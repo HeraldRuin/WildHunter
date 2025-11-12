@@ -1,0 +1,111 @@
+{
+    "$schema": "./node_modules/@biomejs/biome/configuration_schema.json",
+    "formatter": {
+      "enabled": true,
+      "indentStyle": "space",
+      "formatWithErrors": false,
+      "indentWidth": 2,
+      "lineEnding": "lf"
+    },
+    "linter": {
+      "enabled": true,
+      "rules": {
+        "recommended": true,
+        "suspicious": {
+          "noConsole": "error",
+          "noArrayIndexKey": "off"
+        },
+        "correctness": {
+          "noUnusedVariables": "error",
+          "noUnusedImports": "error",
+          "useExhaustiveDependencies": "error"
+        },
+        "complexity": {
+          "noForEach": "off"
+        },
+        "nursery": {
+          "useConsistentCurlyBraces": "error"
+        },
+        "style": {
+          "useSelfClosingElements": "error"
+        },
+        "a11y": {
+          "useKeyWithClickEvents": "off",
+          "useKeyWithMouseEvents": "off",
+          "useMediaCaption": "off",
+          "noNoninteractiveTabindex": "off"
+        }
+      }
+    },
+    "javascript": {
+      "parser": {
+        "unsafeParameterDecoratorsEnabled": true
+      },
+      "formatter": {
+        "jsxQuoteStyle": "double",
+        "quoteProperties": "asNeeded",
+        "semicolons": "always",
+        "arrowParentheses": "always",
+        "bracketSpacing": true,
+        "bracketSameLine": false,
+        "quoteStyle": "single",
+        "trailingCommas": "all"
+      }
+    },
+    "json": {
+      "formatter": {
+        "indentStyle": "space",
+        "indentWidth": 2
+      }
+    },
+    "css": {
+      "linter": {
+        "enabled": true
+      }
+    },
+    "files": {
+      "include": [
+        "cms/src/**/*.js",
+        "cms/src/**/*.jsx",
+        "cms/src/**/*.ts",
+        "cms/src/**/*.tsx",
+        "cms/src/**/*.d.ts",
+        "**/rollup.config.mjs",
+        "**/vite.config.ts",
+        "**/tsconfig.json",
+        "**/tsconfig.base.json",
+        "**/tsconfig.app.json",
+        "**/tsconfig.lib.json",
+        "**/tsconfig.spec.json",
+        "**/package.json",
+        "themes/**/*.ts",
+        "themes/**/*.tsx",
+        "themes/**/*.jsx",
+        "themes/**/*.js",
+        "themes/**/*.d.ts"
+      ],
+      "ignore": [
+        "**/.github",
+        "**/node_modules",
+        "dist",
+        ".next",
+        ".rollup.cache",
+        "schema.graphql",
+        "__generated__"
+      ]
+    },
+    "overrides": [
+      {
+        "include": ["apps/api/**/*"],
+        "linter": {
+          "rules": {
+            "style": {
+              "useImportType": "off",
+              "useNodejsImportProtocol": "off"
+            }
+          }
+        }
+      }
+    ]
+  }
+  

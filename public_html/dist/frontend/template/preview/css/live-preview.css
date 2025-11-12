@@ -1,0 +1,33 @@
+.live-block-preview {
+  position: relative;
+}
+.live-block-preview .block-info {
+  position: absolute;
+  top: 0px;
+  background: #5191fa;
+  padding: 4px 10px;
+  left: 0;
+  z-index: 10;
+  color: white;
+  display: none;
+}
+.live-block-preview.selectable:hover .block-info, .live-block-preview.selectable.selected .block-info {
+  display: block;
+}
+.live-block-preview.selectable:hover:before, .live-block-preview.selectable.selected:before {
+  content: " ";
+  pointer-events: none;
+  position: absolute;
+  left: 0;
+  top: 0;
+  display: block;
+  height: 100%;
+  width: 100%;
+  border-width: 1px;
+  border-style: dashed;
+  --tw-border-opacity: 1;
+  border-color: rgb(38 128 235/var(--tw-border-opacity));
+}
+.live-block-preview.selectable:hover.selected:before, .live-block-preview.selectable.selected.selected:before {
+  border-style: solid;
+}

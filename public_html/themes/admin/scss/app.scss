@@ -1,0 +1,21 @@
+@use "helper";
+@use "typo";
+@use "form";
+
+
+//Modules
+@use "../module/media/admin/scss/browser";
+@use "../module/template/admin/scss/index";
+@use "statistic";
+
+@use "base";
+@use "report";
+@use "responsive/tablet";
+@use "responsive/mobile";
+@use "common/spacing";
+@use "common/typo" as commonTypo;
+@use "common/seo";
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="WebServers">
+    <option name="servers">
+      <webServer id="27fbce72-a695-485f-803c-558a2e05ede6" name="booking_core">
+        <fileTransfer rootFolder="/var/www/" accessType="SFTP" host="109.172.31.240" port="22" sshConfigId="fe728ba8-d140-4ae4-aa21-f48d94f483ac" sshConfig="root@109.172.31.240:22 password">
+          <advancedOptions>
+            <advancedOptions dataProtectionLevel="Private" keepAliveTimeout="0" passiveMode="true" shareSSLContext="true" />
+          </advancedOptions>
+        </fileTransfer>
+      </webServer>
+    </option>
+  </component>
+</project>

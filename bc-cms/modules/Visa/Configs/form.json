@@ -1,0 +1,243 @@
+[
+    {
+        "id":"personal",
+        "type":"step",
+        "label":"Personal Information",
+        "children": [
+            {
+              "id": "first_name",
+              "type": "text",
+              "label": "First Name",
+              "placeholder": "What's your first name?",
+              "rules": "required|string|max:255"
+            },
+            {
+              "id": "last_name",
+              "type": "text",
+              "label": "Last Name",
+              "placeholder": "What's your last name?",
+              "rules": "required|string|max:255"
+            },
+            {
+              "id": "father_name",
+              "type": "text",
+              "label": "Father Name",
+              "placeholder": "What's your father name?",
+              "rules": "nullable|string|max:255"
+            },
+            {
+              "id": "gender",
+              "type": "radio",
+              "label": "Gender",
+              "options": [
+                { "value": "male", "label": "Male" },
+                { "value": "female", "label": "Female" }
+              ],
+              "rules": "required|in:male,female"
+            },
+            {
+              "id": "birth_date",
+              "type": "date",
+              "label": "Birth Date",
+              "rules": "required|date:Y-m-d"
+            },
+            {
+              "id": "country_of_birth",
+              "type": "select",
+              "label": "Country of Birth",
+              "data_source": "country",
+              "rules": "required|string"
+            },
+            {
+              "id": "country_of_residence",
+              "type": "select",
+              "label": "Country of residence",
+              "data_source": "country",
+              "rules": "required|string"
+            },
+            {
+              "id": "nationality",
+              "type": "select",
+              "label": "Nationality",
+              "data_source": "country",
+              "rules": "required|string"
+            },
+            {
+              "id": "last_occ",
+              "type": "text",
+              "label": "Last Occupation",
+              "placeholder": "Be specific, type Marketing Manager not Manager",
+              "rules": "nullable|string|max:255"
+            },
+            {
+              "id": "how_many_times_come",
+              "type": "number",
+              "label": "How many times have you come?",
+              "placeholder": "",
+              "rules": "required|integer|min:0",
+              "std": 0
+            },
+            {
+              "id": "marital",
+              "type": "radio",
+              "label": "Marital Status",
+              "options": [
+                { "value": "single", "label": "Single" },
+                { "value": "married", "label": "Married" }
+              ],
+              "rules": "required|in:single,married"
+            }
+          ]
+    },
+    {
+        "id":"contact",
+        "type":"step",
+        "label":"Contact Information",
+        "children": [
+            {
+                "id":"email",
+                "type":"email",
+                "label":"Email",
+                "rules":"required|email"
+            },
+            {
+                "id":"phone",
+                "type":"text",
+                "label":"Phone",
+                "rules":"required|string|max:255"
+            },
+            {
+                "id":"address",
+                "type":"text",
+                "label":"Address",
+                "rules":"required|string|max:255"
+            },
+            {
+                "id":"social",
+                "type":"textarea",
+                "label":"Social media channels",
+                "rules":"required|string|max:500"
+            }
+        ]
+    },
+    {
+        "id":"passport",
+        "type":"step",
+        "label":"Passport Information",
+        "children": [
+            {
+              "id": "former_nationality",
+              "type": "select",
+              "label": "Former Nationality",
+              "data_source": "country",
+              "placeholder": "Select Your former nationality (if applicable)",
+              "rules": "nullable|string"
+            },
+            {
+              "id": "passport_issue_date",
+              "type": "date",
+              "label": "Passport Issue Date",
+              "rules": "required|date:Y-m-d"
+            },
+            {
+              "id": "passport_expire_date",
+              "type": "date",
+              "label": "Passport Expiry Date",
+              "rules": "required|date:Y-m-d|after:passport_issue_date"
+            },
+            {
+              "id": "passport_number",
+              "type": "text",
+              "label": "Passport Number",
+              "placeholder": "Enter your passport number",
+              "rules": "required|string|max:30"
+            }
+          ]
+    },
+    {
+        "id":"documents",
+        "type":"step",
+        "label":"Upload Documents",
+        "children": [
+            {
+                "id":"personal_photo",
+                "type":"file_picker",
+                "label":"Personal Photo",
+                "rules":"required|max:20480",
+                "mime_types":["image/jpeg","image/png","image/jpg"],
+                "extensions":["jpg","jpeg","png"],
+                "max_size":20480
+            },
+            {
+                "id":"passport_photo",
+                "type":"file_picker",
+                "label":"Passport Photo",
+                "rules":"required|max:20480",
+                "mime_types":["image/jpeg","image/png","image/jpg"],
+                "extensions":["jpg","jpeg","png"],
+                "max_size":20480
+            }
+        ]
+    },
+    {
+        "id":"trip_details",
+        "type":"step",
+        "label":"Trip Details",
+        "children": [
+            {
+              "id": "arrival_date",
+              "type": "date",
+              "label": "Planned Arrival Date",
+              "rules": "required|date:Y-m-d|after:today"
+            },
+            {
+              "id": "departure_date",
+              "type": "date",
+              "label": "Planned Departure Date",
+              "rules": "required|date:Y-m-d|after:arrival_date"
+            },
+            {
+              "id": "duration_of_stay",
+              "type": "number",
+              "label": "Duration of Stay (in days)",
+              "placeholder": "e.g., 14",
+              "rules": "required|integer|min:1|max:365"
+            },
+            {
+              "id": "travel_purpose",
+              "type": "select",
+              "label": "Purpose of Visit",
+              "options": [
+                  { "label": "Tourism", "value": "tourism" },
+                  { "label": "Business", "value": "business" },
+                  { "label": "Family Visit", "value": "family_visit" },
+                  { "label": "Education", "value": "education" },
+                  { "label": "Transit", "value": "transit" },
+                  { "label": "Other", "value": "other" }
+                ],
+              "rules": "required|string"
+            },
+            {
+              "id": "destination_city",
+              "type": "text",
+              "label": "Destination City",
+              "placeholder": "Enter the city you will stay in",
+              "rules": "required|string|max:100"
+            },
+            {
+              "id": "accommodation_type",
+              "type": "select",
+              "label": "Accommodation Type",
+              "options": [
+                  { "label": "Hotel", "value": "hotel" },
+                  { "label": "Hostel", "value": "hostel" },
+                  { "label": "Private Home", "value": "private_home" },
+                  { "label": "Other", "value": "other" }
+                ],
+              "rules": "required|string"
+            }
+          ]
+    }
+]
+
+  

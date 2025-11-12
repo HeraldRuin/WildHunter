@@ -1,0 +1,17 @@
+{
+    "private": true,
+    "type": "module",
+    "scripts": {
+        "watch": "vite build --watch",
+        "prod": "vite build"
+    },
+    "dependencies": {
+        "vite": "^7.0.5"
+    },
+    "volta": {
+        "node": "20.19.4"
+    },
+    "devDependencies": {
+        "sass-embedded": "^1.89.2"
+    }
+}

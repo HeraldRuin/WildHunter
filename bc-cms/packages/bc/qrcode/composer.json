@@ -1,0 +1,34 @@
+{
+    "name": "bc/qrcode",
+    "description": "QR Code package",
+    "authors": [
+        {
+            "name": "BookingCore",
+            "email": "contact@bookingcore.co"
+        }
+    ],
+    "autoload": {
+        "psr-4": {
+            "BC\\QrCode\\": "src/"
+        }
+    },
+    "require": {
+        "php": ">=8.2",
+        "ext-gd": "*",
+        "bacon/bacon-qr-code": "^3.0"
+    },
+    "suggest": {
+        "ext-imagick": "Allows the generation of PNG QrCodes.",
+        "illuminate/support": "Allows for use within Laravel."
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "BC\\QrCode\\ServiceProvider"
+            ],
+            "aliases": {
+                "QrCode": "BC\\QrCode\\Facades\\QrCode"
+            }
+        }
+    }
+}

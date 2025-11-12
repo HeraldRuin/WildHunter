@@ -1,0 +1,1 @@
+<?php echo $__env->make('Flight::frontend.layouts.search.fields.location',['inputName'=>'from_where'], array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH /var/www/bc-cms/themes/BC/Flight/Views/frontend/layouts/search/fields/from-where.blade.php ENDPATH**/ ?>

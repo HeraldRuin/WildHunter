@@ -1,0 +1,74 @@
+#!/bin/bash
+
+# Default values
+PORT=9000
+UPSKILL=false
+BC=true
+MODMIX=false
+MT=false
+
+# Parse arguments
+NEW_ARGS=()
+for arg in "$@"; do
+  case "$arg" in
+    --upskill)
+      UPSKILL=true
+      BC=false
+      ;;
+    --bc)
+      BC=true
+      ;;
+    --port)
+      PORT_SPECIFIED=true
+      NEW_ARGS+=("$arg")
+      ;;
+    --modmix)
+      MODMIX=true
+      BC=false
+      ;;
+    --mt)
+      MT=true
+      BC=false
+      ;;
+    *)
+      NEW_ARGS+=("$arg")
+      ;;
+  esac
+done
+
+# Set environment variables if --upskill is provided
+if [ "$UPSKILL" = true ]; then
+  export BC_ACTIVE_THEME=upskill
+  export DB_DATABASE=upskill
+  PORT=9008
+  echo "BC-CMS: Upskill theme activated"
+fi
+
+# Set environment variables if --bc is provided
+if [ "$BC" = true ]; then
+  export BC_ACTIVE_THEME=Bc
+  export DB_DATABASE=bc_main
+  PORT=9000
+  echo "BC-CMS: BC theme activated"
+fi
+
+if [ "$MODMIX" = true ]; then
+  export BC_ACTIVE_THEME=modmix
+  export DB_DATABASE=bc_pro
+  PORT=9007
+  echo "BC-CMS: ModMix theme activated"
+fi
+
+if [ "$MT" = true ]; then
+  export BC_ACTIVE_THEME=mytravel
+  export DB_DATABASE=bc_mytravel
+  PORT=9002
+  echo "BC-CMS: MyTravel theme activated"
+fi
+
+# Serve with or without specified port
+if [ "$PORT_SPECIFIED" = true ]; then
+  php artisan serve "${NEW_ARGS[@]}"
+else
+  php artisan serve --port="$PORT" "${NEW_ARGS[@]}"
+fi

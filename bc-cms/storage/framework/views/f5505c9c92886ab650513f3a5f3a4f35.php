@@ -1,0 +1,1 @@
+<?php echo $__env->make("Layout::app", array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH /var/www/bc-cms/resources/views/layouts/app.blade.php ENDPATH**/ ?>

@@ -1,0 +1,61 @@
+<?php
+namespace Modules\Agency\Blocks;
+
+use Modules\Template\Blocks\BaseBlock;
+
+class Partners extends BaseBlock
+{
+    public $title;
+    public $desc;
+    public $list_item;
+
+
+    function getOptions()
+    {
+        return ([
+            'settings' => [
+                [
+                    'id'        => 'title',
+                    'type'      => 'input',
+                    'inputType' => 'text',
+                    'label'     => __('Title')
+                ],
+                [
+                    'id'        => 'desc',
+                    'type'      => 'input',
+                    'inputType' => 'text',
+                    'label'     => __('Sub Title')
+                ],
+                [
+                    'id'          => 'list_item',
+                    'type'        => 'listItem',
+                    'label'       => __('List Item(s)'),
+                    'title_field' => 'title',
+                    'settings'    => [
+                        [
+                            'id'        => 'avatar',
+                            'name'      => 'text',
+                            'type'      => 'uploader',
+                            'label'     => __('Image')
+                        ],
+                    ]
+                ],
+            ]
+        ]);
+    }
+
+    public function getTitle()
+    {
+        return __('Our Partners');
+    }
+
+    public function render()
+    {
+        $model = [
+            'title' => $this->title,
+            'desc' => $this->desc,
+            'list_item' => $this->list_item,
+        ];
+        return $this->view('Agency::frontend.blocks.partners', $model);
+    }
+}
