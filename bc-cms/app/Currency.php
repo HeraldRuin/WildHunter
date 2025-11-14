@@ -33,7 +33,8 @@ class Currency
                 'rate'=>1
             ]
         ];
-        $extra = array_merge(setting_item_array('extra_currency'),$extra);
+         //Убираем все дополнительные валюты
+        //$extra = array_merge(setting_item_array('extra_currency'),$extra);
         return $extra;
     }
 

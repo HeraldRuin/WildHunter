@@ -3,13 +3,14 @@
     $current = \App\Currency::getCurrent('currency_main');
 @endphp
 {{--Multi Language--}}
-@if(!empty($actives) and count($actives) > 1)
+{{--@if(!empty($actives) and count($actives) > 1)--}}
+@if(!empty($actives))
     <li class="dropdown">
         @foreach($actives as $currency)
             @if($current == $currency['currency_main'])
                 <a href="#" data-toggle="dropdown" class="is_login">
                     {{strtoupper($currency['currency_main'])}}
-                    <i class="fa fa-angle-down"></i>
+{{--                    <i class="fa fa-angle-down"></i>--}}
                 </a>
             @endif
         @endforeach
