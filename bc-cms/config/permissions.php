@@ -120,6 +120,23 @@ return [
     'popup_update',
     'popup_delete',
 
+    // Base Admin
+    'baseAdmin_view',
+    'baseAdmin_content',
+    'baseAdmin_service',
+
+    // Base Owner
+//    'baseAdmin_view_reports',
+//    'baseAdmin_edit_info',
+//    'baseAdmin_edit_events',
+
+    // Hunter Admin
+    'baseHunterAdmin_edit_events',
+
+    // Hunter
+    'baseHunter_view',
+    'baseHunter_content',
+    'baseHunter_edit_events',
 
     'media_manage_others'
 ];
