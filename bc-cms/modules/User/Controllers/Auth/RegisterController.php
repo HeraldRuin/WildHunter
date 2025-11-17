@@ -48,7 +48,6 @@
                     Password::min(8)
                         ->mixedCase()
                         ->numbers()
-                        ->symbols()
                         ->uncompromised(),
                 ],
                 'phone'       => ['required','unique:users'],
