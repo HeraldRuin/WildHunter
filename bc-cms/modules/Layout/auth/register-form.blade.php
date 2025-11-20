@@ -22,6 +22,7 @@
             <option value="hunter">{{ __('Hunter') }}</option>
             <option value="vendor">{{ __('Base admin') }}</option>
         </select>
+        <i class="input-icon field-icon icofont-caret-down"></i>
         <span class="invalid-feedback error error-role"></span>
     </div>
     <div class="form-group">
