@@ -622,7 +622,6 @@ jQuery(function ($) {
         });
     })
     $('.bc-form-register [type=submit]').click(function (e) {
-        console.log('tut')
         e.preventDefault();
         let form = $(this).closest('.bc-form-register');
         $.ajaxSetup({
