@@ -17,6 +17,14 @@
         </div>
     </div>
     <div class="form-group">
+        <select name="role" class="form-control" required>
+            <option value="" disabled selected hidden>{{ __('Select role') }}</option>
+            <option value="hunter">{{ __('Hunter') }}</option>
+            <option value="vendor">{{ __('Base admin') }}</option>
+        </select>
+        <span class="invalid-feedback error error-role"></span>
+    </div>
+    <div class="form-group">
         <input type="text" class="form-control" name="phone" autocomplete="off" placeholder="{{__('Phone')}}">
         <i class="input-icon field-icon icofont-ui-touch-phone"></i>
         <span class="invalid-feedback error error-phone"></span>
