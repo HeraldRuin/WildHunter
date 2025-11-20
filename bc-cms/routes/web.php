@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\HomeController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -16,9 +17,9 @@ use Illuminate\Support\Facades\Route;
 Route::middleware(['web'])->namespace('App\Http\Controllers')->group(function () {
 
     Route::get('/intro', 'LandingpageController@index');
-    Route::get('/', 'HomeController@index');
-    Route::get('/home', 'HomeController@index')->name('home');
-    Route::post('/install/check-db', 'HomeController@checkConnectDatabase');
+    Route::get('/', [HomeController::class, 'index']);
+    Route::get('/home', [HomeController::class, 'index'])->name('home');
+    Route::post('/install/check-db', [HomeController::class, 'checkConnectDatabase']);
 
     // Social Login
     Route::get('social-login/{provider}', 'Auth\LoginController@socialLogin');
