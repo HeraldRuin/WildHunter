@@ -622,6 +622,7 @@ jQuery(function ($) {
         });
     })
     $('.bc-form-register [type=submit]').click(function (e) {
+        console.log('tut')
         e.preventDefault();
         let form = $(this).closest('.bc-form-register');
         $.ajaxSetup({
@@ -639,6 +640,7 @@ jQuery(function ($) {
                 'phone': form.find('input[name=phone]').val(),
                 'term': form.find('input[name=term]').is(":checked") ? 1 : '',
                 'g-recaptcha-response': form.find('[name=g-recaptcha-response]').val(),
+                'role': form.find('select[name=role]').val(),
             },
             'type': 'POST',
             beforeSend: function () {
