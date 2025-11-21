@@ -511,6 +511,50 @@ class Booking extends BaseModel
         return $res;
     }
 
+    public static function getTopCardsReportForBaseAdmin($user_id)
+    {
+        $res = [];
+        $total_money = parent::selectRaw('sum( `total_before_fees` - `commission` + `vendor_service_fee_amount` ) AS total_price , sum( CASE WHEN `status` = "completed" THEN `total_before_fees` - `commission` + `vendor_service_fee_amount` ELSE NULL END ) AS total_earning')->whereNotIn('status',static::$notAcceptedStatus)->where("vendor_id", $user_id)->first();
+        $total_booking = parent::whereNotIn('status',static::$notAcceptedStatus)->where("vendor_id", $user_id)->count('id');
+        $total_service = 0;
+        $services = get_bookable_services();
+        if(!empty($services))
+        {
+            foreach ($services as $service){
+                $total_service += $service::where('status', 'publish')->where("create_user", $user_id)->count('id');
+            }
+        }
+        $res[] = [
+            'title'  => __("Pending"),
+            'amount' => format_money_main($total_money->total_price - $total_money->total_earning),
+            'desc'   => __("Total pending"),
+            'class'  => 'purple',
+            'icon'   => 'icon ion-ios-cart'
+        ];
+        $res[] = [
+            'title'  => __("Earnings"),
+            'amount' => format_money_main($total_money->total_earning ?? 0),
+            'desc'   => __("Total earnings"),
+            'class'  => 'info',
+            'icon'   => 'icon ion-ios-gift'
+        ];
+        $res[] = [
+            'title'  => __("Bookings"),
+            'amount' => $total_booking,
+            'desc'   => __("Total bookings"),
+            'class'  => 'pink',
+            'icon'   => 'icon ion-ios-pricetags'
+        ];
+        $res[] = [
+            'title'  => __("Services"),
+            'amount' => $total_service,
+            'desc'   => __("Total bookable services"),
+            'class'  => 'success',
+            'icon'   => 'icon ion-ios-flash'
+        ];
+        return $res;
+    }
+
     public static function getEarningChartDataForVendor($from, $to, $user_id)
     {
         $data = [
