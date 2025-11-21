@@ -28,7 +28,6 @@ function setting_item($item, $default = '', $isArray = false)
 }
 function setting_item_array($item, $default = '')
 {
-
     return setting_item($item, $default, true);
 }
 
@@ -115,6 +114,7 @@ function generate_menu($location = '', $options = [])
             if ($l == $location and $menuId) {
                 $menu = (new \Modules\Core\Models\Menu())->findById($menuId);
                 if ($menu) {
+
                     $translation = $menu->translate();
 
                     $walker = new $options['walker']($translation);
@@ -588,7 +588,7 @@ function get_reviewable_services()
     $all = get_services();
 
     $all = array_merge($all, get_bookable_services());
-    
+
     // Modules
     $custom_modules = \Modules\ServiceProvider::getActivatedModules();
     if (!empty($custom_modules)) {
@@ -933,7 +933,13 @@ function is_admin()
 function is_vendor()
 {
     if (!auth()->check()) return false;
-    if (auth()->user()->hasPermission('dashboard_vendor_access')) return true;
+    if (auth()->user()->hasPermission('hunter_dashboard_access')) return true;
+    return false;
+}
+function is_baseAdmin()
+{
+    if (!auth()->check()) return false;
+    if (auth()->user()->hasPermission('baseAdmin_dashboard_access')) return true;
     return false;
 }
 
