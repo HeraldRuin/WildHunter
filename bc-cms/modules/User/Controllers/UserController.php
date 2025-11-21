@@ -24,10 +24,11 @@ use Modules\Booking\Models\Booking;
 use Illuminate\Foundation\Auth\AuthenticatesUsers;
 use Modules\Booking\Models\Enquiry;
 use Illuminate\Support\Str;
+use Modules\User\Traits\HasRoles;
 
 class UserController extends FrontendController
 {
-    use AuthenticatesUsers;
+    use AuthenticatesUsers, HasRoles;
 
     protected $enquiryClass;
     private Booking $booking;
@@ -41,20 +42,41 @@ class UserController extends FrontendController
 
     public function dashboard(Request $request)
     {
-        $this->checkPermission('dashboard_vendor_access');
-        $user_id = Auth::id();
-        $data = [
-            'cards_report'       => $this->booking->getTopCardsReportForVendor($user_id),
-            'earning_chart_data' => $this->booking->getEarningChartDataForVendor(strtotime('monday this week'), time(), $user_id),
+        $user = Auth::user();
+
+        if ($user->hasRole('baseadmin') && $user->hasPermission('baseAdmin_dashboard_access')) {
+            $view = 'User::frontend.dashboardBaseAdmin';
+            $data = $this->getBaseAdminDashboardData($user);
+        } elseif ($user->hasRole('hunter') && $user->hasPermission('hunter_dashboard_access')) {
+            $view = 'User::frontend.dashboardHunter';
+            $data = $this->getVendorDashboardData($user);
+        } else {
+            abort(403);
+        }
+
+        return view($view, $data);
+    }
+    protected function getVendorDashboardData($user)
+    {
+        return [
+            'cards_report'       => $this->booking->getTopCardsReportForVendor($user->id),
+            'earning_chart_data' => $this->booking->getEarningChartDataForVendor(strtotime('monday this week'), time(), $user->id),
             'page_title'         => __("Vendor Dashboard"),
             'breadcrumbs'        => [
-                [
-                    'name'  => __('Dashboard'),
-                    'class' => 'active'
-                ]
+                ['name' => __('Dashboard'), 'class' => 'active']
             ]
         ];
-        return view('User::frontend.dashboard', $data);
+    }
+    protected function getBaseAdminDashboardData($user)
+    {
+        return [
+            'cards_report'       => $this->booking->getTopCardsReportForBaseAdmin($user->id),
+            'earning_chart_data' => $this->booking->getEarningChartDataForVendor(strtotime('monday this week'), time(), $user->id),
+            'page_title'         => __("BaseAdmin Dashboard"),
+            'breadcrumbs'        => [
+                ['name' => __('Dashboard'), 'class' => 'active']
+            ]
+        ];
     }
 
     public function reloadChart(Request $request)
