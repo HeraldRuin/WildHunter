@@ -125,18 +125,10 @@ return [
     'baseAdmin_content',
     'baseAdmin_service',
 
-    // Base Owner
-//    'baseAdmin_view_reports',
-//    'baseAdmin_edit_info',
-//    'baseAdmin_edit_events',
-
-    // Hunter Admin
-    'baseHunterAdmin_edit_events',
-
     // Hunter
-    'baseHunter_dashboard_access',
-    'baseHunter_content',
-    'baseHunter_edit_events',
+    'hunter_dashboard_access',
+    'hunter_content',
+    'hunter_edit_events',
 
     'media_manage_others'
 ];
