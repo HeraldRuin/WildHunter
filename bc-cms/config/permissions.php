@@ -121,7 +121,7 @@ return [
     'popup_delete',
 
     // Base Admin
-    'baseHunter_dashboard_access',
+    'baseAdmin_dashboard_access',
     'baseAdmin_content',
     'baseAdmin_service',
 
@@ -134,7 +134,7 @@ return [
     'baseHunterAdmin_edit_events',
 
     // Hunter
-    'baseHunter_view',
+    'baseHunter_dashboard_access',
     'baseHunter_content',
     'baseHunter_edit_events',
 
