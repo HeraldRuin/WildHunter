@@ -25,33 +25,18 @@
                 return $this->sendError(__("You are not allowed to register"));
             }
             $rules = [
-                'first_name' => [
-                    'required',
-                    'string',
-                    'max:255'
-                ],
-                'last_name'  => [
-                    'required',
-                    'string',
-                    'max:255'
-                ],
-                'email'      => [
-                    'required',
-                    'string',
-                    'email',
-                    'max:255',
-                    'unique:users'
-                ],
-                'password'   => [
-                    'required',
-                    'string',
+                'first_name' => ['required','string','max:255'],
+                'last_name'  => ['required','string','max:255'],
+                'role'  => ['required','string','max:255'],
+                'email'  => ['required','string','email','max:255','unique:users'],
+                'password'   => ['required','string',
                     Password::min(8)
                         ->mixedCase()
                         ->numbers()
                         ->uncompromised(),
                 ],
-                'phone'       => ['required','unique:users'],
-                'term'       => ['required'],
+                'phone' => ['required','unique:users'],
+                'term'  => ['required'],
             ];
             $messages = [
                 'phone.required'      => __('Phone is required field'),
@@ -61,6 +46,7 @@
                 'first_name.required' => __('The first name is required field'),
                 'last_name.required'  => __('The last name is required field'),
                 'term.required'       => __('The terms and conditions field is required'),
+                'role.required'       => __('Role is required field'),
             ];
             if (ReCaptchaEngine::isEnable() and setting_item("user_enable_register_recaptcha")) {
                 $codeCapcha = $request->input('g-recaptcha-response');
@@ -88,6 +74,7 @@
                     'status'    => $request->input('publish','publish'),
                     'phone'    => $request->input('phone'),
                 ]);
+
                 event(new Registered($user));
                 Auth::loginUsingId($user->id);
                 try {
@@ -96,7 +83,8 @@
 
                     Log::warning("SendMailUserRegistered: " . $exception->getMessage());
                 }
-                $user->assignRole(setting_item('user_role'));
+
+                $user->assignRole($request->input('role'));
                 return response()->json([
                     'error'    => false,
                     'messages' => false,
