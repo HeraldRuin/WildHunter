@@ -43,11 +43,11 @@
                                             {{ __('Credit: :amount', ['amount' => auth()->user()->balance]) }}</a>
                                     </li>
                                 @endif
-                                @if (is_vendor())
+                                @if (is_vendor() || is_baseAdmin())
                                     <li class="menu-hr"><a href="{{ route('vendor.dashboard') }}" class="menu-hr"><i
-                                                class="icon ion-md-analytics"></i> {{ __('Vendor Dashboard') }}</a></li>
+                                                class="icon ion-md-analytics"></i>  {{ is_vendor() ? __('Vendor Dashboard') : __('Admin Dashboard') }} </a></li>
                                 @endif
-                                <li class="@if (is_vendor()) menu-hr @endif">
+                                <li class="@if (is_vendor()  || is_baseAdmin()) menu-hr @endif">
                                     <a href="{{ route('user.profile.index') }}"><i class="icon ion-md-construct"></i>
                                         {{ __('My profile') }}</a>
                                 </li>
