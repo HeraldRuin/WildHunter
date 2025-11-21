@@ -121,7 +121,7 @@ return [
     'popup_delete',
 
     // Base Admin
-    'baseAdmin_view',
+    'baseHunter_dashboard_access',
     'baseAdmin_content',
     'baseAdmin_service',
 
