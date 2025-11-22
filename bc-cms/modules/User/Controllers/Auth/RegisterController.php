@@ -27,7 +27,7 @@
             $rules = [
                 'first_name' => ['required','string','max:255'],
                 'last_name'  => ['required','string','max:255'],
-                'role'  => ['required','string','max:255'],
+                'role'  => ['required','in:hunter,baseadmin'],
                 'email'  => ['required','string','email','max:255','unique:users'],
                 'password'   => ['required','string',
                     Password::min(8)
