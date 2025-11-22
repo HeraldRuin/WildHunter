@@ -17,7 +17,7 @@
         </div>
     </div>
     <div class="form-group">
-        <select name="role" class="form-control" required>
+        <select name="role" class="form-control">
             <option value="" disabled selected hidden>{{ __('Select role') }}</option>
             <option value="hunter">{{ __('Hunter') }}</option>
             <option value="baseadmin">{{ __('Base admin') }}</option>
