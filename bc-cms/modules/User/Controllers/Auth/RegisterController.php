@@ -73,6 +73,7 @@
                     'password'   => Hash::make($request->input('password')),
                     'status'    => $request->input('publish','publish'),
                     'phone'    => $request->input('phone'),
+                    'locale'   => setting_item('site_locale') ?? 'en',
                 ]);
 
                 event(new Registered($user));
