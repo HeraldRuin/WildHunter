@@ -3,11 +3,13 @@
 namespace Modules\Hotel\Models;
 
 use App\Currency;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Http\Request;
+use Modules\Animals\Models\Animal;
 use Modules\Booking\Models\Bookable;
 use Modules\Booking\Models\Booking;
 use Modules\Booking\Traits\CapturesService;
@@ -986,6 +988,16 @@ class Hotel extends Bookable
             // Only using block
             $model_hotel->whereIn('location_id', $request['location_ids']);
         }
+        if (!empty($request['animal_id'])) {
+            $animal_ids = (array) $request['animal_id'];
+            $animal_ids = array_filter($animal_ids);
+            if (count($animal_ids)) {
+                $model_hotel->whereHas('animals', function ($query) use ($animal_ids) {
+                    $query->whereIn('bc_animals.id', $animal_ids);
+                });
+            }
+        }
+
         if (!empty($price_range = $request["price_range"] ?? "")) {
             $pri_from = Currency::convertPriceToMain(explode(";", $price_range)[0]);
             $pri_to =  Currency::convertPriceToMain(explode(";", $price_range)[1]);
@@ -1190,4 +1202,10 @@ class Hotel extends Bookable
 
         return $query;
     }
+
+    public function animals(): BelongsToMany
+    {
+        return $this->belongsToMany(Animal::class, 'bc_hotel_animals', 'hotel_id', 'animal_id');
+    }
+
 }
