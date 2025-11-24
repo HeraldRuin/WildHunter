@@ -1,6 +1,7 @@
 <?php
 namespace Modules\Template\Blocks;
 
+use Modules\Animals\Models\Animal;
 use Modules\Location\Models\Location;
 use Modules\Media\Helpers\FileHelper;
 use Modules\Tour\Models\TourCategory;
@@ -148,6 +149,7 @@ class FormSearchAllService extends BaseBlock
         ];
         $model['bg_image_url'] = FileHelper::url($model['bg_image'] ?? "", 'full') ?? "";
         $model['list_location'] = $model['tour_location'] = Location::where("status", "publish")->limit(1000)->with(['translation'])->get()->toTree();
+        $model['list_animals'] = $model['tour_animals'] = Animal::where("is_active", 1)->limit(1000)->get()->toTree();
         $model['tour_category'] = TourCategory::where('status', 'publish')->with(['translation'])->get()->toTree();
         $model['style'] = $model['style'] ?? "";
         $model['list_slider'] = $model['list_slider'] ?? "";
