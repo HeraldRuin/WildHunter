@@ -24,11 +24,10 @@ use Modules\Booking\Models\Booking;
 use Illuminate\Foundation\Auth\AuthenticatesUsers;
 use Modules\Booking\Models\Enquiry;
 use Illuminate\Support\Str;
-use Modules\User\Traits\HasRoles;
 
 class UserController extends FrontendController
 {
-    use AuthenticatesUsers, HasRoles;
+    use AuthenticatesUsers;
 
     protected $enquiryClass;
     private Booking $booking;
@@ -106,7 +105,7 @@ class UserController extends FrontendController
                     'class' => 'active'
                 ]
             ],
-            'is_vendor_access' => $this->hasPermission('dashboard_vendor_access')
+            'is_vendor_access' => $this->hasPermission('hunter_dashboard_access')
         ];
         return view('User::frontend.profile', $data);
     }
