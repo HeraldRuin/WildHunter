@@ -36,8 +36,9 @@
         <span class="invalid-feedback error error-email"></span>
     </div>
     <div class="form-group">
-        <input type="password" class="form-control" name="password" autocomplete="off" placeholder="{{__('Password')}}">
+        <input type="text" class="form-control" name="password" autocomplete="off" placeholder="{{__('Password')}}">
         <i class="input-icon field-icon icofont-ui-password"></i>
+        <button type="button" id="generate-password" class="btn-generate-password">{{__('Generate')}}</button>
         <span class="invalid-feedback error error-password"></span>
     </div>
     <div class="form-group">
