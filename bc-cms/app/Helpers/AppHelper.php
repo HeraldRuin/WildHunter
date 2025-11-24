@@ -31,25 +31,31 @@ function setting_item_array($item, $default = '')
     return setting_item($item, $default, true);
 }
 
-function setting_item_with_lang($item, $locale = '', $default = '', $withOrigin = true)
+function setting_item_with_lang($item, $locale = '', $default = '', $withOrigin = true, $forceLocale = false)
 {
+    if (empty($locale)) {
+        $locale = app()->getLocale();
+    }
 
-    if (empty($locale)) $locale = app()->getLocale();
-
-    if ($withOrigin == false and $locale == setting_item('site_locale')) {
+    if (!$withOrigin && $locale == setting_item('site_locale')) {
         return $default;
     }
 
-    if (
-        empty(setting_item('site_locale'))
-        or empty(setting_item('site_enable_multi_lang'))
-        or  $locale == setting_item('site_locale')
-    ) {
-        $locale = '';
+    if (!$forceLocale) {
+        if (
+            empty(setting_item('site_locale'))
+            || empty(setting_item('site_enable_multi_lang'))
+            || $locale == setting_item('site_locale')
+        ) {
+            $locale = '';
+        }
     }
-
-    return Settings::item($item . ($locale ? '_' . $locale : ''), $withOrigin ? setting_item($item, $default) : $default);
+    return Settings::item(
+        $item . ($locale ? '_' . $locale : ''),
+        $withOrigin ? setting_item($item, $default) : $default
+    );
 }
+
 function setting_item_with_lang_raw($item, $locale = '', $default = '')
 {
 
