@@ -67,10 +67,16 @@
         {
             if (!empty($content)) {
                 foreach (self::CODE as $item => $value) {
-                    if($item == "button_verify") {
-                        $content = str_replace($value, $this->buttonVerify($event), $content);
+                    if ($item == "button_verify") {
+                        $replacement = $this->buttonVerify($event);
+                    } elseif ($item == "password") {
+                        $replacement = $event->password ?? '';
+                    } elseif ($item == "login") {
+                        $replacement = $event->user->email;
+                    } else {
+                        $replacement = @$event->user->$item;
                     }
-                    $content = str_replace($value, @$event->user->$item, $content);
+                    $content = str_replace($value, $replacement, $content);
                 }
             }
             return $content;
