@@ -944,19 +944,15 @@ jQuery(function ($) {
                 var all = upper + lower + digits;
                 var password = "";
 
-                // Обязательно по одному символу из каждой категории
                 password += upper.charAt(Math.floor(Math.random() * upper.length));
                 password += lower.charAt(Math.floor(Math.random() * lower.length));
                 password += digits.charAt(Math.floor(Math.random() * digits.length));
 
-                // Остальные 5 символов
                 for (var i = 0; i < 5; i++) {
                     password += all.charAt(Math.floor(Math.random() * all.length));
                 }
 
-                // Перемешиваем символы
                 password = password.split('').sort(() => 0.5 - Math.random()).join('');
-
                 $passwordInput.val(password);
                 $passwordInput.trigger('input').trigger('change');
             }
