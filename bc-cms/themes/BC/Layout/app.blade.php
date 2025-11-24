@@ -18,7 +18,7 @@
     <link href="{{ asset('libs/select2/css/select2.min.css') }}" rel="stylesheet">
     <link href="{{ asset('themes/bc/dist/frontend/css/notification.css') }}" rel="newest stylesheet">
     <link href="{{ asset('themes/bc/dist/frontend/css/app.css?_ver=' . config('app.asset_version')) }}" rel="stylesheet">
-
+    <link href="{{ asset('custom/css/app.custom.css') }}" rel="newest stylesheet">
     <link rel="stylesheet" type="text/css" href="{{ asset('libs/daterange/daterangepicker.css') }}">
     <!-- Fonts -->
     <link rel="dns-prefetch" href="//fonts.gstatic.com">
