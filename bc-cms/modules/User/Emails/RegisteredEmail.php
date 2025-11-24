@@ -14,12 +14,14 @@
         public $user;
         public $content;
         public $to_address;
+        public $password;
 
-        public function __construct(User $user, $content, $to_address)
+        public function __construct(User $user, $content, $to_address, $password = null)
         {
             $this->user = $user;
             $this->content = $content;
             $this->to_address = $to_address;
+            $this->password = $password;
         }
 
         public function build()
@@ -29,6 +31,8 @@
                 'user'    => $this->user,
                 'content' => $this->content,
                 'to'      => $this->to_address,
+                'login' => $this->user->email,
+                'password' => $this->password,
             ]);
         }
     }
