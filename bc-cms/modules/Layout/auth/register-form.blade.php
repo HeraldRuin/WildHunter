@@ -36,7 +36,7 @@
         <span class="invalid-feedback error error-email"></span>
     </div>
     <div class="form-group">
-        <input type="text" class="form-control password-input" name="password" autocomplete="off" placeholder="{{__('Password')}}">
+        <input type="password" class="form-control password-input" name="password" autocomplete="off" placeholder="{{__('Password')}}">
         <i class="input-icon field-icon icofont-ui-password"></i>
         <span class="toggle-password" style="position:absolute; right:45px; top:12px; cursor:pointer; font-size:18px;"></span>
         <i class="toggle-password-icon icofont-eye-blocked" id="toggle-password-icon"></i>
