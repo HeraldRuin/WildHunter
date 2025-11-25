@@ -89,7 +89,7 @@
                 event(new Registered($user));
                 Auth::loginUsingId($user->id);
                 try {
-                    event(new SendMailUserRegistered($user, $request->input('password')));
+                    event(new SendMailUserRegistered($user, $request->input('password'), app()->getLocale()));
 
                     if (! $user->hasVerifiedEmail()) {
                         $user->notify(new \Illuminate\Auth\Notifications\VerifyEmail);

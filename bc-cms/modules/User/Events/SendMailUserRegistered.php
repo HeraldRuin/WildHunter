@@ -10,10 +10,12 @@ class SendMailUserRegistered
     use SerializesModels;
     public $user;
     public $password;
+    public $appLocale;
 
-    public function __construct($user, $password)
+    public function __construct($user, $password, $appLocale)
     {
         $this->user = $user;
         $this->password = $password;
+        $this->appLocale = $appLocale;
     }
 }

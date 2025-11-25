@@ -3824,5 +3824,6 @@
     "Hunter": "Охотник",
     "Base admin": "Администратор базы",
     "Who will be hunted": "На кого будет охота?",
-    "Generate": "Сгенерировать"
+    "Generate": "Сгенерировать",
+    "user_registered": ":name Вы зарегистрированы"
 }
