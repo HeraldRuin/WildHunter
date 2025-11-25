@@ -14,12 +14,14 @@
                 </div>
                 <div class="form-group">
                     <label>{{__("New Password")}}</label>
-                    <input type="password" required name="new-password" minlength="8" placeholder="{{__("New Password")}}" class="form-control">
-                    <p><i>{{__("* Require at least one uppercase, one lowercase letter, one number and one symbol.")}}</i></p>
+                    <input type="password" required name="new-password" id="new-password" minlength="8" placeholder="{{__("New Password")}}" class="form-control">
+                    <i class="toggle-change-password icofont-eye-blocked" id="toggle-change-password-icon-new"></i>
                </div>
+                <button type="button" class="btn-generate-password" id="generate-password-new">{{__('Generate')}}</button>
                 <div class="form-group">
                     <label>{{__("New Password Again")}}</label>
-                    <input type="password" required name="new-password_confirmation" minlength="8" placeholder="{{__("New Password Again")}}" class="form-control">
+                    <input type="password" required name="new-password_confirmation" id="new-password_confirmation" minlength="8" placeholder="{{__("New Password Again")}}" class="form-control">
+                    <i class="toggle-change-password icofont-eye-blocked" id="toggle-change-password-icon-confirm"></i>
                 </div>
             </div>
             <div class="col-md-12">

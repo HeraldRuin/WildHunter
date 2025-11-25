@@ -507,6 +507,63 @@ var vendorPayout = {
                 bookingCoreApp.showAjaxError(e);
             }
         })
-    }
-
+    },
 };
+jQuery(function($){
+    document.getElementById('toggle-change-password-icon-new').addEventListener('click', function () {
+        const input = document.getElementById('new-password');
+
+        if (input.type === "password") {
+            input.type = "text";
+            this.classList.remove('icofont-eye-blocked');
+            this.classList.add('icofont-eye');
+        } else {
+            input.type = "password";
+            this.classList.add('icofont-eye-blocked');
+            this.classList.remove('icofont-eye');
+        }
+    });
+
+    document.getElementById('toggle-change-password-icon-confirm').addEventListener('click', function () {
+        const input = document.getElementById('new-password_confirmation');
+
+        if (input.type === "password") {
+            input.type = "text";
+            this.classList.remove('icofont-eye-blocked');
+            this.classList.add('icofont-eye');
+        } else {
+            input.type = "password";
+            this.classList.add('icofont-eye-blocked');
+            this.classList.remove('icofont-eye');
+        }
+    });
+    $(document).ready(function() {
+        $("#generate-password-new").on('click', function(e) {
+            e.preventDefault();
+
+            var $passwordInput = $("input[name='new-password']");
+            var $passwordConfirm = $("input[name='new-password_confirmation']");
+
+            if ($passwordInput.length && $passwordConfirm.length) {
+                var upper = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+                var lower = "abcdefghijklmnopqrstuvwxyz";
+                var digits = "0123456789";
+                var all = upper + lower + digits;
+                var password = "";
+
+                password += upper.charAt(Math.floor(Math.random() * upper.length));
+                password += lower.charAt(Math.floor(Math.random() * lower.length));
+                password += digits.charAt(Math.floor(Math.random() * digits.length));
+
+                for (var i = 0; i < 5; i++) {
+                    password += all.charAt(Math.floor(Math.random() * all.length));
+                }
+                password = password.split('').sort(() => 0.5 - Math.random()).join('');
+
+                $passwordInput.val(password).trigger('input').trigger('change');
+                $passwordConfirm.val(password).trigger('input').trigger('change');
+            }
+        });
+    });
+
+});
