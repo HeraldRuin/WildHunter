@@ -81,6 +81,10 @@
                 Auth::loginUsingId($user->id);
                 try {
                     event(new SendMailUserRegistered($user, $request->input('password')));
+
+                    if (! $user->hasVerifiedEmail()) {
+                        $user->notify(new \Illuminate\Auth\Notifications\VerifyEmail);
+                    }
                 } catch (Exception $exception) {
 
                     Log::warning("SendMailUserRegistered: " . $exception->getMessage());
