@@ -45,6 +45,7 @@ class User extends Authenticatable implements MustVerifyEmail
     use HasUserReview;
     use HasStatus;
     use HasAddress;
+    use HasRoles;
 
     public $type = 'user';
     /**
@@ -72,6 +73,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'bio',
         'business_name',
         'status',
+        'locale',
     ];
 
     protected $attributes = [
