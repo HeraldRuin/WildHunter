@@ -41,9 +41,6 @@
                         if (!preg_match('/[0-9]/', $value)) {
                             $fail(__('The password must contain at least one number'));
                         }
-                        if (!preg_match('/[\W_]/', $value)) {
-                            $fail(__('The password must contain at least one character'));
-                        }
                     },
                 ],
                 'phone' => ['required','unique:users'],
