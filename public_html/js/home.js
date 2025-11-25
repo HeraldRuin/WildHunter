@@ -1315,7 +1315,19 @@ jQuery(function($){
             }
         });
     }
+    document.getElementById('toggle-password-icon').addEventListener('click', function () {
+        const input = document.querySelector('.password-input');
 
+        if (input.type === "password") {
+            input.type = "text";
+            this.classList.remove('icofont-eye-blocked');
+            this.classList.add('icofont-eye');
+        } else {
+            input.type = "password";
+            this.classList.add('icofont-eye-blocked');
+            this.classList.remove('icofont-eye');
+        }
+    });
 });
 
 

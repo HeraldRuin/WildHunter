@@ -3352,5 +3352,14 @@ body .bravo_wrap .bravo_detail_tour .bravo_content .g-faq2 .item .desc {
 .btn-generate-password:hover {
     background-color: #0056b3;
 }
-
+.toggle-password-icon {
+    position: absolute;
+    top: 50%;
+    right: 148px;
+    transform: translateY(-50%);
+    font-size: 20px;
+    cursor: pointer;
+    color: #acb5be;
+    z-index: 10;
+}
 /*# sourceMappingURL=app.custom.css.map */
