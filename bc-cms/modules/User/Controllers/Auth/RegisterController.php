@@ -43,6 +43,7 @@
                 'email.required'      => __('Email is required field'),
                 'email.email'         => __('Email invalidate'),
                 'password.required'   => __('Password is required field'),
+                'password.uncompromised' => __('The password was found in a data leak, please use a different one'),
                 'first_name.required' => __('The first name is required field'),
                 'last_name.required'  => __('The last name is required field'),
                 'term.required'       => __('The terms and conditions field is required'),

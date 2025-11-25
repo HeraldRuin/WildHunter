@@ -3819,5 +3819,6 @@
     "Hunter": "Охотник",
     "Base admin": "Администратор базы",
     "Who will be hunted": "На кого будет охота?",
-    "Generate": "Сгенерировать"
+    "Generate": "Сгенерировать",
+    "The password was found in a data leak, please use a different one": "Пароль был найден в утечке данных, используйте другой"
 }
