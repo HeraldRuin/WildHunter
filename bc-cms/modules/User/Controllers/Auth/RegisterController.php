@@ -29,11 +29,22 @@
                 'last_name'  => ['required','string','max:255'],
                 'role'  => ['required','in:hunter,baseadmin'],
                 'email'      => ['required','string','email','max:255'],
-                'password'   => ['required','string',
-                    Password::min(8)
-                        ->mixedCase()
-                        ->numbers()
-                        ->uncompromised(),
+                'password'   => [
+                    'required',
+                    'string',
+                    Password::min(8)->uncompromised(),
+                    function ($attribute, $value, $fail) {
+
+                        if (!preg_match('/[A-Z]/', $value) || !preg_match('/[a-z]/', $value)) {
+                            $fail(__('The password field must contain at least one uppercase and one lowercase letter'));
+                        }
+                        if (!preg_match('/[0-9]/', $value)) {
+                            $fail(__('The password must contain at least one number'));
+                        }
+                        if (!preg_match('/[\W_]/', $value)) {
+                            $fail(__('The password must contain at least one character'));
+                        }
+                    },
                 ],
                 'phone' => ['required','unique:users'],
                 'term'  => ['required'],
@@ -43,6 +54,7 @@
                 'email.required'      => __('Email is required field'),
                 'email.email'         => __('Email invalidate'),
                 'password.required'   => __('Password is required field'),
+                'password.min'       => __('The password must be at least 8 characters'),
                 'password.uncompromised' => __('The password was found in a data leak, please use a different one'),
                 'first_name.required' => __('The first name is required field'),
                 'last_name.required'  => __('The last name is required field'),

@@ -1212,7 +1212,7 @@
     "Email Host": "\u0425\u043e\u0441\u0442 Email",
     "Email invalidate": "\u041d\u0435\u043f\u043e\u0434\u0442\u0432\u0435\u0440\u0436\u0434\u0435\u043d\u043d\u044b\u0439 Email",
     "Email is Required": "Email \u043e\u0431\u044f\u0437\u0430\u0442\u0435\u043b\u0435\u043d",
-    "Email is required field": "Email \u044f\u0432\u043b\u044f\u0435\u0442\u0441\u044f \u043e\u0431\u044f\u0437\u0430\u0442\u0435\u043b\u044c\u043d\u044b\u043c \u043f\u043e\u043b\u0435",
+    "Email is required field": "Email является обязательным полем",
     "Email Password": "\u041f\u0430\u0440\u043e\u043b\u044c \u043e\u0442 Email",
     "Email Port": "\u041f\u043e\u0440\u0442 Email",
     "Email Preview": "\u041f\u0440\u0435\u0434\u043f\u0440\u043e\u0441\u043c\u043e\u0442\u0440 Email",
@@ -2379,6 +2379,11 @@
     "Password updated!": "\u041f\u0430\u0440\u043e\u043b\u044c \u043e\u0431\u043d\u043e\u0432\u043b\u0435\u043d!",
     "Password updated. Please re-login": "\u041f\u0430\u0440\u043e\u043b\u044c \u043e\u0431\u043d\u043e\u0432\u043b\u0435\u043d. \u041f\u043e\u0436\u0430\u043b\u0443\u0439\u0441\u0442\u0430, \u0432\u043e\u0439\u0434\u0438\u0442\u0435 \u0437\u0430\u043d\u043e\u0432\u043e",
     "Passwords must be at least eight characters and match the confirmation.": "\u041f\u0430\u0440\u043e\u043b\u0438 \u0434\u043e\u043b\u0436\u043d\u044b \u0431\u044b\u0442\u044c \u043d\u0435 \u043c\u0435\u043d\u0435\u0435 \u0432\u043e\u0441\u044c\u043c\u0438 \u0441\u0438\u043c\u0432\u043e\u043b\u043e\u0432 \u0438 \u0441\u043e\u043e\u0442\u0432\u0435\u0442\u0441\u0442\u0432\u043e\u0432\u0430\u0442\u044c \u043f\u043e\u0434\u0442\u0432\u0435\u0440\u0436\u0434\u0435\u043d\u0438\u044e.",
+    "The password must be at least 8 characters": "Пароль должен быть не меньше 8 символов",
+    "The password must contain at least one character": "Пароль должен содержать хотя бы одну букву",
+    "The password was found in a data leak, please use a different one": "Пароль был найден в утечке данных, используйте другой",
+    "The password must contain at least one number": "Пароль должен содержать хотя бы одну цифру",
+    "The password field must contain at least one uppercase and one lowercase letter": "Поле пароля должно содержать хотя бы одну заглавную и одну строчную букву",
     "Pay Amount": "\u0421\u0443\u043c\u043c\u0430 \u043a \u043e\u043f\u043b\u0430\u0442\u0435",
     "Pay date": "\u0414\u0430\u0442\u0430 \u043e\u043f\u043b\u0430\u0442\u044b",
     "Pay date:": "\u0414\u0430\u0442\u0430 \u043e\u043f\u043b\u0430\u0442\u044b:",
@@ -3271,7 +3276,7 @@
     "The business name is required field": "\u041d\u0430\u0437\u0432\u0430\u043d\u0438\u0435 \u043a\u043e\u043c\u043f\u0430\u043d\u0438\u0438 \u044f\u0432\u043b\u044f\u0435\u0442\u0441\u044f \u043e\u0431\u044f\u0437\u0430\u0442\u0435\u043b\u044c\u043d\u044b\u043c \u043f\u043e\u043b\u0435\u043c",
     "The City Maps": "\u041a\u0430\u0440\u0442\u044b \u0433\u043e\u0440\u043e\u0434\u0430",
     "The email field is required": "\u041f\u043e\u043b\u0435 Email \u043e\u0431\u044f\u0437\u0430\u0442\u0435\u043b\u044c\u043d\u043e",
-    "The first name is required field": "\u0418\u043c\u044f \u044f\u0432\u043b\u044f\u0435\u0442\u0441\u044f \u043e\u0431\u044f\u0437\u0430\u0442\u0435\u043b\u044c\u043d\u044b\u043c \u043f\u043e\u043b\u0435v",
+    "The first name is required field": "Имя является обязательным полем",
     "The Following errors occurred:": "\u041f\u0440\u043e\u0438\u0437\u043e\u0448\u043b\u0438 \u0441\u043b\u0435\u0434\u0443\u044e\u0449\u0438\u0435 \u043e\u0448\u0438\u0431\u043a\u0438:",
     "The geographic coordinate": "\u0413\u0435\u043e\u0433\u0440\u0430\u0444\u0438\u0447\u0435\u0441\u043a\u0438\u0435 \u043a\u043e\u043e\u0440\u0434\u0438\u043d\u0430\u0442\u044b",
     "The last name is required field": "\u0424\u0430\u043c\u0438\u043b\u0438\u044f \u044f\u0432\u043b\u044f\u0435\u0442\u0441\u044f \u043e\u0431\u044f\u0437\u0430\u0442\u0435\u043b\u044c\u043d\u044b\u043c \u043f\u043e\u043b\u0435\u043c",
@@ -3819,6 +3824,5 @@
     "Hunter": "Охотник",
     "Base admin": "Администратор базы",
     "Who will be hunted": "На кого будет охота?",
-    "Generate": "Сгенерировать",
-    "The password was found in a data leak, please use a different one": "Пароль был найден в утечке данных, используйте другой"
+    "Generate": "Сгенерировать"
 }

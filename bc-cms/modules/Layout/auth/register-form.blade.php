@@ -36,11 +36,11 @@
         <span class="invalid-feedback error error-email"></span>
     </div>
     <div class="form-group">
-        <input type="password" class="form-control password-input" name="password" autocomplete="off" placeholder="{{__('Password')}}">
-        <i class="input-icon field-icon icofont-ui-password"></i>
-        <span class="toggle-password" style="position:absolute; right:45px; top:12px; cursor:pointer; font-size:18px;"></span>
-        <i class="toggle-password-icon icofont-eye-blocked" id="toggle-password-icon"></i>
-        <button type="button" id="generate-password" class="btn-generate-password">{{__('Generate')}}</button>
+        <div class="input-wrapper" style="position: relative;">
+            <input type="password" class="form-control password-input" name="password" autocomplete="off" placeholder="Password">
+            <i class="toggle-password-icon icofont-eye-blocked" id="toggle-password-icon"></i>
+            <button type="button" id="generate-password" class="btn-generate-password">{{__('Generate')}}</button>
+        </div>
         <span class="invalid-feedback error error-password"></span>
     </div>
     <div class="form-group">
