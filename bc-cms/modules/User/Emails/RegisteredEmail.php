@@ -29,8 +29,16 @@
 
         public function build()
         {
-            App::setLocale($this->appLocale);
+            if($this->user->locale){
+                $old = app()->getLocale();
+                app()->setLocale($this->user->locale);
+            }
+
             $subject = __('user_registered', ['name' => $this->user->getDisplayName()]);
+
+            if(!empty($old)){
+                app()->setLocale($old);
+            }
             return $this->subject($subject)->view('User::emails.registered')->with([
                 'user'    => $this->user,
                 'content' => $this->content,
