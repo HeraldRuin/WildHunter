@@ -10,7 +10,8 @@
             <div class="col-md-6">
                 <div class="form-group">
                     <label>{{__("Current Password")}}</label>
-                    <input type="password" required name="current-password" placeholder="{{__("Current Password")}}" class="form-control">
+                    <input type="password" required name="current-password" id="old-password" placeholder="{{__("Current Password")}}" class="form-control">
+                    <i class="toggle-change-password icofont-eye-blocked" id="toggle-change-password-icon-old"></i>
                 </div>
                 <div class="form-group">
                     <label>{{__("New Password")}}</label>
