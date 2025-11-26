@@ -14,14 +14,13 @@
 
         @else
                 <?php
-                $list_animals = $modelBlock['list_animals'] ?? [];
                 $animal_name = "";
                 $list_json = [];
                 $traverse = function ($animals, $prefix = '') use (&$traverse, &$list_json, &$animal_name) {
                     foreach ($animals as $animal) {
-                        //$translate = $animal->translate();
+//                        $translate = $animal->translate();
                         if (Request::query('animal_id') == $animal->id) {
-//                            $animal_name = $translate->name;
+//                           $animal_name = $translate->name;
                         }
                         $list_json[] = [
                             'id'    => $animal->id,
@@ -35,7 +34,7 @@
                 ?>
 
         <div class="smart-search">
-            <input type="text" class="smart-search-location parent_text form-control" {{ ( empty(setting_item("hotel_location_search_style")) or setting_item("hotel_location_search_style") == "normal" ) ? "readonly" : ""  }} placeholder="{{__("Who will be hunted")}}" value="{{ $animal_name }}" data-onLoad="{{__("Loading...")}}"
+            <input type="text" class="smart-search-animal parent_text form-control" {{ ( empty(setting_item("hotel_location_search_style")) or setting_item("hotel_location_search_style") == "normal" ) ? "readonly" : ""  }} placeholder="{{__("Who will be hunted")}}" value="{{ $animal_name }}" data-onLoad="{{__("Loading...")}}"
                    data-default="{{ json_encode($list_json) }}">
             <input type="hidden" class="child_id" name="animal_id" value="{{Request::query('animal_id')}}">
         </div>
