@@ -56,7 +56,6 @@ class PasswordController extends FrontendController
                 Password::min(8)
                     ->mixedCase()
                     ->numbers()
-                    ->symbols()
                     ->uncompromised(),
                 'confirmed',
             ],

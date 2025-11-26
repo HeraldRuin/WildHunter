@@ -510,6 +510,20 @@ var vendorPayout = {
     },
 };
 jQuery(function($){
+    document.getElementById('toggle-change-password-icon-old').addEventListener('click', function () {
+        const input = document.getElementById('old-password');
+
+        if (input.type === "password") {
+            input.type = "text";
+            this.classList.remove('icofont-eye-blocked');
+            this.classList.add('icofont-eye');
+        } else {
+            input.type = "password";
+            this.classList.add('icofont-eye-blocked');
+            this.classList.remove('icofont-eye');
+        }
+    });
+
     document.getElementById('toggle-change-password-icon-new').addEventListener('click', function () {
         const input = document.getElementById('new-password');
 
