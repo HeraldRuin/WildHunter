@@ -14,7 +14,7 @@ class CreateAnimalsTable extends Migration
             $table->text('description')->nullable();
             $table->string('habitat')->nullable();
             $table->string('season')->nullable();
-            $table->boolean('is_active')->default(true);
+            $table->string('status')->default(true);
             $table->timestamps();
         });
     }
