@@ -18,9 +18,9 @@
                 $list_json = [];
                 $traverse = function ($animals, $prefix = '') use (&$traverse, &$list_json, &$animal_name) {
                     foreach ($animals as $animal) {
-//                        $translate = $animal->translate();
+                        $translate = $animal->translate();
                         if (Request::query('animal_id') == $animal->id) {
-//                           $animal_name = $translate->name;
+                           $animal_name = $translate->name;
                         }
                         $list_json[] = [
                             'id'    => $animal->id,
