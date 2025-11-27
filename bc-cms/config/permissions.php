@@ -130,5 +130,11 @@ return [
     'hunter_content',
     'hunter_edit_events',
 
+    // Animals
+    'animal_view',
+    'animal_create',
+    'animal_update',
+    'animal_delete',
+
     'media_manage_others'
 ];
