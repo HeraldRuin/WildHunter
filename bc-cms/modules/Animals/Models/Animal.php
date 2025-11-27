@@ -7,8 +7,17 @@ use Modules\Booking\Models\Bookable;
 
 class Animal extends Bookable
 {
-    use NodeTrait;
+
+
     protected $table = 'bc_animals';
+
+    protected $fillable = [
+        'title',
+        'content',
+        'status',
+        'faqs',
+
+    ];
 
     public static function isEnable(): bool
     {
