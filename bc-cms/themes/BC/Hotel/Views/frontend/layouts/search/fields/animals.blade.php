@@ -32,7 +32,7 @@
                             'id'    => $animal->id,
                             'title' => $animal->title,
                         ];
-                        $traverse($animal->children, $prefix . '-');
+//                        $traverse($animal->children, $prefix . '-');
                     }
                 };
 
