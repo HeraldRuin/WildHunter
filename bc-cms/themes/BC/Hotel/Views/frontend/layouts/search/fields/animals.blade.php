@@ -13,6 +13,12 @@
             </div>
 
         @else
+            <button type="button"
+                    id="clear-animal"
+                    class="clear-animal-btn btn btn-sm btn-light"
+                    style="position:absolute; right:2px; top:30%; transform:translateY(-50%)">
+                ✕
+            </button>
                 <?php
                 $animal_name = "";
                 $list_json = [];
@@ -24,7 +30,7 @@
                         }
                         $list_json[] = [
                             'id'    => $animal->id,
-                            'title' => $animal->name,
+                            'title' => $animal->title,
                         ];
                         $traverse($animal->children, $prefix . '-');
                     }
