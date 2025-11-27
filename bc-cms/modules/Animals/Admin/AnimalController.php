@@ -282,9 +282,9 @@ class AnimalController extends AdminController
             case "delete":
                 foreach ($ids as $id) {
                     $query = $this->animal::where("id", $id);
-                    if (!$this->hasPermission('car_manage_others')) {
+                    if (!$this->hasPermission('animal_manage_others')) {
                         $query->where("create_user", Auth::id());
-                        $this->checkPermission('car_delete');
+                        $this->checkPermission('animal_delete');
                     }
                     $row = $query->first();
                     if (!empty($row)) {
@@ -297,9 +297,9 @@ class AnimalController extends AdminController
             case "permanently_delete":
                 foreach ($ids as $id) {
                     $query = $this->animal::where("id", $id);
-                    if (!$this->hasPermission('car_manage_others')) {
+                    if (!$this->hasPermission('animal_manage_others')) {
                         $query->where("create_user", Auth::id());
-                        $this->checkPermission('car_delete');
+                        $this->checkPermission('animal_delete');
                     }
                     $row = $query->withTrashed()->first();
                     if ($row) {
@@ -336,7 +336,7 @@ class AnimalController extends AdminController
                     $query = $this->animal::where("id", $id);
                     if (!$this->hasPermission('animal_manage_others')) {
                         $query->where("create_user", Auth::id());
-                        $this->checkPermission('car_update');
+                        $this->checkPermission('animal_update');
                     }
                     $row = $query->first();
                     $row->status = $action;
