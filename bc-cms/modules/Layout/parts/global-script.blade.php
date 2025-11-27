@@ -12,6 +12,7 @@
         date_format:'{{get_moment_date_format()}}',
         map_provider:'{{setting_item('map_provider')}}',
         map_gmap_key:'{{setting_item('map_gmap_key')}}',
+        map_yandex_key:'{{setting_item('map_yandex_key')}}',
         map_options:{
             map_lat_default:'{{setting_item('map_lat_default')}}',
             map_lng_default:'{{setting_item('map_lng_default')}}',
