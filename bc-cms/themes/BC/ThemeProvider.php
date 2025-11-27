@@ -40,6 +40,7 @@ class ThemeProvider extends \Themes\Base\ThemeProvider
         'popup'     => \Modules\Popup\ModuleProvider::class,
         'form'      => \Modules\Form\ModuleProvider::class,
         'visa'      => \Modules\Visa\ModuleProvider::class,
+        'animal'      => \Modules\Animals\ModuleProvider::class,
     ];
 
     public function register()
