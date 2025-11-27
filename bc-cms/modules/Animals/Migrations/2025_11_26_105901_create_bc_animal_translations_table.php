@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->bigInteger('origin_id')->nullable()->index();
             $table->string('locale', 10)->nullable();
-            $table->string('name', 255)->nullable();
+            $table->string('title', 255)->nullable();
             $table->text('content')->nullable();
             $table->integer('create_user')->nullable();
             $table->integer('update_user')->nullable();
