@@ -3825,5 +3825,13 @@
     "Base admin": "Администратор базы",
     "Who will be hunted": "На кого будет охота?",
     "Generate": "Сгенерировать",
-    "user_registered": ":name Вы зарегистрированы"
+    "user_registered": ":name Вы зарегистрированы",
+    "All Animals": "Все животные",
+    "Add new animal": "Добавить животное",
+    "No animal found": "Ни одного животного не найдено",
+    "Animal Content": "Контент животного",
+    "Animal": "Животные",
+    "View Animal": "Просмотр животного",
+    "Animal updated": "Животное обновлено",
+    "Animal created": "Животное создано"
 }
