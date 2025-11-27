@@ -40,36 +40,36 @@ class ModuleProvider extends ModuleServiceProvider
                 "position"=>45,
                 'url'        => route('animal.admin.index'),
                 'title'      => __('Animal'),
-                'icon'       => 'ion-logo-model-s',
-                'permission' => 'car_view',
+                'icon'       => 'animal-paw',
+                'permission' => 'animal_view',
                 'group'      => 'catalog',
-//                'children'   => [
-//                    'add'=>[
-//                        'url'        => route('car.admin.index'),
-//                        'title'      => __('All Cars'),
-//                        'permission' => 'car_view',
-//                    ],
-//                    'create'=>[
-//                        'url'        => route('car.admin.create'),
-//                        'title'      => __('Add new Car'),
-//                        'permission' => 'car_create',
-//                    ],
+                'children'   => [
+                    'add'=>[
+                        'url'        => route('animal.admin.index'),
+                        'title'      => __('All Animals'),
+                        'permission' => 'animal_view',
+                    ],
+                    'create'=>[
+                        'url'        => route('animal.admin.create'),
+                        'title'      => __('Add new animal'),
+                        'permission' => 'animal_create',
+                    ],
 //                    'attribute'=>[
-//                        'url'        => route('car.admin.attribute.index'),
+//                        'url'        => route('animal.admin.attribute.index'),
 //                        'title'      => __('Attributes'),
-//                        'permission' => 'car_manage_attributes',
+//                        'permission' => 'animal_manage_attributes',
 //                    ],
 //                    'availability'=>[
-//                        'url'        => route('car.admin.availability.index'),
+//                        'url'        => route('animal.admin.availability.index'),
 //                        'title'      => __('Availability'),
-//                        'permission' => 'car_create',
+//                        'permission' => 'animal_create',
 //                    ],
 //                    'recovery'=>[
-//                        'url'        => route('car.admin.recovery'),
+//                        'url'        => route('animal.admin.recovery'),
 //                        'title'      => __('Recovery'),
-//                        'permission' => 'car_view',
+//                        'permission' => 'animal_view',
 //                    ],
-//                ]
+                ]
             ]
         ];
     }
