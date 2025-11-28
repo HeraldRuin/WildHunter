@@ -8,6 +8,12 @@
                     $adults = request()->query('adults',1);
                     $children = request()->query('children',0);
                 @endphp
+                <button type="button"
+                        id="clear-guest"
+                        class="clear-animal-btn btn btn-sm btn-light"
+                        style="position:absolute; right:2px; top:30%; transform:translateY(-50%)">
+                    ✕
+                </button>
                 <div class="render">
                     <span class="adults" ><span class="one @if($adults >1) d-none @endif">{{__('1 Adult')}}</span> <span class="@if($adults <= 1) d-none @endif multi" data-html="{{__(':count Adults')}}">{{__(':count Adults',['count'=>request()->query('adults',1)])}}</span></span>
                     -

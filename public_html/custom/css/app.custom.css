@@ -3370,7 +3370,8 @@ body .bravo_wrap .bravo_detail_tour .bravo_content .g-faq2 .item .desc {
     z-index: 10;
 }
 #clear-location,
-#clear-animal {
+#clear-animal,
+#clear-guest{
     display: none;
 }
 /*# sourceMappingURL=app.custom.css.map */

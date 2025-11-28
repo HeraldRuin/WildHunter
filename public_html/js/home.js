@@ -1058,6 +1058,55 @@ jQuery(function ($) {
         updateClearButton();
     });
 
+    $(document).ready(function () {
+        const $guestWrapper = $(".form-select-guests");
+        const $btnClearGuest = $("#clear-guest");
+        const $inputAdults = $guestWrapper.find("input[name='adults']");
+        const $inputChildren = $guestWrapper.find("input[name='children']");
+        const $inputRoom = $guestWrapper.find("input[name='room']");
+
+        const defaultAdults = 1;
+        const defaultChildren = 0;
+        const defaultRoom = 1;
+
+        function updateGuestButton() {
+            const adults = parseInt($inputAdults.val(), 10) || defaultAdults;
+            const children = parseInt($inputChildren.val(), 10) || defaultChildren;
+            const room = parseInt($inputRoom.val(), 10) || defaultRoom;
+
+            if(adults !== defaultAdults || children !== defaultChildren || room !== defaultRoom) {
+                $btnClearGuest.show();
+            } else {
+                $btnClearGuest.hide();
+            }
+        }
+
+        $btnClearGuest.on("click", function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+
+            $inputAdults.val(defaultAdults);
+            $inputChildren.val(defaultChildren);
+            $inputRoom.val(defaultRoom);
+
+            if (typeof updateGuestCountText === "function") {
+                updateGuestCountText($guestWrapper);
+            }
+
+            updateGuestButton();
+        });
+
+        $inputAdults.add($inputChildren).add($inputRoom).on("input change", updateGuestButton);
+
+        $guestWrapper.find(".btn-add, .btn-minus").on("click", function(){
+            setTimeout(updateGuestButton, 10);
+        });
+
+        updateGuestButton();
+    });
+
+
+
     $(document).on("click",".service-wishlist",function(){
         var $this = $(this);
         $.ajax({
