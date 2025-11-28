@@ -3369,4 +3369,8 @@ body .bravo_wrap .bravo_detail_tour .bravo_content .g-faq2 .item .desc {
     transform: translateY(-50%);
     z-index: 10;
 }
+#clear-location,
+#clear-animal {
+    display: none;
+}
 /*# sourceMappingURL=app.custom.css.map */
