@@ -1027,6 +1027,37 @@ jQuery(function ($) {
         });
     });
 
+    $(document).ready(function () {
+        const $locationInput = $(".smart-search-location");
+        const $locationHidden = $("input[name='location_id']");
+        const $btnClearLocation = $("#clear-location");
+        const $form = $("form");
+
+        function updateClearButton() {
+            $btnClearLocation.toggle($locationInput.val().trim().length > 0);
+        }
+
+        $btnClearLocation.on("click", function(e) {
+            e.preventDefault();
+
+            $locationInput.val('');
+            $locationHidden.val('');
+
+            $("input[name='map_place']").val('');
+            $("input[name='map_lat']").val('');
+            $("input[name='map_lng']").val('');
+
+            updateClearButton();
+
+            $.get($form.attr('action'), $form.serialize(), function (response) {
+                console.log("Form submitted with:", $form.serialize());
+            });
+        });
+
+        $locationInput.on("input change", updateClearButton);
+        updateClearButton();
+    });
+
     $(document).on("click",".service-wishlist",function(){
         var $this = $(this);
         $.ajax({
