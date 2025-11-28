@@ -13,6 +13,12 @@
             </div>
 
         @else
+            <button type="button"
+                    id="clear-location"
+                    class="clear-animal-btn btn btn-sm btn-light"
+                    style="position:absolute; right:2px; top:30%; transform:translateY(-50%)">
+                ✕
+            </button>
         <?php
         $location_name = "";
         $list_json = [];
