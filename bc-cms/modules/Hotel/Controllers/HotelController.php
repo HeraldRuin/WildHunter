@@ -86,7 +86,7 @@ class HotelController extends Controller
         $data = [
             'rows'               => $list,
             'list_location'      => $this->locationClass::where('status', 'publish')->limit(1000)->with(['translation'])->get()->toTree(),
-            'list_animals'      => Animal::where('status', 'publish')->limit(1000)->get()->toTree(),
+            'list_animals'      => Animal::where('status', 'publish')->limit(1000)->with(['translation'])->get(),
             'hotel_min_max_price' => $this->hotelClass::getMinMaxPrice(),
             'markers'            => $markers,
             "blank" => setting_item('search_open_tab') == "current_tab" ? 0 : 1 ,
