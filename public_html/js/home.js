@@ -978,19 +978,53 @@ jQuery(function ($) {
         });
     });
 
-    $(".smart-search .smart-select").each(function () {
-        var $this = $(this);
-        var string_list = $this.attr('data-default');
-        var default_list = [];
-        if(string_list.length > 0){
-            default_list = JSON.parse(string_list);
+    $(document).ready(function () {
+        const $animalInput = $(".smart-search-animal");
+        const $animalHidden = $(".child_id");
+        const $btnClearAnimal = $("#clear-animal");
+        const $locationInput = $(".smart-search-location");
+        const $form = $("form");
+
+        function updateClearButton() {
+            $btnClearAnimal.toggle($animalInput.val().trim().length > 0);
         }
-        var options = {
-            dataDefault: default_list,
-            iconItem: "",
-            textLoading: $this.attr("data-onLoad"),
-        };
-        $this.bcAutocomplete(options);
+
+        $btnClearAnimal.on("click", function (e) {
+            e.preventDefault();
+
+            $animalInput.val('');
+            $animalHidden.val('');
+            updateClearButton();
+
+            var locations = JSON.parse($locationInput.attr('data-default'));
+            var selectedText = $locationInput.val().trim();
+            var selectedLocation = locations.find(function(loc) {
+                return loc.title.trim() === selectedText;
+            });
+
+            var selectedLocationId = selectedLocation ? selectedLocation.id : '';
+            const selectedLocationText = $locationInput.find("option:selected").text();
+
+            $("input[name='location_id']").val(selectedLocationId ? selectedLocationId : '');
+            $("input[name='map_place']").val(selectedLocationText);
+            $("input[name='map_lat']").val($("input[name='map_lat']").val() || '');
+            $("input[name='map_lng']").val($("input[name='map_lng']").val() || '');
+
+            $.get($form.attr('action'), $form.serialize(), function(response) {
+                console.log("Form submitted with data:", $form.serialize());
+            });
+        });
+
+        $animalInput.on("input change", updateClearButton);
+        updateClearButton();
+
+        $locationInput.on('change', function() {
+            const selectedLocationId = $(this).val();
+            const selectedLocationText = $(this).find("option:selected").text();
+
+            $("input[name='location_id']").val(selectedLocationId);
+            $("input[name='map_place']").val(selectedLocationText);
+        });
     });
 
     $(document).on("click",".service-wishlist",function(){
