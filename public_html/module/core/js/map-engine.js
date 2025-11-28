@@ -23,6 +23,15 @@ window.BCInitMap = function () {
                 
                 return $instance;
                 break;
+            case "yandex":
+                const yInstance = new YandexEngine(id, configs);
+                const waitForYandex = setInterval(() => {
+                    if (window.ymaps) {
+                        clearInterval(waitForYandex);
+                        yInstance.init();
+                    }
+                }, 100);
+                return yInstance;
         }
     };
 
@@ -446,5 +455,71 @@ window.BCInitMap = function () {
             me.map.fitBounds(bounds);
         });
     }
+
+    function YandexEngine(id,options){
+        this.defaults = {
+            fitBounds:true
+        };
+        var el = {};
+        this.map = null;
+        this.id = id;
+        this.options = options;
+        this.markersPositions = [];
+        this.markers = [];
+        var bounds = null;
+        this.infoboxs = [];
+
+        return this;
+
+    }
+
+    YandexEngine.prototype = new BaseMapEngine();
+    YandexEngine.prototype.initScripts = function (func) {
+        func();
+        return;
+        if(typeof window.bc_gmap_script_inited != 'undefined') return;
+        if(this.getOption('disableScripts')){
+            func();
+            return;
+        }
+
+        var head= document.getElementsByTagName('head')[0];
+        var script= document.createElement('script');
+        script.type= 'text/javascript';
+        script.src = 'https://api-maps.yandex.ru/2.1/?lang=ru_RU&apikey=' + '98746b15-4156-4225-98e7-c8293b0eeba2';
+        head.appendChild(script);
+
+        var script2 = document.createElement('script');
+        script2.type= 'text/javascript';
+        script2.src= bookingCore.url+'/libs/infobox.js';
+        head.appendChild(script2);
+
+        window.bc_gmap_script_inited = true;
+
+        script.onload = function(){
+            func();
+        }
+    };
+
+    YandexEngine.prototype.init = function () {
+        var me = this;
+        this.el = $('#' + this.id);
+
+        ymaps.ready(function () {
+            var center = me.getOption('center'); // [lat, lng]
+            var zoom = me.getOption('zoom') || 10;
+
+            me.map = new ymaps.Map(me.id, {
+                center: center,
+                zoom: zoom,
+                controls: ['zoomControl', 'geolocationControl']
+            });
+
+            var rd = me.getOption('ready');
+            if (typeof rd === "function") {
+                rd(me);
+            }
+        });
+    };
 
 })(jQuery);

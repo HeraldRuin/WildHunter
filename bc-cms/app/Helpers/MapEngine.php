@@ -19,6 +19,9 @@ class MapEngine
                 $html .= sprintf("<script %s src='%s'></script>", $defer, url('libs/leaflet1.4.0/leaflet.js'));
                 $html .= sprintf("<link rel='stylesheet' href='%s'>", url('libs/leaflet1.4.0/leaflet.css'));
                 break;
+            case "yandex":
+                $html .= sprintf("<script %s src='https://api-maps.yandex.ru/2.1/?apikey=%s&lang=ru_RU'></script>",$defer, setting_item('map_yandex_key'));
+                break;
         }
 
         static::$_init = true;
