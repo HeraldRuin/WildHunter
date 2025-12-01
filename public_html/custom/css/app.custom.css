@@ -3371,7 +3371,8 @@ body .bravo_wrap .bravo_detail_tour .bravo_content .g-faq2 .item .desc {
 }
 #clear-location,
 #clear-animal,
-#clear-guest{
+#clear-guest,
+#clear-data{
     display: none;
 }
 /*# sourceMappingURL=app.custom.css.map */
