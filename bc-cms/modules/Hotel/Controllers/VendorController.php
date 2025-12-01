@@ -182,9 +182,9 @@ class VendorController extends FrontendController
         ];
 
         $row->fillByAttr($dataKeys,$request->input());
-        if(!auth()->user()->checkUserPlan() and $row->status == "publish") {
-            return redirect(route('user.plan'));
-        }
+//        if(!auth()->user()->checkUserPlan() and $row->status == "publish") {
+//            return redirect(route('user.plan'));
+//        }
 
         $res = $row->saveOriginOrTranslation($request->input('lang'),true);
 
