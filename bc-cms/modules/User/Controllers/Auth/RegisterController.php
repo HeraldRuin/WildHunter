@@ -28,7 +28,7 @@
                 'first_name' => ['required','string','max:255'],
                 'last_name'  => ['required','string','max:255'],
                 'role'  => ['required','in:hunter,baseadmin'],
-                'email'      => ['required','string','email','max:255'],
+                'email'      => ['required','string','email','max:255','unique:users'],
                 'password'   => [
                     'required',
                     'string',
@@ -50,6 +50,7 @@
                 'phone.required'      => __('Phone is required field'),
                 'email.required'      => __('Email is required field'),
                 'email.email'         => __('Email invalidate'),
+                'email.unique'        => __('This email is already taken'),
                 'password.required'   => __('Password is required field'),
                 'password.min'       => __('The password must be at least 8 characters'),
                 'password.uncompromised' => __('The password was found in a data leak, please use a different one'),

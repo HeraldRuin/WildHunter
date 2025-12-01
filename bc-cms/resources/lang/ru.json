@@ -3833,5 +3833,8 @@
     "Animal": "Животные",
     "View Animal": "Просмотр животного",
     "Animal updated": "Животное обновлено",
-    "Animal created": "Животное создано"
+    "Animal created": "Животное создано",
+    "Cabinets": "Кабинеты администраторов базы",
+    "Admin Base": "Список администраторов баз",
+    "This email is already taken": "Эта почта уже занята"
 }
