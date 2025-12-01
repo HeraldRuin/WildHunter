@@ -189,7 +189,7 @@ function get_image_tag($image_id, $size = 'thumb', $options = [])
 }
 function get_date_format()
 {
-    return setting_item('date_format', 'm/d/Y');
+    return setting_item('date_format', 'd/m/Y');
 }
 function get_moment_date_format()
 {

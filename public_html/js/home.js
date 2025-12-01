@@ -482,7 +482,7 @@ jQuery(function ($) {
             minDate: today,
             opens: bookingCore.rtl ? 'right':'left',
             locale: {
-                format: "YYYY-MM-DD",
+                format: "DD-MM-YYYY",
                 direction: bookingCore.rtl ? 'rtl':'ltr',
                 firstDay:daterangepickerLocale.first_day_of_week
             }
@@ -500,7 +500,7 @@ jQuery(function ($) {
                 check_in_render.html( picker.startDate.format(bookingCore.date_format) );
                 check_out_input.val( picker.endDate.format(bookingCore.date_format) );
                 check_out_render.html( picker.endDate.format(bookingCore.date_format) );
-                check_in_out.val( picker.startDate.format("YYYY-MM-DD") + " - "+  picker.endDate.format("YYYY-MM-DD") )
+                check_in_out.val( picker.startDate.format("DD-MM-YYYY") + " - "+  picker.endDate.format("DD-MM-YYYY") )
             });
         date_wrapper.click(function (e) {
             check_in_out.trigger('click');
