@@ -399,6 +399,59 @@ jQuery(function ($) {
         $(this).css('min-height', height);
     });
 
+
+
+    $(document).ready(function () {
+
+        const $checkIn = $(".check-in-input");
+        const $checkOut = $(".check-out-input");
+        const $btnClearDate = $("#clear-data");
+        const $dateTrigger = $(".date-wrapper, .check-in-out");
+
+        let defaultCheckIn = moment().format("DD/MM/YYYY");
+        let defaultCheckOut = moment().add(1, "day").format("DD/MM/YYYY");
+
+        function updateClearDate() {
+            let isDefault =
+                $checkIn.val() === defaultCheckIn &&
+                $checkOut.val() === defaultCheckOut;
+
+            $btnClearDate.toggle(!isDefault);
+        }
+
+        $(".check-in-out").on("apply.daterangepicker", function (ev, picker) {
+
+            let start = picker.startDate.format("DD/MM/YYYY");
+            let end = picker.endDate.format("DD/MM/YYYY");
+
+            $checkIn.val(start);
+            $checkOut.val(end);
+
+            $(".check-in-render").html(start);
+            $(".check-out-render").html(end);
+
+            $(".check-in-out").val(start + " - " + end);
+
+            updateClearDate();
+        });
+
+        $btnClearDate.on("click", function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+
+            $checkIn.val(defaultCheckIn);
+            $checkOut.val(defaultCheckOut);
+
+            $(".check-in-render").html(defaultCheckIn);
+            $(".check-out-render").html(defaultCheckOut);
+            $(".check-in-out").val(defaultCheckIn + " - " + defaultCheckOut);
+
+            updateClearDate();
+        });
+
+        updateClearDate();
+    });
+
     // Date Picker Range
     $('.form-date-search').each(function () {
         var single_picker = false;
