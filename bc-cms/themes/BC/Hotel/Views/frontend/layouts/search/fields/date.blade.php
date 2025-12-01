@@ -9,6 +9,12 @@
                     <span> - </span>
                     <div class="render check-out-render">{{Request::query('end',display_date(strtotime("+1 day")))}}</div>
                 </div>
+                <button type="button"
+                        id="clear-data"
+                        class="clear-animal-btn btn btn-sm btn-light"
+                        style="position:absolute; right:2px; top:30%; transform:translateY(-50%)">
+                    ✕
+                </button>
             </div>
             <input type="hidden" class="check-in-input" value="{{Request::query('start',display_date(strtotime("today")))}}" name="start">
             <input type="hidden" class="check-out-input" value="{{Request::query('end',display_date(strtotime("+1 day")))}}" name="end">
