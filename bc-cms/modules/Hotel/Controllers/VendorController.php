@@ -186,6 +186,11 @@ class VendorController extends FrontendController
 //            return redirect(route('user.plan'));
 //        }
 
+        $user = Auth::user();
+        if ($user->hasRole('baseadmin')){
+            $row->admin_base = $user->id;
+        }
+
         $res = $row->saveOriginOrTranslation($request->input('lang'),true);
 
         if ($res) {
