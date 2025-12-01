@@ -120,6 +120,10 @@ class BaseModel extends Model
     {
         return $this->belongsTo(User::class, "author_id", "id")->withDefault();
     }
+    public function baseAdmin()
+    {
+        return $this->belongsTo(User::class, "admin_base", "id")->withDefault();
+    }
 
     public function vendor(){
         return $this->belongsTo(User::class, "vendor_id", 'id')->withDefault();
