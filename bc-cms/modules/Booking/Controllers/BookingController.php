@@ -213,9 +213,9 @@ class BookingController extends \App\Http\Controllers\Controller
         $payment_gateway = $request->input('payment_gateway');
 
         // require payment gateway except pay full
-        if (empty(floatval($booking->deposit)) || $how_to_pay == 'deposit' || !auth()->check()) {
-            $rules['payment_gateway'] = 'required';
-        }
+//        if (empty(floatval($booking->deposit)) || $how_to_pay == 'deposit' || !auth()->check()) {
+//            $rules['payment_gateway'] = 'required';
+//        }
 
         if (auth()->check()) {
             if ($credit > $user->balance) {
@@ -231,6 +231,11 @@ class BookingController extends \App\Http\Controllers\Controller
 
             $messages['term_conditions.required'] = __('Term conditions is required field');
             $messages['payment_gateway.required'] = __('Payment gateway is required field');
+            $messages['country.required'] = __('Country field is required');
+            $messages['last_name.required'] = __('Last Name field is required');
+            $messages['first_name.required'] = __('First Name field is required');
+            $messages['phone.required'] = __('Phone field is required');
+            $messages['email.required'] = __('Email field is required');
 
             $validator = Validator::make($request->all(), $rules, $messages);
             if ($validator->fails()) {
@@ -298,17 +303,18 @@ class BookingController extends \App\Http\Controllers\Controller
             }
         }
 
-        $gateways = get_payment_gateways();
-        if ($booking->pay_now > 0) {
+       $gateways = get_payment_gateways();
+        if ($booking->pay_now) {
             $gatewayObj = $gateways[$payment_gateway] ?? null;
-            if (!empty($rules['payment_gateway'])) {
-                if (empty($gatewayObj)) {
-                    return $this->sendError(__("Payment gateway not found"));
-                }
-                if (!$gatewayObj->isAvailable()) {
-                    return $this->sendError(__("Payment gateway is not available"));
-                }
-            }
+
+//            if (!empty($rules['payment_gateway'])) {
+//                if (empty($gatewayObj)) {
+//                    return $this->sendError(__("Payment gateway not found"));
+//                }
+//                if (!$gatewayObj->isAvailable()) {
+//                    return $this->sendError(__("Payment gateway is not available"));
+//                }
+//            }
         }
 
         if ($booking->wallet_credit_used && auth()->check()) {
@@ -376,29 +382,35 @@ class BookingController extends \App\Http\Controllers\Controller
             return $res;
         }
 
-        if ($booking->pay_now > 0) {
-            try {
-                $gatewayObj->process($request, $booking, $service);
-            } catch (Exception $exception) {
-                return $this->sendError($exception->getMessage());
-            }
-        } else {
-            if ($booking->paid < $booking->total) {
-                $booking->status = $booking::PARTIAL_PAYMENT;
-            } else {
-                $booking->status = $booking::PAID;
-            }
+//        if ($booking->pay_now > 0) {
+//            try {
+//                //$gatewayObj->process($request, $booking, $service);
+//            } catch (Exception $exception) {
+//                return $this->sendError($exception->getMessage());
+//            }
+//        } else {
+//            if ($booking->paid < $booking->total) {
+//                $booking->status = $booking::PARTIAL_PAYMENT;
+//            } else {
+//                $booking->status = $booking::PAID;
+//            }
+//
+//            if (!empty($booking->coupon_amount) and $booking->coupon_amount > 0 and $booking->total == 0) {
+//                $booking->status = $booking::PAID;
+//            }
+//
+//            $booking->save();
+//            event(new BookingCreatedEvent($booking));
+//            return $this->sendSuccess([
+//                'url' => $booking->getDetailUrl()
+//            ], __("You payment has been processed successfully"));
+//        }
 
-            if (!empty($booking->coupon_amount) and $booking->coupon_amount > 0 and $booking->total == 0) {
-                $booking->status = $booking::PAID;
-            }
-
-            $booking->save();
-            event(new BookingCreatedEvent($booking));
-            return $this->sendSuccess([
-                'url' => $booking->getDetailUrl()
-            ], __("You payment has been processed successfully"));
-        }
+        $booking->save();
+        event(new BookingCreatedEvent($booking));
+        return $this->sendSuccess([
+            'url' => $booking->getDetailUrl()
+        ], __("You payment has been processed successfully"));
     }
 
     protected function savePassengers(Booking $booking, Request $request)
