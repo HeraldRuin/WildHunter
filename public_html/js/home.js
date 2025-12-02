@@ -408,8 +408,8 @@ jQuery(function ($) {
         const $btnClearDate = $("#clear-data");
         const $dateTrigger = $(".date-wrapper, .check-in-out");
 
-        let defaultCheckIn = moment().format("DD/MM/YYYY");
-        let defaultCheckOut = moment().add(1, "day").format("DD/MM/YYYY");
+        let defaultCheckIn = moment().format("DD.MM.YYYY");
+        let defaultCheckOut = moment().add(1, "day").format("DD.MM.YYYY");
 
         function updateClearDate() {
             let isDefault =
@@ -421,8 +421,8 @@ jQuery(function ($) {
 
         $(".check-in-out").on("apply.daterangepicker", function (ev, picker) {
 
-            let start = picker.startDate.format("DD/MM/YYYY");
-            let end = picker.endDate.format("DD/MM/YYYY");
+            let start = picker.startDate.format("DD.MM.YYYY");
+            let end = picker.endDate.format("DD.MM.YYYY");
 
             $checkIn.val(start);
             $checkOut.val(end);

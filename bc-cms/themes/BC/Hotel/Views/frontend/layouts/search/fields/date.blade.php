@@ -18,7 +18,7 @@
             </div>
             <input type="hidden" class="check-in-input" value="{{Request::query('start',display_date(strtotime("today")))}}" name="start">
             <input type="hidden" class="check-out-input" value="{{Request::query('end',display_date(strtotime("+1 day")))}}" name="end">
-            <input type="text" class="check-in-out"  value="{{Request::query('date',date("Y-m-d")." - ".date("Y-m-d",strtotime("+1 day")))}}">
+            <input type="text" class="check-in-out"  value="{{Request::query('date',date("d.m.Y")." - ".date("d.m.Y",strtotime("+1 day")))}}">
         </div>
     </div>
 </div>
