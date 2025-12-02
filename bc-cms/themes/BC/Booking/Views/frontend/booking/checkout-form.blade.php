@@ -106,7 +106,7 @@
 
     @include ('Booking::frontend/booking/checkout-passengers')
     @include ('Booking::frontend/booking/checkout-deposit')
-    @include ($service->checkout_form_payment_file ?? 'Booking::frontend/booking/checkout-payment')
+{{--    @include ($service->checkout_form_payment_file ?? 'Booking::frontend/booking/checkout-payment')--}}
 
     @php
     $term_conditions = setting_item('booking_term_conditions');
