@@ -315,10 +315,11 @@ class VendorController extends FrontendController
                 $query->forceDelete();
             }
         }else {
+            //todo тут проработать нужно ли это условие
             if ($viewAdminCabinet && $AuthUser->hasRole('administrator')) {
                 $hotel = $query->where('admin_base', $user)->where("id", $id)->first();
             } else {
-                $hotel = $query->where("admin_base", $user_id)->where("id", $id)->first();
+                $hotel = $query->where("admin_base", $user)->where("id", $id)->first();
 //                $hotel = $query->where("author_id", $user_id)->where("id", $id)->first();
             }
 
