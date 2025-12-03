@@ -1,5 +1,9 @@
 <?php
-$dataUser = Auth::user();
+$dataUser = $user ?? Auth::user();
+
+$viewAdminCabinet = $viewAdminCabinet ?? false;
+$isAdmin = $isAdmin ?? false;
+
 $menus = [
     'dashboard'       => [
         'url'        => route("vendor.dashboard"),
@@ -41,9 +45,19 @@ $menus = [
     ]
 ];
 
+if (!$isAdmin) {
+    unset($menus['admin']);
+}
+if ($isAdmin) {
+    unset($menus['password']);
+    unset($menus['profile']);
+}
+
 // Modules
 $custom_modules = \Modules\ServiceProvider::getActivatedModules();
+
 if(!empty($custom_modules)){
+
     foreach($custom_modules as $module){
         $moduleClass = $module['class'];
         if(class_exists($moduleClass))
@@ -127,6 +141,7 @@ if (!empty($menus))
     $menus = array_values(\Illuminate\Support\Arr::sort($menus, function ($value) {
         return $value['position'] ?? 100;
     }));
+
     foreach ($menus as $k => $menuItem) {
         if (!empty($menuItem['permission']) and !Auth::user()->hasPermission($menuItem['permission'])) {
             unset($menus[$k]);
@@ -144,6 +159,7 @@ if (!empty($menus))
             }
         }
     }
+
 ?>
 <div class="sidebar-user">
     <div class="bc-close-menu-user"><i class="icofont-scroll-left"></i></div>
@@ -162,9 +178,9 @@ if (!empty($menus))
         </div>
     </div>
     <div class="user-profile-plan">
-        @if( !Auth::user()->hasPermission("dashboard_vendor_access") and setting_item('vendor_enable'))
-            <a href=" {{ route("user.upgrade_vendor") }}">{{ __("Become a vendor") }}</a>
-        @endif
+{{--        @if( !Auth::user()->hasPermission("dashboard_vendor_access") and setting_item('vendor_enable'))--}}
+{{--            <a href=" {{ route("user.upgrade_vendor") }}">{{ __("Become a vendor") }}</a>--}}
+{{--        @endif--}}
     </div>
     <div class="sidebar-menu">
         <ul class="main-menu">
@@ -199,10 +215,21 @@ if (!empty($menus))
         <form id="logout-form-vendor" action="{{ route('logout') }}" method="POST" style="display: none;">
             {{ csrf_field() }}
         </form>
+        @if(!$viewAdminCabinet)
         <a href="#" onclick="event.preventDefault(); document.getElementById('logout-form-vendor').submit();"><i class="fa fa-sign-out"></i> {{__("Log Out")}}
         </a>
+        @endif
     </div>
     <div class="logout">
-        <a href="{{url('/')}}" style="color: #1ABC9C"><i class="fa fa-long-arrow-left"></i> {{__("Back to Homepage")}}</a>
+        @if($viewAdminCabinet)
+            <a href="{{ url('/admin/module/hotel') }}" style="color: #1ABC9C">
+                <i class="fa fa-long-arrow-left"></i> {{ __("Back to Hotels") }}
+            </a>
+        @else
+            <a href="{{ url('/') }}" style="color: #1ABC9C">
+                <i class="fa fa-long-arrow-left"></i> {{ __("Back to Homepage") }}
+            </a>
+        @endif
     </div>
+
 </div>
