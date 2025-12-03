@@ -1,6 +1,7 @@
 <?php
 namespace Modules\Hotel\Controllers;
 
+use App\Models\User;
 use App\Notifications\AdminChannelServices;
 use Illuminate\Notifications\Notifiable;
 use Modules\Booking\Events\BookingUpdatedEvent;
@@ -32,8 +33,9 @@ class VendorController extends FrontendController
      * @var string
      */
     private $locationCategoryClass;
+    private Booking $booking;
 
-    public function __construct(Hotel $hotel,HotelTranslation $hotelTrans)
+    public function __construct(Hotel $hotel,HotelTranslation $hotelTrans, Booking $booking)
     {
         parent::__construct();
         $this->hotelClass = $hotel;
@@ -43,6 +45,7 @@ class VendorController extends FrontendController
         $this->locationClass = Location::class;
         $this->locationCategoryClass = LocationCategory::class;
         $this->bookingClass = Booking::class;
+        $this->booking = $booking;
     }
 
     public function callAction($method, $parameters)
@@ -345,5 +348,29 @@ class VendorController extends FrontendController
             return redirect()->back()->with('error', __('Booking not found!'));
         }
         return redirect()->back()->with('error', __('Update fail!'));
+    }
+
+    public function switchUser($id)
+    {
+        $user = User::find($id);
+        $authUser = Auth::user();
+
+        $view = 'User::frontend.dashboardBaseAdmin';
+        $data = $this->getBaseAdminDashboardData($user);
+        $data['user'] = $user;
+        $data['isAdmin'] = $authUser->hasRole('administrator');
+        $data['viewAdminCabinet'] = true;
+        return view($view, $data);
+    }
+    protected function getBaseAdminDashboardData($user)
+    {
+        return [
+            'cards_report'       => $this->booking->getTopCardsReportForBaseAdmin($user->id),
+            'earning_chart_data' => $this->booking->getEarningChartDataForVendor(strtotime('monday this week'), time(), $user->id),
+            'page_title'         => __("BaseAdmin Dashboard"),
+            'breadcrumbs'        => [
+                ['name' => __('Dashboard'), 'class' => 'active']
+            ]
+        ];
     }
 }
