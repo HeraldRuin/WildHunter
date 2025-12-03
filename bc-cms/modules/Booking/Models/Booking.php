@@ -438,11 +438,12 @@ class Booking extends BaseModel
 
     public static function getBookingHistory($booking_status = false, $customer_id_or_name = false , $vendor_id = false , $service = false , $from = false ,  $to = false )
     {
+
         $list_booking = parent::query()->orderBy('id', 'desc');
         if (!empty($booking_status)) {
             $list_booking->where("status", $booking_status);
         }else{
-            $list_booking->where('status','!=','draft');
+            $list_booking->where('status','=','draft');
         }
         if (!empty($customer_id_or_name)) {
             $list_booking->where(function($q) use($customer_id_or_name){
@@ -463,6 +464,7 @@ class Booking extends BaseModel
         }
 
         $list_booking->whereIn('object_model', array_keys(get_bookable_services()));
+//        dd($list_booking->paginate(10));
         return $list_booking->paginate(10);
     }
 
