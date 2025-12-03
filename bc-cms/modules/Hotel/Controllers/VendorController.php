@@ -60,8 +60,19 @@ class VendorController extends FrontendController
     public function index(Request $request)
     {
         $this->checkPermission('hotel_view');
-        $user_id = Auth::id();
-        $list_hotel = $this->hotelClass::where("author_id", $user_id)->orderBy('id', 'desc');
+        $userId = $request->query('user');
+        $viewAdminCabinet = $request->query('viewAdminCabinet');
+        $user = User::find($userId);
+        $AuthUser = Auth::user();
+        $query = $this->hotelClass::query();
+
+        if ($viewAdminCabinet) {
+            $query->where('admin_base', $userId);
+        } else {
+            $query->where('author_id', $AuthUser->id);
+        }
+
+        $list_hotel = $query->orderBy('id', 'desc');
         $data = [
             'rows' => $list_hotel->paginate(5),
             'breadcrumbs'        => [
@@ -76,6 +87,9 @@ class VendorController extends FrontendController
             ],
             'page_title'         => __("Manage Hotels"),
         ];
+        $data['user'] = $user;
+        $data['isAdmin'] = $AuthUser->hasRole('administrator');
+        $data['viewAdminCabinet'] = $viewAdminCabinet;
         return view('Hotel::frontend.vendorHotel.index', $data);
     }
 
@@ -105,6 +119,10 @@ class VendorController extends FrontendController
     public function create(Request $request)
     {
         $this->checkPermission('hotel_create');
+        $userId = $request->query('user');
+        $viewAdminCabinet = $request->query('viewAdminCabinet');
+        $user = User::find($userId);
+        $AuthUser = Auth::user();
         $row = new $this->hotelClass();
         $data = [
             'row'           => $row,
@@ -124,11 +142,18 @@ class VendorController extends FrontendController
             ],
             'page_title'         => __("Create Hotels"),
         ];
+        $data['user'] = $user;
+        $data['isAdmin'] = $AuthUser->hasRole('administrator');
+        $data['viewAdminCabinet'] = $viewAdminCabinet;
         return view('Hotel::frontend.vendorHotel.detail', $data);
     }
 
 
     public function store( Request $request, $id ){
+        $userId = $request->query('user');
+        $viewAdminCabinet = $request->query('viewAdminCabinet');
+        $user = User::find($userId);
+        $AuthUser = Auth::user();
 
         if(is_demo_mode()){
             return redirect()->back()->with('danger',__("DEMO MODE: Disable setting update"));
@@ -189,8 +214,11 @@ class VendorController extends FrontendController
 //            return redirect(route('user.plan'));
 //        }
 
-        $user = Auth::user();
-        if ($user->hasRole('baseadmin')){
+        if ($AuthUser->hasRole('baseadmin')){
+            $row->admin_base = $AuthUser->id;
+        }
+
+        if ($AuthUser->hasRole('administrator') && $viewAdminCabinet){
             $row->admin_base = $user->id;
         }
 
@@ -208,7 +236,7 @@ class VendorController extends FrontendController
                 return back()->with('success',  __('Hotel updated') );
             }else{
                 event(new CreatedServicesEvent($row));
-                return redirect(route('hotel.vendor.edit',['id'=>$row->id]))->with('success', __('Hotel created') );
+                return redirect(route('hotel.vendor.edit',['id'=>$row->id, 'user'=>$user, 'viewAdminCabinet'=>$viewAdminCabinet]))->with('success', __('Hotel created') );
             }
         }
     }
@@ -233,6 +261,10 @@ class VendorController extends FrontendController
     {
         $this->checkPermission('hotel_update');
         $user_id = Auth::id();
+        $userId = $request->query('user');
+        $viewAdminCabinet = $request->query('viewAdminCabinet');
+        $user = User::find($userId);
+        $AuthUser = Auth::user();
         $row = $this->hotelClass::where("author_id", $user_id);
         $row = $row->find($id);
         if (empty($row)) {
@@ -258,6 +290,10 @@ class VendorController extends FrontendController
             ],
             'page_title'         => __("Edit Hotels"),
         ];
+        $data['user'] = $user;
+        $data['isAdmin'] = $AuthUser->hasRole('administrator');
+        $data['viewAdminCabinet'] = $viewAdminCabinet;
+
         return view('Hotel::frontend.vendorHotel.detail', $data);
     }
 
