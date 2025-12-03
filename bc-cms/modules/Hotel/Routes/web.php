@@ -40,3 +40,7 @@ Route::group(['prefix'=>'user/'.config('hotel.hotel_route_prefix')],function(){
 });
 
 Route::post(config('hotel.hotel_route_prefix').'/checkAvailability','HotelController@checkAvailability')->name('hotel.checkAvailability');
+Route::get('/admin/switch-user/{id}','VendorController@switchUser')->name('admin.switch-user');
+
+
+
