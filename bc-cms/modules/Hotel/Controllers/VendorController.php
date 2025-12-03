@@ -297,23 +297,35 @@ class VendorController extends FrontendController
         return view('Hotel::frontend.vendorHotel.detail', $data);
     }
 
-    public function delete($id)
+    public function delete(Request $request, $id)
     {
         $this->checkPermission('hotel_delete');
         $user_id = Auth::id();
+        $userId = $request->query('user');
+        $viewAdminCabinet = $request->query('viewAdminCabinet');
+
+        $user = User::find($userId);
+        $AuthUser = Auth::user();
+        $query = $this->hotelClass::query();
+
         if(\request()->query('permanently_delete')) {
-            $query = $this->hotelClass::where("author_id", $user_id)->where("id", $id)->withTrashed()->first();
+            $query->where("author_id", $user_id)->where("id", $id)->withTrashed()->first();
             if (!empty($query)) {
                 $query->forceDelete();
             }
         }else {
-            $query = $this->hotelClass::where("author_id", $user_id)->where("id", $id)->first();
+            if ($viewAdminCabinet && $AuthUser->hasRole('administrator')) {
+                $query->where('admin_base', $user)->where("id", $id)->first();
+            } else {
+                $query->where("author_id", $user_id)->where("id", $id)->first();
+            }
+
             if (!empty($query)) {
                 $query->delete();
                 event(new UpdatedServiceEvent($query));
             }
         }
-        return redirect(route('hotel.vendor.index'))->with('success', __('Delete hotel success!'));
+        return redirect(route('hotel.vendor.index',['user'=>$user, 'viewAdminCabinet'=>$viewAdminCabinet]))->with('success', __('Delete hotel success!') );
     }
 
     public function restore($id)
