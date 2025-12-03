@@ -15,49 +15,49 @@
                 @if($is_vendor_access)
                     <div class="form-group">
                         <label>{{__("Business name")}}</label>
-                        <input type="text" value="{{old('business_name',$dataUser->business_name)}}" name="business_name" placeholder="{{__("Business name")}}" class="form-control">
+                        <input type="text" value="{{old('business_name',$user->business_name)}}" name="business_name" placeholder="{{__("Business name")}}" class="form-control">
                         <i class="fa fa-user input-icon"></i>
                     </div>
                 @endif
                 <div class="form-group">
                     <label>{{__("User name")}} <span class="text-danger">*</span></label>
-                    <input type="text" required minlength="4" name="user_name" value="{{old('user_name',$dataUser->user_name)}}" placeholder="{{__("User name")}}" class="form-control">
+                    <input type="text" required minlength="4" name="user_name" value="{{old('user_name',$user->user_name)}}" placeholder="{{__("User name")}}" class="form-control">
                     <i class="fa fa-user input-icon"></i>
                 </div>
                 <div class="form-group">
                     <label>{{__("E-mail")}}</label>
-                    <input type="text" name="email" value="{{old('email',$dataUser->email)}}" placeholder="{{__("E-mail")}}" class="form-control">
+                    <input type="text" name="email" value="{{old('email',$user->email)}}" placeholder="{{__("E-mail")}}" class="form-control">
                     <i class="fa fa-envelope input-icon"></i>
                 </div>
                 <div class="row">
                     <div class="col-md-6">
                         <div class="form-group">
                             <label>{{__("First name")}}</label>
-                            <input type="text" value="{{old('first_name',$dataUser->first_name)}}" name="first_name" placeholder="{{__("First name")}}" class="form-control">
+                            <input type="text" value="{{old('first_name',$user->first_name)}}" name="first_name" placeholder="{{__("First name")}}" class="form-control">
                             <i class="fa fa-user input-icon"></i>
                         </div>
                     </div>
                     <div class="col-md-6">
                         <div class="form-group">
                             <label>{{__("Last name")}}</label>
-                            <input type="text" value="{{old('last_name',$dataUser->last_name)}}" name="last_name" placeholder="{{__("Last name")}}" class="form-control">
+                            <input type="text" value="{{old('last_name',$user->last_name)}}" name="last_name" placeholder="{{__("Last name")}}" class="form-control">
                             <i class="fa fa-user input-icon"></i>
                         </div>
                     </div>
                 </div>
                 <div class="form-group">
                     <label>{{__("Phone Number")}}</label>
-                    <input type="text" value="{{old('phone',$dataUser->phone)}}" name="phone" placeholder="{{__("Phone Number")}}" class="form-control">
+                    <input type="text" value="{{old('phone',$user->phone)}}" name="phone" placeholder="{{__("Phone Number")}}" class="form-control">
                     <i class="fa fa-phone input-icon"></i>
                 </div>
                 <div class="form-group">
                     <label>{{__("Birthday")}}</label>
-                    <input type="text" value="{{ old('birthday',$dataUser->birthday? display_date($dataUser->birthday) :'') }}" name="birthday" placeholder="{{__("Birthday")}}" class="form-control date-picker">
+                    <input type="text" value="{{ old('birthday',$user->birthday? display_date($user->birthday) :'') }}" name="birthday" placeholder="{{__("Birthday")}}" class="form-control date-picker">
                     <i class="fa fa-birthday-cake input-icon"></i>
                 </div>
                 <div class="form-group">
                     <label>{{__("About Yourself")}}</label>
-                    <textarea name="bio" rows="5" class="form-control">{{old('bio',$dataUser->bio)}}</textarea>
+                    <textarea name="bio" rows="5" class="form-control">{{old('bio',$user->bio)}}</textarea>
                 </div>
                 <div class="form-group">
                     <label>{{__("Avatar")}}</label>
@@ -68,10 +68,10 @@
                                     {{__("Browse")}}… <input type="file">
                                 </span>
                             </span>
-                            <input type="text" data-error="{{__("Error upload...")}}" data-loading="{{__("Loading...")}}" class="form-control text-view" readonly value="{{ get_file_url( old('avatar_id',$dataUser->avatar_id) ) ?? $dataUser->getAvatarUrl()?? __("No Image")}}">
+                            <input type="text" data-error="{{__("Error upload...")}}" data-loading="{{__("Loading...")}}" class="form-control text-view" readonly value="{{ get_file_url( old('avatar_id',$user->avatar_id) ) ?? $user->getAvatarUrl()?? __("No Image")}}">
                         </div>
-                        <input type="hidden" class="form-control" name="avatar_id" value="{{ old('avatar_id',$dataUser->avatar_id)?? ""}}">
-                        <img class="image-demo" src="{{ get_file_url( old('avatar_id',$dataUser->avatar_id) ) ??  $dataUser->getAvatarUrl() ?? ""}}"/>
+                        <input type="hidden" class="form-control" name="avatar_id" value="{{ old('avatar_id',$user->avatar_id)?? ""}}">
+                        <img class="image-demo" src="{{ get_file_url( old('avatar_id',$user->avatar_id) ) ??  $user->getAvatarUrl() ?? ""}}"/>
                     </div>
                 </div>
             </div>
@@ -81,22 +81,22 @@
                 </div>
                 <div class="form-group">
                     <label>{{__("Address Line 1")}}</label>
-                    <input type="text" value="{{old('address',$dataUser->address)}}" name="address" placeholder="{{__("Address")}}" class="form-control">
+                    <input type="text" value="{{old('address',$user->address)}}" name="address" placeholder="{{__("Address")}}" class="form-control">
                     <i class="fa fa-location-arrow input-icon"></i>
                 </div>
                 <div class="form-group">
                     <label>{{__("Address Line 2")}}</label>
-                    <input type="text" value="{{old('address2',$dataUser->address2)}}" name="address2" placeholder="{{__("Address2")}}" class="form-control">
+                    <input type="text" value="{{old('address2',$user->address2)}}" name="address2" placeholder="{{__("Address2")}}" class="form-control">
                     <i class="fa fa-location-arrow input-icon"></i>
                 </div>
                 <div class="form-group">
                     <label>{{__("City")}}</label>
-                    <input type="text" value="{{old('city',$dataUser->city)}}" name="city" placeholder="{{__("City")}}" class="form-control">
+                    <input type="text" value="{{old('city',$user->city)}}" name="city" placeholder="{{__("City")}}" class="form-control">
                     <i class="fa fa-street-view input-icon"></i>
                 </div>
                 <div class="form-group">
                     <label>{{__("State")}}</label>
-                    <input type="text" value="{{old('state',$dataUser->state)}}" name="state" placeholder="{{__("State")}}" class="form-control">
+                    <input type="text" value="{{old('state',$user->state)}}" name="state" placeholder="{{__("State")}}" class="form-control">
                     <i class="fa fa-map-signs input-icon"></i>
                 </div>
                 <div class="form-group">
@@ -104,13 +104,13 @@
                     <select name="country" class="form-control">
                         <option value="">{{__('-- Select --')}}</option>
                         @foreach(get_country_lists() as $id=>$name)
-                            <option @if((old('country',$dataUser->country ?? '')) == $id) selected @endif value="{{$id}}">{{$name}}</option>
+                            <option @if((old('country',$user->country ?? '')) == $id) selected @endif value="{{$id}}">{{$name}}</option>
                         @endforeach
                     </select>
                 </div>
                 <div class="form-group">
                     <label>{{__("Zip Code")}}</label>
-                    <input type="text" value="{{old('zip_code',$dataUser->zip_code)}}" name="zip_code" placeholder="{{__("Zip Code")}}" class="form-control">
+                    <input type="text" value="{{old('zip_code',$user->zip_code)}}" name="zip_code" placeholder="{{__("Zip Code")}}" class="form-control">
                     <i class="fa fa-map-pin input-icon"></i>
                 </div>
 
