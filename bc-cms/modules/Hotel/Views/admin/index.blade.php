@@ -84,9 +84,13 @@
                                         <a href="{{route('hotel.admin.edit',['id'=>$row->id])}}">{{$row->title}}</a>
                                     </td>
                                     <td>
-                                        <a href="">
-                                            {{ $row->baseAdmin->getDisplayName() }}
-                                        </a>
+
+                                        @if($row->baseAdmin && $row->baseAdmin->id)
+                                            <a href="{{ route('admin.switch-user', ['id' => $row->baseAdmin->id]) }}">
+                                                {{ $row->baseAdmin->getDisplayName() }}
+                                            </a>
+                                        @endif
+
                                     </td>
 
                                     <td>{{$row->location->name ?? ''}}</td>
