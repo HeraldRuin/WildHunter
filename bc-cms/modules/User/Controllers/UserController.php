@@ -1,6 +1,7 @@
 <?php
 namespace Modules\User\Controllers;
 
+use App\User;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rule;
 use Matrix\Exception;
@@ -52,7 +53,9 @@ class UserController extends FrontendController
         } else {
             abort(403);
         }
-
+        $data['user'] = $user;
+        $data['isAdmin'] = $user->hasRole('administrator');
+        $data['viewAdminCabinet'] = true;
         return view($view, $data);
     }
     protected function getVendorDashboardData($user)
@@ -95,9 +98,10 @@ class UserController extends FrontendController
 
     public function profile(Request $request)
     {
-        $user = Auth::user();
+//        $user = Auth::user();
+        $user = \Modules\User\Models\User::find(64);
         $data = [
-            'dataUser'         => $user,
+            'user'         => $user,
             'page_title'       => __("Profile"),
             'breadcrumbs'      => [
                 [
@@ -151,9 +155,9 @@ class UserController extends FrontendController
 
     public function bookingHistory(Request $request)
     {
-        $user_id = Auth::id();
+        $authUser = Auth::user();
         $data = [
-            'bookings' => $this->booking->getBookingHistory($request->input('status'), $user_id),
+            'bookings' => $this->booking->getBookingHistory($request->input('status'), $authUser->id),
             'statues'     => config('booking.statuses'),
             'breadcrumbs' => [
                 [
@@ -163,6 +167,9 @@ class UserController extends FrontendController
             ],
             'page_title'  => __("Booking History"),
         ];
+        $data['user'] = $authUser;
+        $data['viewAdminCabinet'] = false;
+        $data['isAdmin'] = $authUser->hasRole('administrator');
         return view('User::frontend.bookingHistory', $data);
     }
 
