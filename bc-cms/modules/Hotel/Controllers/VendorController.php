@@ -309,20 +309,22 @@ class VendorController extends FrontendController
         $query = $this->hotelClass::query();
 
         if(\request()->query('permanently_delete')) {
+
             $query->where("author_id", $user_id)->where("id", $id)->withTrashed()->first();
             if (!empty($query)) {
                 $query->forceDelete();
             }
         }else {
             if ($viewAdminCabinet && $AuthUser->hasRole('administrator')) {
-                $query->where('admin_base', $user)->where("id", $id)->first();
+                $hotel = $query->where('admin_base', $user)->where("id", $id)->first();
             } else {
-                $query->where("author_id", $user_id)->where("id", $id)->first();
+                $hotel = $query->where("admin_base", $user_id)->where("id", $id)->first();
+//                $hotel = $query->where("author_id", $user_id)->where("id", $id)->first();
             }
 
-            if (!empty($query)) {
-                $query->delete();
-                event(new UpdatedServiceEvent($query));
+            if (!empty($hotel)) {
+                $hotel->delete();
+                event(new UpdatedServiceEvent($hotel));
             }
         }
         return redirect(route('hotel.vendor.index',['user'=>$user, 'viewAdminCabinet'=>$viewAdminCabinet]))->with('success', __('Delete hotel success!') );
