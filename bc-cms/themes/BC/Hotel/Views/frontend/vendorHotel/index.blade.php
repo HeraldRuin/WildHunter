@@ -26,7 +26,7 @@
                 <div class="row">
                     @foreach($rows as $row)
                         <div class="col-md-12">
-                            @include('Hotel::frontend.vendorHotel.loop-list')
+                            @include('Hotel::frontend.vendorHotel.loop-list', ['user' => $user, 'viewAdminCabinet' => $viewAdminCabinet])
                         </div>
                     @endforeach
                 </div>

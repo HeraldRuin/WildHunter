@@ -20,7 +20,7 @@
     <div class="lang-content-box">
         <form
         @if($viewAdminCabinet && $isAdmin)
-            action="{{ route('hotel.vendor.store', ['id' => $row->id ? $row->id : '-1', 'lang' => request()->query('lang'), 'user' => $user->id, 'viewAdminCabinet' => 1]) }}"
+            action="{{ route('hotel.vendor.store', ['id' => $row->id ? $row->id : '-1', 'lang' => request()->query('lang'), 'user' => $user->id, 'viewAdminCabinet' => $viewAdminCabinet]) }}"
             method="post">
         @else
             action="{{ route('hotel.vendor.store', ['id' => $row->id ? $row->id : '-1', 'lang' => request()->query('lang')]) }}"

@@ -76,7 +76,7 @@ use Illuminate\Support\Facades\URL;
 
                     @if(Auth::user()->hasPermission('hotel_delete'))
                         <a
-                                href="{{ Url::signedRoute("hotel.vendor.delete",[$row->id]) }}"
+                                href="{{ Url::signedRoute("hotel.vendor.delete",[$row->id,'user' => $user->id, 'viewAdminCabinet' => $viewAdminCabinet]) }}"
                                 class="btn btn-danger"
                                 data-confirm="{{__('"Do you want to delete?"')}}"
                         >{{__("Del")}}</a>
