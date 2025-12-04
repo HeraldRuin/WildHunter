@@ -3,16 +3,10 @@
     <h2 class="title-bar">
         {{!empty($recovery) ?__('Recovery Hotels') : __("Manage Hotels")}}
         @if(Auth::user()->hasPermission('hotel_create') && empty($recovery))
-            @if($viewAdminCabinet && $isAdmin)
-                <a href="{{ route("hotel.vendor.create", ['user' => $user->id, 'viewAdminCabinet' => 1]) }}"
-                   class="btn-change-password">
-                    {{ __("Add Hotel") }}
-                </a>
-            @else
-                <a href="{{ route("hotel.vendor.create") }}" class="btn-change-password">
-                    {{ __("Add Hotel") }}
-                </a>
-            @endif
+            <a href="{{ route("hotel.vendor.create", ['user' => $user->id, 'viewAdminCabinet' => $viewAdminCabinet]) }}"
+               class="btn-change-password">
+                {{ __("Add Hotel") }}
+            </a>
         @endif
     </h2>
     @include('admin.message')
