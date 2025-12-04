@@ -44,4 +44,8 @@ class AddDataInView
     {
         return $this->request->query('user');
     }
+    public function getViewUser()
+    {
+        return  User::find($this->getViewUserId());
+    }
 }
