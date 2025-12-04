@@ -4,7 +4,7 @@
         {{ $row->id ? __('Edit: ') . $row->title : __('Add new hotel') }}
         @if ($row->id)
             <div class="title-action">
-                <a class="btn btn-info" href="{{ route('hotel.vendor.room.index', ['hotel_id' => $row->id,'user' => $user->id, 'viewAdminCabinet' => $viewAdminCabinet]) }}">
+                <a class="btn btn-info" href="{{ route('hotel.vendor.room.index', ['hotel_id' => $row->id,'user' => $user->id]) }}">
                     <i class="fa fa-hand-o-right"></i> {{ __('Manage Rooms') }}
                 </a>
                 <a href="{{ route('hotel.vendor.room.availability.index', ['hotel_id' => $row->id,'user' => $user->id, 'viewAdminCabinet' => $viewAdminCabinet]) }}" class="btn btn-warning">
@@ -23,7 +23,7 @@
             action="{{ route('hotel.vendor.store', ['id' => $row->id ? $row->id : '-1', 'lang' => request()->query('lang'), 'user' => $user->id, 'viewAdminCabinet' => $viewAdminCabinet]) }}"
             method="post">
         @else
-            action="{{ route('hotel.vendor.store', ['id' => $row->id ? $row->id : '-1', 'lang' => request()->query('lang')]) }}"
+            action="{{ route('hotel.vendor.store', ['id' => $row->id ? $row->id : '-1', 'lang' => request()->query('lang'), 'user' => $user->id, 'viewAdminCabinet' => $viewAdminCabinet]) }}"
             method="post">
         @endif
 
