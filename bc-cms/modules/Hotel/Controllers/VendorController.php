@@ -162,7 +162,7 @@ class VendorController extends FrontendController
 
             if($row->author_id != Auth::id() and !$this->hasPermission('hotel_manage_others'))
             {
-                return redirect(route('hotel.vendor.index'));
+                return redirect(route('hotel.vendor.index', ['user'=> $this->cabinetService->getViewUserId(), 'viewAdminCabinet'=> $this->cabinetService->getViewAdminCabinet()]));
             }
         }else{
             $this->checkPermission('hotel_create');
@@ -397,9 +397,12 @@ class VendorController extends FrontendController
 
     public function switchUser($id)
     {
-        $user = User::find($id);
         $authUser = Auth::user();
 
+        if (!$authUser) {
+            return redirect()->back()->with('error', 'You are not logged in');
+        }
+        $user = User::find($id);
         $view = 'User::frontend.dashboardBaseAdmin';
         $data = $this->getBaseAdminDashboardData($user);
         $data['user'] = $user;
