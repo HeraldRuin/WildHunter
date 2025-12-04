@@ -1,6 +1,7 @@
 <?php
 namespace Modules\Hotel\Controllers;
 
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Modules\FrontendController;
@@ -8,6 +9,7 @@ use Modules\Core\Models\Attributes;
 use Modules\Hotel\Models\HotelRoom;
 use Modules\Hotel\Models\HotelRoomTerm;
 use Modules\Hotel\Models\HotelRoomTranslation;
+use Modules\Hotel\Services\AddDataInView;
 use Modules\Location\Models\Location;
 use Modules\Hotel\Models\Hotel;
 use Modules\Hotel\Models\HotelTerm;
@@ -25,8 +27,9 @@ class VendorRoomController extends FrontendController
     protected $roomClass;
     protected $currentHotel;
     protected $roomTranslationClass;
+    protected AddDataInView $cabinetService;
 
-    public function __construct()
+    public function __construct(AddDataInView $cabinetService)
     {
         parent::__construct();
         $this->hotelClass = Hotel::class;
@@ -35,6 +38,7 @@ class VendorRoomController extends FrontendController
         $this->locationClass = Location::class;
         $this->roomClass = HotelRoom::class;
         $this->roomTranslationClass = HotelRoomTranslation::class;
+        $this->cabinetService = $cabinetService;
     }
 
     protected function hasHotelPermission($hotel_id = false){
@@ -49,6 +53,8 @@ class VendorRoomController extends FrontendController
     }
     public function index(Request $request,$hotel_id)
     {
+        $cabinetData = $this->cabinetService->getCabinetData();
+
         $this->checkPermission('hotel_view');
 
         if(!$this->hasHotelPermission($hotel_id))
@@ -62,7 +68,7 @@ class VendorRoomController extends FrontendController
             $query->orderBy('title', 'asc');
         }
         $query->where('parent_id',$hotel_id);
-        $data = [
+        $data = array_merge($cabinetData, [
             'rows'               => $query->with(['author'])->paginate(20),
             'breadcrumbs'        => [
                 [
@@ -83,13 +89,15 @@ class VendorRoomController extends FrontendController
             'row'=> new $this->roomClass(),
             'translation'=>new $this->roomTranslationClass(),
             'attributes'     => $this->attributesClass::where('service', 'hotel_room')->get(),
-        ];
+        ]);
+
         return view('Hotel::frontend.vendorHotel.room.index', $data);
     }
 
     public function create($hotel_id)
     {
         $this->checkPermission('hotel_update');
+        $cabinetData = $this->cabinetService->getCabinetData();
 
         if(!$this->hasHotelPermission($hotel_id))
         {
@@ -97,7 +105,7 @@ class VendorRoomController extends FrontendController
         }
         $row = new $this->roomClass();
         $translation = new $this->roomTranslationClass();
-        $data = [
+        $data = array_merge($cabinetData, [
             'row'            => $row,
             'translation'    => $translation,
             'attributes'     => $this->attributesClass::where('service', 'hotel_room')->get(),
@@ -122,13 +130,15 @@ class VendorRoomController extends FrontendController
             ],
             'page_title'         => __("Create Room"),
             'hotel'=>$this->currentHotel
-        ];
+        ]);
+
         return view('Hotel::frontend.vendorHotel.room.detail', $data);
     }
 
     public function edit(Request $request, $hotel_id,$id)
     {
         $this->checkPermission('hotel_update');
+        $cabinetData = $this->cabinetService->getCabinetData();
 
         if(!$this->hasHotelPermission($hotel_id))
         {
@@ -142,7 +152,7 @@ class VendorRoomController extends FrontendController
 
         $translation = $row->translate($request->query('lang'));
 
-        $data = [
+        $data = array_merge($cabinetData, [
             'row'            => $row,
             'translation'    => $translation,
             "selected_terms" => $row->terms->pluck('term_id'),
@@ -168,7 +178,8 @@ class VendorRoomController extends FrontendController
             ],
             'page_title'=>__("Edit: :name",['name'=>$row->title]),
             'hotel'=>$this->currentHotel
-        ];
+        ]);
+
         return view('Hotel::frontend.vendorHotel.room.detail', $data);
     }
 
@@ -228,7 +239,7 @@ class VendorRoomController extends FrontendController
             if($id > 0 ){
                 return redirect()->back()->with('success',  __('Room updated') );
             }else{
-                return redirect(route('hotel.vendor.room.edit',['hotel_id'=>$hotel_id,'id'=>$row->id]))->with('success', __('Room created') );
+                return redirect(route('hotel.vendor.room.edit',['hotel_id'=>$hotel_id,'id'=>$row->id, 'user' => $this->cabinetService->getViewUserId(), 'viewAdminCabinet' => $this->cabinetService->getCabinetData()]))->with('success', __('Room created') );
             }
         }
     }
@@ -252,7 +263,7 @@ class VendorRoomController extends FrontendController
     public function delete($hotel_id,$id )
     {
         $this->checkPermission('hotel_delete');
-        $user_id = Auth::id();
+
         $query = $this->roomClass::where("parent_id", $hotel_id)->where("id", $id)->first();
         if(!empty($query)){
             $query->delete();
@@ -264,7 +275,7 @@ class VendorRoomController extends FrontendController
     {
         $this->checkPermission('hotel_update');
         $action = $request->input('action');
-        $user_id = Auth::id();
+
         $query = $this->roomClass::where("parent_id", $hotel_id)->where("id", $id)->first();
         if (empty($id)) {
             return redirect()->back()->with('error', __('No item!'));
