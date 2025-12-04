@@ -464,7 +464,34 @@ class Booking extends BaseModel
         }
 
         $list_booking->whereIn('object_model', array_keys(get_bookable_services()));
-//        dd($list_booking->paginate(10));
+
+        return $list_booking->paginate(10);
+    }
+
+    public static function getBookingHistoryForAdminBase($booking_status = false, $admin_base = false)
+    {
+        $list_booking = parent::query()->orderBy('id', 'desc');
+
+        if (!empty($booking_status)) {
+            $list_booking->where("status", $booking_status);
+        }else{
+            $list_booking->where('status','=','draft');
+        }
+//        if (!empty($vendor_id)) {
+//            $list_booking->where("vendor_id", $vendor_id);
+//        }
+//        if (!empty($service)) {
+//            $list_booking->where("object_model", $service);
+//        }
+//        if(!empty($from) and !empty($to)){
+//            $list_booking->whereBetween('created_at', [
+//                $from." 00:00",
+//                $to." 23:59",
+//            ]);
+//        }
+
+//        $list_booking->whereIn('object_model', array_keys(get_bookable_services()));
+
         return $list_booking->paginate(10);
     }
 
