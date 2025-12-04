@@ -24,9 +24,9 @@ use Modules\Booking\Models\Booking;
                         {{__('your booking was submitted successfully!')}}
                     </p>
                     <p class="line2">{{__('Booking details has been sent to:')}} <span>{{$booking->email}}</span></p>
-                    @if($note = $gateway->getOption("payment_note"))
-                        <div class="line2">{!! clean($note) !!}</div>
-                    @endif
+{{--                    @if($note = $gateway->getOption("payment_note"))--}}
+{{--                        <div class="line2">{!! clean($note) !!}</div>--}}
+{{--                    @endif--}}
                 </div>
             @endif
         </div>
