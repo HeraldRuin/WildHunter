@@ -66,11 +66,12 @@ use Illuminate\Support\Facades\URL;
                 @else
                     <a href="{{$row->getDetailUrl()}}" target="_blank" class="btn btn-info">{{__("View")}}</a>
                     @if(Auth::user()->hasPermission('hotel_update'))
-                        <a href="{{ route("hotel.vendor.edit",[$row->id]) }}" class="btn btn-warning">{{__("Edit")}}</a>
+
+                        <a href="{{ route("hotel.vendor.edit",[$row->id,'user' => $user->id,'viewAdminCabinet' => $viewAdminCabinet]) }}" class="btn btn-warning">{{__("Edit")}}</a>
                     @endif
                     @if(Auth::user()->hasPermission('hotel_create'))
                         <a
-                                href="{{ Url::signedRoute("hotel.vendor.bulk_edit",[$row->id,'action' => "clone"]) }}" class="btn btn-info"
+                                href="{{ Url::signedRoute("hotel.vendor.bulk_edit",[$row->id,'action' => "clone",'user' => $user->id, 'viewAdminCabinet' => $viewAdminCabinet]) }}" class="btn btn-info"
                         >{{__("Clone")}}</a>
                     @endif
 
@@ -83,12 +84,12 @@ use Illuminate\Support\Facades\URL;
                     @endif
                     @if($row->status == 'publish')
                         <a
-                                href="{{ Url::signedRoute("hotel.vendor.bulk_edit",[$row->id,'action' => "make-hide"]) }}" class="btn btn-secondary"
+                                href="{{ Url::signedRoute("hotel.vendor.bulk_edit",[$row->id,'action' => "make-hide",'user' => $user->id, 'viewAdminCabinet' => $viewAdminCabinet]) }}" class="btn btn-secondary"
                         >{{__("Make hide")}}</a>
                     @endif
                     @if($row->status == 'draft')
                         <a
-                                href="{{ Url::signedRoute("hotel.vendor.bulk_edit",[$row->id,'action' => "make-publish"]) }}" class="btn btn-success"
+                                href="{{ Url::signedRoute("hotel.vendor.bulk_edit",[$row->id,'action' => "make-publish",'user' => $user->id, 'viewAdminCabinet' => $viewAdminCabinet]) }}" class="btn btn-success"
                         >{{__("Make publish")}}</a>
                     @endif
                 @endif
