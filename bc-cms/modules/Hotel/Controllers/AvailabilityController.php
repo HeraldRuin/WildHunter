@@ -9,6 +9,7 @@ use Modules\Hotel\Models\Hotel;
 use Modules\Hotel\Models\HotelRoom;
 use Modules\Hotel\Models\HotelRoomBooking;
 use Modules\Hotel\Models\HotelRoomDate;
+use Modules\Hotel\Services\AddDataInView;
 
 class AvailabilityController extends FrontendController{
 
@@ -26,9 +27,11 @@ class AvailabilityController extends FrontendController{
     protected $currentHotel;
     protected $roomBookingClass;
 
+    protected AddDataInView $cabinetService;
+
     protected $indexView = 'Hotel::frontend.user.availability';
 
-    public function __construct()
+    public function __construct(AddDataInView $cabinetService)
     {
         parent::__construct();
         $this->roomClass = HotelRoom::class;
@@ -36,6 +39,7 @@ class AvailabilityController extends FrontendController{
         $this->bookingClass = Booking::class;
         $this->hotelClass = Hotel::class;
         $this->roomBookingClass = HotelRoomBooking::class;
+        $this->cabinetService = $cabinetService;
     }
     public function callAction($method, $parameters)
     {
@@ -60,9 +64,11 @@ class AvailabilityController extends FrontendController{
         return true;
     }
 
-    public function index(Request $request,$hotel_id){
-
+    public function index(Request $request,$hotel_id)
+    {
         $this->checkPermission('hotel_update');
+        $user = $this->cabinetService->getViewUser();
+        $viewAdminCabinet = $this->cabinetService->getCabinetData();
 
         if(!$this->hasHotelPermission($hotel_id))
         {
@@ -107,7 +113,7 @@ class AvailabilityController extends FrontendController{
         $hotel = $this->currentHotel;
         $page_title = __('Room Availability');
 
-        return view($this->indexView,compact('rows','breadcrumbs','current_month','page_title','request','hotel'));
+        return view($this->indexView,compact('rows','breadcrumbs','current_month','page_title','request','hotel', 'user', 'viewAdminCabinet'));
     }
 
     public function loadDates(Request $request,$hotel_id){
