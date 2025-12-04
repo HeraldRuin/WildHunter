@@ -4,7 +4,7 @@
     <h2 class="title-bar no-border-bottom">
         {{ __('Availability Rooms') }}
         <div class="title-action">
-            <a class="btn btn-info" href="{{ route('hotel.vendor.room.index', ['hotel_id' => $hotel->id]) }}">
+            <a class="btn btn-info" href="{{ route('hotel.vendor.room.index', ['hotel_id' => $hotel->id,'user' => $user->id, 'viewAdminCabinet' => $viewAdminCabinet]) }}">
                 <i class="fa fa-hand-o-right"></i> {{ __('Manage Rooms') }}
             </a>
         </div>
