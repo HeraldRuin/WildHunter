@@ -277,7 +277,7 @@ foreach ($menus as $k => $menuItem) {
         @endif
     </div>
     <div class="logout">
-        @if($viewAdminCabinet)
+        @if($viewAdminCabinet && $isAdmin)
             <a href="{{ url('/admin/module/hotel') }}" style="color: #1ABC9C">
                 <i class="fa fa-long-arrow-left"></i> {{ __("Back to Hotels") }}
             </a>
