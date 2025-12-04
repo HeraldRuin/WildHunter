@@ -3,7 +3,7 @@
     <h2 class="title-bar no-border-bottom">
         {{$row->id ? __('Edit: ').$row->title : __('Add new room')}}
         <div class="title-action">
-            <a class="btn btn-info" href="{{route('hotel.vendor.room.index',['hotel_id'=>$hotel->id])}}">
+            <a class="btn btn-info" href="{{route('hotel.vendor.room.index',['hotel_id'=>$hotel->id,'user' => $user->id, 'viewAdminCabinet' => $viewAdminCabinet])}}">
                 <i class="fa fa-hand-o-right"></i> {{__("Manage Rooms")}}
             </a>
         </div>
@@ -13,7 +13,7 @@
         @include('Language::admin.navigation')
     @endif
     <div class="lang-content-box">
-        <form novalidate action="{{route('hotel.vendor.room.store',['hotel_id'=>$hotel->id,'id'=>($row->id) ? $row->id : '-1','lang'=>request()->query('lang')])}}" class="needs-validation" method="post">
+        <form novalidate action="{{route('hotel.vendor.room.store',['hotel_id'=>$hotel->id,'id'=>($row->id) ? $row->id : '-1','lang'=>request()->query('lang'),'user' => $user->id, 'viewAdminCabinet' => $viewAdminCabinet])}}" class="needs-validation" method="post">
             @csrf
             <div class="form-add-service">
                 <div class="nav nav-tabs nav-fill" id="nav-tab" role="tablist">
