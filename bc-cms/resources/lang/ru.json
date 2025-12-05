@@ -736,6 +736,7 @@
     "Change your invoice page options": "\u0418\u0437\u043c\u0435\u043d\u0438\u0442\u044c \u043f\u0430\u0440\u0430\u043c\u0435\u0442\u0440\u044b \u0441\u0442\u0440\u0430\u043d\u0438\u0446\u044b \u0441\u0447\u0435\u0442\u0430",
     "Change your options": "\u0418\u0437\u043c\u0435\u043d\u0438\u0442\u044c \u043f\u0430\u0440\u0430\u043c\u0435\u0442\u0440\u044b",
     "Check Availability": "\u041f\u0440\u043e\u0432\u0435\u0440\u0438\u0442\u044c \u043d\u0430\u043b\u0438\u0447\u0438\u0435",
+    "Check Presence": "Проверить доступность",
     "Check for update": "\u041f\u0440\u043e\u0432\u0435\u0440\u0438\u0442\u044c \u043e\u0431\u043d\u043e\u0432\u043b\u0435\u043d\u0438\u044f",
     "Check in": "\u0417\u0430\u0435\u0437\u0434",
     "Check In": "\u0417\u0430\u0435\u0437\u0434",
@@ -3827,6 +3828,7 @@
     "ZIP code\/Postal code": "Zip-\u043a\u043e\u0434 \/ \u041f\u043e\u0447\u0442\u043e\u0432\u044b\u0439 \u0438\u043d\u0434\u0435\u043a\u0441",
     "Select role": "Выберите роль",
     "Hunter": "Охотник",
+    "Hunters": "Охотники",
     "Base admin": "Администратор базы",
     "Who will be hunted": "На кого будет охота?",
     "Generate": "Сгенерировать",
@@ -3845,5 +3847,6 @@
     "This email is already taken": "Эта почта уже занята",
     "Back to Hotels": "Назад к отелям",
     "You are not logged in": "Вы не авторизованы",
-    "Available Animals": "Доступные животные"
+    "Available Animals": "Доступные животные",
+    "Hunting Date": "Дата охоты"
 }

@@ -16,7 +16,7 @@
                         <i class="fa fa-angle-down arrow"></i>
                         <input type="text" class="start_date" ref="start_date" style="height: 1px; visibility: hidden">
                         <div class="date-wrapper form-content" >
-                            <label class="form-label">{{__("Check In - Out")}}</label>
+                            <label class="form-label">{{__("Hunting Date")}}</label>
                             <div class="render check-in-render" v-html="start_date_html"></div>
                         </div>
                     </div>
@@ -25,7 +25,7 @@
                     <div class="form-group">
                         <i class="fa fa-angle-down arrow"></i>
                         <div class="form-content dropdown-toggle" data-toggle="dropdown">
-                            <label class="form-label">{{__('Guests')}}</label>
+                            <label class="form-label">{{__('Hunters')}}</label>
                             <div class="render">
                                 <span class="adults" >
                                     <span class="one" >@{{adults}}
@@ -65,7 +65,7 @@
                 <div class="col-md-4 col-btn">
                     <div class="g-button-submit">
                         <button class="btn btn-primary btn-search" @click="checkAvailability" v-bind:class="{'loading':onLoadAvailability}" type="submit">
-                            {{__("Check Availability")}}
+                            {{__("Check Presence")}}
                             <i v-show="onLoadAvailability" class="fa fa-spinner fa-spin"></i>
                         </button>
                     </div>
