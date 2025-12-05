@@ -14,7 +14,7 @@
                     <div class="col-md-12 col-lg-9">
                         @php $review_score = $row->review_data @endphp
                         @include('Hotel::frontend.layouts.details.hotel-detail')
-                        @include('Hotel::frontend.layouts.details.hotel-review')
+{{--                        @include('Hotel::frontend.layouts.details.hotel-review')--}}
                     </div>
                     <div class="col-md-12 col-lg-3">
                         @include('Tour::frontend.layouts.details.vendor')
