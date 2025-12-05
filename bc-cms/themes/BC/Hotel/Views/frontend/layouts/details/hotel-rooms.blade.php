@@ -4,9 +4,9 @@
         <div class="enquiry-item active" >
             <span>{{ __("Book") }}</span>
         </div>
-        <div class="enquiry-item" data-toggle="modal" data-target="#enquiry_form_modal">
-            <span>{{ __("Enquiry") }}</span>
-        </div>
+{{--        <div class="enquiry-item" data-toggle="modal" data-target="#enquiry_form_modal">--}}
+{{--            <span>{{ __("Enquiry") }}</span>--}}
+{{--        </div>--}}
     </div>
     <div class="form-book">
         <div class="form-search-rooms">
