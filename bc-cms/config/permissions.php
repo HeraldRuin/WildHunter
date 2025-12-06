@@ -135,6 +135,7 @@ return [
     'animal_create',
     'animal_update',
     'animal_delete',
+    'animal_availability_dates',
 
     'media_manage_others'
 ];
