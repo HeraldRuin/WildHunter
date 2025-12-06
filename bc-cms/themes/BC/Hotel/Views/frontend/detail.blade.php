@@ -14,7 +14,6 @@
                     <div class="col-md-12 col-lg-9">
                         @php $review_score = $row->review_data @endphp
                         @include('Hotel::frontend.layouts.details.hotel-detail')
-{{--                        @include('Hotel::frontend.layouts.details.hotel-review')--}}
                     </div>
                     <div class="col-md-12 col-lg-3">
                         @include('Tour::frontend.layouts.details.vendor')
@@ -66,6 +65,6 @@
     <script type="text/javascript" src="{{ asset('libs/ion_rangeslider/js/ion.rangeSlider.min.js') }}"></script>
     <script type="text/javascript" src="{{ asset('libs/fotorama/fotorama.js') }}"></script>
     <script type="text/javascript" src="{{ asset('libs/sticky/jquery.sticky.js') }}"></script>
-    <script type="text/javascript" src="{{ asset('module/hotel/js/single-hotel.js?_ver=' . config('app.asset_version')) }}">
-    </script>
+    <script type="text/javascript" src="{{ asset('module/hotel/js/single-hotel.js?_ver=' . config('app.asset_version')) }}"></script>
+    <script type="text/javascript" src="{{ asset('module/animal/js/single-animal.js?_ver=' . config('app.asset_version')) }}"></script>
 @endpush
