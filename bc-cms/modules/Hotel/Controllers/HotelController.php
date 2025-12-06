@@ -127,6 +127,7 @@ class HotelController extends Controller
             'translation'       => $translation,
             'hotel_related' => $hotel_related,
             'location_category'=>$this->locationCategoryClass::where("status", "publish")->with('location_category_translations')->get(),
+            'list_animals'      => Animal::where('status', 'publish')->limit(1000)->with(['translation'])->get(),
             'booking_data' => $row->getBookingData(),
             'review_list'  => $review_list,
             'seo_meta'  => $row->getSeoMetaWithTranslation(app()->getLocale(),$translation),
@@ -155,7 +156,7 @@ class HotelController extends Controller
             $rules = [
                 'hotel_id'   => 'required',
                 'start_date' => 'required:date_format:Y-m-d',
-                'end_date'   => 'required:date_format:Y-m-d',
+//                'end_date'   => 'required:date_format:Y-m-d',
                 'adults'     => 'required',
             ];
             $validator = \Validator::make(request()->all(), $rules);
@@ -163,9 +164,9 @@ class HotelController extends Controller
                 return $this->sendError($validator->errors()->all());
             }
 
-            if(strtotime(\request('end_date')) - strtotime(\request('start_date')) < DAY_IN_SECONDS){
-                return $this->sendError(__("Dates are not valid"));
-            }
+//            if(strtotime(\request('end_date')) - strtotime(\request('start_date')) < DAY_IN_SECONDS){
+//                return $this->sendError(__("Dates are not valid"));
+//            }
             if(strtotime(\request('end_date')) - strtotime(\request('start_date')) > 30*DAY_IN_SECONDS){
                 return $this->sendError(__("Maximum day for booking is 30"));
             }
