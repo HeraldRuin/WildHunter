@@ -3852,5 +3852,6 @@
     "Cost of hunting": "Стоимость охоты",
     "Availability Dates": "Даты доступности",
     "Animal Availability Calendar": "Календарь доступности животных",
-    "Showing :from - :to of :total animals": "Показаны :from - :to из :total животных"
+    "Showing :from - :to of :total animals": "Показаны :from - :to из :total животных",
+    "Select an animal": "Выберите животное"
 }
