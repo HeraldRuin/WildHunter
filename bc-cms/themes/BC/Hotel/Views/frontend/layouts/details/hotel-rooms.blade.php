@@ -1,12 +1,12 @@
 <div id="hotel-rooms" class="hotel_rooms_form" v-cloak="" v-bind:class="{'d-none':enquiry_type!='book'}">
-    <h3 class="heading-section">{{__('Available Animals')}}</h3>
+    <h3 class="heading-section">{{__('Available Rooms')}}</h3>
     <div class="nav-enquiry" v-if="is_form_enquiry_and_book">
         <div class="enquiry-item active" >
             <span>{{ __("Book") }}</span>
         </div>
-{{--        <div class="enquiry-item" data-toggle="modal" data-target="#enquiry_form_modal">--}}
-{{--            <span>{{ __("Enquiry") }}</span>--}}
-{{--        </div>--}}
+        <div class="enquiry-item" data-toggle="modal" data-target="#enquiry_form_modal">
+            <span>{{ __("Enquiry") }}</span>
+        </div>
     </div>
     <div class="form-book">
         <div class="form-search-rooms">
@@ -16,7 +16,7 @@
                         <i class="fa fa-angle-down arrow"></i>
                         <input type="text" class="start_date" ref="start_date" style="height: 1px; visibility: hidden">
                         <div class="date-wrapper form-content" >
-                            <label class="form-label">{{__("Hunting Date")}}</label>
+                            <label class="form-label">{{__("Check In - Out")}}</label>
                             <div class="render check-in-render" v-html="start_date_html"></div>
                         </div>
                     </div>
@@ -25,7 +25,7 @@
                     <div class="form-group">
                         <i class="fa fa-angle-down arrow"></i>
                         <div class="form-content dropdown-toggle" data-toggle="dropdown">
-                            <label class="form-label">{{__('Hunters')}}</label>
+                            <label class="form-label">{{__('Guests')}}</label>
                             <div class="render">
                                 <span class="adults" >
                                     <span class="one" >@{{adults}}
@@ -65,7 +65,7 @@
                 <div class="col-md-4 col-btn">
                     <div class="g-button-submit">
                         <button class="btn btn-primary btn-search" @click="checkAvailability" v-bind:class="{'loading':onLoadAvailability}" type="submit">
-                            {{__("Check Presence")}}
+                            {{__("Check Availability")}}
                             <i v-show="onLoadAvailability" class="fa fa-spinner fa-spin"></i>
                         </button>
                     </div>
@@ -255,4 +255,5 @@
         </div>
     </div>
 </div>
+
 @include("Booking::frontend.global.enquiry-form",['service_type'=>'hotel'])
