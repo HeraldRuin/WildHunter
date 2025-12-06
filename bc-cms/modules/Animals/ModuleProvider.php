@@ -55,7 +55,7 @@ class ModuleProvider extends ModuleServiceProvider
                         'permission' => 'animal_create',
                     ],
                     'availability'=>[
-                        'url'        => route('animal.admin.availability.dates'),
+                        'url'        => route('animal.admin.availability.index'),
                         'title'      => __('Availability Dates'),
                         'permission' => 'animal_availability_dates',
                     ],
