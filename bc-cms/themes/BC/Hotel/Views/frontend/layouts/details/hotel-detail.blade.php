@@ -48,6 +48,48 @@
 <div class="g-all-attribute is_mobile">
     @include('Hotel::frontend.layouts.details.hotel-attributes')
 </div>
+<div class="g-rules">
+    <h3>{{__("Rules")}}</h3>
+    <div class="description">
+        <div class="row">
+            <div class="col-lg-4">
+                <div class="key">{{__("Check In")}}</div>
+            </div>
+            <div class="col-lg-8">
+                <div class="value">	{{$row->check_in_time}} </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-lg-4">
+                <div class="key">{{__("Check Out")}}</div>
+            </div>
+            <div class="col-lg-8">
+                <div class="value">	{{$row->check_out_time}} </div>
+            </div>
+        </div>
+        @if($translation->policy)
+            <div class="row">
+                <div class="col-lg-4">
+                    <div class="key">{{__("Hotel Policies")}}</div>
+                </div>
+                <div class="col-lg-8">
+                    @foreach($translation->policy as $key => $item)
+                        <div class="item @if($key > 1) d-none @endif">
+                            <div class="strong">{{$item['title'] ?? ''}}</div>
+                            <div class="context">{!! $item['content'] !!}</div>
+                        </div>
+                    @endforeach
+                    @if( count($translation->policy) > 2)
+                        <div class="btn-show-all">
+                            <span class="text">{{__("Show All")}}</span>
+                            <i class="fa fa-caret-down"></i>
+                        </div>
+                    @endif
+                </div>
+            </div>
+        @endif
+    </div>
+</div>
 <div class="bc-hr"></div>
 @includeIf("Hotel::frontend.layouts.details.hotel-surrounding")
 
@@ -69,3 +111,4 @@
     </div>
 @endif
 <div class="bc-hr"></div>
+@include('Hotel::frontend.layouts.details.hotel-animals')
