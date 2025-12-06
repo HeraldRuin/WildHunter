@@ -40,7 +40,7 @@ class ModuleProvider extends ModuleServiceProvider
                 "position"=>45,
                 'url'        => route('animal.admin.index'),
                 'title'      => __('Animal'),
-                'icon'       => 'animal-paw',
+                'icon'       => 'ion-ios-play-circle',
                 'permission' => 'animal_view',
                 'group'      => 'catalog',
                 'children'   => [
@@ -54,16 +54,11 @@ class ModuleProvider extends ModuleServiceProvider
                         'title'      => __('Add new animal'),
                         'permission' => 'animal_create',
                     ],
-//                    'attribute'=>[
-//                        'url'        => route('animal.admin.attribute.index'),
-//                        'title'      => __('Attributes'),
-//                        'permission' => 'animal_manage_attributes',
-//                    ],
-//                    'availability'=>[
-//                        'url'        => route('animal.admin.availability.index'),
-//                        'title'      => __('Availability'),
-//                        'permission' => 'animal_create',
-//                    ],
+                    'availability'=>[
+                        'url'        => route('animal.admin.availability.dates'),
+                        'title'      => __('Availability Dates'),
+                        'permission' => 'animal_availability_dates',
+                    ],
 //                    'recovery'=>[
 //                        'url'        => route('animal.admin.recovery'),
 //                        'title'      => __('Recovery'),
