@@ -25,3 +25,5 @@ Route::group(['prefix'=>'user/'.config('animal.animal_route_prefix')],function()
         Route::post('/store','AvailabilityController@store')->name('animal.vendor.availability.store');
     });
 });
+
+Route::post(config('animal.animal_route_prefix').'/checkAvailability','AnimalController@checkAvailability')->name('animal.checkAvailability');
