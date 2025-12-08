@@ -97,9 +97,9 @@ class ModuleProvider extends ModuleServiceProvider
         if(Animal::isEnable()){
             $res['animal'] = [
                 'url'   => route('animal.vendor.index'),
-                'title'      => __("Manage Animal"),
+                'title'      => __("Manage Animals"),
                 'icon'       => Animal::getServiceIconFeatured(),
-                'position'   => 70,
+                'position'   => 30,
                 'permission' => 'animal_view',
                 'children' => [
                     [
