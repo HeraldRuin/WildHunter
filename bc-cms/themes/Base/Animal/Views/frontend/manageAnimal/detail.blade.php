@@ -1,14 +1,14 @@
 @extends('layouts.user')
 @section('content')
     <h2 class="title-bar no-border-bottom">
-        {{ $row->id ? __('Edit: ') . $row->title : __('Add new car') }}
+        {{ $row->id ? __('Edit: ') . $row->title : __('Add new animal') }}
     </h2>
     @include('admin.message')
     @if ($row->id)
         @include('Language::admin.navigation')
     @endif
     <div class="lang-content-box">
-        <form action="{{ route('car.vendor.store', ['id' => $row->id ? $row->id : '-1', 'lang' => request()->query('lang')]) }}"
+        <form action="{{ route('animal.vendor.store', ['id' => $row->id ? $row->id : '-1', 'lang' => request()->query('lang')]) }}"
             method="post">
             @csrf
             <div class="form-add-service">
@@ -24,7 +24,7 @@
                 </div>
                 <div class="tab-content" id="nav-tabContent">
                     <div class="tab-pane fade show active" id="nav-tour-content">
-                        @include('Car::admin/car/content')
+                        @include('Animals::admin/animal/content')
                         @if (is_default_lang())
                             <div class="form-group">
                                 <label>{{ __('Featured Image') }}</label>
@@ -33,7 +33,7 @@
                         @endif
                     </div>
                     <div class="tab-pane fade" id="nav-tour-location">
-                        @include('Car::admin/car/location', ['is_smart_search' => '1'])
+{{--                        @include('Animal::admin/animal/location', ['is_smart_search' => '1'])--}}
                     </div>
                     <div class="tab-pane fade" id="nav-tour-pricing">
                         <div class="panel">
@@ -54,14 +54,14 @@
                                 </div>
                             </div>
                         </div>
-                        @include('Car::admin/car/pricing')
+                        @include('Animals::admin/animal/pricing')
                     </div>
                     @if (is_default_lang())
                         <div class="tab-pane fade" id="nav-attribute">
-                            @include('Car::admin/car/attributes')
+{{--                            @include('Animal::admin/animal/attributes')--}}
                         </div>
                         <div class="tab-pane fade" id="nav-ical">
-                            @include('Car::admin.car.ical')
+{{--                            @include('Animal::admin.animal.ical')--}}
                         </div>
                     @endif
                 </div>
