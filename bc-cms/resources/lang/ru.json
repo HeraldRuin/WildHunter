@@ -3853,5 +3853,8 @@
     "Availability Dates": "Даты доступности",
     "Animal Availability Calendar": "Календарь доступности животных",
     "Showing :from - :to of :total animals": "Показаны :from - :to из :total животных",
-    "Select an animal": "Выберите животное"
+    "Select an animal": "Выберите животное",
+    "Manage Animals": "Управление животными",
+    "Add Animal": "Добавить животное",
+    "No Animal": "Нет животных"
 }
