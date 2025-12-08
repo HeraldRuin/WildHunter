@@ -150,27 +150,6 @@ if (!empty($menus))
         return $value['position'] ?? 100;
     }));
 
-//    foreach ($menus as $k => $menuItem) {
-//        if (!empty($menuItem['permission']) and !Auth::user()->hasPermission($menuItem['permission'])) {
-//            unset($menus[$k]);
-//            continue;
-//        }
-//
-//        $menus[$k]['class'] = $currentUrl == url($menuItem['url']) ? 'active' : '';
-//
-//        if (!empty($menuItem['children'])) {
-//            $menus[$k]['class'] .= ' has-children';
-//            foreach ($menuItem['children'] as $k2 => $menuItem2) {
-//                if (!empty($menuItem2['permission']) and !Auth::user()->hasPermission($menuItem2['permission'])) {
-//                    unset($menus[$k]['children'][$k2]);
-//                    continue;
-//                }
-//                $menus[$k]['children'][$k2]['class'] = $currentUrl == url($menuItem2['url']) ? 'active active_child' : '';
-//            }
-//        }
-//    }
-
-
 foreach ($menus as $k => $menuItem) {
 
     if (!empty($menuItem['permission']) && !$dataUser->hasPermission($menuItem['permission'])) {
