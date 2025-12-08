@@ -98,24 +98,24 @@
                     this.total_price_before_fee = total_price;
 
                     var total_fee = 0;
-                    for (var ix in me.buyer_fees) {
-                        var item = me.buyer_fees[ix];
-
-                        if(!item.price) continue;
-
-                        //for Fixed
-                        var fee_price = parseFloat(item.price);
-
-                        //for Percent
-                        if (typeof item.unit !== "undefined" && item.unit === "percent" ) {
-                            fee_price = ( total_price / 100 ) * fee_price;
-                        }
-
-                        if (typeof item.per_person !== "undefined") {
-                            fee_price = fee_price * guests;
-                        }
-                        total_fee += fee_price;
-                    }
+                    // for (var ix in me.buyer_fees) {
+                    //     var item = me.buyer_fees[ix];
+                    //
+                    //     if(!item.price) continue;
+                    //
+                    //     //for Fixed
+                    //     var fee_price = parseFloat(item.price);
+                    //
+                    //     //for Percent
+                    //     if (typeof item.unit !== "undefined" && item.unit === "percent" ) {
+                    //         fee_price = ( total_price / 100 ) * fee_price;
+                    //     }
+                    //
+                    //     if (typeof item.per_person !== "undefined") {
+                    //         fee_price = fee_price * guests;
+                    //     }
+                    //     total_fee += fee_price;
+                    // }
                     total_price += total_fee;
                     this.total_price_fee = total_fee;
 
@@ -330,6 +330,7 @@
                     }
                 }
                 this.onLoadAvailability = true;
+
                 $.ajax({
                     url:bookingCore.module.hotel+'/checkAvailability',
                     data:{
