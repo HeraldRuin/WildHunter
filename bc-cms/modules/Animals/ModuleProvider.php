@@ -2,15 +2,21 @@
 namespace Modules\Animals;
 use Modules\Animals\Models\Animal;
 use Modules\Animals\RouterServiceProvider;
+use Modules\Core\Helpers\SitemapHelper;
 use Modules\ModuleServiceProvider;
 use Modules\User\Helpers\PermissionHelper;
 
 class ModuleProvider extends ModuleServiceProvider
 {
 
-    public function boot(){
+    public function boot(SitemapHelper $sitemapHelper){
 
         $this->loadMigrationsFrom(__DIR__ . '/Migrations');
+
+        if(is_installed() and Animal::isEnable()){
+
+            $sitemapHelper->add("animal",[app()->make(Animal::class),'getForSitemap']);
+        }
 
         PermissionHelper::add([
             // animal
@@ -59,11 +65,6 @@ class ModuleProvider extends ModuleServiceProvider
                         'title'      => __('Availability Dates'),
                         'permission' => 'animal_availability_dates',
                     ],
-//                    'recovery'=>[
-//                        'url'        => route('animal.admin.recovery'),
-//                        'title'      => __('Recovery'),
-//                        'permission' => 'animal_view',
-//                    ],
                 ]
             ]
         ];
@@ -71,7 +72,7 @@ class ModuleProvider extends ModuleServiceProvider
 
     public static function getBookableServices()
     {
-        if(Animal::isEnable()) return [];
+        if(!Animal::isEnable()) return [];
         return [
             'animal'=>Animal::class
         ];
@@ -129,9 +130,9 @@ class ModuleProvider extends ModuleServiceProvider
 //    public static function getTemplateBlocks(){
 //        if(!Animal::isEnable()) return [];
 //        return [
-//            'form_search_car'=>"\\Modules\\Animal\\Blocks\\FormSearchCar",
-//            'list_car'=>"\\Modules\\Animal\\Blocks\\ListCar",
-//            'car_term_featured_box'=>"\\Modules\\Animal\\Blocks\\CarTermFeaturedBox",
+//            'form_search_animal'=>"\\Modules\\Animal\\Blocks\\FormSearchCar",
+//            'list_animal'=>"\\Modules\\Animal\\Blocks\\ListAnimal",
+//            'animal_term_featured_box'=>"\\Modules\\Animal\\Blocks\\AnimalTermFeaturedBox",
 //        ];
 //    }
 }
