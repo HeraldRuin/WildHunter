@@ -3856,5 +3856,6 @@
     "Select an animal": "Выберите животное",
     "Manage Animals": "Управление животными",
     "Add Animal": "Добавить животное",
-    "No Animal": "Нет животных"
+    "No Animal": "Нет животных",
+    "Delete animal success!": "Животное успешно удалено"
 }
