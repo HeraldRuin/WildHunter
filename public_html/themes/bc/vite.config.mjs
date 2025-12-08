@@ -8,6 +8,7 @@ const modulesMap = {
     space: '../../module/space/scss/space.scss',
     flight: '../../module/flight/scss/flight.scss',
     hotel: '../../module/hotel/scss/hotel.scss',
+    animal: '../../module/animal/scss/animal.scss',
     news: '../../module/news/scss/news.scss',
     media: '../../module/media/scss/browser.scss',
     location: '../../module/location/scss/location.scss',
