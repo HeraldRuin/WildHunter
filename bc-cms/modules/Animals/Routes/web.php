@@ -7,15 +7,15 @@ Route::group(['prefix'=>config('animal.animal_route_prefix')],function(){
 });
 
 Route::group(['prefix'=>'user/'.config('animal.animal_route_prefix'),'middleware' => ['auth','verified']],function(){
-    Route::get('/','ManageCarController@manageCar')->name('animal.vendor.index');
-    Route::get('/create','ManageCarController@createCar')->name('animal.vendor.create');
-    Route::get('/edit/{id}','ManageCarController@editCar')->name('animal.vendor.edit');
-    Route::get('/del/{id}','ManageCarController@deleteCar')->name('animal.vendor.delete');
-    Route::post('/store/{id}','ManageCarController@store')->name('animal.vendor.store');
-    Route::get('bulkEdit/{id}','ManageCarController@bulkEditCar')->name("animal.vendor.bulk_edit");
+    Route::get('/','ManageAnimalController@manageCar')->name('animal.vendor.index');
+    Route::get('/create','ManageAnimalController@createCar')->name('animal.vendor.create');
+    Route::get('/edit/{id}','ManageAnimalController@editCar')->name('animal.vendor.edit');
+    Route::get('/del/{id}','ManageAnimalController@deleteCar')->name('animal.vendor.delete');
+    Route::post('/store/{id}','ManageAnimalController@store')->name('animal.vendor.store');
+    Route::get('bulkEdit/{id}','ManageAnimalController@bulkEditCar')->name("animal.vendor.bulk_edit");
     Route::get('/booking-report/bulkEdit/{id}','ManageCarController@bookingReportBulkEdit')->name("animal.vendor.booking_report.bulk_edit");
-    Route::get('/recovery','ManageCarController@recovery')->name('animal.vendor.recovery');
-    Route::get('/restore/{id}','ManageCarController@restore')->name('animal.vendor.restore');
+    Route::get('/recovery','ManageAnimalController@recovery')->name('animal.vendor.recovery');
+    Route::get('/restore/{id}','ManageAnimalController@restore')->name('animal.vendor.restore');
 });
 
 Route::group(['prefix'=>'user/'.config('animal.animal_route_prefix')],function(){
