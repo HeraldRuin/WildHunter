@@ -114,7 +114,7 @@ class ManageAnimalController extends FrontendController
             'row'           => $row,
             'translation' => new $this->animalTranslationClass(),
             'car_location' => $this->locationClass::where("status","publish")->get()->toTree(),
-            'attributes'    => $this->attributesClass::where('service', 'car')->get(),
+            'attributes'    => $this->attributesClass::where('service', 'animal')->get(),
             'breadcrumbs'        => [
                 [
                     'name' => __('Manage Animals'),
