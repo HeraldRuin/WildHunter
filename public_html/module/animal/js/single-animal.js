@@ -429,7 +429,7 @@
                 $.ajax({
                     url:bookingCore.url+'/booking/addToCartAnimal',
                     data:{
-                        service_id:this.id,
+                        service_id:this.getSelectAnimalId(),
                         service_type:"animal",
                         start_date:this.start_date,
                         // end_date:this.end_date,
