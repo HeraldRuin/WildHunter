@@ -1205,7 +1205,7 @@ class Hotel extends Bookable
 
     public function animals(): BelongsToMany
     {
-        return $this->belongsToMany(Animal::class, 'bc_hotel_animals', 'hotel_id', 'animal_id');
+        return $this->belongsToMany(Animal::class, 'bc_hotel_animals', 'hotel_id', 'animal_id')->withPivot('status');
     }
 
 }

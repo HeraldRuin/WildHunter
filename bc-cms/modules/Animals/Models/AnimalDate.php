@@ -8,9 +8,7 @@ class AnimalDate extends BaseModel
     protected $table = 'bc_animal_dates';
 
     protected $casts = [
-        'person_types'=>'array',
         'price'=>'float',
-        'sale_price'=>'float',
     ];
 
     public static function getDatesInRanges($start_date,$end_date,$id){
