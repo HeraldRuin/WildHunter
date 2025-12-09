@@ -522,6 +522,41 @@ class BookingController extends \App\Http\Controllers\Controller
         return $service->addToCart($request);
     }
 
+    public function addToCartAnimal(Request $request)
+    {
+        // NOTE: Always allow addToCart for guest
+        // Will check for logged in user at checkout step
+
+//        $validator = Validator::make($request->all(), [
+//            'service_id'   => 'required|integer',
+//            'service_type' => 'required'
+//        ]);
+//        if ($validator->fails()) {
+//            return $this->sendError('', ['errors' => $validator->errors()]);
+//        }
+        $service_type = $request->input('service_type');
+        $service_id = $request->input('service_id');
+        $allServices = get_bookable_services();
+        if (empty($allServices[$service_type])) {
+            return $this->sendError(__('Service type not found'));
+        }
+        $module = $allServices[$service_type];
+        $service = $module::find($service_id);
+
+        if (empty($service) or !is_subclass_of($service, '\\Modules\\Booking\\Models\\Bookable')) {
+            return $this->sendError(__('Service not found'));
+        }
+        if (!$service->isBookable()) {
+            return $this->sendError(__('Service is not bookable'));
+        }
+
+        if (\auth()->user() && Auth::id() == $service->author_id) {
+            return $this->sendError(__('You cannot book your own service'));
+        }
+
+        return $service->addToCart($request);
+    }
+
     public function detail(Request $request, $code)
     {
         if (!is_enable_guest_checkout() and !Auth::check()) {
