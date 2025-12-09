@@ -107,7 +107,8 @@ class HotelController extends Controller
 
     public function detail(Request $request, $slug)
     {
-        $row = $this->hotelClass::where('slug', $slug)->with(['location','translation','hasWishList'])->first();;
+        $row = $this->hotelClass::where('slug', $slug)->with(['location','translation','hasWishList'])->first();
+        $hotelId = $row->id;
         if ( empty($row) or !$row->hasPermissionDetailView()) {
             return redirect('/');
         }
@@ -127,7 +128,9 @@ class HotelController extends Controller
             'translation'       => $translation,
             'hotel_related' => $hotel_related,
             'location_category'=>$this->locationCategoryClass::where("status", "publish")->with('location_category_translations')->get(),
-            'list_animals'      => Animal::where('status', 'publish')->limit(1000)->with(['translation'])->get(),
+            'list_animals' => Animal::where('status', 'publish')->whereHas('hotels', function($q) use ($hotelId) {
+                $q->where('bc_hotel_animals.hotel_id', $hotelId);
+            })->limit(1000)->with(['translation', 'hotels'])->get(),
             'booking_data' => $row->getBookingData(),
             'review_list'  => $review_list,
             'seo_meta'  => $row->getSeoMetaWithTranslation(app()->getLocale(),$translation),
@@ -156,7 +159,7 @@ class HotelController extends Controller
             $rules = [
                 'hotel_id'   => 'required',
                 'start_date' => 'required:date_format:Y-m-d',
-//                'end_date'   => 'required:date_format:Y-m-d',
+                'end_date'   => 'required:date_format:Y-m-d',
                 'adults'     => 'required',
             ];
             $validator = \Validator::make(request()->all(), $rules);
