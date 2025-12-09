@@ -10,5 +10,10 @@ class AnimalBooking extends Model
 
     protected $fillable = [
         'animal_id',
+        'user_id',
+        'hotel_id',
+        'date',
+        'adults',
+        'status'
     ];
 }
