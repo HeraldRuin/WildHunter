@@ -262,21 +262,13 @@
         </div>
 
         <div class="end_room_sticky"></div>
-{{--        <div class="alert alert-warning" v-if="!h.length">--}}
-{{--            {{__("No room available with your selected date. Please change your search critical")}}--}}
-{{--        </div>--}}
+
     </div>
 </div>
 
 <div class="modal fade" id="confirmAnimalBooking" tabindex="-1" role="dialog" aria-labelledby="confirmBookingAnimalOnlyLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered" role="document">
         <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="confirmBookingAnimalOnlyLabel">Подтверждение бронирования</h5>
-                <button type="button" class="close" data-bs-dismiss="modal" aria-label="Закрыть">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
             <div class="modal-body text-center">
                 <p id="confirmBookingAnimalText">Бронируете только охоту, без жилья?</p>
             </div>
