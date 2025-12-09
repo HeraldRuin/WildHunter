@@ -15,7 +15,7 @@
         <div class="form-search-rooms">
             <div class="d-flex form-search-row">
                 <div class="col-md-4">
-                    <div class="form-group form-date-field form-date-search " @click="openStartDate" data-format="{{get_moment_date_format()}}">
+                    <div class="form-group form-date-field form-date-search" @click="openStartDate" data-format="{{get_moment_date_format()}}">
                         <i class="fa fa-angle-down arrow"></i>
                         <input type="text" class="start_date" ref="start_date" style="height: 1px; visibility: hidden">
                         <div class="date-wrapper form-content" >
@@ -36,13 +36,13 @@
                                         <span v-else>{{__('Adults')}}</span>
                                     </span>
                                 </span>
-                                -
-                                <span class="children" >
-                                    <span class="one" >@{{children}}
-                                        <span v-if="children < 2">{{__('Child')}}</span>
-                                        <span v-else>{{__('Children')}}</span>
-                                    </span>
-                                </span>
+
+{{--                                <span class="children" >--}}
+{{--                                    <span class="one" >@{{children}}--}}
+{{--                                        <span v-if="children < 2">{{__('Child')}}</span>--}}
+{{--                                        <span v-else>{{__('Children')}}</span>--}}
+{{--                                    </span>--}}
+{{--                                </span>--}}
                             </div>
                         </div>
                         <div class="dropdown-menu select-guests-dropdown" >
@@ -54,20 +54,20 @@
                                     <span class="btn-add2" data-input="adults" @click="addPersonType('adults')"><i class="icon ion-ios-add"></i></span>
                                 </div>
                             </div>
-                            <div class="dropdown-item-row">
-                                <div class="label">{{__('Children')}}</div>
-                                <div class="val">
-                                    <span class="btn-minus2" data-input="children" @click="minusPersonType('children')"><i class="icon ion-md-remove"></i></span>
-                                    <span class="count-display"><input type="number" v-model="children" min="0"/></span>
-                                    <span class="btn-add2" data-input="children" @click="addPersonType('children')"><i class="icon ion-ios-add"></i></span>
-                                </div>
-                            </div>
+{{--                            <div class="dropdown-item-row">--}}
+{{--                                <div class="label">{{__('Children')}}</div>--}}
+{{--                                <div class="val">--}}
+{{--                                    <span class="btn-minus2" data-input="children" @click="minusPersonType('children')"><i class="icon ion-md-remove"></i></span>--}}
+{{--                                    <span class="count-display"><input type="number" v-model="children" min="0"/></span>--}}
+{{--                                    <span class="btn-add2" data-input="children" @click="addPersonType('children')"><i class="icon ion-ios-add"></i></span>--}}
+{{--                                </div>--}}
+{{--                            </div>--}}
                         </div>
                     </div>
                 </div>
                 <div class="col-md-4 col-btn">
                     <div class="g-button-submit">
-                        <button class="btn btn-primary btn-search" @click="checkAvailability" v-bind:class="{'loading':onLoadAvailability}" type="submit">
+                        <button class="btn btn-primary btn-search" @click="checkAvailabilityForAnimal" v-bind:class="{'loading':onLoadAvailability}" type="submit">
                             {{__("Check Presence")}}
                             <i v-show="onLoadAvailability" class="fa fa-spinner fa-spin"></i>
                         </button>
@@ -243,18 +243,47 @@
                             <span>{{__("Pay now")}}</span>
                             @{{pay_now_price_html}}
                         </div>
-                        <button type="button" class="btn btn-primary" @click="doSubmit($event)" v-bind:class="{'disabled':onSubmit}" name="submit">
+                        <button type="button" class="btn btn-primary" @click="doSubmit($event)"  name="submit">
                             <span >{{__("Book Now")}}</span>
                             <i v-show="onSubmit" class="fa fa-spinner fa-spin"></i>
                         </button>
                     </div>
 
                 </div>
+
             </div>
         </div>
+
+        <div class="pt-2">
+                <button v-if="animalCheckPassed" type="button" class="btn btn-primary btn-lg w-100" @click="validateBeforeSubmit($event)" :class="{'disabled':onSubmit}">
+                    <span>{{__("Book Now")}}</span>
+                    <i v-show="onSubmit" class="fa fa-spinner fa-spin"></i>
+                </button>
+        </div>
+
         <div class="end_room_sticky"></div>
-        <div class="alert alert-warning" v-if="!firstLoad && !rooms.length">
-            {{__("No room available with your selected date. Please change your search critical")}}
+{{--        <div class="alert alert-warning" v-if="!h.length">--}}
+{{--            {{__("No room available with your selected date. Please change your search critical")}}--}}
+{{--        </div>--}}
+    </div>
+</div>
+
+<div class="modal fade" id="confirmAnimalBooking" tabindex="-1" role="dialog" aria-labelledby="confirmBookingAnimalOnlyLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="confirmBookingAnimalOnlyLabel">Подтверждение бронирования</h5>
+                <button type="button" class="close" data-bs-dismiss="modal" aria-label="Закрыть">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body text-center">
+                <p id="confirmBookingAnimalText">Бронируете только охоту, без жилья?</p>
+            </div>
+            <div class="modal-footer justify-content-center">
+                <button type="button" class="btn btn-primary" id="confirmBookingAnimalYes">Да</button>
+                <button type="button" class="btn btn-secondary" id="confirmBookingAnimalNo" data-bs-dismiss="modal">Нет</button>
+            </div>
         </div>
     </div>
 </div>
