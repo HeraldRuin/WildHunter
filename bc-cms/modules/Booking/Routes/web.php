@@ -3,6 +3,7 @@ use Illuminate\Support\Facades\Route;
 // Booking
 Route::group(['prefix'=>config('booking.booking_route_prefix')],function(){
     Route::post('/addToCart','BookingController@addToCart');
+    Route::post('/addToCartAnimal','BookingController@addToCartAnimal');
     Route::post('/doCheckout','BookingController@doCheckout')->name('booking.doCheckout');
     Route::get('/confirm/{gateway}','BookingController@confirmPayment')->name('booking.confirm-payment');
     Route::get('/cancel/{gateway}','BookingController@cancelPayment');
