@@ -39,6 +39,8 @@
             enquiry_email:"",
             enquiry_phone:"",
             enquiry_note:"",
+            confirm_message: "",
+            show_confirm_only_hotel: false,
         },
         watch:{
             extra_price:{
@@ -280,12 +282,34 @@
                 return window.bc_format_money(m);
             },
             validate(){
+                var me = this;
                 if(!this.start_date || !this.end_date)
                 {
 					this.message.status = false;
                     this.message.content = bc_booking_i18n.no_date_select;
                     return false;
                 }
+
+                var animalInput = document.querySelector('.child_id');
+                var animalId = animalInput ? animalInput.value : '';
+
+                if (!animalId) {
+                    $('#confirmSingleBookingText').text("Вы бронируете только жильё, без охоты. Продолжить?");
+                    $('#confirmSingleHotelBooking').modal('show');
+
+
+                    $('#confirmSingleBookingYes').off('click').on('click', function () {
+                        $('#confirmSingleHotelBooking').modal('hide');
+                        me.doSubmit(null, {skipValidate: true});
+                    });
+
+                    $('#confirmSingleBookingNo').off('click').on('click', function() {
+                        $('#confirmSingleHotelBooking').modal('hide');
+                    });
+
+                    return false;
+                }
+
                 if(!this.guests )
                 {
 					this.message.status = false;
@@ -361,11 +385,10 @@
                     }
                 })
 			},
-            doSubmit:function (e) {
-                e.preventDefault();
+            doSubmit:function (e, options = {}) {
+                if(e && e.preventDefault) e.preventDefault();
                 if(this.onSubmit) return false;
-
-                if(!this.validate()) return false;
+                if (!options.skipValidate && !this.validate()) return false;
 
                 this.onSubmit = true;
                 var me = this;
