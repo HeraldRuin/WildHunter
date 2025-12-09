@@ -1,9 +1,12 @@
 <?php
-namespace Modules\Car\Controllers;
+namespace Modules\Animals\Controllers;
 
 use App\Http\Controllers\Controller;
-use Modules\Car\Models\Car;
+use Modules\Animals\Models\Animal;
 use Illuminate\Http\Request;
+use Modules\Animals\Models\AnimalBooking;
+use Modules\Animals\Models\AnimalDate;
+use Modules\Hotel\Models\Hotel;
 use Modules\Location\Models\Location;
 use Modules\Review\Models\Review;
 use Modules\Core\Models\Attributes;
@@ -11,17 +14,17 @@ use DB;
 
 class AnimalController extends Controller
 {
-    protected $carClass;
+    protected $animalClass;
     protected $locationClass;
-    public function __construct(Car $carClass, Location $locationClass)
+    public function __construct(Animal $animalClass, Location $locationClass)
     {
-        $this->carClass = $carClass;
+        $this->animalClass = $animalClass;
         $this->locationClass = $locationClass;
     }
 
     public function callAction($method, $parameters)
     {
-        if(!$this->carClass::isEnable())
+        if(!$this->animalClass::isEnable())
         {
             return redirect('/');
         }
@@ -30,7 +33,7 @@ class AnimalController extends Controller
     public function index(Request $request)
     {
 
-        $layout = setting_item("car_layout_search", 'normal');
+        $layout = setting_item("animal_layout_search", 'normal');
         if ($request->query('_layout')) {
             $layout = $request->query('_layout');
         }
@@ -40,10 +43,10 @@ class AnimalController extends Controller
         if(!empty($request->query('limit'))){
             $limit = $request->query('limit');
         }else{
-            $limit = !empty(setting_item("car_page_limit_item"))? setting_item("car_page_limit_item") : 9;
+            $limit = !empty(setting_item("animal_page_limit_item"))? setting_item("animal_page_limit_item") : 9;
 
         }
-        $query = $this->carClass->search($request->input());
+        $query = $this->animalClass->search($request->input());
         $list = $query->paginate($limit);
         $markers = [];
         if (!empty($list) and $for_map) {
@@ -54,8 +57,8 @@ class AnimalController extends Controller
                     "lat"     => (float)$row->map_lat,
                     "lng"     => (float)$row->map_lng,
                     "gallery" => $row->getGallery(true),
-                    "infobox" => view('Car::frontend.layouts.search.loop-grid', ['row' => $row,'disable_lazyload'=>1,'wrap_class'=>'infobox-item'])->render(),
-                    'marker' => get_file_url(setting_item("car_icon_marker_map"),'full') ?? url('images/icons/png/pin.png'),
+                    "infobox" => view('Animal::frontend.layouts.search.loop-grid', ['row' => $row,'disable_lazyload'=>1,'wrap_class'=>'infobox-item'])->render(),
+                    'marker' => get_file_url(setting_item("animal_icon_marker_map"),'full') ?? url('images/icons/png/pin.png'),
                 ];
             }
         }
@@ -67,49 +70,49 @@ class AnimalController extends Controller
             return $this->sendSuccess([
                 "markers" => $markers,
                 'fragments'=>[
-                    '.ajax-search-result'=>view('Car::frontend.ajax.search-result'.($for_map ? '-map' : ''), $data)->render(),
-                    '.result-count'=>$list->total() ? ($list->total() > 1 ? __(":count cars found",['count'=>$list->total()]) : __(":count car found",['count'=>$list->total()])) : '',
-                    '.count-string'=> $list->total() ? __("Showing :from - :to of :total Cars",["from"=>$list->firstItem(),"to"=>$list->lastItem(),"total"=>$list->total()]) : ''
+                    '.ajax-search-result'=>view('Animal::frontend.ajax.search-result'.($for_map ? '-map' : ''), $data)->render(),
+                    '.result-count'=>$list->total() ? ($list->total() > 1 ? __(":count animals found",['count'=>$list->total()]) : __(":count animal found",['count'=>$list->total()])) : '',
+                    '.count-string'=> $list->total() ? __("Showing :from - :to of :total Animals",["from"=>$list->firstItem(),"to"=>$list->lastItem(),"total"=>$list->total()]) : ''
                 ]
             ]);
         }
         $data = [
             'rows'               => $list,
             'list_location'      => $this->locationClass::where('status', 'publish')->limit(1000)->with(['translation'])->get()->toTree(),
-            'car_min_max_price' => $this->carClass::getMinMaxPrice(),
+            'car_min_max_price' => $this->animalClass::getMinMaxPrice(),
             'markers'            => $markers,
             "blank" => setting_item('search_open_tab') == "current_tab" ? 0 : 1 ,
-            "seo_meta"           => $this->carClass::getSeoMetaForPageList()
+            "seo_meta"           => $this->animalClass::getSeoMetaForPageList()
         ];
         $data['layout'] = $layout;
-        $data['attributes'] = Attributes::where('service', 'car')->orderBy("position","desc")->with(['terms'=>function($query){
-            $query->withCount('car');
+        $data['attributes'] = Attributes::where('service', 'animal')->orderBy("position","desc")->with(['terms'=>function($query){
+            $query->withCount('animal');
         },'translation'])->get();
 
         if ($layout == "map") {
             $data['body_class'] = 'has-search-map';
             $data['html_class'] = 'full-page';
-            return view('Car::frontend.search-map', $data);
+            return view('Animal::frontend.search-map', $data);
         }
-        return view('Car::frontend.search', $data);
+        return view('Animal::frontend.search', $data);
     }
 
     public function detail(Request $request, $slug)
     {
-        $row = $this->carClass::where('slug', $slug)->with(['location','translation','hasWishList'])->first();;
+        $row = $this->animalClass::where('slug', $slug)->with(['location','translation','hasWishList'])->first();;
         if ( empty($row) or !$row->hasPermissionDetailView()) {
             return redirect('/');
         }
         $adminbar_buttons = [];
 
         if(is_admin()){
-            $adminbar_buttons[] = ['label' => __('Edit Car'), 'url' => route('car.admin.edit',['id' => $row->id]), 'icon' => 'edit'];
+            $adminbar_buttons[] = ['label' => __('Edit Animal'), 'url' => route('animal.admin.edit',['id' => $row->id]), 'icon' => 'edit'];
         }
         $translation = $row->translate();
         $car_related = [];
         $location_id = $row->location_id;
         if (!empty($location_id)) {
-            $car_related = $this->carClass::where('location_id', $location_id)->where("status", "publish")->take($this->limitRelated ?? 4)->whereNotIn('id', [$row->id])->with(['location','translation','hasWishList'])->get();
+            $car_related = $this->animalClass::where('location_id', $location_id)->where("status", "publish")->take($this->limitRelated ?? 4)->whereNotIn('id', [$row->id])->with(['location','translation','hasWishList'])->get();
         }
         $review_list = $row->getReviewList();
         $data = [
@@ -122,8 +125,8 @@ class AnimalController extends Controller
             'body_class'=>'is_single',
             'breadcrumbs'       => [
                 [
-                    'name'  => __('Car'),
-                    'url'  => route('car.search'),
+                    'name'  => __('Animal'),
+                    'url'  => route('animal.search'),
                 ],
             ],
             'adminbar_buttons' => $adminbar_buttons
@@ -134,6 +137,50 @@ class AnimalController extends Controller
             'class' => 'active'
         ];
         $this->setActiveMenu($row);
-        return view('Car::frontend.detail', $data);
+        return view('Animal::frontend.detail', $data);
+    }
+
+    public function checkAvailability(){
+        $animal_id = \request('animal_id');
+        $hotel_id = \request('hotel_id');
+        $start_date = request('start_date');
+        $adults = request('adults');
+
+        if(\request()->input('firstLoad') == "false") {
+            $rules = [
+                'hotel_id'   => 'required',
+                'start_date' => 'required:date_format:Y-m-d',
+                'adults'     => 'required',
+                'animal_id'     => 'required',
+            ];
+            $validator = \Validator::make(request()->all(), $rules);
+            if ($validator->fails()) {
+                return $this->sendError($validator->errors()->all());
+            }
+
+            if(empty($start_date)){
+                return $this->sendError(__("Please select a date"));
+            }
+        }
+
+        $range = AnimalDate::where('target_id', $animal_id)
+            ->whereDate('start_date', '=', $start_date)
+            ->first();
+
+        if (!$range) {
+            return $this->sendError('На эту дату охота на это животное недоступна');
+        }
+        $animalBookedCount = AnimalBooking::where('animal_id', $animal_id)
+            ->where('date', $start_date)
+            ->where('status', 'processing')
+            ->count();
+
+        $hotel = Hotel::find($hotel_id);
+        $maxTotalHunts = (int) $hotel->max_hunts_per_day;
+
+        if ($animalBookedCount >= $maxTotalHunts) {
+            return $this->sendError('На эту дату лимит охот на выбранное животное исчерпан');
+        }
+        return $this->sendSuccess(['available' => true]);
     }
 }
