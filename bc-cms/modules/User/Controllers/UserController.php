@@ -12,6 +12,7 @@ use Modules\Event\Models\Event;
 use Modules\Flight\Models\Flight;
 use Modules\FrontendController;
 use Modules\Hotel\Models\Hotel;
+use Modules\Hotel\Services\AddDataInView;
 use Modules\Space\Models\Space;
 use Modules\Tour\Models\Tour;
 use Modules\User\Events\NewVendorRegistered;
@@ -32,12 +33,14 @@ class UserController extends FrontendController
 
     protected $enquiryClass;
     private Booking $booking;
+    protected AddDataInView $cabinetService;
 
-    public function __construct(Booking $booking, Enquiry $enquiry)
+    public function __construct(Booking $booking, Enquiry $enquiry, AddDataInView $cabinetService)
     {
         $this->enquiryClass = $enquiry;
         parent::__construct();
         $this->booking = $booking;
+        $this->cabinetService = $cabinetService;
     }
 
     public function dashboard(Request $request)
@@ -55,7 +58,7 @@ class UserController extends FrontendController
         }
         $data['user'] = $user;
         $data['isAdmin'] = $user->hasRole('administrator');
-        $data['viewAdminCabinet'] = true;
+        $data['viewAdminCabinet'] = $user->hasRole('administrator');
         return view($view, $data);
     }
     protected function getVendorDashboardData($user)
@@ -155,9 +158,17 @@ class UserController extends FrontendController
 
     public function bookingHistory(Request $request)
     {
+        $cabinetData = $this->cabinetService->getCabinetData();
         $authUser = Auth::user();
-        $data = [
-            'bookings' => $this->booking->getBookingHistory($request->input('status'), $authUser->id),
+
+        if ($authUser->hasRole('baseadmin')){
+            $bookings = $this->booking->getBookingHistoryForAdminBase($request->input('status'));
+        }else {
+            $bookings = $this->booking->getBookingHistory($request->input('status'), $authUser->id);
+        }
+
+        $data = array_merge($cabinetData, [
+            'bookings' => $bookings,
             'statues'     => config('booking.statuses'),
             'breadcrumbs' => [
                 [
@@ -166,10 +177,8 @@ class UserController extends FrontendController
                 ]
             ],
             'page_title'  => __("Booking History"),
-        ];
-        $data['user'] = $authUser;
-        $data['viewAdminCabinet'] = false;
-        $data['isAdmin'] = $authUser->hasRole('administrator');
+        ]);
+
         return view('User::frontend.bookingHistory', $data);
     }
 
