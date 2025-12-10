@@ -37,6 +37,7 @@ class Hotel extends Bookable
         'title',
         'content',
         'status',
+        'max_hunts_per_day',
     ];
     protected $slugField     = 'slug';
     protected $slugFromField = 'title';
@@ -204,6 +205,7 @@ class Hotel extends Bookable
         $extra_price = [];
         $extra_price_input = $request->input('extra_price');
         $extra_price = [];
+        $hotel_id = $request->input('service_id');
 
         $total = 0;
         $total_room_selected = 0;
@@ -273,6 +275,7 @@ class Hotel extends Bookable
         $booking->buyer_fees = $list_buyer_fees ?? '';
         $booking->total_before_fees = $total_before_fees;
         $booking->total_before_discount = $total_before_fees;
+        $booking->hotel_id = $hotel_id;
 
         $booking->calculateCommission();
 
