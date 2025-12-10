@@ -75,9 +75,10 @@ class BookingController extends \App\Http\Controllers\Controller
 
         $booking = $this->bookingInst;
 
-        if (!in_array($booking->status, ['draft', 'unpaid'])) {
-            return redirect('/');
-        }
+        //TODO закоментировал так как на время чтобы убрать оплату ставлю статус processing но тут тогда перекидывает на главную
+//        if (!in_array($booking->status, ['draft', 'unpaid'])) {
+//            return redirect('/');
+//        }
 
         $is_api = request()->segment(1) == 'api';
 
@@ -112,12 +113,13 @@ class BookingController extends \App\Http\Controllers\Controller
                 'redirect' => url('/')
             ];
         }
-        if (!in_array($booking->status, ['draft', 'unpaid'])) {
-            $data = [
-                'error'    => true,
-                'redirect' => url('/')
-            ];
-        }
+        //TODO закоментировал так как на время чтобы убрать оплату ставлю статус processing но тут тогда перекидывает на главную
+//        if (!in_array($booking->status, ['draft', 'unpaid'])) {
+//            $data = [
+//                'error'    => true,
+//                'redirect' => url('/')
+//            ];
+//        }
         return response()->json($data, 200);
     }
 
