@@ -17,7 +17,7 @@ return new class extends Migration
             $table->timestamp('start_date')->nullable();
             $table->timestamp('end_date')->nullable();
             $table->decimal('price', 12, 2)->nullable();
-            $table->tinyInteger('active')->default(0);
+            $table->tinyInteger('active')->default(1);
             $table->text('note_to_customer')->nullable();
             $table->text('note_to_admin')->nullable();
             $table->tinyInteger('is_instant')->default(0);
