@@ -1,5 +1,6 @@
 <?php
 
+use Illuminate\Support\Facades\Auth;
 use Livewire\Mechanisms\ComponentRegistry;
 use Modules\Core\Models\Settings;
 use App\Currency;
@@ -1185,3 +1186,16 @@ function is_image_data($data){
     $checkExtension = in_array($data['file_extension'], ['jpg', 'jpeg', 'png', 'gif', 'webp']);
     return $checkMimeType && $checkExtension;
 }
+
+if (!function_exists('get_user_hotel_id')) {
+    function get_user_hotel_id() {
+        $authUser = Auth::user();
+        if ($authUser && $authUser->hotels->isNotEmpty()) {
+            return $authUser->hotels->first()->id;
+        }
+        return null;
+    }
+}
+
+
+
