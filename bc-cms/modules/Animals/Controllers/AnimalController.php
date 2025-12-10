@@ -6,6 +6,7 @@ use Modules\Animals\Models\Animal;
 use Illuminate\Http\Request;
 use Modules\Animals\Models\AnimalBooking;
 use Modules\Animals\Models\AnimalDate;
+use Modules\Booking\Models\Booking;
 use Modules\Hotel\Models\Hotel;
 use Modules\Location\Models\Location;
 use Modules\Review\Models\Review;
@@ -170,15 +171,17 @@ class AnimalController extends Controller
         if (!$range) {
             return $this->sendError('На эту дату охота на это животное недоступна');
         }
-        $animalBookedCount = AnimalBooking::where('animal_id', $animal_id)
-            ->where('date', $start_date)
+
+        $animalBookedCount = Booking::where('object_model', 'animal')
+            ->whereDate('start_date', '=', $start_date)
+            ->where('hotel_id', $hotel_id)
             ->where('status', 'processing')
             ->count();
 
         $hotel = Hotel::find($hotel_id);
         $maxTotalHunts = (int) $hotel->max_hunts_per_day;
 
-        if ($animalBookedCount >= $maxTotalHunts) {
+        if ($animalBookedCount + 1 > $maxTotalHunts) {
             return $this->sendError('На эту дату лимит охот на выбранное животное исчерпан');
         }
         return $this->sendSuccess(['available' => true]);
