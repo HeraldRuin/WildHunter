@@ -149,9 +149,7 @@ class ManageAnimalController extends FrontendController
             }
         }else{
             $this->checkPermission('animal_create');
-            $authUser = Auth::user();
-            $hotelId = $authUser->hotels->first()->id;
-//        $hotelIds = $authUser->hotels->pluck('id'); //TODO на будущее когда несколько баз будет и будет привязываеться админ к конкретной
+
             $row = new $this->animalClass();
             $row->status = "publish";
 
@@ -185,7 +183,8 @@ class ManageAnimalController extends FrontendController
         ];
 
         $row->fillByAttr($dataKeys,$request->input());
-        $row->hotel_id = $hotelId ?? null;
+        $hotelId = get_user_hotel_id();
+        $row->hotel_id = $hotelId;
 
 //        if(!auth()->user()->checkUserPlan() and $row->status == "publish") {
 //            return redirect(route('user.plan'));
