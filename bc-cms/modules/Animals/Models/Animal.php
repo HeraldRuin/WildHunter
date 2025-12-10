@@ -31,7 +31,7 @@ class Animal extends Bookable
         'content',
         'status',
         'faqs',
-
+        'hotel_id',
     ];
 
     public function addToCart(Request $request)

@@ -113,7 +113,7 @@ class ManageAnimalController extends FrontendController
         $data = [
             'row'           => $row,
             'translation' => new $this->animalTranslationClass(),
-            'car_location' => $this->locationClass::where("status","publish")->get()->toTree(),
+            'animal_location' => $this->locationClass::where("status","publish")->get()->toTree(),
             'attributes'    => $this->attributesClass::where('service', 'animal')->get(),
             'breadcrumbs'        => [
                 [
@@ -138,6 +138,7 @@ class ManageAnimalController extends FrontendController
         if($id>0){
             $this->checkPermission('animal_update');
             $row = $this->animalClass::find($id);
+
             if (empty($row)) {
                 return redirect(route('animal.vendor.index'));
             }
@@ -148,8 +149,13 @@ class ManageAnimalController extends FrontendController
             }
         }else{
             $this->checkPermission('animal_create');
+            $authUser = Auth::user();
+            $hotelId = $authUser->hotels->first()->id;
+//        $hotelIds = $authUser->hotels->pluck('id'); //TODO на будущее когда несколько баз будет и будет привязываеться админ к конкретной
             $row = new $this->animalClass();
             $row->status = "publish";
+
+
             if(setting_item("animal_vendor_create_service_must_approved_by_admin", 0)){
                 $row->status = "pending";
             }
@@ -166,24 +172,20 @@ class ManageAnimalController extends FrontendController
             'banner_image_id',
             'gallery',
             'location_id',
+            'hotel_id',
             'address',
             'map_lat',
             'map_lng',
             'map_zoom',
             'number',
             'price',
-//            'enable_extra_price',
-//            'extra_price',
             'is_featured',
             'default_state',
-//            'enable_service_fee',
-//            'service_fee',
-//            'min_day_before_booking',
-//            'min_day_stays',
             'ical_import_url'
         ];
 
         $row->fillByAttr($dataKeys,$request->input());
+        $row->hotel_id = $hotelId ?? null;
 
 //        if(!auth()->user()->checkUserPlan() and $row->status == "publish") {
 //            return redirect(route('user.plan'));
