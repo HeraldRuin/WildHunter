@@ -345,6 +345,10 @@
                 var animalInput = document.querySelector('.child_id');
                 return animalInput ? animalInput.value : ''
             },
+            clearAnimal() {
+                this.animal_id = '';
+                this.animalCheckPassed = false;
+            },
             checkAvailabilityForAnimal:function () {
                 var me  = this;
                 if(!this.start_date){

@@ -1,5 +1,4 @@
 @php($location_search_style = setting_item('hotel_location_search_style'))
-
 <div class="form-group">
     <div class="form-content">
         @if($location_search_style=='autocompletePlace')
@@ -14,7 +13,7 @@
             <button type="button"
                     id="clear-animal"
                     class="clear-animal-btn btn btn-sm btn-light"
-                    style="position:absolute; right:2px; top:30%; transform:translateY(-50%)">
+                    style="position:relative; left:278px;" @click="clearAnimal">
                 ✕
             </button>
                 <?php
