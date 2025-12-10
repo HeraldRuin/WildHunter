@@ -34,6 +34,7 @@
                 <div class="row">
                     <div class="col-md-9">
                         @include('Hotel::admin.hotel.content')
+                        @include('Hotel::admin.hotel.hunting')
                         @include('Hotel::admin.hotel.pricing')
                         @include('Hotel::admin.hotel.location')
                         @include('Hotel::admin.hotel.surrounding')
@@ -140,32 +141,108 @@
                 ],
                 zoom: {{ $row->map_zoom ?? '8' }},
                 ready: function(engineMap) {
-                    @if ($row->map_lat && $row->map_lng)
-                        engineMap.addMarker([{{ $row->map_lat }}, {{ $row->map_lng }}], {
-                            icon_options: {}
-                        });
-                    @endif
-                    engineMap.on('click', function(dataLatLng) {
-                        engineMap.clearMarkers();
-                        engineMap.addMarker(dataLatLng, {
-                            icon_options: {}
-                        });
-                        $("input[name=map_lat]").attr("value", dataLatLng[0]);
-                        $("input[name=map_lng]").attr("value", dataLatLng[1]);
-                    });
-                    engineMap.on('zoom_changed', function(zoom) {
-                        $("input[name=map_zoom]").attr("value", zoom);
-                    });
-                    if (bookingCore.map_provider === "gmap") {
-                        engineMap.searchBox($('#customPlaceAddress'), function(dataLatLng) {
-                            engineMap.clearMarkers();
-                            engineMap.addMarker(dataLatLng, {
-                                icon_options: {}
-                            });
-                            $("input[name=map_lat]").attr("value", dataLatLng[0]);
-                            $("input[name=map_lng]").attr("value", dataLatLng[1]);
+
+{{--                    @if ($row->map_lat && $row->map_lng)--}}
+{{--                        engineMap.addMarker([{{ $row->map_lat }}, {{ $row->map_lng }}], {--}}
+{{--                            icon_options: {}--}}
+{{--                        });--}}
+{{--                    @endif--}}
+
+
+                    // engineMap.on('click', function(dataLatLng) {
+                    //     engineMap.clearMarkers();
+                    //     engineMap.addMarker(dataLatLng, {
+                    //         icon_options: {}
+                    //     });
+                    //     $("input[name=map_lat]").attr("value", dataLatLng[0]);
+                    //     $("input[name=map_lng]").attr("value", dataLatLng[1]);
+                    // });
+                    // engineMap.on('zoom_changed', function(zoom) {
+                    //     $("input[name=map_zoom]").attr("value", zoom);
+                    // });
+                    // if (bookingCore.map_provider === "gmap") {
+                    //     engineMap.searchBox($('#customPlaceAddress'), function(dataLatLng) {
+                    //         engineMap.clearMarkers();
+                    //         engineMap.addMarker(dataLatLng, {
+                    //             icon_options: {}
+                    //         });
+                    //         $("input[name=map_lat]").attr("value", dataLatLng[0]);
+                    //         $("input[name=map_lng]").attr("value", dataLatLng[1]);
+                    //     });
+                    // }
+
+                    if (bookingCore.map_provider === "yandex") {
+
+                        // 1. Получаем input для поиска
+                        var input = $('.bc_searchbox')[0];
+
+                        if (!input) return;
+
+                        // 2. Создаем SuggestView для подсказок
+                        // var suggestView = new ymaps.SuggestView(input);
+
+                        // 3. Событие при выборе подсказки
+                        // suggestView.events.add('select', function(e) {
+                        //     var selectedAddress = e.get('item').value; // выбранный адрес
+                        //     alert("Вы выбрали адрес: " + selectedAddress);
+                        //
+                        //     // 4. Получаем координаты через geocode
+                        //     ymaps.geocode(selectedAddress).then(function(res) {
+                        //         var geoObject = res.geoObjects.get(0);
+                        //         if (!geoObject) return;
+                        //
+                        //         var coord = geoObject.geometry.getCoordinates();
+                        //         alert("Координаты: " + coord);
+                        //
+                        //         // 5. Очищаем старые маркеры и добавляем новый
+                        //         engineMap.clearMarkers();
+                        //         engineMap.addMarker(coord, { icon_options: {} });
+                        //
+                        //         // 6. Обновляем поля формы
+                        //         $("input[name=map_lat]").val(coord[0]);
+                        //         $("input[name=map_lng]").val(coord[1]);
+                        //     });
+                        // });
+
+                        // 7. (Опционально) событие при вводе текста
+                        input.addEventListener('input', function() {
+                            console.log("Ввод в поиск: " + input.value);
                         });
                     }
+
+                    // if (bookingCore.map_provider === "yandex") {
+                    //
+                    //     function initSuggest() {
+                    //         var input = document.querySelector('.bc_searchbox');
+                    //         if (!input) {
+                    //             // если элемент еще нет, попробуем через 100мс
+                    //             setTimeout(initSuggest, 100);
+                    //             return;
+                    //         }
+                    //
+                    //         var suggestView = new ymaps.SuggestView(input);
+                    //
+                    //         suggestView.events.add('select', function(e) {
+                    //             var selectedAddress = e.get('item').value;
+                    //             alert("Вы выбрали адрес: " + selectedAddress);
+                    //
+                    //             ymaps.geocode(selectedAddress).then(function(res) {
+                    //                 var coord = res.geoObjects.get(0).geometry.getCoordinates();
+                    //                 alert("Координаты: " + coord);
+                    //
+                    //                 engineMap.clearMarkers();
+                    //                 engineMap.addMarker(coord, { icon_options: {} });
+                    //
+                    //                 $("input[name=map_lat]").val(coord[0]);
+                    //                 $("input[name=map_lng]").val(coord[1]);
+                    //             });
+                    //         });
+                    //     }
+                    //
+                    //     ymaps.ready(initSuggest);
+                    // }
+
+
                     engineMap.searchBox($('.bc_searchbox'), function(dataLatLng) {
                         engineMap.clearMarkers();
                         engineMap.addMarker(dataLatLng, {
