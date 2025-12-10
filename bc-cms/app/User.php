@@ -3,6 +3,7 @@
 namespace App;
 
 use App\Models\ChMessage as Message;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -14,6 +15,7 @@ use Laravel\Fortify\TwoFactorAuthenticatable;
 use Laravel\Sanctum\HasApiTokens;
 use Modules\Booking\Models\Booking;
 use Modules\Booking\Models\Service;
+use Modules\Hotel\Models\Hotel;
 use Modules\Review\Models\Review;
 use Modules\User\Emails\EmailUserVerifyRegister;
 use Modules\User\Emails\ResetPasswordToken;
@@ -561,5 +563,10 @@ class User extends Authenticatable implements MustVerifyEmail
     public function getDetailUrl()
     {
         return route('user.profile', ['id' => $this->user_name ?? $this->id]);
+    }
+
+    public function hotels(): HasMany
+    {
+        return $this->hasMany(Hotel::class, 'create_user');
     }
 }
