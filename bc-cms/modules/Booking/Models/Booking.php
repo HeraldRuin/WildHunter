@@ -443,7 +443,8 @@ class Booking extends BaseModel
         if (!empty($booking_status)) {
             $list_booking->where("status", $booking_status);
         }else{
-            $list_booking->where('status','=','draft');
+            $list_booking->where('status','=','processing');
+//            $list_booking->where('status','=','draft');
         }
         if (!empty($customer_id_or_name)) {
             $list_booking->where(function($q) use($customer_id_or_name){
@@ -468,29 +469,16 @@ class Booking extends BaseModel
         return $list_booking->paginate(10);
     }
 
-    public static function getBookingHistoryForAdminBase($booking_status = false, $admin_base = false)
+    public static function getBookingHistoryForAdminBase($booking_status = false, $hotel_id)
     {
         $list_booking = parent::query()->orderBy('id', 'desc');
+        $list_booking->where('hotel_id', $hotel_id);
 
         if (!empty($booking_status)) {
             $list_booking->where("status", $booking_status);
         }else{
-            $list_booking->where('status','=','draft');
+            $list_booking->where('status','=','processing');
         }
-//        if (!empty($vendor_id)) {
-//            $list_booking->where("vendor_id", $vendor_id);
-//        }
-//        if (!empty($service)) {
-//            $list_booking->where("object_model", $service);
-//        }
-//        if(!empty($from) and !empty($to)){
-//            $list_booking->whereBetween('created_at', [
-//                $from." 00:00",
-//                $to." 23:59",
-//            ]);
-//        }
-
-//        $list_booking->whereIn('object_model', array_keys(get_bookable_services()));
 
         return $list_booking->paginate(10);
     }
