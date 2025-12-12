@@ -19,6 +19,7 @@ class PasswordController extends FrontendController
 
     public function changePassword(Request $request)
     {
+        $user = Auth::user();
         $data = [
             'breadcrumbs' => [
                 [
@@ -32,6 +33,9 @@ class PasswordController extends FrontendController
             ],
             'page_title'  => __("Change Password"),
         ];
+
+        $data['current_password'] = $user->current_password ?? null;
+
         return view('User::frontend.changePassword', $data);
     }
 
