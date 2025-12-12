@@ -200,6 +200,7 @@
     <script src="{{ asset('libs/fullcalendar-4.2.0/core/main.js') }}"></script>
     <script src="{{ asset('libs/fullcalendar-4.2.0/interaction/main.js') }}"></script>
     <script src="{{ asset('libs/fullcalendar-4.2.0/daygrid/main.js') }}"></script>
+    <script src="{{ asset('libs/fullcalendar-4.2.0/core/locales/ru.js') }}"></script>
 
     <script>
         var calendarEl, calendar, lastId, formModal;
@@ -210,6 +211,7 @@
                 calendar.destroy();
             }
             calendar = new FullCalendar.Calendar(calendarEl, {
+                locale: 'ru',
                 buttonText: {
                     today: '{{ __('Today') }}',
                 },
