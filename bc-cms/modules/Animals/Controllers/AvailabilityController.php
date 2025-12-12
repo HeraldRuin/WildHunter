@@ -1,6 +1,7 @@
 <?php
 namespace Modules\Animals\Controllers;
 
+use Carbon\Carbon;
 use ICal\ICal;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -9,6 +10,7 @@ use Modules\Animals\Models\Animal;
 use Modules\Animals\Models\AnimalDate;
 use Modules\Booking\Models\Booking;
 use Modules\FrontendController;
+use Modules\Hotel\Models\Hotel;
 
 class AvailabilityController extends FrontendController{
 
@@ -54,6 +56,11 @@ class AvailabilityController extends FrontendController{
             $q->where('author_id',$this->currentUser()->id);
         }
 
+        $userHotelId = get_user_hotel_id();
+        if ($userHotelId) {
+            $q->where('hotel_id', $userHotelId);
+        }
+
         $q->orderBy('bc_animals.id','desc');
 
         $rows = $q->paginate(15);
@@ -83,145 +90,64 @@ class AvailabilityController extends FrontendController{
         return view($this->indexView,compact('rows','breadcrumbs','current_month','page_title','request'));
     }
 
-    public function loadDates(Request $request){
+    public function loadDates(Request $request)
+    {
         $rules = [
-            'id'=>'required',
-            'start'=>'required',
-            'end'=>'required',
+            'id' => 'required',
+            'start' => 'required',
+            'end' => 'required',
         ];
         $validator = Validator::make($request->all(), $rules);
         if ($validator->fails()) {
             return $this->sendError($validator->errors());
         }
-        $is_single = $request->query('for_single');
-        $car = $this->carClass::find($request->query('id'));
-        if(empty($car)){
-            return $this->sendError(__('Car not found'));
+
+        $animal = $this->animalClass::find($request->query('id'));
+        if (!$animal) {
+            return $this->sendError(__('Animal not found'));
         }
-        $query = $this->carDateClass::query();
-        $query->where('target_id',$request->query('id'));
-        $query->where('start_date','>=',date('Y-m-d H:i:s',strtotime($request->query('start'))));
-        $query->where('end_date','<=',date('Y-m-d H:i:s',strtotime($request->query('end'))));
-        $rows =  $query->take(100)->get();
-        $allDates = [];
-        $period = periodDate($request->query('start'),$request->query('end'));
-        foreach ($period as $dt){
-            $i = $dt->getTimestamp();
-            $date = [
-                'id'=>rand(0,999),
-                'active'=>0,
-                'price'=>(!empty($car->sale_price) and $car->sale_price > 0 and $car->sale_price < $car->price) ? $car->sale_price : $car->price,
-                'is_instant'=>$car->is_instant,
-                'is_default'=>true,
-                'textColor'=>'#2791fe'
-            ];
-            $date['price_html'] = format_money($date['price']).' x '.$car->number;
-            if(!$is_single) {
-                $date['price_html'] = format_money_main($date['price']).' x '.$car->number;
-            }
-            $date['title'] = $date['event']  = $date['price_html'];
-            $date['start'] = $date['end'] = date('Y-m-d',$i);
-            $date['number'] = $car->number;
-            if($car->default_state){
-                $date['active'] = 1;
-            }else{
-                $date['title'] = $date['event'] = __('Blocked');
-                $date['backgroundColor'] = 'orange';
-                $date['borderColor'] = '#fe2727';
-                $date['classNames'] = ['blocked-event'];
-                $date['textColor'] = '#fe2727';
-            }
-            $allDates[date('Y-m-d',$i)] = $date;
-        }
-        if(!empty($rows))
-        {
-            foreach ($rows as $row)
-            {
-                $row->start = date('Y-m-d',strtotime($row->start_date));
-                $row->end = date('Y-m-d',strtotime($row->start_date));
-                $row->textColor = '#2791fe';
-                $price = $row->price;
-                if(empty($price)){
-                    $price = (!empty($car->sale_price) and $car->sale_price > 0 and $car->sale_price < $car->price) ? $car->sale_price : $car->price;
+
+        $calendarStart = Carbon::parse($request->start)->startOfDay();
+        $calendarEnd   = Carbon::parse($request->end)->endOfDay();
+
+        $rows = $this->animalDateClass::query()
+            ->where('target_id', $animal->id)
+            ->where('end_date', '>=', $calendarStart)
+            ->where('start_date', '<=', $calendarEnd)
+            ->get();
+
+        $events = [];
+
+        foreach ($rows as $row) {
+            $rowStart = Carbon::parse($row->start_date)->startOfDay();
+            $rowEnd   = Carbon::parse($row->end_date)->startOfDay();
+
+            for ($date = $rowStart; $date->lte($rowEnd); $date->addDay()) {
+
+                $event = [
+                    'id' => $row->id . '-' . $date->format('Ymd'),
+                    'start' => $date->format('Y-m-d'),
+                    'display' => 'background',
+                    'backgroundColor' => '#27ae60',
+                ];
+
+                if (!$row->active) {
+                    $event['title'] = 'Доступно';
+                    $event['backgroundColor'] = '#fe2727';
+                    $event['borderColor'] = '#fe2727';
+                    $event['classNames'] = ['blocked-event'];
+                } else {
+
                 }
-                $row->title = $row->event = format_money($price).' x '.$row->number;
-                if(!$is_single) {
-                    $row->title = $row->event = format_money_main($price).' x '.$row->number;
-                }
-                $row->price = $price;
-                if(!$row->active)
-                {
-                    $row->title = $row->event = __('Blocked');
-                    $row->backgroundColor = '#fe2727';
-                    $row->classNames = ['blocked-event'];
-                    $row->textColor = '#fe2727';
-                    $row->active = 0;
-                }else{
-                    $row->classNames = ['active-event'];
-                    $row->active = 1;
-                    if($row->is_instant){
-                        $row->title = '<i class="fa fa-bolt"></i> '.$row->title;
-                    }
-                }
-                $allDates[date('Y-m-d',strtotime($row->start_date))] = $row->toArray();
-            }
-        }
-        $model_car = new $this->carClass;
-        $bookings = $model_car->getBookingInRanges($car->id,$car->type,$request->query('start'),$request->query('end'));
-        if(!empty($bookings))
-        {
-            foreach ($bookings as $booking){
-                $period = periodDate($booking->start_date,$booking->end_date);
-                foreach ($period as $dt){
-                    $i = $dt->getTimestamp();
-                    if(isset($allDates[date('Y-m-d',$i)])){
-                        $total_number_booking = $booking->total_numbers;
-                        $max_number = $allDates[date('Y-m-d',$i)]['number'];
-                        if($total_number_booking >= $max_number){
-                            $allDates[date('Y-m-d',$i)]['active'] = 0;
-                            $allDates[date('Y-m-d',$i)]['event'] = __('Full Book');
-                            $allDates[date('Y-m-d',$i)]['title'] = __('Full Book');
-                            $allDates[date('Y-m-d',$i)]['classNames'] = ['full-book-event'];
-                        } else {
-                            $allDates[date('Y-m-d',$i)]['title'] = format_money_main($allDates[date('Y-m-d',$i)]['price']).' x '.( $max_number - $total_number_booking );
-                        }
-                    }
-                }
+
+                $events[] = $event;
             }
         }
 
-        if (!empty($car->ical_import_url)) {
-            $startDate = $request->query('start');
-            $endDate = $request->query('end');
-            $timezone = setting_item('site_timezone', config('app.timezone'));
-            try {
-                $icalevents = new Ical($car->ical_import_url, [
-                    'defaultTimeZone' => $timezone
-                ]);
-                $eventRange = $icalevents->eventsFromRange($startDate, $endDate);
-                if (!empty($eventRange)) {
-                    foreach ($eventRange as $item => $value) {
-                        if (!empty($date = $value->dtstart_array[2])) {
-                            $max_guests = $allDates[date('Y-m-d', $date)]['number'] - 1;
-                            $allDates[date('Y-m-d', $date)]['number'] = $max_guests;
-                            if ($max_guests == 0) {
-                                $allDates[date('Y-m-d', $date)]['active'] = 0;
-                                $allDates[date('Y-m-d', $date)]['event'] = __('Full Book');
-                                $allDates[date('Y-m-d', $date)]['title'] = __('Full Book');
-                                $allDates[date('Y-m-d', $date)]['classNames'] = ['full-book-event'];
-                            }
-                        }
-                    }
-                }
-            } catch (\Exception $exception) {
-                return $this->sendError($exception->getMessage());
-            }
-        }
-
-
-        $data = array_values($allDates);
-        return response()->json($data);
+        return response()->json($events);
     }
+
+
 
     public function store(Request $request){
 
@@ -273,5 +199,53 @@ class AvailabilityController extends FrontendController{
 
         return $this->sendSuccess([],__("Update Success"));
 
+    }
+
+    public function checkAvailability(): \Illuminate\Http\JsonResponse
+    {
+        $animal_id = \request('animal_id');
+        $hotel_id = \request('hotel_id');
+        $start_date = request('start_date');
+        $adults = request('adults');
+
+        if(\request()->input('firstLoad') == "false") {
+            $rules = [
+                'hotel_id'   => 'required',
+                'start_date' => 'required:date_format:Y-m-d',
+                'adults'     => 'required',
+                'animal_id'     => 'required',
+            ];
+            $validator = \Validator::make(request()->all(), $rules);
+            if ($validator->fails()) {
+                return $this->sendError($validator->errors()->all());
+            }
+
+            if(empty($start_date)){
+                return $this->sendError(__("Please select a date"));
+            }
+        }
+
+        $range = AnimalDate::where('target_id', $animal_id)
+            ->where('start_date', '<=', $start_date)
+            ->where('end_date', '>=', $start_date)
+            ->first();
+
+        if (!$range) {
+            return $this->sendError('На эту дату охота на это животное недоступна');
+        }
+
+        $animalBookedCount = Booking::where('object_model', 'animal')
+            ->whereDate('start_date', '=', $start_date)
+            ->where('hotel_id', $hotel_id)
+            ->where('status', 'processing')
+            ->count();
+
+        $hotel = Hotel::find($hotel_id);
+        $maxTotalHunts = (int) $hotel->max_hunts_per_day;
+
+        if ($animalBookedCount + 1 > $maxTotalHunts) {
+            return $this->sendError('На эту дату лимит охот на выбранное животное исчерпан');
+        }
+        return $this->sendSuccess(['available' => true]);
     }
 }
