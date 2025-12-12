@@ -101,8 +101,7 @@ class UserController extends FrontendController
 
     public function profile(Request $request)
     {
-//        $user = Auth::user();
-        $user = \Modules\User\Models\User::find(64);
+        $user = Auth::user();
         $data = [
             'user'         => $user,
             'page_title'       => __("Profile"),
