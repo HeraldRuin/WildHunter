@@ -132,35 +132,7 @@
                         $list_all_fee = array_merge($list_all_fee , $vendor_service_fee);
                     }
 				@endphp
-				@if(!empty($list_all_fee))
-					@foreach ($list_all_fee as $item)
-						@php
-							$fee_price = $item['price'];
-                            if(!empty($item['unit']) and $item['unit'] == "percent"){
-                                $fee_price = ( $booking->total_before_fees / 100 ) * $item['price'];
-                            }
-						@endphp
-						<li>
-							<div class="label">
-                                {{$item['name_'.$lang_local] ?? $item['name'] ?? '' }}
-                                <i
-                                    class="icofont-info-circle" data-toggle="tooltip" data-placement="top"
-                                    title="{{ $item['desc_'.$lang_local] ?? $item['desc'] ?? '' }}"
-                                ></i>
-								@if(!empty($item['per_person']) and $item['per_person'] == "on")
-									: {{$booking->total_guests}} * {{format_money( $fee_price )}}
-								@endif
-							</div>
-							<div class="val">
-								@if(!empty($item['per_person']) and $item['per_person'] == "on")
-									{{ format_money( $fee_price * $booking->total_guests ) }}
-								@else
-									{{ format_money( $fee_price ) }}
-								@endif
-							</div>
-						</li>
-					@endforeach
-				@endif
+
 				@includeIf('Coupon::frontend/booking/checkout-coupon')
 				<li class="final-total d-block">
 					<div class="d-flex justify-content-between">
