@@ -159,12 +159,14 @@ class UserController extends FrontendController
     public function bookingHistory(Request $request)
     {
         $cabinetData = $this->cabinetService->getCabinetData();
+
         $authUser = Auth::user();
-        $hotelId = $authUser->hotels->first()->id;
+
 //        $hotelIds = $authUser->hotels->pluck('id'); //TODO на будущее когда несколько баз будет и будет привязываеться админ к конкретной
 
 
         if ($authUser->hasRole('baseadmin')){
+            $hotelId = $authUser->hotels->first()->id;
             $bookings = $this->booking->getBookingHistoryForAdminBase($request->input('status'), $hotelId);
         }else {
             $bookings = $this->booking->getBookingHistory($request->input('status'), $authUser->id);
