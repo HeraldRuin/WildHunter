@@ -82,7 +82,6 @@ class HotelController extends Controller
                 ]
             ]);
         }
-
         $data = [
             'rows'               => $list,
             'list_location'      => $this->locationClass::where('status', 'publish')->limit(1000)->with(['translation'])->get()->toTree(),
