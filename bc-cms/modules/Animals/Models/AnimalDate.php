@@ -16,8 +16,8 @@ class AnimalDate extends BaseModel
 
     public static function getDatesInRanges($start_date,$end_date,$id){
         return static::query()->where([
-            ['start_date','>=',$start_date],
-            ['end_date','<=',$end_date],
+            ['start_date','<=',$start_date],
+            ['end_date','>=',$end_date],
             ['target_id','=',$id],
         ])->take(100)->get();
     }
