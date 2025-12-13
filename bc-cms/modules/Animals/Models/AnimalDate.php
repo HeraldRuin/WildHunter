@@ -7,6 +7,9 @@ class AnimalDate extends BaseModel
 {
     protected $table = 'bc_animal_dates';
 
+    protected $fillable = [
+        'target_id'
+    ];
     protected $casts = [
         'price'=>'float',
     ];
