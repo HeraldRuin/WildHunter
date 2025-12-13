@@ -31,7 +31,7 @@ class AvailabilityController extends FrontendController{
     {
         parent::__construct();
         $this->animalClass = $animalClass;
-       $this->animalDateClass = $animalDateClass;
+        $this->animalDateClass = $animalDateClass;
         $this->bookingClass = $bookingClass;
     }
 
@@ -180,15 +180,15 @@ class AvailabilityController extends FrontendController{
             $date->save();
 
         } elseif ($type === 'range') {
-                $date = $this->animalDateClass::firstOrNew([
-                    'target_id' => $target_id,
-                ]);
+            $date = $this->animalDateClass::firstOrNew([
+                'target_id' => $target_id,
+            ]);
 
-                $date->active = $animal->status === 'publish';
-                $date->start_date = $request->input('start_date');
-                $date->end_date = $request->input('end_date');
-                $date->excluded_dates = json_encode([]);
-                $date->save();
+            $date->active = $animal->status === 'publish';
+            $date->start_date = $request->input('start_date');
+            $date->end_date = $request->input('end_date');
+            $date->excluded_dates = json_encode([]);
+            $date->save();
         } else {
             $removedDate = $request->input('start_date');
             $date = $this->animalDateClass::firstOrNew([
@@ -233,12 +233,7 @@ class AvailabilityController extends FrontendController{
 
         $range = AnimalDate::getDatesInRanges($start_date, $start_date, $animal_id)->first();
 
-        if (!$range) {
-            return $this->sendError('На эту дату охота на это животное недоступна');
-        }
-
-        $excludedDates = $range->excluded_dates ? json_decode($range->excluded_dates, true) : [];
-        if (in_array($start_date, $excludedDates)) {
+        if (!$range || ( $range->excluded_dates && in_array($start_date, json_decode($range->excluded_dates, true)) )) {
             return $this->sendError('На эту дату охота на это животное недоступна');
         }
 
