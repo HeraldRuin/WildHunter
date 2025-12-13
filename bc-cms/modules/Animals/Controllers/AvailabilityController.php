@@ -231,10 +231,7 @@ class AvailabilityController extends FrontendController{
             }
         }
 
-        $range = AnimalDate::where('target_id', $animal_id)
-            ->where('start_date', '<=', $start_date)
-            ->where('end_date', '>=', $start_date)
-            ->first();
+        $range = AnimalDate::getDatesInRanges($start_date, $start_date, $animal_id)->first();
 
         if (!$range) {
             return $this->sendError('На эту дату охота на это животное недоступна');
