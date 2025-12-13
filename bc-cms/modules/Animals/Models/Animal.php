@@ -3,6 +3,7 @@
 namespace Modules\Animals\Models;
 
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Auth;
 use Kalnoy\Nestedset\NodeTrait;
 use Modules\Booking\Models\Bookable;
@@ -12,6 +13,8 @@ use Illuminate\Http\Request;
 
 class Animal extends Bookable
 {
+    use SoftDeletes;
+
     protected $bookingClass;
     public    $checkout_booking_detail_file       = 'Animal::frontend/booking/detail';
     public    $checkout_booking_detail_modal_file = 'Animal::frontend/booking/detail-modal';
