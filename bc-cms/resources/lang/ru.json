@@ -3864,5 +3864,8 @@
     "Hunting date:": "Дата охоты:",
     "Maximum number of hunts for a base": "Максимальное количество охот для базы",
     "How many hunts per day?": "Сколько охот в день?",
-    "Hunting organization": "Организация охоты"
+    "Hunting organization": "Организация охоты",
+    "Set this date range for availability?": "Установить этот диапазон дат для доступности?",
+    "Set availability on this day": "Установить доступность в этот день",
+    "Availability on this day": "Доступно в этот день"
 }
