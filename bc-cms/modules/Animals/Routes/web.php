@@ -26,8 +26,8 @@ Route::group(['prefix'=>'user/'.config('animal.animal_route_prefix')],function()
     });
     Route::group(['prefix'=>'hunting'],function(){
         Route::get('/','HuntingController@index')->name('animal.vendor.hunting.index');
-        Route::get('/loadDates','HuntingController@loadDates')->name('hotel.vendor.hunting.loadDates');
-        Route::post('/store','HuntingController@store')->name('hotel.vendor.hunting.store');
+        Route::get('/loadDates','HuntingController@loadDates')->name('animal.vendor.hunting.loadDates');
+        Route::post('/store','HuntingController@store')->name('animal.vendor.hunting.store');
     });
 });
 
