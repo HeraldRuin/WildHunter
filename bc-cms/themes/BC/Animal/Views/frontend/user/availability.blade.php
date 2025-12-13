@@ -47,7 +47,7 @@
             </div>
         </div>
     @else
-        <div class="alert alert-warning">{{ __('No cars found') }}</div>
+        <div class="alert alert-warning">{{ __('No animals found') }}</div>
     @endif
     <div class="d-flex justify-content-center">
         {{ $rows->appends($request->query())->links() }}
@@ -69,53 +69,20 @@
                                 <input readonly type="text" class="form-control has-daterangepicker">
                             </div>
                         </div>
-                        <div class="col-md-6">
+                        <div class="col-md-6 mt-3">
                             <div class="form-group">
-                                <label>{{ __('Status') }}</label>
                                 <br>
-                                <label><input true-value=1 false-value=0 type="checkbox" v-model="form.active">
-                                    {{ __('Available for booking?') }}</label>
+                                <label><input type="checkbox" v-model="form.availability_range" @change="onRangeChange">
+                                    {{ __('Set this date range for availability?') }}</label>
                             </div>
                         </div>
                         <div class="col-md-12">
-                            <div class="form-group mb-1">
-                                <label>{{ __('Day of week') }}</label>
-                            </div>
-                            <div class="form-group">
-                                <div class="form-check form-check-inline">
-                                    <input class="form-check-input" type="checkbox" v-model="form.day_of_week_select"
-                                        id="monday" value="1">
-                                    <label class="form-check-label" for="monday">{{ __('Monday') }}</label>
-                                </div>
-                                <div class="form-check form-check-inline">
-                                    <input class="form-check-input" type="checkbox" v-model="form.day_of_week_select"
-                                        id="tuesday" value="2">
-                                    <label class="form-check-label" for="tuesday">{{ __('Tuesday') }}</label>
-                                </div>
-                                <div class="form-check form-check-inline">
-                                    <input class="form-check-input" type="checkbox" v-model="form.day_of_week_select"
-                                        id="wednesday" value="3">
-                                    <label class="form-check-label" for="wednesday">{{ __('Wednesday') }}</label>
-                                </div>
-                                <div class="form-check form-check-inline">
-                                    <input class="form-check-input" type="checkbox" v-model="form.day_of_week_select"
-                                        id="thursday" value="4">
-                                    <label class="form-check-label" for="thursday">{{ __('Thursday') }}</label>
-                                </div>
-                                <div class="form-check form-check-inline">
-                                    <input class="form-check-input" type="checkbox" v-model="form.day_of_week_select"
-                                        id="friday" value="5">
-                                    <label class="form-check-label" for="friday">{{ __('Friday') }}</label>
-                                </div>
-                                <div class="form-check form-check-inline">
-                                    <input class="form-check-input" type="checkbox" v-model="form.day_of_week_select"
-                                        id="saturday" value="6">
-                                    <label class="form-check-label" for="saturday">{{ __('Saturday') }}</label>
-                                </div>
-                                <div class="form-check form-check-inline">
-                                    <input class="form-check-input" type="checkbox" v-model="form.day_of_week_select"
-                                        id="sunday" value="7">
-                                    <label class="form-check-label" for="sunday">{{ __('Sunday') }}</label>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label>{{ __('Set availability on this day') }}</label>
+                                    <br>
+                                    <label><input type="checkbox" v-model="form.availability_day" @change="onDayChange">
+                                        {{ __('Availability on this day') }}</label>
                                 </div>
                             </div>
                         </div>
@@ -169,28 +136,11 @@
 
         #dates-calendar .loading {}
 
-        /*.fc-event.active-event {*/
-        /*    background-color: rgba(40, 167, 69, 0.5) !important; !* зеленый полупрозрачный фон *!*/
-        /*    color: #000 !important;                                !* черный текст для читаемости *!*/
-        /*    border: 1px solid #28a745 !important;                 !* зеленая граница *!*/
-        /*}*/
-
-        /* По желанию: заблокированные события */
         .fc-event.blocked-event {
             background-color: rgba(40, 167, 69, 0.5) !important;
             color: #fff !important;
             border: 1px solid #666 !important;
         }
-
-
-        /*.fc-event.available-event,*/
-        /*.fc-event.blocked-event {*/
-        /*    width: 100% !important;*/
-        /*    height: 100% !important;*/
-        /*    top: 0 !important;*/
-        /*    left: 0 !important;*/
-        /*    border-radius: 0 !important;*/
-        /*}*/
     </style>
 @endpush
 
@@ -256,22 +206,7 @@
                 eventRender: function(info) {
                     $(info.el).find('.fc-event-dot').remove();
                     $(info.el).find('.fc-title').html(info.event.title);
-
-
                 }
-
-                // eventRender: function(info) {
-                //     info.el.style.display = 'flex';
-                //     info.el.style.alignItems = 'center';
-                //     info.el.style.justifyContent = 'center';
-                //     info.el.style.height = '100%';
-                //     info.el.style.width = '100%';
-                //     info.el.style.borderRadius = '0';
-                //     info.el.style.fontWeight = 'bold';
-                //     $(info.el).find('.fc-event-dot').remove();
-                // }
-
-
 
             });
             calendar.render();
@@ -297,7 +232,9 @@
                     max_guests: 0,
                     active: 0,
                     number: 0,
-                    day_of_week_select: []
+                    type: '',
+                    availability_range: false,
+                    availability_day: true,
                 },
                 formDefault: {
                     id: '',
@@ -310,7 +247,8 @@
                     max_guests: 0,
                     active: 0,
                     number: 0,
-                    day_of_week_select: []
+                    availability_range: false,
+                    availability_day: false,
                 },
                 person_types: [
 
@@ -331,11 +269,16 @@
                     this.onSubmit = false;
 
                     if (typeof form != 'undefined') {
-                        form.day_of_week_select = []
-                        this.form = Object.assign({}, form);
-                        if (typeof this.form.person_types == 'object') {
-                            this.person_types = Object.assign({}, this.form.person_types);
-                        }
+                        this.form.id = form.id || '';
+                        this.form.price = form.price || '';
+                        this.form.start_date = form.start_date || '';
+                        this.form.end_date = form.end_date || '';
+                        this.form.availability_range = form.availability_range || false;
+                        this.form.availability_day = form.availability_day || false;
+
+                        this.form.availability_day = true;
+                        this.form.availability_range = false;
+                        this.form.type = 'day';
 
                         if (form.start_date) {
                             var drp = $('.has-daterangepicker').data('daterangepicker');
@@ -359,9 +302,8 @@
                     if (!this.validateForm()) return;
 
                     this.onSubmit = true;
-                    this.form.person_types = Object.assign({}, this.person_types);
                     $.ajax({
-                        url: '{{ route('car.vendor.availability.store') }}',
+                        url: '{{ route('animal.vendor.availability.store') }}',
                         data: this.form,
                         dataType: 'json',
                         method: 'post',
@@ -386,11 +328,26 @@
                     return true;
                 },
                 addItem: function() {
-                    console.log(this.person_types);
                     this.person_types.push(Object.assign({}, this.person_type_item));
                 },
                 deleteItem: function(index) {
                     this.person_types.splice(index, 1);
+                },
+                onRangeChange() {
+                    if (this.form.availability_range) {
+                        this.form.availability_day = false;
+                        this.form.type = 'range';
+                    } else {
+                        this.form.type = '';
+                    }
+                },
+                onDayChange() {
+                    if (this.form.availability_day) {
+                        this.form.availability_range = false;
+                        this.form.type = 'day';
+                    } else {
+                        this.form.type = '';
+                    }
                 }
             },
             created: function() {
@@ -418,7 +375,7 @@
             },
             mounted: function() {
                 // $(this.$el).modal();
-            }
+            },
         });
     </script>
 @endpush
