@@ -122,22 +122,27 @@ class AvailabilityController extends FrontendController{
             $rowStart = Carbon::parse($row->start_date)->startOfDay();
             $rowEnd   = Carbon::parse($row->end_date)->startOfDay();
 
+            $excludedDates = $row->excluded_dates ? json_decode($row->excluded_dates, true) : [];
+
             for ($date = $rowStart; $date->lte($rowEnd); $date->addDay()) {
+                $dateStr = $date->format('Y-m-d');
+
+                if (in_array($dateStr, $excludedDates)) {
+                    continue;
+                }
 
                 $event = [
                     'id' => $row->id . '-' . $date->format('Ymd'),
-                    'start' => $date->format('Y-m-d'),
+                    'start' => $dateStr,
                     'display' => 'background',
                     'backgroundColor' => '#27ae60',
                 ];
 
-                if (!$row->active) {
+                if ($row->active) {
                     $event['title'] = 'Доступно';
                     $event['backgroundColor'] = '#fe2727';
                     $event['borderColor'] = '#fe2727';
                     $event['classNames'] = ['blocked-event'];
-                } else {
-
                 }
 
                 $events[] = $event;
@@ -147,56 +152,57 @@ class AvailabilityController extends FrontendController{
         return response()->json($events);
     }
 
-
-
-    public function store(Request $request){
-
+    public function store(Request $request)
+    {
         $request->validate([
             'target_id'=>'required',
             'start_date'=>'required',
-            'end_date'=>'required'
+            'end_date'=>'required',
         ]);
-
-        $car = $this->carClass::find($request->input('target_id'));
         $target_id = $request->input('target_id');
+        $type = $request->input('type', null);
 
-        if(empty($car)){
-            return $this->sendError(__('Car not found'));
+        $animal = $this->animalClass::find($target_id);
+
+
+        if(empty($animal)){
+            return $this->sendError(__('Animal not found'));
         }
 
-        if(!$this->hasPermission('car_manage_others')){
-            if($car->author_id != Auth::id()){
-                return $this->sendError("You do not have permission to access it");
-            }
-        }
+        if ($type === 'day') {
+            $date = $this->animalDateClass::firstOrNew([
+                'target_id' => $target_id,
+            ]);
+            $date->active = $animal->status === 'publish';
+            $date->start_date = $request->input('start_date');
+            $date->end_date = $request->input('start_date');
+            $date->excluded_dates = json_encode([]);
+            $date->save();
 
-        $dayOfWeek =$request->input("day_of_week_select",[]);
+        } elseif ($type === 'range') {
+                $date = $this->animalDateClass::firstOrNew([
+                    'target_id' => $target_id,
+                ]);
 
-        $postData = $request->input();
-        $period = periodDate($request->input('start_date'),$request->input('end_date'));
-        foreach ($period as $dt){
-            $date = $this->carDateClass::where('start_date',$dt->format('Y-m-d'))->where('target_id',$target_id)->first();
-
-            if(empty($date)){
-                $date = new $this->carDateClass();
-                $date->target_id = $target_id;
-            }
-            $postData['start_date'] = $dt->format('Y-m-d H:i:s');
-            $postData['end_date'] = $dt->format('Y-m-d H:i:s');
-
-
-            $date->fillByAttr([
-                'start_date','end_date','price','number',
-                'is_instant','active',
-            ],$postData);
-
-            if(empty($dayOfWeek)){
+                $date->active = $animal->status === 'publish';
+                $date->start_date = $request->input('start_date');
+                $date->end_date = $request->input('end_date');
+                $date->excluded_dates = json_encode([]);
                 $date->save();
-            }elseif(in_array(date('N', strtotime($dt->format('Y-m-d H:i:s')) ),$dayOfWeek)){
+        } else {
+            $removedDate = $request->input('start_date');
+            $date = $this->animalDateClass::firstOrNew([
+                'target_id' => $target_id,
+            ]);
+            if ($date) {
+                $excluded = json_decode($date->excluded_dates ?? '[]', true);
+                if (!in_array($removedDate, $excluded)) {
+                    $excluded[] = $removedDate;
+                }
+                $date->excluded_dates = json_encode($excluded);
                 $date->save();
             }
         }
-
         return $this->sendSuccess([],__("Update Success"));
 
     }
@@ -231,6 +237,11 @@ class AvailabilityController extends FrontendController{
             ->first();
 
         if (!$range) {
+            return $this->sendError('На эту дату охота на это животное недоступна');
+        }
+
+        $excludedDates = $range->excluded_dates ? json_decode($range->excluded_dates, true) : [];
+        if (in_array($start_date, $excludedDates)) {
             return $this->sendError('На эту дату охота на это животное недоступна');
         }
 
