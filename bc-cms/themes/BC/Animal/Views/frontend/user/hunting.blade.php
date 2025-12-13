@@ -1,0 +1,339 @@
+@extends('layouts.user')
+
+@section('content')
+    <h2 class="title-bar no-border-bottom">
+        {{ __('Hunting Animals') }}
+    </h2>
+    <div class="language-navigation">
+        <div class="panel-body">
+            <div class="filter-div d-flex justify-content-between ">
+                <div class="col-left">
+                    <form method="get" action="" class="filter-form filter-form-left d-flex flex-column flex-sm-row"
+                        role="search">
+                        <input type="text" name="s" value="{{ Request()->s }}"
+                            placeholder="{{ __('Search by name') }}" class="form-control">&nbsp;&nbsp;
+                        <button class="btn-info btn btn-icon btn_search btn-sm" type="submit">{{ __('Search') }}</button>
+                    </form>
+                </div>
+                <div class="col-right">
+                    @if ($rows->total() > 0)
+                        <span
+                            class="count-string">{{ __('Showing :from - :to of :total cars', ['from' => $rows->firstItem(), 'to' => $rows->lastItem(), 'total' => $rows->total()]) }}</span>
+                    @endif
+                </div>
+            </div>
+        </div>
+    </div>
+    @if (count($rows))
+        <div class="user-panel">
+            <div class="panel-title"><strong>{{ __('Availability') }}</strong></div>
+            <div class="panel-body no-padding" style="background: #f4f6f8;padding: 0px 15px;">
+                <div class="row">
+                    <div class="col-md-3" style="border-right: 1px solid #dee2e6;">
+                        <ul class="nav nav-tabs  flex-column vertical-nav" id="items_tab" role="tablist">
+                            @foreach ($rows as $k => $item)
+                                <li class="nav-item event-name ">
+                                    <a class="nav-link" data-id="{{ $item->id }}" data-toggle="tab"
+                                        href="#calendar-{{ $item->id }}"
+                                        title="{{ $item->title }}">#{{ $item->id }} - {{ $item->title }}</a>
+                                </li>
+                            @endforeach
+                        </ul>
+                    </div>
+                    <div class="col-md-9" style="background: white;padding: 15px;">
+                        <div id="dates-calendar" class="dates-calendar"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    @else
+        <div class="alert alert-warning">{{ __('No animals found') }}</div>
+    @endif
+    <div class="d-flex justify-content-center">
+        {{ $rows->appends($request->query())->links() }}
+    </div>
+    <div id="bc_modal_calendar" class="modal fade">
+        <div class="modal-dialog modal-lg " role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">{{ __('Date Information') }}</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form class="row form_modal_calendar form-horizontal" novalidate onsubmit="return false">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>{{ __('Date Ranges') }}</label>
+                                <input readonly type="text" class="form-control has-daterangepicker">
+                            </div>
+                        </div>
+                        <div class="col-md-6 mt-3">
+                            <div class="form-group">
+                                <br>
+                                <label><input type="checkbox" v-model="form.availability_range" @change="onRangeChange">
+                                    {{ __('Set amount for this range?') }}</label>
+                            </div>
+                        </div>
+                        <div class="col-md-12">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label>{{ __('Set amount on this day') }}</label>
+                                    <br>
+                                    <label><input type="checkbox" v-model="form.availability_day" @change="onDayChange">
+                                        {{ __('Set amount for this day') }}</label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>{{ __('Price') }}</label>
+                                <input type="number" v-model="form.price" class="form-control">
+                            </div>
+                        </div>
+                    </form>
+                    <div v-if="lastResponse.message">
+                        <br>
+                        <div class="alert" v-bind:class="!lastResponse.status ? 'alert-danger' : 'alert-success'">
+                            @{{ lastResponse.message }}</div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">{{ __('Close') }}</button>
+                    <button type="button" class="btn btn-primary" @click="saveForm">{{ __('Save changes') }}</button>
+                </div>
+            </div>
+        </div>
+    </div>
+@endsection
+
+@push('css')
+    <link rel="stylesheet" href="{{ asset('libs/fullcalendar-4.2.0/core/main.css') }}">
+    <link rel="stylesheet" href="{{ asset('libs/fullcalendar-4.2.0/daygrid/main.css') }}">
+    <link rel="stylesheet" href="{{ asset('libs/daterange/daterangepicker.css') }}">
+
+    <style>
+        .event-name {
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            overflow: hidden;
+        }
+
+        #dates-calendar .loading {}
+
+        .fc-event.blocked-event {
+            background-color: rgba(40, 167, 69, 0.5) !important;
+            color: #fff !important;
+            border: 1px solid #666 !important;
+        }
+    </style>
+@endpush
+
+@push('js')
+    <script src="{{ asset('libs/daterange/moment.min.js') }}"></script>
+    <script src="{{ asset('libs/daterange/daterangepicker.min.js?_ver=' . config('app.asset_version')) }}"></script>
+    <script src="{{ asset('libs/fullcalendar-4.2.0/core/main.js') }}"></script>
+    <script src="{{ asset('libs/fullcalendar-4.2.0/interaction/main.js') }}"></script>
+    <script src="{{ asset('libs/fullcalendar-4.2.0/daygrid/main.js') }}"></script>
+    <script src="{{ asset('libs/fullcalendar-4.2.0/core/locales/ru.js') }}"></script>
+
+    <script>
+        var calendarEl, calendar, lastId, formModal;
+        $('#items_tab').on('show.bs.tab', function(e) {
+            calendarEl = document.getElementById('dates-calendar');
+            lastId = $(e.target).data('id');
+            if (calendar) {
+                calendar.destroy();
+            }
+            calendar = new FullCalendar.Calendar(calendarEl, {
+                locale: 'ru',
+                buttonText: {
+                    today: '{{ __('Today') }}',
+                },
+
+                plugins: ['dayGrid', 'interaction'],
+                header: {},
+                selectable: true,
+                selectMirror: false,
+                allDay: false,
+                editable: false,
+                eventLimit: false,
+                defaultView: 'dayGridMonth',
+                firstDay: daterangepickerLocale.first_day_of_week,
+                events: {
+                    url: "{{ route('animal.vendor.hunting.loadDates') }}",
+                    extraParams: {
+                        id: lastId,
+                    }
+                },
+                loading: function(isLoading) {
+                    if (!isLoading) {
+                        $(calendarEl).removeClass('loading');
+                    } else {
+                        $(calendarEl).addClass('loading');
+                    }
+                },
+                select: function(arg) {
+                    formModal.show({
+                        start_date: moment(arg.start).format('YYYY-MM-DD'),
+                        end_date: moment(arg.end).format('YYYY-MM-DD'),
+                    });
+                },
+                eventClick: function(info) {
+                    var form = Object.assign({}, info.event.extendedProps);
+                    form.start_date = moment(info.event.start).format('YYYY-MM-DD');
+                    form.end_date = moment(info.event.start).format('YYYY-MM-DD');
+                    console.log(form);
+                    formModal.show(form);
+                },
+
+
+                eventRender: function(info) {
+                    $(info.el).find('.fc-event-dot').remove();
+                    $(info.el).find('.fc-title').html(info.event.title);
+                }
+
+            });
+            calendar.render();
+        });
+
+        $('.event-name:first-child a').trigger('click');
+
+        formModal = new Vue({
+            el: '#bc_modal_calendar',
+            data: {
+                lastResponse: {
+                    status: null,
+                    message: ''
+                },
+                form: {
+                    price: '',
+                    start_date: '',
+                    end_date: '',
+                    active: 0,
+                    type: '',
+                    availability_range: false,
+                    availability_day: true,
+                },
+                formDefault: {
+                    price: '',
+                    start_date: '',
+                    end_date: '',
+                    active: 0,
+                    type: '',
+                    availability_range: false,
+                    availability_day: true,
+                },
+                onSubmit: false
+            },
+            methods: {
+                show: function(form) {
+                    $(this.$el).modal('show');
+                    this.lastResponse.message = '';
+                    this.onSubmit = false;
+
+                    if (typeof form != 'undefined') {
+                        this.form.price = form.price || '';
+                        this.form.start_date = form.start_date || '';
+                        this.form.end_date = form.end_date || '';
+                        this.form.availability_range = form.availability_range || false;
+                        this.form.availability_day = form.availability_day || false;
+
+                        this.form.availability_day = true;
+                        this.form.availability_range = false;
+                        this.form.type = 'day';
+
+                        if (form.start_date) {
+                            var drp = $('.has-daterangepicker').data('daterangepicker');
+                            drp.setStartDate(moment(form.start_date).format(bookingCore.date_format));
+                            drp.setEndDate(moment(form.end_date).format(bookingCore.date_format));
+
+                        }
+                    }
+                },
+                hide: function() {
+                    $(this.$el).modal('hide');
+                    this.form = Object.assign({}, this.formDefault);
+                    this.person_types = [];
+                },
+                saveForm: function() {
+                    this.form.target_id = lastId;
+                    var me = this;
+                    me.lastResponse.message = '';
+                    if (this.onSubmit) return;
+
+                    if (!this.validateForm()) return;
+
+                    this.onSubmit = true;
+                    $.ajax({
+                        url: '{{ route('animal.vendor.hunting.store') }}',
+                        data: this.form,
+                        dataType: 'json',
+                        method: 'post',
+                        success: function(json) {
+                            if (json.status) {
+                                if (calendar)
+                                    calendar.refetchEvents();
+                                me.hide();
+                            }
+                            me.lastResponse = json;
+                            me.onSubmit = false;
+                        },
+                        error: function(e) {
+                            me.onSubmit = false;
+                        }
+                    });
+                },
+                validateForm: function() {
+                    if (!this.form.start_date) return false;
+                    if (!this.form.end_date) return false;
+
+                    return true;
+                },
+                onRangeChange() {
+                    if (this.form.availability_range) {
+                        this.form.availability_day = false;
+                        this.form.type = 'range';
+                    } else {
+                        this.form.type = '';
+                    }
+                },
+                onDayChange() {
+                    if (this.form.availability_day) {
+                        this.form.availability_range = false;
+                        this.form.type = 'day';
+                    } else {
+                        this.form.type = '';
+                    }
+                }
+            },
+            created: function() {
+                var me = this;
+                this.$nextTick(function() {
+                    $('.has-daterangepicker').daterangepicker({
+                            "locale": {
+                                "format": bookingCore.date_format
+                            }
+                        })
+                        .on('apply.daterangepicker', function(e, picker) {
+                            console.log(picker);
+                            me.form.start_date = picker.startDate.format('YYYY-MM-DD');
+                            me.form.end_date = picker.endDate.format('YYYY-MM-DD');
+                        });
+
+                    $(me.$el).on('hide.bs.modal', function() {
+
+                        this.form = Object.assign({}, this.formDefault);
+                        this.person_types = [];
+
+                    });
+
+                })
+            },
+            mounted: function() {
+                // $(this.$el).modal();
+            },
+        });
+    </script>
+@endpush
