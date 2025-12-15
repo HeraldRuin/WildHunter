@@ -127,7 +127,14 @@ class HotelController extends Controller
             'translation'       => $translation,
             'hotel_related' => $hotel_related,
             'location_category'=>$this->locationCategoryClass::where("status", "publish")->with('location_category_translations')->get(),
-            'list_animals' => Animal::where('status', 'publish')->where('hotel_id', $hotelId)->limit(1000)->with(['translation', 'hotels'])->get(),
+            'list_animals' => Animal::whereHas('hotels', function($query) use ($hotelId) {
+                $query->where('hotel_id', $hotelId);
+            })
+                ->with(['translation', 'hotels' => function($q) use ($hotelId) {
+                    $q->where('hotel_id', $hotelId);
+                }])
+                ->limit(1000)
+                ->get(),
             'booking_data' => $row->getBookingData(),
             'review_list'  => $review_list,
             'seo_meta'  => $row->getSeoMetaWithTranslation(app()->getLocale(),$translation),
