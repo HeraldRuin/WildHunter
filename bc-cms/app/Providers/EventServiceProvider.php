@@ -10,8 +10,10 @@ use Modules\Booking\Listeners\EnquiryNotifyListen;
 use Modules\Booking\Listeners\EnquirySendListen;
 use Modules\User\Events\NewVendorRegistered;
 use Modules\User\Events\SendMailUserRegistered;
+use Modules\User\Events\SendMailUserUpdatePassword;
 use Modules\User\Events\VendorApproved;
 use Modules\User\Listeners\SendMailUserRegisteredListen;
+use Modules\User\Listeners\SendMailUserUpdatePasswordListen;
 use Modules\User\Listeners\SendNotifyApproved;
 use Modules\User\Listeners\SendNotifyRegistered;
 use Modules\User\Listeners\SendNotifyRegisteredListen;
@@ -35,6 +37,9 @@ class EventServiceProvider extends ServiceProvider
         SendMailUserRegistered::class => [
             SendMailUserRegisteredListen::class,
             SendNotifyRegisteredListen::class
+        ],
+        SendMailUserUpdatePassword::class => [
+            SendMailUserUpdatePasswordListen::class,
         ],
         VendorApproved::class=>[
             SendVendorApprovedMail::class,
