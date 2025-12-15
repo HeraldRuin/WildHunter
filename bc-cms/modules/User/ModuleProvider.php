@@ -135,61 +135,58 @@ class ModuleProvider extends ModuleServiceProvider
         /**
          * @var $user User
          */
-        $res = [];
-        $user = Auth::user();
+        //        $is_wallet_module_disable = setting_item('wallet_module_disable');
+//        if (empty($is_wallet_module_disable) and isPro())
+//        {
+//            $res['wallet']= [
+//                'position'   => 85,
+//                'icon'       => 'fa fa-money',
+//                'url'        => route('user.wallet'),
+//                'title'      => __("My Wallet"),
+//            ];
+//        }
+//
+//        $is_disable_verification_feature = setting_item('user_disable_verification_feature');
+//        if(!empty($user->verification_fields) and empty($is_disable_verification_feature))
+//        {
+//            $res['verification']= [
+//                'url'        => route('user.verification.index'),
+//                'title'      => __("Verifications"),
+//                'icon'       => 'fa fa-handshake-o',
+//                'position'   => 85,
+//            ];
+//        }
+//
+//        if(setting_item('inbox_enable')) {
+//            $count = auth()->user()->unseen_message_count;
+//            $res['chat'] = [
+//                'position' => 90,
+//                'icon' => 'fa fa-comments',
+//                'url' => route('user.chat'),
+//                'title' => __("Messages :count",['count'=>$count ? sprintf('<span class="badge badge-danger">%d</span>',$count) : '']),
+//            ];
+//        }
+//        if(setting_item('user_enable_2fa'))
+//        {
+//            $res['chat'] = [
+//                'position' => 110,
+//                'icon' => 'fa fa-lock',
+//                'url' => route('user.2fa'),
+//                'title' => __("2F Authentication"),
+//            ];
+//        }
+//
+//        if(is_enable_plan())
+//        $res['my_plan'] = [
+//            'url' => 'user/my-plan',
+//            'title' => __("My Plans"),
+//            'icon' => 'fa fa-list-alt',
+//            'permission' => 'dashboard_vendor_access',
+//            'enable' => true,
+//            'position' => 95,
+//        ];
 
-        $is_wallet_module_disable = setting_item('wallet_module_disable');
-        if (empty($is_wallet_module_disable) and isPro())
-        {
-            $res['wallet']= [
-                'position'   => 85,
-                'icon'       => 'fa fa-money',
-                'url'        => route('user.wallet'),
-                'title'      => __("My Wallet"),
-            ];
-        }
-
-        $is_disable_verification_feature = setting_item('user_disable_verification_feature');
-        if(!empty($user->verification_fields) and empty($is_disable_verification_feature))
-        {
-            $res['verification']= [
-                'url'        => route('user.verification.index'),
-                'title'      => __("Verifications"),
-                'icon'       => 'fa fa-handshake-o',
-                'position'   => 85,
-            ];
-        }
-
-        if(setting_item('inbox_enable')) {
-            $count = auth()->user()->unseen_message_count;
-            $res['chat'] = [
-                'position' => 90,
-                'icon' => 'fa fa-comments',
-                'url' => route('user.chat'),
-                'title' => __("Messages :count",['count'=>$count ? sprintf('<span class="badge badge-danger">%d</span>',$count) : '']),
-            ];
-        }
-        if(setting_item('user_enable_2fa'))
-        {
-            $res['chat'] = [
-                'position' => 110,
-                'icon' => 'fa fa-lock',
-                'url' => route('user.2fa'),
-                'title' => __("2F Authentication"),
-            ];
-        }
-
-        if(is_enable_plan())
-        $res['my_plan'] = [
-            'url' => 'user/my-plan',
-            'title' => __("My Plans"),
-            'icon' => 'fa fa-list-alt',
-            'permission' => 'dashboard_vendor_access',
-            'enable' => true,
-            'position' => 95,
-        ];
-
-        return $res;
+        return [];
     }
 
 
