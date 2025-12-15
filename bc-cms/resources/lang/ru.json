@@ -3871,5 +3871,9 @@
     "Availability on this day": "Доступно в этот день",
     "Set amount for this range?": "Установить сумму для этого диапазона?",
     "Set amount on this day": "Установить сумму в этот день",
-    "Set amount for this day": "Установить сумму на этот день?"
+    "Set amount for this day": "Установить сумму на этот день?",
+    "Attach to base": "Закрепить за базой",
+    "Attach success!": "Закреплено за базой",
+    "Detach to base": "Открепить от базы",
+    "Detach success!": "Откреплено от базы"
 }
