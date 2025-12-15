@@ -52,18 +52,26 @@
                         <a href="{{ route("animal.vendor.delete",['id'=>$row->id,'permanently_delete'=>1]) }}" class="btn btn-danger" data-confirm="{{__('"Do you want to permanently delete?"')}}">{{__("Del")}}</a>
                     @endif
                 @else
-                    @if(Auth::user()->hasPermission('animal_update'))
-                        <a href="{{ route("animal.vendor.edit",[$row->id]) }}" class="btn btn-warning">{{__("Edit")}}</a>
+
+                    @if(is_null($row->animal_status))
+                        <a href="{{ route("animal.vendor.bulk_edit",[$row->id,'action' => "add"]) }}" class="btn btn-warning">{{__("Attach to base")}}</a>
                     @endif
-                    @if(Auth::user()->hasPermission('animal_delete'))
-                        <a href="{{ route("animal.vendor.delete",[$row->id]) }}" class="btn btn-danger" data-confirm="{{__('"Do you want to delete?"')}}">{{__("Del")}}</a>
+                    @if($row->animal_status == 'available')
+                        <a href="{{ route("animal.vendor.bulk_edit",[$row->id,'action' => "delete"]) }}" class="btn btn-success">{{__("Detach to base")}}</a>
                     @endif
-                    @if($row->status == 'publish')
-                        <a href="{{ route("animal.vendor.bulk_edit",[$row->id,'action' => "make-hide"]) }}" class="btn btn-secondary">{{__("Make hide")}}</a>
-                    @endif
-                    @if($row->status == 'draft')
-                        <a href="{{ route("animal.vendor.bulk_edit",[$row->id,'action' => "make-publish"]) }}" class="btn btn-success">{{__("Make publish")}}</a>
-                    @endif
+
+                    {{--                    @if(Auth::user()->hasPermission('animal_update'))--}}
+{{--                        <a href="{{ route("animal.vendor.edit",[$row->id]) }}" class="btn btn-warning">{{__("Edit")}}</a>--}}
+{{--                    @endif--}}
+{{--                    @if(Auth::user()->hasPermission('animal_delete'))--}}
+{{--                        <a href="{{ route("animal.vendor.delete",[$row->id]) }}" class="btn btn-danger" data-confirm="{{__('"Do you want to delete?"')}}">{{__("Del")}}</a>--}}
+{{--                    @endif--}}
+{{--                    @if($row->status == 'publish')--}}
+{{--                        <a href="{{ route("animal.vendor.bulk_edit",[$row->id,'action' => "make-hide"]) }}" class="btn btn-secondary">{{__("Make hide")}}</a>--}}
+{{--                    @endif--}}
+{{--                    @if($row->status == 'draft')--}}
+{{--                        <a href="{{ route("animal.vendor.bulk_edit",[$row->id,'action' => "make-publish"]) }}" class="btn btn-success">{{__("Make publish")}}</a>--}}
+{{--                    @endif--}}
                 @endif
             </div>
         </div>
