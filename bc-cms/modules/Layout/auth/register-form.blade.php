@@ -37,8 +37,8 @@
     </div>
     <div class="form-group">
         <div class="input-wrapper" style="position: relative;">
-            <input type="password" class="form-control password-input" name="password" autocomplete="off" placeholder="Password">
-            <i class="toggle-password-icon icofont-eye-blocked" id="toggle-password-icon"></i>
+            <input type="password" class="form-control password-input-register" name="password" autocomplete="off" placeholder="Password">
+            <i class="toggle-password-icon icofont-eye-blocked" id="toggle-register-password"></i>
             <button type="button" id="generate-password" class="btn-generate-password">{{__('Generate')}}</button>
         </div>
         <span class="invalid-feedback error error-password"></span>

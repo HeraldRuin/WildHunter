@@ -7,8 +7,8 @@
         <span class="invalid-feedback error error-email"></span>
     </div>
     <div class="form-group">
-        <input type="password" class="form-control" name="password" autocomplete="off"  placeholder="{{__('Password')}}">
-        <i class="input-icon icofont-ui-password"></i>
+        <input type="password" class="form-control password-input-login" name="password" autocomplete="off"  placeholder="{{__('Password')}}">
+        <i class="toggle-password-icon icofont-eye-blocked" id="toggle-login-password"></i>
         <span class="invalid-feedback error error-password"></span>
     </div>
     <div class="form-group">

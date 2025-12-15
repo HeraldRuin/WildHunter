@@ -1501,8 +1501,21 @@ jQuery(function($){
             }
         });
     }
-    document.getElementById('toggle-password-icon').addEventListener('click', function () {
-        const input = document.querySelector('.password-input');
+    document.getElementById('toggle-register-password').addEventListener('click', function () {
+        const input = document.querySelector('.password-input-register');
+
+        if (input.type === "password") {
+            input.type = "text";
+            this.classList.remove('icofont-eye-blocked');
+            this.classList.add('icofont-eye');
+        } else {
+            input.type = "password";
+            this.classList.add('icofont-eye-blocked');
+            this.classList.remove('icofont-eye');
+        }
+    });
+    document.getElementById('toggle-login-password').addEventListener('click', function () {
+        const input = document.querySelector('.password-input-login');
 
         if (input.type === "password") {
             input.type = "text";
