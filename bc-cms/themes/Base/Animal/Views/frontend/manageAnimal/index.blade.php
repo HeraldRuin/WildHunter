@@ -2,9 +2,9 @@
 @section('content')
     <h2 class="title-bar">
         {{!empty($recovery) ?__('Recovery Animal') : __("Manage Animals")}}
-        @if(Auth::user()->hasPermission('animal_create') && empty($recovery))
-            <a href="{{ route("animal.vendor.create") }}" class="btn-change-password">{{__("Add Animal")}}</a>
-        @endif
+{{--        @if(Auth::user()->hasPermission('animal_create') && empty($recovery))--}}
+{{--            <a href="{{ route("animal.vendor.create") }}" class="btn-change-password">{{__("Add Animal")}}</a>--}}
+{{--        @endif--}}
     </h2>
     @include('admin.message')
     @if($rows->total() > 0)
