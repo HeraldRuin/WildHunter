@@ -3369,6 +3369,28 @@ body .bravo_wrap .bravo_detail_tour .bravo_content .g-faq2 .item .desc {
     transform: translateY(-50%);
     z-index: 10;
 }
+
+.btn-generate-reset-password {
+    transform: translateY(-50%);
+    padding: 4px 8px;
+    font-size: 12px;
+    cursor: pointer;
+    border: none;
+    background-color: #007bff;
+    color: #fff;
+    border-radius: 4px;
+    transition: background-color 0.2s, transform 0.2s;
+}
+.btn-generate-reset-password{
+    position: absolute;
+    top: 47%;
+    right: 40px;
+    transform: translateY(-50%);
+    z-index: 10;
+}
+.btn-generate-reset-password:hover {
+    background-color: #0056b3;
+}
 #clear-location,
 #clear-animal,
 #clear-guest,
