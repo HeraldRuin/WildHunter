@@ -50,8 +50,7 @@ class ManageAnimalController extends FrontendController
     public function manageAnimal(Request $request)
     {
         $this->checkPermission('animal_view');
-        $user_id = Auth::id();
-        $list_animals = $this->animalClass::where("author_id", $user_id)->orderBy('id', 'desc');
+        $list_animals = $this->animalClass::orderBy('id', 'desc');
 
         $data = [
             'rows' => $list_animals->paginate(5),
