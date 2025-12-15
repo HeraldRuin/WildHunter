@@ -80,7 +80,7 @@ class Animal extends Bookable
 
     public static function isEnable(): bool
     {
-        return setting_item('animal_disable') == false;
+        return setting_item('animal_disable');
     }
 
     public function getNumberReviewsInService($status = false)
