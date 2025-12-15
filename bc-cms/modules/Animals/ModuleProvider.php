@@ -80,11 +80,6 @@ class ModuleProvider extends ModuleServiceProvider
                         'title'  => __("All Animals"),
                     ],
                     [
-                        'url'   => route('animal.vendor.create'),
-                        'title'      => __("Add Animal"),
-                        'permission' => 'animal_create',
-                    ],
-                    [
                         'url'        => route('animal.vendor.availability.index'),
                         'title'      => __("Availability Dates"),
                         'permission' => 'animal_create',
@@ -92,11 +87,6 @@ class ModuleProvider extends ModuleServiceProvider
                     [
                         'url'        => route('animal.vendor.hunting.index'),
                         'title'      => __("Hunting organization"),
-                        'permission' => 'animal_create',
-                    ],
-                    [
-                        'url'   => route('animal.vendor.recovery'),
-                        'title'      => __("Recovery"),
                         'permission' => 'animal_create',
                     ],
                 ]
