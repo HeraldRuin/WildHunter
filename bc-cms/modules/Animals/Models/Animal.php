@@ -82,6 +82,10 @@ class Animal extends Bookable
     {
         return setting_item('animal_disable');
     }
+    public static function isEnableForAdmin(): bool
+    {
+        return setting_item('admin_animal_disable');
+    }
 
     public function getNumberReviewsInService($status = false)
     {
