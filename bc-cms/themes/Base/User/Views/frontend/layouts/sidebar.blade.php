@@ -21,12 +21,6 @@ $menus = [
         'icon' => 'fa fa-clock-o',
         'position' => 20
     ],
-    "wishlist" => [
-        'url' => route("user.wishList.index"),
-        'title' => __("Wishlist"),
-        'icon' => 'fa fa-heart-o',
-        'position' => 21
-    ],
     'profile' => [
         'url' => route("user.profile.index"),
         'title' => __("My Profile"),
