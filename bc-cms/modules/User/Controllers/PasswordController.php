@@ -8,8 +8,11 @@ use Illuminate\Foundation\Auth\ResetsPasswords;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
+use Matrix\Exception;
 use Modules\FrontendController;
 use Illuminate\Validation\Rules\Password;
+use Modules\User\Events\SendMailUserUpdatePassword;
 
 
 class PasswordController extends FrontendController
@@ -67,6 +70,14 @@ class PasswordController extends FrontendController
         //Change Password
         $user = Auth::user();
         $this->resetPassword($user,$request->input('new-password'));
+
+        try {
+            event(new SendMailUserUpdatePassword($user));
+
+        } catch (Exception $exception) {
+
+            Log::warning("SendMailUserUpdatePassword: " . $exception->getMessage());
+        }
 
         return redirect()->back()->with('success', __('Password changed successfully !'));
     }
