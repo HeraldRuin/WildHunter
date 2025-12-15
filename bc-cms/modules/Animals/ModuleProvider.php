@@ -40,35 +40,34 @@ class ModuleProvider extends ModuleServiceProvider
 
     public static function getAdminMenu()
     {
-        if(!Animal::isEnable()) return [];
-        return [];
-//        return [
-//            'animal'=>[
-//                "position"=>45,
-//                'url'        => route('animal.admin.index'),
-//                'title'      => __('Animal'),
-//                'icon'       => 'ion-ios-play-circle',
-//                'permission' => 'animal_view',
-//                'group'      => 'catalog',
-//                'children'   => [
-//                    'add'=>[
-//                        'url'        => route('animal.admin.index'),
-//                        'title'      => __('All Animals'),
-//                        'permission' => 'animal_view',
-//                    ],
-//                    'create'=>[
-//                        'url'        => route('animal.admin.create'),
-//                        'title'      => __('Add new animal'),
-//                        'permission' => 'animal_create',
-//                    ],
-//                    'availability'=>[
-//                        'url'        => route('animal.admin.availability.index'),
-//                        'title'      => __('Availability Dates'),
-//                        'permission' => 'animal_availability_dates',
-//                    ],
-//                ]
-//            ]
-//        ];
+        if(!Animal::isEnableForAdmin()) return [];
+        return [
+            'animal'=>[
+                "position"=>45,
+                'url'        => route('animal.admin.index'),
+                'title'      => __('Animal'),
+                'icon'       => 'ion-ios-play-circle',
+                'permission' => 'animal_view',
+                'group'      => 'catalog',
+                'children'   => [
+                    'add'=>[
+                        'url'        => route('animal.admin.index'),
+                        'title'      => __('All Animals'),
+                        'permission' => 'animal_view',
+                    ],
+                    'create'=>[
+                        'url'        => route('animal.admin.create'),
+                        'title'      => __('Add new animal'),
+                        'permission' => 'animal_create',
+                    ],
+                    'availability'=>[
+                        'url'        => route('animal.admin.availability.index'),
+                        'title'      => __('Availability Dates'),
+                        'permission' => 'animal_availability_dates',
+                    ],
+                ]
+            ]
+        ];
     }
 
     public static function getBookableServices()
