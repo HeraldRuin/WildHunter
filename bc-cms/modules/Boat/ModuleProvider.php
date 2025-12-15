@@ -97,38 +97,7 @@ class ModuleProvider extends ModuleServiceProvider
 
     public static function getUserMenu()
     {
-        $res = [];
-        if(Boat::isEnable()){
-            $res['boat'] = [
-                'url'   => route('boat.vendor.index'),
-                'title'      => __("Manage Boat"),
-                'icon'       => Boat::getServiceIconFeatured(),
-                'position'   => 70,
-                'permission' => 'boat_view',
-                'children' => [
-                    [
-                        'url'   => route('boat.vendor.index'),
-                        'title'  => __("All Boats"),
-                    ],
-                    [
-                        'url'   => route('boat.vendor.create'),
-                        'title'      => __("Add Boat"),
-                        'permission' => 'boat_create',
-                    ],
-                    [
-                        'url'        => route('boat.vendor.availability.index'),
-                        'title'      => __("Availability"),
-                        'permission' => 'boat_create',
-                    ],
-                    [
-                        'url'   => route('boat.vendor.recovery'),
-                        'title'      => __("Recovery"),
-                        'permission' => 'boat_create',
-                    ],
-                ]
-            ];
-        }
-        return $res;
+        return [];
     }
 
     public static function getTemplateBlocks(){

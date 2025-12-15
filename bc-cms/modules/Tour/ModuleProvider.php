@@ -102,38 +102,7 @@ class ModuleProvider extends ModuleServiceProvider
 
     public static function getUserMenu()
     {
-        $res = [];
-        if(Tour::isEnable()){
-            $res['tour'] = [
-                'url'   => route('tour.vendor.index'),
-                'title'      => __("Manage Tour"),
-                'icon'       => Tour::getServiceIconFeatured(),
-                'permission' => 'tour_view',
-                'position'   => 40,
-                'children'   => [
-                    [
-                        'url'   => route('tour.vendor.index'),
-                        'title' => __("All Tours"),
-                    ],
-                    [
-                        'url'        => route('tour.vendor.create'),
-                        'title'      => __("Add Tour"),
-                        'permission' => 'tour_create',
-                    ],
-                    [
-                        'url'        => route('tour.vendor.availability.index'),
-                        'title'      => __("Availability"),
-                        'permission' => 'tour_create',
-                    ],
-                    [
-                        'url'   => route('tour.vendor.recovery'),
-                        'title'      => __("Recovery"),
-                        'permission' => 'tour_create',
-                    ],
-                ]
-            ];
-        }
-        return $res;
+        return [];
     }
 
     public static function getMenuBuilderTypes()

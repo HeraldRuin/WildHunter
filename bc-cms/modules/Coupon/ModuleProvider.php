@@ -45,13 +45,6 @@ class ModuleProvider extends ModuleServiceProvider
     }
     public static function getUserMenu()
     {
-        $res['coupon'] = [
-            'url'   => route('coupon.vendor.index'),
-            'title'      => __("Coupon"),
-            'icon'       => "fa fa-ticket",
-            'position'   => 80,
-            'permission' => 'coupon_view',
-        ];
-        return $res;
+        return [];
     }
 }

@@ -46,44 +46,6 @@ class ModuleProvider extends ModuleServiceProvider
     }
     public static function getUserMenu()
     {
-        $res = [];
-        $res['booking_report']= [
-            'url'        => route('vendor.bookingReport'),
-            'title'      => __("Booking Report"),
-            'icon'       => 'icon ion-ios-pie',
-            'position'   => 81,
-            'permission' => 'dashboard_vendor_access',
-        ];
-
-
-        $res['enquiry']= [
-            'position'   => 82,
-            'icon'       => 'icofont-ebook',
-            'url'        => route('vendor.enquiry_report'),
-            'title'      => __("Enquiry Report"),
-            'permission' => 'enquiry_view',
-        ];
-
-        if(!setting_item('disable_payout'))
-        {
-            $res['payout']= [
-                'url'        => route('vendor.payout.index'),
-                'title'      => __("Payouts"),
-                'icon'       => 'icon ion-md-card',
-                'position'   => 90,
-                'permission' => 'dashboard_vendor_access',
-            ];
-        }
-        if(is_enable_vendor_team()){
-
-            $res['team']= [
-                'url'        => route('vendor.team.index'),
-                'title'      => __("Teams"),
-                'icon'       => 'icon ion-ios-contacts',
-                'position'   => 100,
-                'permission' => 'dashboard_vendor_access',
-            ];
-        }
-        return $res;
+        return [];
     }
 }

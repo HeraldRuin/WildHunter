@@ -96,38 +96,7 @@ class ModuleProvider extends ModuleServiceProvider
 
     public static function getUserMenu()
     {
-        $res = [];
-        if(Car::isEnable()){
-            $res['car'] = [
-                'url'   => route('car.vendor.index'),
-                'title'      => __("Manage Car"),
-                'icon'       => Car::getServiceIconFeatured(),
-                'position'   => 70,
-                'permission' => 'car_view',
-                'children' => [
-                    [
-                        'url'   => route('car.vendor.index'),
-                        'title'  => __("All Cars"),
-                    ],
-                    [
-                        'url'   => route('car.vendor.create'),
-                        'title'      => __("Add Car"),
-                        'permission' => 'car_create',
-                    ],
-                    [
-                        'url'        => route('car.vendor.availability.index'),
-                        'title'      => __("Availability"),
-                        'permission' => 'car_create',
-                    ],
-                    [
-                        'url'   => route('car.vendor.recovery'),
-                        'title'      => __("Recovery"),
-                        'permission' => 'car_create',
-                    ],
-                ]
-            ];
-        }
-        return $res;
+        return [];
     }
 
     public static function getTemplateBlocks(){

@@ -89,28 +89,7 @@ class ModuleProvider extends ModuleServiceProvider
 
     public static function getUserMenu()
     {
-        $res = [];
-        if (Flight::isEnable()) {
-            $res['flight'] = [
-                'url'        => route('flight.vendor.index'),
-                'title'      => __("Manage Flight"),
-                'icon'       => Flight::getServiceIconFeatured(),
-                'position'   => 60,
-                'permission' => 'flight_view',
-                'children'   => [
-                    [
-                        'url'   => route('flight.vendor.index'),
-                        'title' => __("All Flights"),
-                    ],
-                    [
-                        'url'        => route('flight.vendor.create'),
-                        'title'      => __("Add Flights"),
-                        'permission' => 'flight_create',
-                    ],
-                ]
-            ];
-        }
-        return $res;
+        return [];
     }
 
     public static function getTemplateBlocks(){

@@ -71,16 +71,7 @@ class ModuleProvider extends ModuleServiceProvider
 
     public static function getUserMenu()
     {
-        $res = [];
+        return [];
 
-        $res['news'] = [
-            "position"=>80.1,
-            'url'        => route('news.vendor.index'),
-            'title'      => __("Manage News"),
-            'icon'       => 'ion-md-bookmarks',
-            'permission' => 'news_view',
-        ];
-
-        return $res;
     }
 }

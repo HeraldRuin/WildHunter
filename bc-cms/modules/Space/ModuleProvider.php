@@ -102,39 +102,7 @@ class ModuleProvider extends ModuleServiceProvider
 
     public static function getUserMenu()
     {
-        $res = [];
-        if (Space::isEnable()) {
-            $res['space'] = [
-                'url'        => route('space.vendor.index'),
-                'title'      => __("Manage Space"),
-                'icon'       => Space::getServiceIconFeatured(),
-                'position'   => 50,
-                'permission' => 'space_view',
-                'group'      => 'catalog',
-                'children'   => [
-                    [
-                        'url'   => route('space.vendor.index'),
-                        'title' => __("All Spaces"),
-                    ],
-                    [
-                        'url'        => route('space.vendor.create'),
-                        'title'      => __("Add Space"),
-                        'permission' => 'space_create',
-                    ],
-                    [
-                        'url'        => route('space.vendor.availability.index'),
-                        'title'      => __("Availability"),
-                        'permission' => 'space_create',
-                    ],
-                    [
-                        'url'   => route('space.vendor.recovery'),
-                        'title'      => __("Recovery"),
-                        'permission' => 'space_create',
-                    ],
-                ]
-            ];
-        }
-        return $res;
+        return [];
     }
 
     public static function getTemplateBlocks(){

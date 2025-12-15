@@ -32,4 +32,9 @@ class ModuleProvider extends ModuleServiceProvider
             ],
         ];
     }
+    public static function getUserMenu()
+    {
+        return [];
+    }
+
 }

@@ -102,37 +102,7 @@ class ModuleProvider extends ModuleServiceProvider
 
     public static function getUserMenu()
     {
-        if(!Event::isEnable()) return [];
-        return [
-            'event' => [
-                'url'   => route('event.vendor.index'),
-                'title'      => __("Manage Event"),
-                'icon'       => Event::getServiceIconFeatured(),
-                'position'   => 80,
-                'permission' => 'event_view',
-                'children' => [
-                    [
-                        'url'   => route('event.vendor.index'),
-                        'title'  => __("All Events"),
-                    ],
-                    [
-                        'url'   => route('event.vendor.create'),
-                        'title'      => __("Add Event"),
-                        'permission' => 'event_create',
-                    ],
-                    'availability'=>[
-                        'url'        => route('event.vendor.availability.index'),
-                        'title'      => __('Availability'),
-                        'permission' => 'event_create',
-                    ],
-                    [
-                        'url'   => route('event.vendor.recovery'),
-                        'title'      => __("Recovery"),
-                        'permission' => 'event_create',
-                    ],
-                ]
-            ],
-        ];
+        return [];
     }
 
     public static function getTemplateBlocks(){
