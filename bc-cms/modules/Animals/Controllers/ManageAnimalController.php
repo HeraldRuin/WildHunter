@@ -49,8 +49,19 @@ class ManageAnimalController extends FrontendController
     }
     public function manageAnimal(Request $request)
     {
+        $userHotelId = get_user_hotel_id();
         $this->checkPermission('animal_view');
-        $list_animals = $this->animalClass::orderBy('id', 'desc');
+
+        $list_animals = $this->animalClass::query()
+            ->leftJoin('bc_hotel_animals as bha', function ($join) use ($userHotelId) {
+                $join->on('bha.animal_id', '=', 'bc_animals.id')
+                    ->where('bha.hotel_id', '=', $userHotelId);
+            })
+            ->select([
+                'bc_animals.*',
+                'bha.status as animal_status'
+            ])
+            ->orderBy('bc_animals.id', 'desc');
 
         $data = [
             'rows' => $list_animals->paginate(5),
@@ -66,6 +77,7 @@ class ManageAnimalController extends FrontendController
             ],
             'page_title'         => __("Manage Animals"),
         ];
+
         return view('Animal::frontend.manageAnimal.index', $data);
     }
 
@@ -253,6 +265,35 @@ class ManageAnimalController extends FrontendController
         return view('Animal::frontend.manageAnimal.detail', $data);
     }
 
+    public function bulkEdit($id , Request $request)
+    {
+        $this->checkPermission('animal_update');
+        $action = $request->input('action');
+        $userHotelId = get_user_hotel_id();
+
+        if (empty($id)) {
+            return redirect()->back()->with('error', __('No item!'));
+        }
+        if (empty($action)) {
+            return redirect()->back()->with('error', __('Please select an action!'));
+        }
+
+        $animal = $this->animalClass::find($id);
+
+        if (!$animal) {
+            return redirect()->back()->with('error', __('Not Found'));
+        }
+
+        switch ($action){
+            case "add":
+                $animal->hotels()->syncWithoutDetaching([$userHotelId]);
+                return redirect()->back()->with('success', __('Attach success!'));
+            case "delete":
+                $animal->hotels()->detach($userHotelId);
+                return redirect()->back()->with('success', __('Detach success!'));
+        }
+    }
+
     public function delete($id)
     {
         $this->checkPermission('animal_delete');
@@ -270,37 +311,6 @@ class ManageAnimalController extends FrontendController
             }
         }
         return redirect(route('animal.vendor.index'))->with('success', __('Delete animal success!'));
-    }
-
-    public function bulkEdit($id , Request $request){
-        $this->checkPermission('animal_update');
-        $action = $request->input('action');
-        $user_id = Auth::id();
-        $query = $this->animalClass::where("author_id", $user_id)->where("id", $id)->first();
-        if (empty($id)) {
-            return redirect()->back()->with('error', __('No item!'));
-        }
-        if (empty($action)) {
-            return redirect()->back()->with('error', __('Please select an action!'));
-        }
-        if(empty($query)){
-            return redirect()->back()->with('error', __('Not Found'));
-        }
-        switch ($action){
-            case "make-hide":
-                $query->status = "draft";
-                break;
-            case "make-publish":
-//                if(!auth()->user()->checkUserPlan()) {
-//                    return redirect(route('user.plan'));
-//                }
-                $query->status = "publish";
-                break;
-        }
-        $query->save();
-        event(new UpdatedServiceEvent($query));
-
-        return redirect()->back()->with('success', __('Update success!'));
     }
 
     public function bookingReportBulkEdit($booking_id , Request $request){
