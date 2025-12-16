@@ -60,10 +60,10 @@ class ModuleProvider extends ModuleServiceProvider
                         'title'      => __('Add new animal'),
                         'permission' => 'animal_create',
                     ],
-                    'availability'=>[
-                        'url'        => route('animal.admin.availability.index'),
-                        'title'      => __('Availability Dates'),
-                        'permission' => 'animal_availability_dates',
+                    'recovery'=>[
+                        'url'        => route('animal.admin.recovery'),
+                        'title'      => __('Recovery'),
+                        'permission' => 'animal_view',
                     ],
                 ]
             ]
