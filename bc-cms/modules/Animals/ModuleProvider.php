@@ -40,7 +40,7 @@ class ModuleProvider extends ModuleServiceProvider
 
     public static function getAdminMenu()
     {
-        if(!Animal::isEnableForAdmin()) return [];
+//        if(!Animal::isEnableForAdmin()) return [];
         return [
             'animal'=>[
                 "position"=>45,
