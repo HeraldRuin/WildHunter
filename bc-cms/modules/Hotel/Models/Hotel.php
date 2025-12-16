@@ -202,9 +202,15 @@ class Hotel extends Bookable
         $discount = 0;
         $start_date = new \DateTime($request->input('start_date'));
         $end_date = new \DateTime($request->input('end_date'));
-        $extra_price = [];
-        $extra_price_input = $request->input('extra_price');
-        $extra_price = [];
+        $end_date = new \DateTime($request->input('start_date_animal'));
+        $hotelId = $request->input('hotel_id');
+        $animal_id = $request->input('animal_id');
+        $animal = Animal::find($animal_id);
+//        $animal_id = $request->input('animal_adults');
+        $type = $request->input('type');
+//        $extra_price = [];
+//        $extra_price_input = $request->input('extra_price');
+//        $extra_price = [];
         $hotel_id = $request->input('service_id');
 
         $total = 0;
@@ -219,45 +225,45 @@ class Hotel extends Bookable
         }
 
         $duration_in_hour = max(1, ceil(($end_date->getTimestamp() - $start_date->getTimestamp()) / HOUR_IN_SECONDS));
-        if ($this->enable_extra_price and !empty($this->extra_price)) {
-            if (!empty($this->extra_price)) {
-                foreach (array_values($this->extra_price) as $k => $type) {
-                    if (isset($extra_price_input[$k]) and !empty($extra_price_input[$k]['enable'])) {
-                        $type_total = 0;
-                        switch ($type['type']) {
-                            case "one_time":
-                                $type_total = $type['price'];
-                                break;
-                            case "per_day":
-                                $type_total = $type['price'] * ceil($duration_in_hour / 24);
-                                break;
-                        }
-                        if (!empty($type['per_person'])) {
-                            $type_total = $type_total * $total_guests;
-                        }
-                        $type['total'] = $type_total;
-                        $total += $type_total;
-                        $extra_price[] = $type;
-                    }
-                }
-            }
-        }
+//        if ($this->enable_extra_price and !empty($this->extra_price)) {
+//            if (!empty($this->extra_price)) {
+//                foreach (array_values($this->extra_price) as $k => $type) {
+//                    if (isset($extra_price_input[$k]) and !empty($extra_price_input[$k]['enable'])) {
+//                        $type_total = 0;
+//                        switch ($type['type']) {
+//                            case "one_time":
+//                                $type_total = $type['price'];
+//                                break;
+//                            case "per_day":
+//                                $type_total = $type['price'] * ceil($duration_in_hour / 24);
+//                                break;
+//                        }
+//                        if (!empty($type['per_person'])) {
+//                            $type_total = $type_total * $total_guests;
+//                        }
+//                        $type['total'] = $type_total;
+//                        $total += $type_total;
+//                        $extra_price[] = $type;
+//                    }
+//                }
+//            }
+//        }
 
         //Buyer Fees for Admin
         $total_before_fees = $total;
         $total_buyer_fee = 0;
-        if (!empty($list_buyer_fees = setting_item('hotel_booking_buyer_fees'))) {
-            $list_fees = json_decode($list_buyer_fees, true);
-            $total_buyer_fee = $this->calculateServiceFees($list_fees, $total_before_fees, $total_guests);
-            $total += $total_buyer_fee;
-        }
+//        if (!empty($list_buyer_fees = setting_item('hotel_booking_buyer_fees'))) {
+//            $list_fees = json_decode($list_buyer_fees, true);
+//            $total_buyer_fee = $this->calculateServiceFees($list_fees, $total_before_fees, $total_guests);
+//            $total += $total_buyer_fee;
+//        }
 
         //Service Fees for Vendor
         $total_service_fee = 0;
-        if (!empty($this->enable_service_fee) and !empty($list_service_fee = $this->service_fee)) {
-            $total_service_fee = $this->calculateServiceFees($list_service_fee, $total_before_fees, $total_guests);
-            $total += $total_service_fee;
-        }
+//        if (!empty($this->enable_service_fee) and !empty($list_service_fee = $this->service_fee)) {
+//            $total_service_fee = $this->calculateServiceFees($list_service_fee, $total_before_fees, $total_guests);
+//            $total += $total_service_fee;
+//        }
 
         $booking = new $this->bookingClass();
         $booking->status = 'draft';
@@ -276,6 +282,8 @@ class Hotel extends Bookable
         $booking->total_before_fees = $total_before_fees;
         $booking->total_before_discount = $total_before_fees;
         $booking->hotel_id = $hotel_id;
+        $booking->animal_id = $animal_id ?? null;
+        $booking->type = $type ?? null;
 
         $booking->calculateCommission();
 
@@ -310,7 +318,12 @@ class Hotel extends Bookable
             $booking->addMeta('guests', $total_guests);
             $booking->addMeta('adults', $request->input('adults'));
             $booking->addMeta('children', $request->input('children'));
-            $booking->addMeta('extra_price', $extra_price);
+            $booking->addMeta('animal', [
+                $animal->only(['id', 'title'])
+            ]);
+
+
+//            $booking->addMeta('extra_price', $extra_price);
             if ($this->isDepositEnable()) {
                 $booking->addMeta('deposit_info', [
                     'type' => $this->getDepositType(),
