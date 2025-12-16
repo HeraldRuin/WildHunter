@@ -19,6 +19,9 @@
             start_date:'',
             end_date:'',
             start_date_html:'',
+            start_date_animal: '',
+            end_date_animal: '',
+            start_date_animal_html: 'Выберите пожалуйста',
             number_of_guests:0,
             step:1,
             start_date_obj:'',
@@ -41,6 +44,8 @@
             enquiry_note:"",
             confirm_message: "",
             show_confirm_only_hotel: false,
+            animal_id: '',
+            animalCheckPassed: false,
         },
         watch:{
             extra_price:{
@@ -214,10 +219,53 @@
 
 
             var options = {
-                // singleDatePicker: true,
 				maxSpan: {
 					"days": 30
 				},
+                showCalendar: false,
+                sameDate: true,
+                autoApply           : true,
+                disabledPast        : true,
+                dateFormat          : bookingCore.date_format,
+                enableLoading       : true,
+                showEventTooltip    : true,
+                classNotAvailable   : ['disabled', 'off'],
+                disableHightLight: true,
+                minDate:this.minDate,
+                opens: bookingCore.rtl ? 'left':'right',
+                locale:{
+                    direction: bookingCore.rtl ? 'rtl':'ltr',
+                    firstDay:daterangepickerLocale.first_day_of_week
+                },
+                isInvalidDate:function (date) {
+                    for(var k = 0 ; k < me.allEvents.length ; k++){
+                        var item = me.allEvents[k];
+                        if(item.start == date.format('YYYY-MM-DD')){
+                            return item.active ? false : true;
+                        }
+                    }
+                    return false;
+                },
+                addClassCustom:function (date) {
+                    for(var k = 0 ; k < me.allEvents.length ; k++){
+                        var item = me.allEvents[k];
+                        if(item.start == date.format('YYYY-MM-DD') && item.classNames !== undefined){
+                            var class_names = "";
+                            for(var i = 0 ; i < item.classNames.length ; i++){
+                                var classItem = item.classNames[i];
+                                class_names += " "+classItem;
+                            }
+                            return class_names;
+                        }
+                    }
+                    return "";
+                }
+            };
+            var animalOptions = {
+                singleDatePicker: true,
+                maxSpan: {
+                    "days": 30
+                },
                 showCalendar: false,
                 sameDate: true,
                 autoApply           : true,
@@ -262,18 +310,26 @@
                 options.locale = _merge(daterangepickerLocale, options.locale);
             }
 
-            this.$nextTick(function () {
-                $(this.$refs.start_date).daterangepicker(options).on('apply.daterangepicker',
-                    function (ev, picker) {
-                        if(picker.endDate.diff(picker.startDate,'day') <=0){
-							picker.endDate.add(1,'day');
-                        }
-                        me.start_date = picker.startDate.format('YYYY-MM-DD');
-                        me.end_date = picker.endDate.format('YYYY-MM-DD');
-                        me.start_date_html = picker.startDate.format(bookingCore.date_format) +' <i class="fa fa-long-arrow-right" style="font-size: inherit"></i> '+ picker.endDate.format(bookingCore.date_format);
-                        // me.handleTotalPrice();
+            this.$nextTick(() => {
+                $(this.$refs.hotelStartDate).daterangepicker(options).on('apply.daterangepicker', (ev, picker) => {
+                    if(picker.endDate.diff(picker.startDate,'day') <= 0){
+                        picker.endDate.add(1,'day');
+                    }
+                    this.start_date = picker.startDate.format('YYYY-MM-DD');
+                    this.end_date = picker.endDate.format('YYYY-MM-DD');
+                    this.start_date_html = this.start_date + ' <i class="fa fa-long-arrow-right" style="font-size: inherit"></i> ' + this.end_date;
+                    // this.handleTotalPrice();
+                });
+            });
+
+            this.$nextTick(() => {
+                $(this.$refs.animalStartDate).daterangepicker(animalOptions).on('apply.daterangepicker',(ev, picker) => {
+                        this.start_date_animal = picker.startDate.format('YYYY-MM-DD');
+                        this.end_date_animal = this.start_date_animal;
+                        this.start_date_animal_html = picker.startDate.format(bookingCore.date_format);
                     })
             })
+
         },
         methods:{
             handleTotalPrice:function() {
@@ -281,26 +337,56 @@
             formatMoney: function (m) {
                 return window.bc_format_money(m);
             },
+            clearAnimal() {
+                this.animal_id = '';
+                this.animalCheckPassed = false;
+            },
+
             validate(){
                 var me = this;
-                if(!this.start_date || !this.end_date)
-                {
-					this.message.status = false;
-                    this.message.content = bc_booking_i18n.no_date_select;
+                // if(!this.start_date || !this.end_date)
+                // {
+				// 	this.message.status = false;
+                //     this.message.content = bc_booking_i18n.no_date_select;
+                //     return false;
+                // }
+
+                var animalInput = document.querySelector('.child_id');
+                var animalId = animalInput ? Number(animalInput.value) : 0;
+
+                let selects = document.querySelectorAll('#hotel-rooms select.custom-select');
+                let hasSelectedRoom = false;
+
+                selects.forEach(function(sel){
+                    if(parseInt(sel.value) > 0){
+                        hasSelectedRoom = true;
+                    }
+                });
+
+                if (!hasSelectedRoom && animalId > 0) {
+                    $('#confirmBookingAnimalText').text("Вы бронируете только охоту, без жилья. Продолжить?");
+                    $('#confirmAnimalBooking').modal('show');
+
+                    $('#confirmBookingAnimalYes').off('click').on('click', function () {
+                        $('#confirmAnimalBooking').modal('hide');
+                        me.doSubmit(null, {skipValidate: true, type: 'animal'});
+                    });
+
+                    $('#confirmBookingAnimalNo').off('click').on('click', function() {
+                        $('#confirmAnimalBooking').modal('hide');
+                    });
+
                     return false;
                 }
 
-                var animalInput = document.querySelector('.child_id');
-                var animalId = animalInput ? animalInput.value : '';
-
-                if (!animalId) {
+                if (animalId === 0 && hasSelectedRoom) {
                     $('#confirmSingleBookingText').text("Вы бронируете только жильё, без охоты. Продолжить?");
                     $('#confirmSingleHotelBooking').modal('show');
 
 
                     $('#confirmSingleBookingYes').off('click').on('click', function () {
                         $('#confirmSingleHotelBooking').modal('hide');
-                        me.doSubmit(null, {skipValidate: true});
+                        me.doSubmit(null, {skipValidate: true, type: 'hotel'});
                     });
 
                     $('#confirmSingleBookingNo').off('click').on('click', function() {
@@ -385,7 +471,55 @@
                     }
                 })
 			},
+            checkAvailabilityForAnimal:function () {
+                var me  = this;
+                if(!this.start_date_animal){
+                    bookingCoreApp.showError( 'Пожалуйста, выберите дату');
+                    return;
+                }
+
+                if(!this.getSelectAnimalId()){
+                    bookingCoreApp.showError('Пожалуйста, выберите животное');
+                    return;
+                }
+
+                this.onLoadAvailability = true;
+
+                $.ajax({
+                    url:bookingCore.module.animal+'/checkAvailability',
+                    data:{
+                        hotel_id:this.id,
+                        animal_id:this.getSelectAnimalId(),
+                        start_date:this.start_date_animal,
+                        firstLoad:me.firstLoad,
+                        adults:this.adults,
+                    },
+                    method:'post',
+                    success:function (json) {
+                        me.onLoadAvailability = false;
+                        me.firstLoad = false;
+
+                        if (json.available === true) {
+                            me.animalCheckPassed = true;
+                        }
+
+                        if(json.message){
+                            bookingCoreApp.showAjaxMessage(json);
+                        }
+                    },
+                    error:function (e) {
+                        me.firstLoad = false;
+                        bookingCoreApp.showAjaxError(e);
+                    }
+                })
+            },
+            getSelectAnimalId(){
+                var animalInput = document.querySelector('.child_id');
+                return animalInput ? animalInput.value : ''
+            },
             doSubmit:function (e, options = {}) {
+                const type = options.type || null;
+
                 if(e && e.preventDefault) e.preventDefault();
                 if(this.onSubmit) return false;
                 if (!options.skipValidate && !this.validate()) return false;
@@ -399,20 +533,64 @@
                     this.html = '';
                 }
 
+                let request = null;
+
+                if (type === 'animal') {
+                    request = {
+                        url: bookingCore.url + '/booking/addToCartAnimal',
+                        data: {
+                            service_id: this.getSelectAnimalId(),
+                            service_type: 'animal',
+                            start_date: this.start_date_animal,
+                            adults: this.adults,
+                            animal_id: this.getSelectAnimalId(),
+                            hotel_id: this.id,
+                        }
+                    };
+                }
+                else if (type === 'hotel') {
+                    request = {
+                        url: bookingCore.url + '/booking/addToCart',
+                        data: {
+                            service_id: this.id,
+                            service_type: 'hotel',
+                            start_date: this.start_date,
+                            end_date: this.end_date,
+                            extra_price: this.extra_price,
+                            adults: this.adults,
+                            children: this.children,
+                            rooms: this.rooms.map(item =>
+                                objectPick(item, ['id', 'number_selected'])
+                            )
+                        }
+                    };
+                }
+                else {
+                    request = {
+                        url: bookingCore.url + '/booking/addToCart',
+                        data: {
+                            service_id: this.id,
+                            service_type: 'hotel',
+                            type: 'hotel_animal',
+                            start_date_animal: this.start_date_animal,
+                            start_date: this.start_date,
+                            end_date: this.end_date,
+                            extra_price: this.extra_price,
+                            adults: this.adults,
+                            children: this.children,
+                            animal_id: this.getSelectAnimalId(),
+                            hotel_id: this.id,
+                            rooms: this.rooms.map(item =>
+                                objectPick(item, ['id', 'number_selected'])
+                            )
+                        }
+                    };
+                }
+
+
                 $.ajax({
-                    url:bookingCore.url+'/booking/addToCart',
-                    data:{
-                        service_id:this.id,
-                        service_type:"hotel",
-                        start_date:this.start_date,
-                        end_date:this.end_date,
-                        extra_price:this.extra_price,
-                        adults:this.adults,
-                        children:this.children,
-                        rooms:this.rooms.map(function (item) {
-                            return objectPick(item,['id','number_selected'])
-                        })
-                    },
+                    url: request.url,
+                    data: request.data,
                     dataType:'json',
                     type:'post',
                     success:function(res){
@@ -536,7 +714,10 @@
                 return true;
             },
             openStartDate:function(){
-                $(this.$refs.start_date).trigger('click');
+                $(this.$refs.hotelStartDate).trigger('click');
+            },
+            openAnimalStartDate:function(){
+                $(this.$refs.animalStartDate).trigger('click');
             },
             initJs:function () {
                 //$('.fotorama').fotorama();
