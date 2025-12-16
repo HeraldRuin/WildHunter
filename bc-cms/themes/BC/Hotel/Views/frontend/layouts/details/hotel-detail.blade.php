@@ -345,7 +345,7 @@
     </div>
     @include('Hotel::frontend.layouts.details.hotel-animals')
             <div class="pt-2">
-                <div >
+                <div v-if="total_price > 0">
                     <button type="button" class="btn btn-primary btn-lg w-100"
                             @click="doSubmit($event)"
                             :class="{'disabled':onSubmit}">
