@@ -3863,6 +3863,7 @@
     "No Animal": "Нет животных",
     "Delete animal success!": "Животное успешно удалено",
     "Hunting date:": "Дата охоты:",
+    "Hunting list:": "Информация об охоте:",
     "Maximum number of hunts for a base": "Максимальное количество охот для базы",
     "How many hunts per day?": "Сколько охот в день?",
     "Hunting organization": "Организация охоты",
@@ -3875,5 +3876,6 @@
     "Attach to base": "Закрепить за базой",
     "Attach success!": "Закреплено за базой",
     "Detach to base": "Открепить от базы",
-    "Detach success!": "Откреплено от базы"
+    "Detach success!": "Откреплено от базы",
+    "On this day there is an animal hunt. You can continue booking": "На этот день есть охота на животное. Можете продолжить бронирование"
 }
