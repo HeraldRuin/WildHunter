@@ -610,6 +610,7 @@
                         }
 
                         if(res.url){
+                            me.onSubmit = false;
                             window.location.href = res.url
                         }
 
@@ -625,7 +626,6 @@
                         }
                     },
                     error:function (e) {
-                        console.log(e);
                         me.onSubmit = false;
 
                         bc_handle_error_response(e);
