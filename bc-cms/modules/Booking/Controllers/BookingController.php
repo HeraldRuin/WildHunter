@@ -88,7 +88,8 @@ class BookingController extends \App\Http\Controllers\Controller
             'service'    => $booking->service,
             'gateways' => get_available_gateways(),
             'user'       => auth()->user(),
-            'is_api'     => $is_api
+            'is_api'     => $is_api,
+            'booking_type'  => $booking->type
         ];
         return view('Booking::frontend/checkout', $data);
     }
@@ -517,9 +518,9 @@ class BookingController extends \App\Http\Controllers\Controller
             return $this->sendError(__('Service is not bookable'));
         }
 
-        if (\auth()->user() && Auth::id() == $service->author_id) {
-            return $this->sendError(__('You cannot book your own service'));
-        }
+//        if (\auth()->user() && Auth::id() == $service->author_id) {
+//            return $this->sendError(__('You cannot book your own service'));
+//        }
 
         return $service->addToCart($request);
     }
