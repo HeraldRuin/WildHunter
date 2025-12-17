@@ -83,6 +83,7 @@ https://cdn.jsdelivr.net/npm/ionicons@4.6.3/dist/css/ionicons.min.css
 " rel="stylesheet">
 
 <!-- Scripts -->
+<script src="{{ asset('libs/vue/vue' . (!env('APP_DEBUG') ? '.min' : '') . '.js') }}"></script>
 {!! \App\Helpers\Assets::css(true) !!}
 <script src="{{ asset('libs/pusher.min.js') }}"></script>
 <script src="{{ asset('libs/jquery-3.6.3.min.js?_ver='.config('app.asset_version')) }}"></script>
