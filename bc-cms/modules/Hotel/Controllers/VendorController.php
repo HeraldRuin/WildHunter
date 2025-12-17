@@ -170,6 +170,7 @@ class VendorController extends FrontendController
             $row->status = "publish";
             if(setting_item("hotel_vendor_create_service_must_approved_by_admin", 0)){
                 $row->status = "pending";
+                $row->max_hunts_per_day = $request->input('max_hunts_per_day');
             }
             $row->author_id = Auth::id();
         }
@@ -201,7 +202,8 @@ class VendorController extends FrontendController
             'enable_service_fee',
             'service_fee',
             'surrounding',
-            'related_ids'
+            'related_ids',
+            'max_hunts_per_day'
         ];
 
         $row->fillByAttr($dataKeys,$request->input());
