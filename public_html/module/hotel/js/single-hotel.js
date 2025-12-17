@@ -308,7 +308,9 @@
 
             if (typeof  daterangepickerLocale == 'object') {
                 options.locale = _merge(daterangepickerLocale, options.locale);
+                animalOptions.locale = _merge(daterangepickerLocale, animalOptions.locale);
             }
+
 
             this.$nextTick(() => {
                 $(this.$refs.hotelStartDate).daterangepicker(options).on('apply.daterangepicker', (ev, picker) => {
@@ -553,6 +555,7 @@
                         url: bookingCore.url + '/booking/addToCart',
                         data: {
                             service_id: this.id,
+                            hotel_id: this.id,
                             service_type: 'hotel',
                             start_date: this.start_date,
                             end_date: this.end_date,
