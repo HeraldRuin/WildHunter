@@ -318,9 +318,9 @@ class Hotel extends Bookable
             $booking->addMeta('guests', $total_guests);
             $booking->addMeta('adults', $request->input('adults'));
             $booking->addMeta('children', $request->input('children'));
-            $booking->addMeta('animal', [
-                $animal->only(['id', 'title'])
-            ]);
+//            $booking->addMeta('animal', [
+//                $animal->only(['id', 'title'])
+//            ]);
 
 
 //            $booking->addMeta('extra_price', $extra_price);
