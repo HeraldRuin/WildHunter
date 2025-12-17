@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Mockery\Exception;
+use Modules\Animals\Models\Animal;
 use Modules\Booking\Emails\NewBookingEmail;
 use Modules\Booking\Emails\StatusUpdatedEmail;
 use Modules\Booking\Events\BookingUpdatedEvent;
@@ -439,7 +440,7 @@ class Booking extends BaseModel
     public static function getBookingHistory($booking_status = false, $customer_id_or_name = false , $vendor_id = false , $service = false , $from = false ,  $to = false )
     {
 
-        $list_booking = parent::query()->orderBy('id', 'desc');
+        $list_booking = parent::query()->with('animal')->orderBy('id', 'desc');
         if (!empty($booking_status)) {
             $list_booking->where("status", $booking_status);
         }else{
@@ -471,7 +472,7 @@ class Booking extends BaseModel
 
     public static function getBookingHistoryForAdminBase($booking_status = false, $hotel_id)
     {
-        $list_booking = parent::query()->orderBy('id', 'desc');
+        $list_booking = parent::query()->with('animal')->orderBy('id', 'desc');
         $list_booking->where('hotel_id', $hotel_id);
 
         if (!empty($booking_status)) {
@@ -1137,4 +1138,9 @@ class Booking extends BaseModel
 
         }
     }
+    public function animal()
+    {
+        return $this->belongsTo(Animal::class, 'animal_id');
+    }
+
 }
