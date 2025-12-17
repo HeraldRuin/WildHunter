@@ -3,6 +3,7 @@
 namespace Modules\Hotel\Models;
 
 use App\Currency;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Auth;
@@ -200,18 +201,14 @@ class Hotel extends Bookable
         // Add Booking
         $total_guests = $request->input('adults') + $request->input('children');
         $discount = 0;
-        $start_date = new \DateTime($request->input('start_date'));
-        $end_date = new \DateTime($request->input('end_date'));
+        $start_date = Carbon::parse($request->input('start_date'))->startOfDay();
+        $end_date   = Carbon::parse($request->input('end_date'))->endOfDay();
+
         $end_date = new \DateTime($request->input('start_date_animal'));
-        $hotelId = $request->input('hotel_id');
-        $animal_id = $request->input('animal_id');
-        $animal = Animal::find($animal_id);
+        $animal = Animal::find($request->input('animal_id'));
 //        $animal_id = $request->input('animal_adults');
         $type = $request->input('type');
-//        $extra_price = [];
-//        $extra_price_input = $request->input('extra_price');
-//        $extra_price = [];
-        $hotel_id = $request->input('service_id');
+        //$hotel_id = $request->input('service_id');
 
         $total = 0;
         $total_room_selected = 0;
@@ -281,7 +278,7 @@ class Hotel extends Bookable
         $booking->buyer_fees = $list_buyer_fees ?? '';
         $booking->total_before_fees = $total_before_fees;
         $booking->total_before_discount = $total_before_fees;
-        $booking->hotel_id = $hotel_id;
+        $booking->hotel_id = $request->input('hotel_id');
         $booking->animal_id = $animal_id ?? null;
         $booking->type = $type ?? null;
 
