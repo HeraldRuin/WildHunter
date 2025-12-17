@@ -84,14 +84,14 @@ class AnimalController extends AdminController
 
     public function recovery(Request $request)
     {
-        $this->checkPermission('car_view');
-        $query = $this->car::onlyTrashed();
+        $this->checkPermission('animal_view');
+        $query = $this->animal::onlyTrashed();
         $query->orderBy('id', 'desc');
         if (!empty($s = $request->input('s'))) {
             $query->where('title', 'LIKE', '%' . $s . '%');
             $query->orderBy('title', 'asc');
         }
-        if ($this->hasPermission('car_manage_others')) {
+        if ($this->hasPermission('animal__manage_others')) {
             if (!empty($author = $request->input('vendor_id'))) {
                 $query->where('author_id', $author);
             }
@@ -100,21 +100,21 @@ class AnimalController extends AdminController
         }
         $data = [
             'rows'              => $query->with(['author'])->paginate(20),
-            'car_manage_others' => $this->hasPermission('car_manage_others'),
+            'animal_manage_others' => $this->hasPermission('animal__manage_others'),
             'recovery'          => 1,
             'breadcrumbs'       => [
                 [
-                    'name' => __('Cars'),
-                    'url'  => route('car.admin.index')
+                    'name' => __('Animals'),
+                    'url'  => route('animal.admin.index')
                 ],
                 [
                     'name'  => __('Recovery'),
                     'class' => 'active'
                 ],
             ],
-            'page_title'        => __("Recovery Car Management")
+            'page_title'        => __("Recovery Animals Management")
         ];
-        return view('Car::admin.index', $data);
+        return view('Animals::admin.index', $data);
     }
 
     public function create(Request $request)
