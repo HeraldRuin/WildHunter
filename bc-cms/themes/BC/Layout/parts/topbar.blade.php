@@ -37,50 +37,21 @@
                                 <i class="fa fa-angle-down"></i>
                             </a>
                             <ul class="dropdown-menu dropdown-menu-user text-left">
-                                @if (empty(setting_item('wallet_module_disable')))
-                                    <li class="credit_amount">
-                                        <a href="{{ route('user.wallet') }}"><i class="fa fa-money"></i>
-                                            {{ __('Credit: :amount', ['amount' => auth()->user()->balance]) }}</a>
-                                    </li>
-                                @endif
                                 @if (is_vendor() || is_baseAdmin())
                                     <li class="menu-hr"><a href="{{ route('vendor.dashboard') }}" class="menu-hr"><i
-                                                class="icon ion-md-analytics"></i>  {{ is_vendor() ? __('Vendor Dashboard') : __('Admin Dashboard') }} </a></li>
+                                                class="icon ion-md-analytics"></i>  {{ __('PERSONAL ACCOUNT') }} </a></li>
                                 @endif
                                 <li class="@if (is_vendor()  || is_baseAdmin()) menu-hr @endif">
                                     <a href="{{ route('user.profile.index') }}"><i class="icon ion-md-construct"></i>
                                         {{ __('My profile') }}</a>
                                 </li>
-                                @if (setting_item('inbox_enable'))
-                                    <li class="menu-hr">
-                                        <a href="{{ route('user.chat') }}"><i class="fa fa-comments"></i>
-                                            {{ __('Messages') }}
-                                            @if ($count = auth()->user()->unseen_message_count)
-                                                <span class="badge badge-danger">{{ $count }}</span>
-                                            @endif
-                                        </a>
-                                    </li>
-                                @endif
                                 <li class="menu-hr"><a href="{{ route('user.booking_history') }}"><i
                                             class="fa fa-clock-o"></i> {{ __('Booking History') }}</a></li>
                                 <li class="menu-hr"><a href="{{ route('user.change_password') }}"><i
                                             class="fa fa-lock"></i> {{ __('Change password') }}</a></li>
-
-                                @if (is_enable_plan())
-                                    <li class="menu-hr"><a href="{{ route('user.plan') }}"><i
-                                                class="fa fa-list-alt"></i> {{ __('My plan') }}</a></li>
-                                @endif
-
-                                @if (isPro())
-                                    <li class="menu-hr">
-                                        <a href="{{ route('support.index') }}">
-                                            <i class="fa fa-list-alt"></i> {{ __('Support Center') }}</a>
-                                    </li>
-                                @endif
-
                                 @if (is_admin())
                                     <li class="menu-hr"><a href="{{ route('admin.index') }}"><i
-                                                class="icon ion-ios-ribbon"></i> {{ __('Admin Dashboard') }}</a></li>
+                                                class="icon ion-ios-ribbon"></i> {{ __('PERSONAL ACCOUNT') }}</a></li>
                                 @endif
                                 <li class="menu-hr">
                                     <a href="#"
