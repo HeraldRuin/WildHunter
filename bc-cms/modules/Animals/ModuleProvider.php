@@ -60,6 +60,11 @@ class ModuleProvider extends ModuleServiceProvider
                         'title'      => __('Add new animal'),
                         'permission' => 'animal_create',
                     ],
+                    'dates'=>[
+                        'url'        => route('animal.admin.availability'),
+                        'title'      => __("Availability Dates"),
+                        'permission' => 'animal_create',
+                    ],
                     'recovery'=>[
                         'url'        => route('animal.admin.recovery'),
                         'title'      => __('Recovery'),
@@ -105,11 +110,6 @@ class ModuleProvider extends ModuleServiceProvider
                     [
                         'url'   => route('animal.vendor.index'),
                         'title'  => __("All Animals"),
-                    ],
-                    [
-                        'url'        => route('animal.vendor.availability.index'),
-                        'title'      => __("Availability Dates"),
-                        'permission' => 'animal_create',
                     ],
                     [
                         'url'        => route('animal.vendor.hunting.index'),

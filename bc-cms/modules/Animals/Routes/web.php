@@ -19,11 +19,6 @@ Route::group(['prefix'=>'user/'.config('animal.animal_route_prefix'),'middleware
 });
 
 Route::group(['prefix'=>'user/'.config('animal.animal_route_prefix')],function(){
-    Route::group(['prefix'=>'availability'],function(){
-        Route::get('/','AvailabilityController@index')->name('animal.vendor.availability.index');
-        Route::get('/loadDates','AvailabilityController@loadDates')->name('animal.vendor.availability.loadDates');
-        Route::post('/store','AvailabilityController@store')->name('animal.vendor.availability.store');
-    });
     Route::group(['prefix'=>'hunting'],function(){
         Route::get('/','HuntingController@index')->name('animal.vendor.hunting.index');
         Route::get('/loadDates','HuntingController@loadDates')->name('animal.vendor.hunting.loadDates');
