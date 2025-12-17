@@ -59,7 +59,7 @@
         <div class="modal-dialog modal-lg " role="document">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">{{ __('Date Information') }}</h5>
+                    <h5 class="modal-title">{{ __('Set the animals availability date range') }}</h5>
                     <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                         <span aria-hidden="true">&times;</span>
                     </button>
@@ -79,36 +79,6 @@
                                     {{ __('Set this date range for availability?') }}</label>
                             </div>
                         </div>
-                        <div class="col-md-12">
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label>{{ __('Set availability on this day') }}</label>
-                                    <br>
-                                    <label><input type="checkbox" v-model="form.availability_day" @change="onDayChange">
-                                        {{ __('Availability on this day') }}</label>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-6" v-show="form.active">
-                            <div class="form-group">
-                                <label>{{ __('Price') }}</label>
-                                <input type="number" v-model="form.price" class="form-control">
-                            </div>
-                        </div>
-                        <div class="col-md-6" v-show="form.active">
-                            <div class="form-group">
-                                <label>{{ __('Number') }}</label>
-                                <input type="number" v-model="form.number" class="form-control">
-                            </div>
-                        </div>
-                        <div class="col-md-6 d-none" v-show="form.active">
-                            <div class="form-group">
-                                <label>{{ __('Instant Booking?') }}</label>
-                                <br>
-                                <label><input true-value=1 false-value=0 type="checkbox" v-model="form.is_instant">
-                                    {{ __('Enable instant booking') }}</label>
-                            </div>
-                        </div>
                     </form>
                     <div v-if="lastResponse.message">
                         <br>
@@ -118,7 +88,7 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-dismiss="modal">{{ __('Close') }}</button>
-                    <button type="button" class="btn btn-primary" @click="saveForm">{{ __('Save changes') }}</button>
+                    <button v-if="form.availability_range" type="button" class="btn btn-primary" @click="saveForm">{{ __('Save changes') }}</button>
                 </div>
             </div>
         </div>
@@ -237,7 +207,6 @@
                     number: 0,
                     type: '',
                     availability_range: false,
-                    availability_day: true,
                 },
                 formDefault: {
                     id: '',
@@ -251,7 +220,6 @@
                     active: 0,
                     number: 0,
                     availability_range: false,
-                    availability_day: false,
                 },
                 person_types: [
 
@@ -277,11 +245,7 @@
                         this.form.start_date = form.start_date || '';
                         this.form.end_date = form.end_date || '';
                         this.form.availability_range = form.availability_range || false;
-                        this.form.availability_day = form.availability_day || false;
-
-                        this.form.availability_day = true;
                         this.form.availability_range = false;
-                        this.form.type = 'day';
 
                         if (form.start_date) {
                             var drp = $('.has-daterangepicker').data('daterangepicker');

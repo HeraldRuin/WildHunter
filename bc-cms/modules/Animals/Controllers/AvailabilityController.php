@@ -52,17 +52,6 @@ class AvailabilityController extends FrontendController{
             $q->where('title','like','%'.$request->query('s').'%');
         }
 
-        if(!$this->hasPermission('animal_manage_others')){
-            $q->where('author_id',$this->currentUser()->id);
-        }
-
-        $userHotelId = get_user_hotel_id();
-        if ($userHotelId) {
-            $q->where('hotel_id', $userHotelId);
-        }
-
-        $q->orderBy('bc_animals.id','desc');
-
         $rows = $q->paginate(15);
 
         $current_month = strtotime(date('Y-m-01',time()));
@@ -169,17 +158,7 @@ class AvailabilityController extends FrontendController{
             return $this->sendError(__('Animal not found'));
         }
 
-        if ($type === 'day') {
-            $date = $this->animalDateClass::firstOrNew([
-                'target_id' => $target_id,
-            ]);
-            $date->active = $animal->status === 'publish';
-            $date->start_date = $request->input('start_date');
-            $date->end_date = $request->input('start_date');
-            $date->excluded_dates = json_encode([]);
-            $date->save();
-
-        } elseif ($type === 'range') {
+        if ($type === 'range') {
             $date = $this->animalDateClass::firstOrNew([
                 'target_id' => $target_id,
             ]);
@@ -189,19 +168,6 @@ class AvailabilityController extends FrontendController{
             $date->end_date = $request->input('end_date');
             $date->excluded_dates = json_encode([]);
             $date->save();
-        } else {
-            $removedDate = $request->input('start_date');
-            $date = $this->animalDateClass::firstOrNew([
-                'target_id' => $target_id,
-            ]);
-            if ($date) {
-                $excluded = json_decode($date->excluded_dates ?? '[]', true);
-                if (!in_array($removedDate, $excluded)) {
-                    $excluded[] = $removedDate;
-                }
-                $date->excluded_dates = json_encode($excluded);
-                $date->save();
-            }
         }
         return $this->sendSuccess([],__("Update Success"));
 
