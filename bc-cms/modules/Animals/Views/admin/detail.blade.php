@@ -29,11 +29,6 @@
                 <div class="row">
                     <div class="col-md-9">
                         @include('Animals::admin.animal.content')
-{{--                        @include('Animals::admin.animal.location')--}}
-{{--                        @include('Animals::admin.animal.pricing')--}}
-                        @if (is_default_lang())
-                            {{-- @include('Animals::admin.animal.availability') --}}
-                        @endif
                         @include('Core::admin/seo-meta/seo-meta')
                     </div>
                     <div class="col-md-3">
@@ -86,42 +81,6 @@
                         @endif
                         @if (is_default_lang())
                             <div class="panel">
-                                <div class="panel-title"><strong>{{ __('Availability') }}</strong></div>
-                                <div class="panel-body">
-                                    <div class="form-group">
-                                        <label>{{ __('Car Featured') }}</label>
-                                        <br>
-                                        <label>
-                                            <input type="checkbox" name="is_featured"
-                                                @if ($row->is_featured) checked @endif value="1">
-                                            {{ __('Enable featured') }}
-                                        </label>
-                                    </div>
-                                    <div class="form-group d-none">
-                                        <label>{{ __('Is Instant Booking?') }}</label>
-                                        <br>
-                                        <label>
-                                            <input type="checkbox" name="is_instant"
-                                                @if ($row->is_instant) checked @endif value="1">
-                                            {{ __('Enable instant booking') }}
-                                        </label>
-                                    </div>
-                                    <div class="form-group">
-                                        <label>{{ __('Default State') }}</label>
-                                        <br>
-                                        <select name="default_state" class="custom-select">
-                                            <option value="">{{ __('-- Please select --') }}</option>
-                                            <option value="1" @if (old('default_state', $row->default_state ?? 0) == 1) selected @endif>
-                                                {{ __('Always available') }}</option>
-                                            <option value="0" @if (old('default_state', $row->default_state ?? 0) == 0) selected @endif>
-                                                {{ __('Only available on specific dates') }}</option>
-                                        </select>
-                                    </div>
-                                </div>
-                            </div>
-                            @include('Car::admin.car.attributes')
-                            @include('Car::admin.car.ical')
-                            <div class="panel">
                                 <div class="panel-title"><strong>{{ __('Feature Image') }}</strong></div>
                                 <div class="panel-body">
                                     <div class="form-group">
@@ -136,54 +95,54 @@
         </div>
     </form>
 @endsection
-{{--@push('js')--}}
-{{--    {!! App\Helpers\MapEngine::scripts() !!}--}}
-{{--    <script>--}}
-{{--        jQuery(function($) {--}}
-{{--            new BCMapEngine('map_content', {--}}
-{{--                disableScripts: true,--}}
-{{--                fitBounds: true,--}}
-{{--                center: [{{ $row->map_lat ?? setting_item('map_lat_default', 51.505) }},--}}
-{{--                    {{ $row->map_lng ?? setting_item('map_lng_default', -0.09) }}--}}
-{{--                ],--}}
-{{--                zoom: {{ $row->map_zoom ?? '8' }},--}}
-{{--                ready: function(engineMap) {--}}
-{{--                    @if ($row->map_lat && $row->map_lng)--}}
-{{--                        engineMap.addMarker([{{ $row->map_lat }}, {{ $row->map_lng }}], {--}}
-{{--                            icon_options: {}--}}
-{{--                        });--}}
-{{--                    @endif--}}
-{{--                    engineMap.on('click', function(dataLatLng) {--}}
-{{--                        engineMap.clearMarkers();--}}
-{{--                        engineMap.addMarker(dataLatLng, {--}}
-{{--                            icon_options: {}--}}
-{{--                        });--}}
-{{--                        $("input[name=map_lat]").attr("value", dataLatLng[0]);--}}
-{{--                        $("input[name=map_lng]").attr("value", dataLatLng[1]);--}}
-{{--                    });--}}
-{{--                    engineMap.on('zoom_changed', function(zoom) {--}}
-{{--                        $("input[name=map_zoom]").attr("value", zoom);--}}
-{{--                    });--}}
-{{--                    if (bookingCore.map_provider === "gmap") {--}}
-{{--                        engineMap.searchBox($('#customPlaceAddress'), function(dataLatLng) {--}}
-{{--                            engineMap.clearMarkers();--}}
-{{--                            engineMap.addMarker(dataLatLng, {--}}
-{{--                                icon_options: {}--}}
-{{--                            });--}}
-{{--                            $("input[name=map_lat]").attr("value", dataLatLng[0]);--}}
-{{--                            $("input[name=map_lng]").attr("value", dataLatLng[1]);--}}
-{{--                        });--}}
-{{--                    }--}}
-{{--                    engineMap.searchBox($('.bc_searchbox'), function(dataLatLng) {--}}
-{{--                        engineMap.clearMarkers();--}}
-{{--                        engineMap.addMarker(dataLatLng, {--}}
-{{--                            icon_options: {}--}}
-{{--                        });--}}
-{{--                        $("input[name=map_lat]").attr("value", dataLatLng[0]);--}}
-{{--                        $("input[name=map_lng]").attr("value", dataLatLng[1]);--}}
-{{--                    });--}}
-{{--                }--}}
-{{--            });--}}
-{{--        })--}}
-{{--    </script>--}}
-{{--@endpush--}}
+@push('js')
+    {!! App\Helpers\MapEngine::scripts() !!}
+    <script>
+        jQuery(function($) {
+            new BCMapEngine('map_content', {
+                disableScripts: true,
+                fitBounds: true,
+                center: [{{ $row->map_lat ?? setting_item('map_lat_default', 51.505) }},
+                    {{ $row->map_lng ?? setting_item('map_lng_default', -0.09) }}
+                ],
+                zoom: {{ $row->map_zoom ?? '8' }},
+                ready: function(engineMap) {
+                    @if ($row->map_lat && $row->map_lng)
+                        engineMap.addMarker([{{ $row->map_lat }}, {{ $row->map_lng }}], {
+                            icon_options: {}
+                        });
+                    @endif
+                    engineMap.on('click', function(dataLatLng) {
+                        engineMap.clearMarkers();
+                        engineMap.addMarker(dataLatLng, {
+                            icon_options: {}
+                        });
+                        $("input[name=map_lat]").attr("value", dataLatLng[0]);
+                        $("input[name=map_lng]").attr("value", dataLatLng[1]);
+                    });
+                    engineMap.on('zoom_changed', function(zoom) {
+                        $("input[name=map_zoom]").attr("value", zoom);
+                    });
+                    if (bookingCore.map_provider === "gmap") {
+                        engineMap.searchBox($('#customPlaceAddress'), function(dataLatLng) {
+                            engineMap.clearMarkers();
+                            engineMap.addMarker(dataLatLng, {
+                                icon_options: {}
+                            });
+                            $("input[name=map_lat]").attr("value", dataLatLng[0]);
+                            $("input[name=map_lng]").attr("value", dataLatLng[1]);
+                        });
+                    }
+                    engineMap.searchBox($('.bc_searchbox'), function(dataLatLng) {
+                        engineMap.clearMarkers();
+                        engineMap.addMarker(dataLatLng, {
+                            icon_options: {}
+                        });
+                        $("input[name=map_lat]").attr("value", dataLatLng[0]);
+                        $("input[name=map_lng]").attr("value", dataLatLng[1]);
+                    });
+                }
+            });
+        })
+    </script>
+@endpush

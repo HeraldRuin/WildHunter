@@ -1,7 +1,6 @@
 @php
     $user = Auth::user();
-    $languages = \Modules\Language\Models\Language::getActive();
-
+        $languages = \Modules\Language\Models\Language::getActive()->where('locale', 'ru');
 @endphp
 
 @if(!empty($languages) && setting_item('site_enable_multi_lang') && setting_item('site_locale'))
