@@ -37,7 +37,7 @@
                 ?>
 
         <div class="smart-search">
-            <input type="text" class="smart-search-animal parent_text form-control" {{ ( empty(setting_item("hotel_location_search_style")) or setting_item("hotel_location_search_style") == "normal" ) ? "readonly" : ""  }} placeholder="{{__("Select an animal")}}" value="{{ $animal_name }}" data-onLoad="{{__("Loading...")}}"
+            <input type="text" class="smart-search-booking-animal parent_text form-control" {{ ( empty(setting_item("hotel_location_search_style")) or setting_item("hotel_location_search_style") == "normal" ) ? "readonly" : ""  }} placeholder="{{__("Select an animal")}}" value="{{ $animal_name }}" data-onLoad="{{__("Loading...")}}"
                    data-default="{{ json_encode($list_json) }}">
             <input type="hidden" class="child_id" name="animal_id" value="{{Request::query('animal_id')}}">
         </div>
