@@ -204,11 +204,10 @@ class Hotel extends Bookable
         $start_date = Carbon::parse($request->input('start_date'))->startOfDay();
         $end_date   = Carbon::parse($request->input('end_date'))->endOfDay();
 
-        $end_date = new \DateTime($request->input('start_date_animal'));
+        //$end_date = new \DateTime($request->input('start_date_animal'));
         $animal = Animal::find($request->input('animal_id'));
 //        $animal_id = $request->input('animal_adults');
         $type = $request->input('type');
-        //$hotel_id = $request->input('service_id');
 
         $total = 0;
         $total_room_selected = 0;
@@ -270,8 +269,8 @@ class Hotel extends Bookable
         $booking->customer_id = Auth::id();
         $booking->total = $total;
         $booking->total_guests = $total_guests;
-        $booking->start_date = $start_date->format('Y-m-d H:i:s');
-        $booking->end_date = $end_date->format('Y-m-d H:i:s');
+        $booking->start_date = $start_date;
+        $booking->end_date = $end_date;
 
         $booking->vendor_service_fee_amount = $total_service_fee ?? '';
         $booking->vendor_service_fee = $list_service_fee ?? '';
@@ -344,8 +343,8 @@ class Hotel extends Bookable
                         ], [
                             'room_id'    => $room['id'],
                             'parent_id'  => $this->id,
-                            'start_date' => $start_date->format('Y-m-d H:i:s'),
-                            'end_date'   => $end_date->format('Y-m-d H:i:s'),
+                            'start_date' => $start_date,
+                            'end_date'   => $end_date,
                             'number'     => $room['number_selected'],
                             'booking_id' => $booking->id,
                             'price'      => $this->tmp_rooms_by_id[$room['id']]->tmp_price
