@@ -212,24 +212,24 @@ $dateDetail = $service->detailBookingEachDate($booking);
         </div>
         <div class="review-section">
             <ul class="review-list">
-                @if($booking->start_date)
+                @if($booking->start_date_animal)
                     <li>
                         <div class="label">{{__('Date Hunting:')}}</div>
                         <div class="val">
-                            {{display_date($booking->start_date)}}
+                            {{display_date($booking->start_date_animal)}}
                         </div>
                     </li>
 
                     <li>
                         <div class="label">{{__('Aduls Hunting:')}}</div>
                         <div class="val">
-                            {{--                            {{$booking->duration_nights}}--}}
+                           {{$booking->total_hunting}}
                         </div>
                     </li>
                     <li>
                         <div class="label">{{__('Organization Hunting:')}}</div>
                         <div class="val">
-                            {{--                            {{$booking->duration_nights}}--}}
+                           {{$booking->amount_hunting}}
                         </div>
                     </li>
                 @endif
