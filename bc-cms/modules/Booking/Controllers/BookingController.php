@@ -87,13 +87,19 @@ class BookingController extends \App\Http\Controllers\Controller
             'page_title' => __('Checkout'),
             'booking'    => $booking,
             'service'    => $booking->service,
-            'animal_service'    => Animal::where('id', $booking->animal_id)->first(),
+            'animal_service' => Animal::where('id', $booking->animal_id)->first(),
             'gateways' => get_available_gateways(),
             'user'       => auth()->user(),
             'is_api'     => $is_api,
-            'booking_type'  => $booking->type
+            'booking_type'  => $booking->type,
+            'all_total'  => $this->getAllPay($booking->total, $booking->amount_hunting)
         ];
         return view('Booking::frontend/checkout', $data);
+    }
+
+    public function getAllPay($booking, $hunter)
+    {
+        return $booking + $hunter;
     }
 
     public function checkStatusCheckout($code)

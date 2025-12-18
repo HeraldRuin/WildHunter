@@ -266,7 +266,7 @@ $dateDetail = $service->detailBookingEachDate($booking);
                 <li class="final-total d-block">
                     <div class="d-flex justify-content-between">
                         <div class="label">{{__("Total:")}}</div>
-{{--                        <div class="val">{{format_money($booking->total)}}</div>--}}
+                        <div class="val">{{format_money($all_total)}}</div>
                     </div>
                     @if($booking->status !='draft')
                         <div class="d-flex justify-content-between">
