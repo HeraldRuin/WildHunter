@@ -278,7 +278,7 @@ class Hotel extends Bookable
         $booking->total_before_fees = $total_before_fees;
         $booking->total_before_discount = $total_before_fees;
         $booking->hotel_id = $request->input('hotel_id');
-        $booking->animal_id = $animal_id ?? null;
+        $booking->animal_id = $request->input('animal_id') ?? null;
         $booking->type = $type ?? null;
 
         $booking->calculateCommission();
