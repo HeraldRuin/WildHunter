@@ -206,7 +206,6 @@ class BookingController extends \App\Http\Controllers\Controller
             'last_name'       => 'required|string|max:255',
             'email'           => 'required|string|email|max:255',
             'phone'           => 'required|string|max:255',
-            'country'         => 'required',
             'term_conditions' => 'required',
         ];
 
@@ -242,7 +241,6 @@ class BookingController extends \App\Http\Controllers\Controller
 
             $messages['term_conditions.required'] = __('Term conditions is required field');
             $messages['payment_gateway.required'] = __('Payment gateway is required field');
-            $messages['country.required'] = __('Country field is required');
             $messages['last_name.required'] = __('Last Name field is required');
             $messages['first_name.required'] = __('First Name field is required');
             $messages['phone.required'] = __('Phone field is required');
