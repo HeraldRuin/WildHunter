@@ -201,10 +201,9 @@ class Hotel extends Bookable
         // Add Booking
         $total_guests = $request->input('adults') + $request->input('children');
         $discount = 0;
+        $start_date_animal = Carbon::parse($request->input('start_date_animal'))->startOfDay();
         $start_date = Carbon::parse($request->input('start_date'))->startOfDay();
         $end_date   = Carbon::parse($request->input('end_date'))->endOfDay();
-
-        //$end_date = new \DateTime($request->input('start_date_animal'));
         $animal = Animal::find($request->input('animal_id'));
 //        $animal_id = $request->input('animal_adults');
         $type = $request->input('type');
@@ -269,6 +268,7 @@ class Hotel extends Bookable
         $booking->customer_id = Auth::id();
         $booking->total = $total;
         $booking->total_guests = $total_guests;
+        $booking->total_hunting = $request->input('hunting_adults') ?? null;
         $booking->start_date = $start_date;
         $booking->end_date = $end_date;
 
@@ -279,6 +279,7 @@ class Hotel extends Bookable
         $booking->total_before_discount = $total_before_fees;
         $booking->hotel_id = $request->input('hotel_id');
         $booking->animal_id = $request->input('animal_id') ?? null;
+        $booking->start_date_animal = $start_date_animal ?? null;
         $booking->type = $type ?? null;
 
         $booking->calculateCommission();

@@ -553,7 +553,7 @@
                             service_id: this.getSelectAnimalId(),
                             service_type: 'animal',
                             type: 'animal',
-                            start_date: this.start_date_animal,
+                            start_date_animal: this.start_date_animal,
                             hunting_adults: this.hunting_adults,
                             animal_id: this.getSelectAnimalId(),
                             hotel_id: this.id,
