@@ -189,20 +189,12 @@ $dateDetail = $service->detailBookingEachDate($booking);
         <div class="review-section">
             <div class="service-info">
                 <div>
-                    @php
-                        $service_translation = $service->translate($lang_local);
-                    @endphp
-                    <h3 class="service-name"><a href="{{$service->getDetailUrl()}}">{!! clean($service_translation->title) !!}</a></h3>
-                    @if($service_translation->address)
-                        <p class="address"><i class="fa fa-map-marker"></i>
-                            {{$service_translation->address}}
-                        </p>
-                    @endif
+                    <h3 class="service-name"><a href="{{$animal_service->getDetailUrl()}}">{!! clean($animal_service->title) !!}</a></h3>
                 </div>
                 <div>
-                    @if($image_url = $service->image_url)
+                    @if($image_url = $animal_service->image_url)
                         @if(!empty($disable_lazyload))
-                            <img src="{{$service->image_url}}" class="img-responsive" alt="{!! clean($service_translation->title) !!}">
+                            <img src="{{$animal_service->image_url}}" class="img-responsive" alt="{!! clean($service_translation->title) !!}">
                         @else
                             {!! get_image_tag($service->image_id,'medium',['class'=>'img-responsive','alt'=>$service_translation->title]) !!}
                         @endif
@@ -274,7 +266,7 @@ $dateDetail = $service->detailBookingEachDate($booking);
                 <li class="final-total d-block">
                     <div class="d-flex justify-content-between">
                         <div class="label">{{__("Total:")}}</div>
-                        <div class="val">{{format_money($booking->total)}}</div>
+{{--                        <div class="val">{{format_money($booking->total)}}</div>--}}
                     </div>
                     @if($booking->status !='draft')
                         <div class="d-flex justify-content-between">
@@ -294,39 +286,5 @@ $dateDetail = $service->detailBookingEachDate($booking);
         </div>
     </div>
 </div>
-
-{{--<div class="modal fade" id="detailBookingDate{{$booking->code}}" tabindex="-1" role="dialog" aria-labelledby="modelTitleId" aria-hidden="true" style="background-color: #00000060">--}}
-{{--    <div class="modal-dialog modal-dialog-centered" role="document">--}}
-{{--        <div class="modal-content">--}}
-{{--            <div class="modal-header">--}}
-{{--                <h5 class="modal-title text-center">{{__('Detail')}}</h5>--}}
-{{--                <button type="button" class="close" data-dismiss="modal" aria-label="Close">--}}
-{{--                    <span aria-hidden="true">&times;</span>--}}
-{{--                </button>--}}
-{{--            </div>--}}
-{{--            <div class="modal-body">--}}
-{{--                @if(!empty($rooms))--}}
-{{--                    <ul class="review-list list-unstyled">--}}
-{{--                        @foreach($rooms as $room)--}}
-{{--                            <li class="mb-3 pb-1 border-bottom">--}}
-{{--                                <h6 class="label text-center font-weight-bold mb-1">{{$room->room->title}} * {{$room->number}}</h6>--}}
-{{--                                @if(!empty($dateDetail[$room->room_id]))--}}
-{{--                                    <div>--}}
-{{--                                        @includeIf("Hotel::frontend.booking.detail-room",['roomDate'=>$dateDetail[$room->room_id]])--}}
-{{--                                    </div>--}}
-{{--                                @endif--}}
-{{--                                <div class="d-flex justify-content-between font-weight-bold px-2">--}}
-{{--                                    <span>{{__("Total:")}}</span>--}}
-{{--                                    <span>{{format_money($room->price * $room->number)}}</span>--}}
-{{--                                </div>--}}
-{{--                            </li>--}}
-{{--                        @endforeach--}}
-{{--                    </ul>--}}
-{{--                @endif--}}
-{{--            </div>--}}
-{{--        </div>--}}
-{{--    </div>--}}
-{{--</div>--}}
-
 
 
