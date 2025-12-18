@@ -196,7 +196,7 @@ $dateDetail = $service->detailBookingEachDate($booking);
                         @if(!empty($disable_lazyload))
                             <img src="{{$animal_service->image_url}}" class="img-responsive" alt="{!! clean($service_translation->title) !!}">
                         @else
-                            {!! get_image_tag($service->image_id,'medium',['class'=>'img-responsive','alt'=>$service_translation->title]) !!}
+                            {!! get_image_tag($animal_service->image_id,'medium',['class'=>'img-responsive','alt'=>$service_translation->title]) !!}
                         @endif
 
                     @endif
