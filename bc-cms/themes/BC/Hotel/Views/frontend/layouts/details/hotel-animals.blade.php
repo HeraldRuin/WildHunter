@@ -31,7 +31,7 @@
                             <label class="form-label">{{__('Hunters')}}</label>
                             <div class="render">
                                 <span class="adults" >
-                                    <span class="one" >@{{adults}}
+                                    <span class="one" >@{{hunting_adults}}
                                         <span v-if="adults < 2">{{__('Adult')}}</span>
                                         <span v-else>{{__('Adults')}}</span>
                                     </span>
@@ -42,9 +42,9 @@
                             <div class="dropdown-item-row">
                                 <div class="label">{{__('Adults')}}</div>
                                 <div class="val">
-                                    <span class="btn-minus2" data-input="adults" @click="minusPersonType('adults')"><i class="icon ion-md-remove"></i></span>
-                                    <span class="count-display"><input type="number" v-model="adults" min="1"/></span>
-                                    <span class="btn-add2" data-input="adults" @click="addPersonType('adults')"><i class="icon ion-ios-add"></i></span>
+                                    <span class="btn-minus2" data-input="hunting_adults" @click="minusPersonType('hunting_adults')"><i class="icon ion-md-remove"></i></span>
+                                    <span class="count-display"><input type="number" v-model="hunting_adults" min="1"/></span>
+                                    <span class="btn-add2" data-input="hunting_adults" @click="addPersonType('hunting_adults')"><i class="icon ion-ios-add"></i></span>
                                 </div>
                             </div>
                         </div>
