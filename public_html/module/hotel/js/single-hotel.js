@@ -26,6 +26,7 @@
             step:1,
             start_date_obj:'',
             adults:1,
+            hunting_adults:1,
             children:0,
             allEvents:[],
             rooms:[],
@@ -412,6 +413,9 @@
                     case "adults":
                         this.adults ++ ;
                     break;
+                    case "hunting_adults":
+                        this.hunting_adults++;
+                        break;
                     case "children":
                         this.children ++;
                     break;
@@ -425,6 +429,11 @@
 						    this.adults --;
                         }
 						break;
+                    case "hunting_adults":
+                        if(this.hunting_adults >= 1){
+                            this.hunting_adults--;
+                        }
+                        break;
 					case "children":
 						if(this.children  >=1){
 							this.children --;
@@ -543,8 +552,9 @@
                         data: {
                             service_id: this.getSelectAnimalId(),
                             service_type: 'animal',
+                            type: 'animal',
                             start_date: this.start_date_animal,
-                            adults: this.adults,
+                            hunting_adults: this.hunting_adults,
                             animal_id: this.getSelectAnimalId(),
                             hotel_id: this.id,
                         }
@@ -557,6 +567,7 @@
                             service_id: this.id,
                             hotel_id: this.id,
                             service_type: 'hotel',
+                            type: 'hotel',
                             start_date: this.start_date,
                             end_date: this.end_date,
                             extra_price: this.extra_price,
@@ -580,6 +591,7 @@
                             end_date: this.end_date,
                             extra_price: this.extra_price,
                             adults: this.adults,
+                            hunting_adults: this.hunting_adults,
                             children: this.children,
                             animal_id: this.getSelectAnimalId(),
                             hotel_id: this.id,
