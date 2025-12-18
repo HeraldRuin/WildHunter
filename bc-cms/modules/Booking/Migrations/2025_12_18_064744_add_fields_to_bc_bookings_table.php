@@ -30,7 +30,8 @@ return new class extends Migration
                 'animal_id',
                 'type',
                 'total_hunting',
-                'amount_hunting'
+                'amount_hunting',
+                'start_date_animal'
             ]);
         });
     }
