@@ -590,6 +590,10 @@ class BookingController extends \App\Http\Controllers\Controller
             'page_title' => __('Booking Details'),
             'booking'    => $booking,
             'service'    => $booking->service,
+            'animal_service' => Animal::where('id', $booking->animal_id)->first(),
+            'user'       => auth()->user(),
+            'booking_type'  => $booking->type,
+            'all_total'  => $this->getAllPay($booking->total, $booking->amount_hunting)
         ];
         if ($booking->gateway) {
             $data['gateway'] = get_payment_gateway_obj($booking->gateway);

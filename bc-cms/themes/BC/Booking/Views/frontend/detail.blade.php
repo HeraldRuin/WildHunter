@@ -14,7 +14,11 @@
                     </div>
                 </div>
                 <div class="col-md-4">
-                    @include ($service->checkout_booking_detail_file ?? '')
+                    @if($booking_type === 'hotel_animal')
+                        @include ('Hotel::frontend/booking/detailHotelAnimal')
+                    @else
+                        @include ($service->checkout_booking_detail_file ?? '')
+                    @endif
                 </div>
             </div>
         </div>
