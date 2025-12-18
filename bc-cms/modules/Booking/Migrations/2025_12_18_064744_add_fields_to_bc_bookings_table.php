@@ -16,6 +16,7 @@ return new class extends Migration
             $table->string('type', 50)->nullable()->after('object_model');
             $table->integer('total_hunting')->nullable()->after('total_guests');
             $table->decimal('amount_hunting', 10, 2)->nullable()->after('total');
+            $table->dateTime('start_date_animal')->nullable()->after('start_date');
         });
     }
 
