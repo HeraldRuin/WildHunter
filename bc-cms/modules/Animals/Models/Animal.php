@@ -2,6 +2,7 @@
 
 namespace Modules\Animals\Models;
 
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Auth;
@@ -42,14 +43,7 @@ class Animal extends Bookable
 //        $res = $this->addToCartValidate($request);
 //        if ($res !== true) return $res;
 
-
-
         // Add Booking
-        $adults = $request->input('adults');
-        $start_date = new \DateTime($request->input('start_date'));
-        $hotelId = $request->input('hotel_id');
-        $animal_id = $request->input('animal_id');
-
         $booking = new $this->bookingClass();
         $booking->status = 'processing';
         $booking->object_id = $request->input('service_id');
@@ -57,9 +51,11 @@ class Animal extends Bookable
         $booking->vendor_id = $this->author_id;
         $booking->customer_id = Auth::id();
 //        $booking->total = $total;
-        $booking->total_guests = $adults;
-        $booking->start_date = $start_date->format('Y-m-d H:i:s');
-        $booking->hotel_id = $hotelId;
+        $booking->animal_id = $request->input('animal_id') ?? null;
+        $booking->type = $request->input('type') ?? null;
+        $booking->total_hunting = $request->input('hunting_adults');
+        $booking->start_date = Carbon::parse($request->input('start_date'))->startOfDay();
+        $booking->hotel_id = $request->input('hotel_id');
 
         $check = $booking->save();
 
