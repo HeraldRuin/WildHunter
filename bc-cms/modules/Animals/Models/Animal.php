@@ -54,7 +54,8 @@ class Animal extends Bookable
         $booking->animal_id = $request->input('animal_id') ?? null;
         $booking->type = $request->input('type') ?? null;
         $booking->total_hunting = $request->input('hunting_adults');
-        $booking->start_date = Carbon::parse($request->input('start_date'))->startOfDay();
+        $booking->start_date = Carbon::parse($request->input('start_date_animal'))->startOfDay();
+        $booking->start_date_animal = Carbon::parse($request->input('start_date_animal'))->startOfDay();
         $booking->hotel_id = $request->input('hotel_id');
 
         $check = $booking->save();
