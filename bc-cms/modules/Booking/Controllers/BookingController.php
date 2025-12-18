@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 use Mockery\Exception;
+use Modules\Animals\Models\Animal;
 use Modules\Booking\Events\BookingCreatedEvent;
 use Modules\Booking\Events\BookingUpdatedEvent;
 use Modules\Booking\Events\EnquirySendEvent;
@@ -86,6 +87,7 @@ class BookingController extends \App\Http\Controllers\Controller
             'page_title' => __('Checkout'),
             'booking'    => $booking,
             'service'    => $booking->service,
+            'animal_service'    => Animal::where('id', $booking->animal_id)->first(),
             'gateways' => get_available_gateways(),
             'user'       => auth()->user(),
             'is_api'     => $is_api,
