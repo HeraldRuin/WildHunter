@@ -64,7 +64,7 @@ use Illuminate\Support\Facades\URL;
                         >{{__("Del")}}</a>
                     @endif
                 @else
-                    <a href="{{$row->getDetailUrl()}}" target="_blank" class="btn btn-info">{{__("View")}}</a>
+                    <a href="{{ route("hotel.vendor.room.availability.index",[$row->id,'user' => $user->id,'viewAdminCabinet' => $viewAdminCabinet]) }}" class="btn btn-info">{{__("Availability Rooms")}}</a>
                     @if(Auth::user()->hasPermission('hotel_update'))
 
                         <a href="{{ route("hotel.vendor.edit",[$row->id,'user' => $user->id,'viewAdminCabinet' => $viewAdminCabinet]) }}" class="btn btn-warning">{{__("Edit")}}</a>
