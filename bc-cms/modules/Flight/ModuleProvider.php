@@ -32,7 +32,7 @@ class ModuleProvider extends ModuleServiceProvider
 
     public static function getAdminMenu()
     {
-        if(!Flight::isEnable()) return [];
+        if(Flight::isEnable()) return [];
         return [
             'flight'=>[
                 "position"=>41,

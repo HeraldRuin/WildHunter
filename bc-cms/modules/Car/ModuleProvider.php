@@ -33,7 +33,7 @@ class ModuleProvider extends ModuleServiceProvider
 
     public static function getAdminMenu()
     {
-        if(!Car::isEnable()) return [];
+        if(Car::isEnable()) return [];
         return [
             'car'=>[
                 "position"=>45,

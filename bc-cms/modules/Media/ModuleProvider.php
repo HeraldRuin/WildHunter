@@ -23,14 +23,14 @@ class ModuleProvider extends ModuleServiceProvider
     public static function getAdminMenu()
     {
         return [
-            'media'=>[
-                'position'=>56,
-                'title'=>__("Media"),
-                'icon'=>"fa fa-picture-o",
-                "url"=>route('media.admin.index'),
-                'permission' => 'media_upload',
-                "group"=>"content"
-            ]
+//            'media'=>[
+//                'position'=>56,
+//                'title'=>__("Media"),
+//                'icon'=>"fa fa-picture-o",
+//                "url"=>route('media.admin.index'),
+//                'permission' => 'media_upload',
+//                "group"=>"content"
+//            ]
         ];
     }
 }

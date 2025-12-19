@@ -100,33 +100,33 @@ class ModuleProvider extends ModuleServiceProvider
             'users' => $options,
         ];
 
-        if ($enablePlan) {
-            $menus['plan'] = [
-                "position" => 50,
-                'url' => route('user.admin.plan.index'),
-                'title' => __('User Plans :count', ['count' => $count ? sprintf('<span class="badge badge-warning">%d</span>', $count) : '']),
-                'icon' => 'fa fa-list-alt',
-                'permission' => 'role_view',
-                'group' => 'system',
-                'children' => [
-                    'user-plan' => [
-                        'url' => route('user.admin.plan.index'),
-                        'title' => __('User Plans'),
-                        'permission' => 'role_view',
-                    ],
-                    'plan-report' => [
-                        'url' => route('user.admin.plan_report.index'),
-                        'title' => __('Plan Report'),
-                        'permission' => 'role_view',
-                    ],
-                    'plan-request' => [
-                        'url' => route('user.admin.plan_request.index'),
-                        'title' => __('Plan Request :count', ['count' => $count ? sprintf('<span class="badge badge-warning">%d</span>', $count) : '']),
-                        'permission' => 'role_view',
-                    ],
-                ]
-            ];
-        }
+//        if ($enablePlan) {
+//            $menus['plan'] = [
+//                "position" => 50,
+//                'url' => route('user.admin.plan.index'),
+//                'title' => __('User Plans :count', ['count' => $count ? sprintf('<span class="badge badge-warning">%d</span>', $count) : '']),
+//                'icon' => 'fa fa-list-alt',
+//                'permission' => 'role_view',
+//                'group' => 'system',
+//                'children' => [
+//                    'user-plan' => [
+//                        'url' => route('user.admin.plan.index'),
+//                        'title' => __('User Plans'),
+//                        'permission' => 'role_view',
+//                    ],
+//                    'plan-report' => [
+//                        'url' => route('user.admin.plan_report.index'),
+//                        'title' => __('Plan Report'),
+//                        'permission' => 'role_view',
+//                    ],
+//                    'plan-request' => [
+//                        'url' => route('user.admin.plan_request.index'),
+//                        'title' => __('Plan Request :count', ['count' => $count ? sprintf('<span class="badge badge-warning">%d</span>', $count) : '']),
+//                        'permission' => 'role_view',
+//                    ],
+//                ]
+//            ];
+//        }
 
         return $menus;
     }

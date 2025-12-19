@@ -48,55 +48,7 @@ class ModuleProvider extends ModuleServiceProvider
 
     public static function getAdminMenu()
     {
-        $res = [];
-        if(Tour::isEnable()){
-            $res['tour'] = [
-                "position"=>40,
-                'url'        => route('tour.admin.index'),
-                'title'      => __("Tour"),
-                'icon'       => 'icon ion-md-umbrella',
-                'permission' => 'tour_view',
-                'group'      => 'catalog',
-                'children'   => [
-                    'tour_view'=>[
-                        'url'        => route('tour.admin.index'),
-                        'title'      => __('All Tours'),
-                        'permission' => 'tour_view',
-                    ],
-                    'tour_create'=>[
-                        'url'        => route('tour.admin.create'),
-                        'title'      => __("Add Tour"),
-                        'permission' => 'tour_create',
-                    ],
-                    'tour_category'=>[
-                        'url'        => route('tour.admin.category.index'),
-                        'title'      => __('Categories'),
-                        'permission' => 'tour_manage_others',
-                    ],
-                    'tour_attribute'=>[
-                        'url'        => route('tour.admin.attribute.index'),
-                        'title'      => __('Attributes'),
-                        'permission' => 'tour_manage_attributes',
-                    ],
-                    'tour_availability'=>[
-                        'url'        => route('tour.admin.availability.index'),
-                        'title'      => __('Availability'),
-                        'permission' => 'tour_create',
-                    ],
-                    'tour_booking'=>[
-                        'url'        => route('tour.admin.booking.index'),
-                        'title'      => __('Booking Calendar'),
-                        'permission' => 'tour_create',
-                    ],
-                    'recovery'=>[
-                        'url'        => route('tour.admin.recovery'),
-                        'title'      => __('Recovery'),
-                        'permission' => 'tour_view',
-                    ],
-                ]
-            ];
-        }
-        return $res;
+        return [];
     }
 
 

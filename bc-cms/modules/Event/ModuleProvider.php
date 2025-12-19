@@ -39,7 +39,7 @@ class ModuleProvider extends ModuleServiceProvider
 
     public static function getAdminMenu()
     {
-        if(!Event::isEnable()) return [];
+        if(Event::isEnable()) return [];
         return [
             'event'=>[
                 "position"=>50,

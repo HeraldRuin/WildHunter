@@ -38,7 +38,7 @@ class ModuleProvider extends ModuleServiceProvider
 
     public static function getAdminMenu()
     {
-        if(!Space::isEnable()) return [];
+        if(Space::isEnable()) return [];
         return [
             'space'=>[
                 "position"=>41,

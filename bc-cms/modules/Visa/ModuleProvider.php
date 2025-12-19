@@ -57,8 +57,8 @@ class ModuleProvider extends ModuleServiceProvider
     }
 
 
-    static function getAdminMenu(){ 
-        if(!VisaService::isEnable()){
+    static function getAdminMenu(){
+        if(VisaService::isEnable()){
             return [];
         }
         return [

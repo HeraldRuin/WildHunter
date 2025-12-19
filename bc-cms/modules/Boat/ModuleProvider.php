@@ -34,7 +34,7 @@ class ModuleProvider extends ModuleServiceProvider
 
     public static function getAdminMenu()
     {
-        if(!Boat::isEnable()) return [];
+        if(Boat::isEnable()) return [];
         return [
             'boat'=>[
                 "position"=>45,

@@ -34,13 +34,7 @@ class ModuleProvider extends ModuleServiceProvider
     public static function getAdminMenu()
     {
         return [
-            'coupon'=>[
-                "position"=>51,
-                'url'        => route('coupon.admin.index'),
-                'title'      => __('Coupon'),
-                'icon'       => 'fa fa-ticket',
-                'permission' => 'coupon_view',
-            ],
+
         ];
     }
     public static function getUserMenu()
