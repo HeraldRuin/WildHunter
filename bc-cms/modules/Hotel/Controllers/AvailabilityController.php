@@ -27,13 +27,15 @@ class AvailabilityController extends FrontendController{
     protected $currentHotel;
     protected $roomBookingClass;
 
-    protected AddDataInView $cabinetService;
+    protected ?AddDataInView $cabinetService;
 
     protected $indexView = 'Hotel::frontend.user.availability';
 
     public function __construct(AddDataInView $cabinetService)
     {
-        parent::__construct();
+        if ($cabinetService) {
+            parent::__construct();
+        }
         $this->roomClass = HotelRoom::class;
         $this->roomDateClass = HotelRoomDate::class;
         $this->bookingClass = Booking::class;
@@ -116,16 +118,16 @@ class AvailabilityController extends FrontendController{
         return view($this->indexView,compact('rows','breadcrumbs','current_month','page_title','request','hotel', 'user', 'viewAdminCabinet'));
     }
 
-    public function loadDates(Request $request,$hotel_id){
+    public function loadDates(Request $request,$hotel_id)
+    {
 
         $request->validate([
-            'id'=>'required',
-            'start'=>'required',
-            'end'=>'required',
+            'id' => 'required',
+            'start' => 'required',
+            'end' => 'required',
         ]);
 
-        if(!$this->hasHotelPermission($hotel_id))
-        {
+        if (!$this->hasHotelPermission($hotel_id)) {
             return $this->sendError(__("Hotel not found"));
         }
         /**
@@ -133,65 +135,65 @@ class AvailabilityController extends FrontendController{
          */
 
         $room = $this->roomClass::find($request->query('id'));
-        if(empty($room)){
+        if (empty($room)) {
             return $this->sendError(__('room not found'));
         }
 
         $is_single = $request->query('for_single');
-        $query = $this->roomDateClass::query();
-        $query->where('target_id',$request->query('id'));
-        $query->where('start_date','>=',date('Y-m-d H:i:s',strtotime($request->query('start'))));
-        $query->where('end_date','<=',date('Y-m-d H:i:s',strtotime($request->query('end'))));
 
-        $rows =  $query->take(100)->get();
+        $query = $this->roomDateClass::query();
+
+        $query->where('target_id', $request->query('id'));
+        $query->where('start_date', '>=', date('Y-m-d H:i:s', strtotime($request->query('start'))));
+        $query->where('end_date', '<=', date('Y-m-d H:i:s', strtotime($request->query('end'))));
+
+        $rows = $query->take(100)->get();
+
         $allDates = [];
 
-        $period = periodDate($request->input('start'),$request->input('end'),false);
-        foreach ($period as $dt){
+        $period = periodDate($request->input('start'), $request->input('end'), false);
+        foreach ($period as $dt) {
             $date = [
-                'id'=>rand(0,999),
-                'active'=>0,
-                'price'=> $room->price,
-                'number'=> $room->number,
-                'is_instant'=>0,
-                'is_default'=>true,
-                'textColor'=>'#2791fe'
+                'id' => rand(0, 999),
+                'active' => 0,
+                'price' => $room->price,
+                'number' => $room->number,
+                'is_instant' => 0,
+                'is_default' => true,
+                'textColor' => '#2791fe'
             ];
             $date['price_html'] = format_money($date['price']);
-            if(!$is_single){
+            if (!$is_single) {
                 $date['price_html'] = format_money_main($date['price']);
             }
-            $date['title'] = $date['event']  = $date['price_html'].' x '.$room->number;
+            $date['title'] = $date['event'] = $date['price_html'] . ' x ' . $room->number;
             $date['start'] = $date['end'] = $dt->format('Y-m-d');
 
             $date['active'] = 1;
             $allDates[$dt->format('Y-m-d')] = $date;
         }
-        if(!empty($rows))
-        {
-            foreach ($rows as $row)
-            {
-                $row->start = date('Y-m-d',strtotime($row->start_date));
-                $row->end = date('Y-m-d',strtotime($row->start_date));
+        if (!empty($rows)) {
+            foreach ($rows as $row) {
+                $row->start = date('Y-m-d', strtotime($row->start_date));
+                $row->end = date('Y-m-d', strtotime($row->start_date));
                 $row->textColor = '#2791fe';
                 $price = $row->price;
-                if(empty($price)){
+                if (empty($price)) {
                     $price = $room->price;
                 }
                 $row->title = $row->event = format_money($price);
-                if(!$is_single){
-                    $row->title = $row->event = format_money_main($price).' x '.$row->number;
+                if (!$is_single) {
+                    $row->title = $row->event = format_money_main($price) . ' x ' . $row->number;
                 }
                 $row->price = $price;
 
-                if(!$row->active)
-                {
+                if (!$row->active) {
                     $row->title = $row->event = __('Blocked');
                     $row->backgroundColor = '#fe2727';
                     $row->classNames = ['blocked-event'];
                     $row->textColor = '#fe2727';
                     $row->active = 0;
-                }else{
+                } else {
                     $row->classNames = ['active-event'];
                     $row->active = 1;
 //                    if($row->is_instant){
@@ -199,32 +201,76 @@ class AvailabilityController extends FrontendController{
 //                    }
                 }
 
-                $allDates[date('Y-m-d',strtotime($row->start_date))] = $row->toArray();
+                $allDates[date('Y-m-d', strtotime($row->start_date))] = $row->toArray();
 
             }
         }
-        $bookings = $room->getBookingsInRange($request->query('start'),$request->query('end'));
-        if(!empty($bookings))
-        {
-            foreach ($bookings as $booking){
-                $period = periodDate($booking->start_date,$booking->end_date,false);
-                foreach ($period as $dt){
-                    $date = $dt->format('Y-m-d');
-                    if(isset($allDates[$date])){
-                        $allDates[$date]['number'] -= $booking->number;
-                        $allDates[$date]['event'] = $allDates[$date]['title'] = format_money_main($allDates[$date]['price'] ). ' x '.$allDates[$date]['number'];
-                        if($allDates[$date]['number'] <=0 ){
-                            $allDates[$date]['active'] = 0;
-                            $allDates[$date]['event'] = __('Full Book');
-                            $allDates[$date]['title'] = __('Full Book');
-                            $allDates[$date]['classNames'] = ['full-book-event'];
-                        }
-                    }
+//        $bookings = $room->getBookingsInRange($request->query('start'),$request->query('end'));
+//        if(!empty($bookings))
+//        {
+//            foreach ($bookings as $booking){
+//                $period = periodDate($booking->start_date,$booking->end_date,false);
+//                foreach ($period as $dt){
+//                    $date = $dt->format('Y-m-d');
+//                    if(isset($allDates[$date])){
+//                        $allDates[$date]['number'] -= $booking->number;
+//                        $allDates[$date]['event'] = $allDates[$date]['title'] = format_money_main($allDates[$date]['price'] ). ' x '.$allDates[$date]['number'];
+//                        if($allDates[$date]['number'] <=0 ){
+//                            $allDates[$date]['active'] = 0;
+//                            $allDates[$date]['event'] = __('Full Book');
+//                            $allDates[$date]['title'] = __('Full Book');
+//                            $allDates[$date]['classNames'] = ['full-book-event'];
+//                        }
+//                    }
+//                }
+//            }
+//        }
+
+        $bookings = $room->getBookingsInRange($request->query('start'), $request->query('end'));
+
+        foreach ($bookings as $roomBooking) {
+            $period = periodDate($roomBooking->start_date, $roomBooking->end_date, false);
+
+            $booking = Booking::find($roomBooking->booking_id);
+            if (!$booking) continue;
+            $totalGuests = $booking->total_guests ?? 0;
+
+            foreach ($period as $dt) {
+                $date = $dt->format('Y-m-d');
+                if (!isset($allDates[$date])) continue;
+
+                if (!isset($allDates[$date]['occupiedBeds'])) {
+                    $allDates[$date]['occupiedBeds'] = 0;
+                }
+
+                // Суммируем гостей на дату
+                $allDates[$date]['occupiedBeds'] += $totalGuests;
+
+                // Общее количество кроватей
+                $totalBeds = $room->number * $room->beds;
+
+                // Считаем оставшиеся кровати
+                $remainingBeds = max($totalBeds - $allDates[$date]['occupiedBeds'], 0);
+
+                // Проверяем доступность по количеству гостей в поиске
+                $requestedGuests = $request->query('adults') ?? 1; // если не указано — 1
+                if ($remainingBeds < $requestedGuests) {
+                    $allDates[$date]['active'] = 0;
+                    $allDates[$date]['event'] = __('Full Book');
+                    $allDates[$date]['title'] = __('Full Book');
+                    $allDates[$date]['classNames'] = ['full-book-event'];
+                } else {
+                    // Выводим сколько мест доступно
+                    $allDates[$date]['active'] = 1;
+                    $allDates[$date]['number'] = $remainingBeds;
+                    $allDates[$date]['event'] = $allDates[$date]['title'] = format_money_main($allDates[$date]['price']) . ' x ' . $remainingBeds;
+                    $allDates[$date]['classNames'] = ['active-event'];
                 }
             }
         }
-        $data = array_values($allDates);
 
+
+        $data = array_values($allDates);
         return response()->json($data);
     }
 
