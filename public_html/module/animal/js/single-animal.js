@@ -11,7 +11,7 @@
             $('#animal-app').on('click', '.remove-period', function() {
                 let periodId = $(this).data('id');
 
-                // if (!confirm('Хотите удалить период?')) return;
+                if (!confirm('Хотите удалить период?')) return;
 
                 $.ajax({
                     url: '/animal/period/' + periodId,
