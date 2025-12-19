@@ -320,8 +320,10 @@
                     }
                     this.start_date = picker.startDate.format('YYYY-MM-DD');
                     this.end_date = picker.endDate.format('YYYY-MM-DD');
-                    this.start_date_html = this.start_date + ' <i class="fa fa-long-arrow-right" style="font-size: inherit"></i> ' + this.end_date;
-                    // this.handleTotalPrice();
+                    this.start_date_html = picker.startDate.format(bookingCore.date_format) +
+                        ' <i class="fa fa-long-arrow-right" style="font-size: inherit"></i> ' +
+                        picker.endDate.format(bookingCore.date_format);
+
                 });
             });
 
