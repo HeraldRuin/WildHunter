@@ -236,9 +236,9 @@ class User extends Authenticatable implements MustVerifyEmail
         if (!empty($this->first_name) or !empty($this->last_name)) {
             $name = implode(' ', [$this->first_name, $this->last_name]);
         }
-        if (!empty($this->business_name)) {
-            $name = $this->business_name;
-        }
+//        if (!empty($this->business_name)) {
+//            $name = $this->business_name;
+//        }
         if (!trim($name) and $email) $name = $this->email;
         if (empty($name)) {
             $name = ' ';
