@@ -987,26 +987,30 @@ class Hotel extends Bookable
     {
         $model_hotel = parent::query()->select("bc_hotels.*");
         $model_hotel->where("bc_hotels.status", "publish");
-        if (!empty($location_id = $request['location_id'] ?? "")) {
-            $location = Location::query()->where('id', $location_id)->where("status", "publish")->first();
-            if (!empty($location)) {
-                $model_hotel->join('bc_locations', function ($join) use ($location) {
-                    $join->on('bc_locations.id', '=', 'bc_hotels.location_id')
-                        ->where('bc_locations._lft', '>=', $location->_lft)
-                        ->where('bc_locations._rgt', '<=', $location->_rgt);
+
+        if (!empty($location_id = $request['location_id'] ?? null)) {
+            $location = Location::where('id', $location_id)
+                ->where('status', 'publish')
+                ->first();
+
+            if ($location) {
+                $model_hotel->whereHas('location', function ($q) use ($location) {
+                    $q->where('_lft', '>=', $location->_lft)
+                        ->where('_rgt', '<=', $location->_rgt);
                 });
             }
         }
+
         if (!empty($request['location_ids'])) {
-            // Only using block
             $model_hotel->whereIn('location_id', $request['location_ids']);
         }
+
         if (!empty($request['animal_id'])) {
-            $animal_ids = (array) $request['animal_id'];
-            $animal_ids = array_filter($animal_ids);
+            $animal_ids = array_filter((array)$request['animal_id']);
             if (count($animal_ids)) {
-                $model_hotel->whereHas('animals', function ($query) use ($animal_ids) {
-                    $query->whereIn('bc_animals.id', $animal_ids);
+                $model_hotel->whereHas('animals', function ($q) use ($animal_ids) {
+                    $q->whereIn('bc_animals.id', $animal_ids)
+                        ->where('bc_hotel_animals.status', 'available'); // правильный способ
                 });
             }
         }
