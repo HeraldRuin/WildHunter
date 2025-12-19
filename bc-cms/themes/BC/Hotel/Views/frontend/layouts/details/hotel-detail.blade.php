@@ -46,14 +46,14 @@
 @endif
 <div id="hotel-rooms" class="hotel_rooms_form" v-cloak="" v-bind:class="{'d-none':enquiry_type!='book'}">
     <h3 class="heading-section">{{__('Available Rooms')}}</h3>
-    <div class="nav-enquiry" v-if="is_form_enquiry_and_book">
-        <div class="enquiry-item active" >
-            <span>{{ __("Book") }}</span>
-        </div>
-        <div class="enquiry-item" data-toggle="modal" data-target="#enquiry_form_modal">
-            <span>{{ __("Enquiry") }}</span>
-        </div>
-    </div>
+{{--    <div class="nav-enquiry" v-if="is_form_enquiry_and_book">--}}
+{{--        <div class="enquiry-item active" >--}}
+{{--            <span>{{ __("Book") }}</span>--}}
+{{--        </div>--}}
+{{--        <div class="enquiry-item" data-toggle="modal" data-target="#enquiry_form_modal">--}}
+{{--            <span>{{ __("Enquiry") }}</span>--}}
+{{--        </div>--}}
+{{--    </div>--}}
     <div class="form-book">
         <div class="form-search-rooms">
             <div class="d-flex form-search-row">
@@ -274,48 +274,48 @@
             </div>
         </div>
 
-        <div class="g-rules">
-            <h3>{{__("Rules")}}</h3>
-            <div class="description">
-                <div class="row">
-                    <div class="col-lg-4">
-                        <div class="key">{{__("Check In")}}</div>
-                    </div>
-                    <div class="col-lg-8">
-                        <div class="value">	{{$row->check_in_time}} </div>
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="col-lg-4">
-                        <div class="key">{{__("Check Out")}}</div>
-                    </div>
-                    <div class="col-lg-8">
-                        <div class="value">	{{$row->check_out_time}} </div>
-                    </div>
-                </div>
-                @if($translation->policy)
-                    <div class="row">
-                        <div class="col-lg-4">
-                            <div class="key">{{__("Hotel Policies")}}</div>
-                        </div>
-                        <div class="col-lg-8">
-                            @foreach($translation->policy as $key => $item)
-                                <div class="item @if($key > 1) d-none @endif">
-                                    <div class="strong">{{$item['title'] ?? ''}}</div>
-                                    <div class="context">{!! $item['content'] !!}</div>
-                                </div>
-                            @endforeach
-                            @if( count($translation->policy) > 2)
-                                <div class="btn-show-all">
-                                    <span class="text">{{__("Show All")}}</span>
-                                    <i class="fa fa-caret-down"></i>
-                                </div>
-                            @endif
-                        </div>
-                    </div>
-                @endif
-            </div>
-        </div>
+{{--        <div class="g-rules">--}}
+{{--            <h3>{{__("Rules")}}</h3>--}}
+{{--            <div class="description">--}}
+{{--                <div class="row">--}}
+{{--                    <div class="col-lg-4">--}}
+{{--                        <div class="key">{{__("Check In")}}</div>--}}
+{{--                    </div>--}}
+{{--                    <div class="col-lg-8">--}}
+{{--                        <div class="value">	{{$row->check_in_time}} </div>--}}
+{{--                    </div>--}}
+{{--                </div>--}}
+{{--                <div class="row">--}}
+{{--                    <div class="col-lg-4">--}}
+{{--                        <div class="key">{{__("Check Out")}}</div>--}}
+{{--                    </div>--}}
+{{--                    <div class="col-lg-8">--}}
+{{--                        <div class="value">	{{$row->check_out_time}} </div>--}}
+{{--                    </div>--}}
+{{--                </div>--}}
+{{--                @if($translation->policy)--}}
+{{--                    <div class="row">--}}
+{{--                        <div class="col-lg-4">--}}
+{{--                            <div class="key">{{__("Hotel Policies")}}</div>--}}
+{{--                        </div>--}}
+{{--                        <div class="col-lg-8">--}}
+{{--                            @foreach($translation->policy as $key => $item)--}}
+{{--                                <div class="item @if($key > 1) d-none @endif">--}}
+{{--                                    <div class="strong">{{$item['title'] ?? ''}}</div>--}}
+{{--                                    <div class="context">{!! $item['content'] !!}</div>--}}
+{{--                                </div>--}}
+{{--                            @endforeach--}}
+{{--                            @if( count($translation->policy) > 2)--}}
+{{--                                <div class="btn-show-all">--}}
+{{--                                    <span class="text">{{__("Show All")}}</span>--}}
+{{--                                    <i class="fa fa-caret-down"></i>--}}
+{{--                                </div>--}}
+{{--                            @endif--}}
+{{--                        </div>--}}
+{{--                    </div>--}}
+{{--                @endif--}}
+{{--            </div>--}}
+{{--        </div>--}}
 
         <div class="bc-hr"></div>
         @includeIf("Hotel::frontend.layouts.details.hotel-surrounding")
