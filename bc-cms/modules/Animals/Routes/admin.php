@@ -1,5 +1,6 @@
 <?php
 use \Illuminate\Support\Facades\Route;
+
 Route::get('/','AnimalController@index')->name('animal.admin.index');
 Route::get('/create','AnimalController@create')->name('animal.admin.create');
 Route::get('/edit/{id}','AnimalController@edit')->name('animal.admin.edit');
@@ -13,4 +14,7 @@ Route::group(['prefix'=>'availability'],function(){
     Route::get('/','AvailabilityController@index')->name('animal.admin.availability');
     Route::get('/loadDates','AvailabilityController@loadDates')->name('animal.admin.availability.loadDates');
     Route::post('/store','AvailabilityController@store')->name('animal.admin.availability.store');
+});
+Route::group(['prefix'=>'organisation'],function(){
+    Route::get('/','OrganisationController@index')->name('animal.admin.organisation');
 });

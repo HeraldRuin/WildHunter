@@ -3852,7 +3852,8 @@
     "Available Animals": "Доступные животные",
     "Hunting Date": "Дата охоты",
     "Cost of hunting": "Стоимость охоты",
-    "Availability Dates": "Даты доступности",
+    "Availability Dates": "Сезон охоты",
+    "Hunting organization": "Организация охоты",
     "Availability Animals": "Даты доступности животных",
     "Hunting Animals": "Даты и стоимость охоты",
     "Animal Availability Calendar": "Календарь доступности животных",
@@ -3866,7 +3867,6 @@
     "Hunting list:": "Информация об охоте:",
     "Maximum number of hunts for a base": "Максимальное количество охот для базы",
     "How many hunts per day?": "Сколько охот в день?",
-    "Hunting organization": "Организация охоты",
     "Set this date range for availability?": "Установить этот диапазон дат для доступности?",
     "Set availability on this day": "Установить доступность в этот день",
     "Set the animals availability date range": "Установите диапазон дат доступности животного",
@@ -3890,6 +3890,12 @@
     "Booking Hotel": "Бронирование жилья",
     "Date Hunting:": "Дата охоты:",
     "Aduls Hunting:": "Количество охотников:",
-    "Organization Hunting:": "Организация охоты:"
+    "Organization Hunting:": "Организация охоты:",
+    "Availability Rooms": "Доступные номера",
+    "Add Period": "Добавить период",
+    "From": "От",
+    "To": "До",
+    "Amount": "Стоимость",
+    "Saved Success": "Данные успешно сохранены"
 
 }

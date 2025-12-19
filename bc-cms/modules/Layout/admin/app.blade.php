@@ -98,6 +98,7 @@ https://cdn.jsdelivr.net/npm/ionicons@4.6.3/dist/css/ionicons.min.css
 
 <script src="{{url('libs/daterange/moment.min.js')}}"></script>
 <script src="{{url('libs/daterange/daterangepicker.min.js?_ver='.config('app.asset_version'))}}"></script>
+<script type="text/javascript" src="{{ asset('module/animal/js/single-animal.js?_ver=' . config('app.asset_version')) }}"></script>
 
 {!! \App\Helpers\Assets::js(true) !!}
 

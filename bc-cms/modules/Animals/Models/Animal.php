@@ -4,6 +4,7 @@ namespace Modules\Animals\Models;
 
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Auth;
 use Kalnoy\Nestedset\NodeTrait;
@@ -91,6 +92,10 @@ class Animal extends Bookable
     public function hotels(): BelongsToMany
     {
         return $this->belongsToMany(Hotel::class, 'bc_hotel_animals','animal_id','hotel_id')->withPivot('status');
+    }
+    public function periods(): HasMany
+    {
+        return $this->hasMany(AnimalPricePeriod::class);
     }
 }
 
