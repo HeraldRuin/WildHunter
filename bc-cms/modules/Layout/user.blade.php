@@ -137,6 +137,7 @@
     <script
         src="{{ asset('libs/filerobot-image-editor/filerobot-image-editor.min.js?_ver=' . config('app.asset_version')) }}">
     </script>
+    <script type="text/javascript" src="{{ asset('module/animal/js/single-animal.js?_ver=' . config('app.asset_version')) }}"></script>
     @if (!is_demo_mode())
         {!! setting_item('footer_scripts') !!}
     @endif
