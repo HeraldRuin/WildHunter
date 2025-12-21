@@ -346,9 +346,10 @@
     @include('Hotel::frontend.layouts.details.hotel-animals')
             <div class="pt-2">
                 <div v-if="total_price > 0 || animalCheckPassed">
-                    <button type="button" class="btn btn-primary btn-lg w-100"
+                    <button type="button" class="btn btn-primary w-100"
                             @click="doSubmit($event)"
-                            :class="{'disabled':onSubmit}">
+                            :class="{'disabled':onSubmit}"
+                            style="height: 80px; font-size: large">
                         <span>{{__("Book Now")}}</span>
                         <i v-show="onSubmit" class="fa fa-spinner fa-spin"></i>
                     </button>
