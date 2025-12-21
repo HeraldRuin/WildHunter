@@ -1010,16 +1010,16 @@ class Hotel extends Bookable
             if (count($animal_ids)) {
                 $model_hotel->whereHas('animals', function ($q) use ($animal_ids) {
                     $q->whereIn('bc_animals.id', $animal_ids)
-                        ->where('bc_hotel_animals.status', 'available'); // правильный способ
+                        ->where('bc_hotel_animals.status', 'available');
                 });
             }
         }
 
-        if (!empty($price_range = $request["price_range"] ?? "")) {
-            $pri_from = Currency::convertPriceToMain(explode(";", $price_range)[0]);
-            $pri_to =  Currency::convertPriceToMain(explode(";", $price_range)[1]);
-            $model_hotel->whereBetween('bc_hotels.price', [$pri_from, $pri_to]);
-        }
+//        if (!empty($price_range = $request["price_range"] ?? "")) {
+//            $pri_from = Currency::convertPriceToMain(explode(";", $price_range)[0]);
+//            $pri_to =  Currency::convertPriceToMain(explode(";", $price_range)[1]);
+//            $model_hotel->whereBetween('bc_hotels.price', [$pri_from, $pri_to]);
+//        }
 
         if (!empty($star_rate = $request['star_rate'] ?? "")) {
             $model_hotel->WhereIn('star_rate', $star_rate);
