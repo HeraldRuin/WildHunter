@@ -15,6 +15,3 @@ Route::group(['prefix'=>'availability'],function(){
     Route::get('/loadDates','AvailabilityController@loadDates')->name('animal.admin.availability.loadDates');
     Route::post('/store','AvailabilityController@store')->name('animal.admin.availability.store');
 });
-Route::group(['prefix'=>'organisation'],function(){
-    Route::get('/','OrganisationController@index')->name('animal.admin.organisation');
-});
