@@ -15,9 +15,9 @@
                         <img src="{{$animal->image_url}}" class="img-responsive" alt="">
                     @endif
                 </a>
-                <div class="service-wishlist {{$animal->isWishList()}}" data-id="{{$animal->id}}" data-type="{{$animal->type}}">
-                    <i class="fa fa-heart"></i>
-                </div>
+{{--                <div class="service-wishlist {{$animal->isWishList()}}" data-id="{{$animal->id}}" data-type="{{$animal->type}}">--}}
+{{--                    <i class="fa fa-heart"></i>--}}
+{{--                </div>--}}
             </div>
         </div>
         <div class="col-md-9">
