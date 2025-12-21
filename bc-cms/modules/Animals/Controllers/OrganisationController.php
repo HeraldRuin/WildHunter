@@ -67,11 +67,11 @@ class OrganisationController extends FrontendController{
         }
         $breadcrumbs = [
             [
-                'name' => __('Animals'),
+                'name' => __('Animal'),
                 'url'  => route('animal.vendor.index')
             ],
             [
-                'name'  => __('Availability'),
+                'name'  => __('Hunting organization'),
                 'class' => 'active'
             ],
         ];
