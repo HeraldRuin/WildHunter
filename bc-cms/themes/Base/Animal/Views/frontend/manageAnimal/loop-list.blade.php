@@ -9,35 +9,17 @@
                     {{__("Featured")}}
                 </div>
             @endif
-            <div>
 
-                @if(!empty($animal->image_url))
-                    <div class="thumb-image">
-                    <a href="{{$animal->getDetailUrl()}}" target="_blank">
-                    </a>
-                    </div>
+            <div class="thumb-image" style="{{ empty($animal->image_url) ? 'padding-bottom:0;' : '' }}">
+                <a href="{{$animal->getDetailUrl()}}" target="_blank">
+                    @if(!empty($animal->image_url))
+                        <img src="{{$animal->image_url}}" class="img-responsive" alt="">
                     @else
                         <div style="display:flex;align-items:center;justify-content:center;min-height:150px;width:100%;border:1px solid #ccc;">
                             {{ __("No Image") }}
                         </div>
                     @endif
-
-        </div>
-
-{{--            <div class="thumb-image">--}}
-{{--                <a href="{{$animal->getDetailUrl()}}" target="_blank">--}}
-{{--                    @if(!empty($animal->image_url))--}}
-{{--                        <img src="{{$animal->image_url}}" class="img-responsive" alt="">--}}
-{{--                    @else--}}
-{{--                        <div style="display:flex;align-items:center;justify-content:center;min-height:150px;width:100%;border:1px solid #ccc;">--}}
-{{--                            {{ __("No Image") }}--}}
-{{--                        </div>--}}
-{{--                    @endif--}}
-{{--                </a>--}}
-
-                {{--                <div class="service-wishlist {{$animal->isWishList()}}" data-id="{{$animal->id}}" data-type="{{$animal->type}}">--}}
-{{--                    <i class="fa fa-heart"></i>--}}
-{{--                </div>--}}
+                </a>
             </div>
         </div>
         <div class="col-md-9">
