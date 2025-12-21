@@ -77,7 +77,7 @@ class OrganisationController extends FrontendController{
         ];
         $page_title = __('Hunting organization');
 
-        return view('Animals::admin.organisation',compact('rows','breadcrumbs','current_month','page_title','request'));
+        return view('Animals::user.organisation',compact('rows','breadcrumbs','current_month','page_title','request'));
     }
     public function create($animalId)
     {
