@@ -1,4 +1,4 @@
-@extends('admin.layouts.app')
+@extends('layouts.user')
 
 @section('content')
     <h2 class="title-bar">{{ __('Hunting organization') }}</h2>
