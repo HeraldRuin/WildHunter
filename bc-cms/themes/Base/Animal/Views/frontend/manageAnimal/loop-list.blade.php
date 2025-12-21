@@ -15,7 +15,7 @@
                     @if(!empty($animal->image_url))
                         <img src="{{$animal->image_url}}" class="img-responsive" alt="">
                     @else
-                        <div style="display:flex;align-items:center;justify-content:center;min-height:150px;width:100%;border:1px solid #ccc;">
+                        <div style="display:flex;align-items:center;justify-content:center;min-height:120px;width:100%;border:1px solid #ccc;">
                             {{ __("No Image") }}
                         </div>
                     @endif
