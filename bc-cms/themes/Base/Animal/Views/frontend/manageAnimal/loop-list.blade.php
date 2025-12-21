@@ -24,16 +24,16 @@
 
         </div>
 
-            <div class="thumb-image">
-                <a href="{{$animal->getDetailUrl()}}" target="_blank">
-                    @if(!empty($animal->image_url))
-                        <img src="{{$animal->image_url}}" class="img-responsive" alt="">
-                    @else
-                        <div style="display:flex;align-items:center;justify-content:center;min-height:150px;width:100%;border:1px solid #ccc;">
-                            {{ __("No Image") }}
-                        </div>
-                    @endif
-                </a>
+{{--            <div class="thumb-image">--}}
+{{--                <a href="{{$animal->getDetailUrl()}}" target="_blank">--}}
+{{--                    @if(!empty($animal->image_url))--}}
+{{--                        <img src="{{$animal->image_url}}" class="img-responsive" alt="">--}}
+{{--                    @else--}}
+{{--                        <div style="display:flex;align-items:center;justify-content:center;min-height:150px;width:100%;border:1px solid #ccc;">--}}
+{{--                            {{ __("No Image") }}--}}
+{{--                        </div>--}}
+{{--                    @endif--}}
+{{--                </a>--}}
 
                 {{--                <div class="service-wishlist {{$animal->isWishList()}}" data-id="{{$animal->id}}" data-type="{{$animal->type}}">--}}
 {{--                    <i class="fa fa-heart"></i>--}}
