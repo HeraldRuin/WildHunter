@@ -12,7 +12,7 @@
             <div class="thumb-image">
                 <a href="{{$animal->getDetailUrl()}}" target="_blank">
                     @if($animal->image_url)
-                        <img src="{{$row->image_url}}" class="img-responsive" alt="">
+                        <img src="{{$animal->image_url}}" class="img-responsive" alt="">
                     @endif
                 </a>
                 <div class="service-wishlist {{$animal->isWishList()}}" data-id="{{$animal->id}}" data-type="{{$animal->type}}">
