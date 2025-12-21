@@ -1,7 +1,7 @@
 <?php
-use \Illuminate\Support\Facades\Route;
-use Modules\Animals\Admin\OrganisationController;
-use Modules\Animals\Controllers\AnimalPeriodController;
+
+use Illuminate\Support\Facades\Route;
+use Modules\Animals\user\OrganisationController;
 
 Route::group(['prefix'=>config('animal.animal_route_prefix')],function(){
     Route::get('/','AnimalController@index')->name('animal.search'); // Search
@@ -28,8 +28,12 @@ Route::group(['prefix'=>'user/'.config('animal.animal_route_prefix')],function()
     });
 });
 
+Route::group(['prefix'=>'organisation'],function(){
+    Route::get('/','OrganisationController@index')->name('animal.vendor.organisation');
+});
+
 Route::group(['prefix'=>config('animal.animal_route_prefix')],function(){
-    Route::post('/{animal}/period/create', [OrganisationController::class, 'create'])->name('animal.admin.period.create');
+    Route::post('/{animal}/period/create', [OrganisationController::class, 'create'])->name('animal.vendor.period.create');
     Route::post('/period/{period}/update', [OrganisationController::class, 'update']);
     Route::post('/period/{period}', [OrganisationController::class, 'delete'])->name('animal.vendor.period.delete');
 

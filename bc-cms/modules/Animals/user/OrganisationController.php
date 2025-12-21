@@ -10,12 +10,12 @@ class OrganisationController extends \Modules\Animals\Controllers\OrganisationCo
     protected $animalClass;
     protected $animalDateClass;
     protected $bookingClass;
-    protected $indexView = 'Animals::admin.organisation';
+    protected $indexView = 'Animals::user.organisation';
 
     public function __construct(Animal $animalClass, AnimalDate $animalDateClass, Booking $bookingClass)
     {
-        $this->setActiveMenu(route('animal.admin.index'));
-        $this->middleware('dashboard');
+        $this->setActiveMenu(route('animal.vendor.organisation'));
+//        $this->middleware('dashboard');
         $this->animalClass = $animalClass;
         $this->animalDateClass = $animalDateClass;
         $this->bookingClass = $bookingClass;
