@@ -1,11 +1,16 @@
 <?php
 namespace Modules\User\Controllers;
 
-use App\User;
+use Illuminate\Foundation\Auth\AuthenticatesUsers;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Matrix\Exception;
 use Modules\Boat\Models\Boat;
+use Modules\Booking\Models\Booking;
+use Modules\Booking\Models\Enquiry;
 use Modules\Booking\Models\Service;
 use Modules\Car\Models\Car;
 use Modules\Event\Models\Event;
@@ -18,14 +23,10 @@ use Modules\Tour\Models\Tour;
 use Modules\User\Events\NewVendorRegistered;
 use Modules\User\Events\UserSubscriberSubmit;
 use Modules\User\Models\Subscriber;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Modules\Vendor\Models\VendorRequest;
+use Modules\Weapon\Models\Caliber;
+use Modules\Weapon\Models\WeaponType;
 use Validator;
-use Modules\Booking\Models\Booking;
-use Illuminate\Foundation\Auth\AuthenticatesUsers;
-use Modules\Booking\Models\Enquiry;
-use Illuminate\Support\Str;
 
 class UserController extends FrontendController
 {
@@ -102,9 +103,12 @@ class UserController extends FrontendController
     public function profile(Request $request)
     {
         $user = Auth::user();
+
         $data = [
             'user'         => $user,
             'page_title'       => __("Profile"),
+            'weapons' => WeaponType::all(),
+            'calibers' => Caliber::all(),
             'breadcrumbs'      => [
                 [
                     'name'  => __('Setting'),
@@ -113,7 +117,12 @@ class UserController extends FrontendController
             ],
             'is_vendor_access' => $this->hasPermission('hunter_dashboard_access')
         ];
-        return view('User::frontend.profile', $data);
+
+        if ($user->hasRole('baseadmin')){
+          return view('User::frontend.profile_base_admin', $data);
+        }else {
+           return view('User::frontend.profile_hunter', $data);
+        }
     }
 
     public function profileUpdate(Request $request){
@@ -151,6 +160,11 @@ class UserController extends FrontendController
         $user->bio = clean($request->input('bio'));
         $user->birthday = date("Y-m-d", strtotime($user->birthday));
         $user->user_name = Str::slug( $request->input('user_name') ,"_");
+        $user->hunter_billet_number = $request->input('hunter_billet_number');
+        $user->hunter_license_number = $request->input('hunter_license_number');
+        $user->hunter_license_date = $request->input('hunter_license_date');
+        $user->weapon_type_id = $request->input('weapon_type_id');
+        $user->caliber = $request->input('caliber');
         $user->save();
         return redirect()->back()->with('success', __('Update successfully'));
     }
@@ -160,9 +174,6 @@ class UserController extends FrontendController
         $cabinetData = $this->cabinetService->getCabinetData();
 
         $authUser = Auth::user();
-
-//        $hotelIds = $authUser->hotels->pluck('id'); //TODO на будущее когда несколько баз будет и будет привязываеться админ к конкретной
-
 
         if ($authUser->hasRole('baseadmin')){
             $hotelId = $authUser->hotels->first()->id;
