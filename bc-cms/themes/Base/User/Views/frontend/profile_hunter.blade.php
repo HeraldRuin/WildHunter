@@ -72,7 +72,6 @@
                 <div class="form-group">
                     <label>{{__("Number hunter billet")}}</label>
                     <input type="text" value="{{old('address',$user->hunter_billet_number)}}" name="hunter_billet_number" placeholder="{{__("Add Number")}}" class="form-control">
-                    <i class="fa fa-location-arrow input-icon"></i>
                 </div>
                 <div class="form-group">
                     <label>{{ __("License") }}</label>
