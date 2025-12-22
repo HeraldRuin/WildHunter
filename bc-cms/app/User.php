@@ -3,6 +3,7 @@
 namespace App;
 
 use App\Models\ChMessage as Message;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
@@ -34,6 +35,8 @@ use Illuminate\Support\Facades\Auth;
 use App\Traits\HasUserReview;
 use App\Traits\HasStatus;
 use App\Traits\HasAddress;
+use Modules\Weapon\Models\Caliber;
+use Modules\Weapon\Models\WeaponType;
 
 class User extends Authenticatable implements MustVerifyEmail
 {
@@ -569,5 +572,14 @@ class User extends Authenticatable implements MustVerifyEmail
     public function hotels(): HasMany
     {
         return $this->hasMany(Hotel::class, 'create_user');
+    }
+
+    public function weaponType(): BelongsTo
+    {
+        return $this->belongsTo(WeaponType::class, 'weapon_type_id');
+    }
+    public function caliber(): BelongsTo
+    {
+        return $this->belongsTo(Caliber::class, 'caliber_id');
     }
 }
