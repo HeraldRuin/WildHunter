@@ -138,5 +138,8 @@ return [
     'animal_availability_dates',
     'animal_create_hunting',
 
+    //Weapon
+    'weapon_view',
+
     'media_manage_others'
 ];

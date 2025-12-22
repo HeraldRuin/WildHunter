@@ -49,7 +49,7 @@ class ThemeProvider extends AbstractThemeProvider
         'review'    => \Modules\Review\ModuleProvider::class,
         'popup'     => \Modules\Popup\ModuleProvider::class,
         'animal'      => \Modules\Animals\ModuleProvider::class,
-
+        'weapon' => \Modules\Weapon\ModuleProvider::class
     ];
 
     public function boot(Kernel $kernel)
@@ -62,9 +62,17 @@ class ThemeProvider extends AbstractThemeProvider
 
     public function register()
     {
+//        foreach (static::$modules as $module => $class) {
+//            if (class_exists($class)) {
+//                $this->app->register($class);
+//            }
+//        }
         foreach (static::$modules as $module => $class) {
             if (class_exists($class)) {
+                \Log::info("Registering module: $module");
                 $this->app->register($class);
+            } else {
+                \Log::error("Module class does not exist: $class");
             }
         }
     }
