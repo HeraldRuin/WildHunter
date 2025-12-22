@@ -46,14 +46,28 @@ class OrganisationController extends FrontendController{
     }
     public function index(Request $request){
         $this->checkPermission('animal_create_hunting');
+        $userHotelId = get_user_hotel_id();
 
-        $q = $this->animalClass::query();
+        $list_animals = $this->animalClass::query()
+            ->join('bc_hotel_animals as bha', function ($join) use ($userHotelId) {
+                $join->on('bha.animal_id', '=', 'bc_animals.id')
+                    ->where('bha.hotel_id', '=', $userHotelId);
+            })
+            ->select([
+                'bc_animals.*',
+                'bha.status as animal_status'
+            ]);
 
         if($request->query('s')){
-            $q->where('title','like','%'.$request->query('s').'%');
+            $list_animals->where('title','like','%'.$request->query('s').'%');
         }
 
-        $rows = $q->paginate(15);
+        if($request->query('s')){
+            $list_animals->where('bc_animals.title', 'like', '%'.$request->query('s').'%');
+        }
+
+        $list_animals->orderBy('bc_animals.id', 'desc');
+        $rows = $list_animals->paginate(15);
 
         $current_month = strtotime(date('Y-m-01',time()));
 
