@@ -53,7 +53,7 @@ class ManageAnimalController extends FrontendController
         $this->checkPermission('animal_view');
 
         $list_animals = $this->animalClass::query()
-            ->leftJoin('bc_hotel_animals as bha', function ($join) use ($userHotelId) {
+            ->join('bc_hotel_animals as bha', function ($join) use ($userHotelId) {
                 $join->on('bha.animal_id', '=', 'bc_animals.id')
                     ->where('bha.hotel_id', '=', $userHotelId);
             })
@@ -65,6 +65,7 @@ class ManageAnimalController extends FrontendController
 
         $data = [
             'rows' => $list_animals->paginate(5),
+            'animal_list' =>  $this->animalClass::whereDoesntHave('hotels', function($q) use ($userHotelId) {$q->where('bc_hotel_animals.hotel_id', $userHotelId);})->get(),
             'breadcrumbs'        => [
                 [
                     'name' => __('Manage Animals'),
@@ -265,33 +266,33 @@ class ManageAnimalController extends FrontendController
         return view('Animal::frontend.manageAnimal.detail', $data);
     }
 
-    public function bulkEdit($id , Request $request)
+    public function bulkEAttach(Request $request)
     {
         $this->checkPermission('animal_update');
-        $action = $request->input('action');
+        $animalId = $request->input('animal_id');
         $userHotelId = get_user_hotel_id();
 
-        if (empty($id)) {
-            return redirect()->back()->with('error', __('No item!'));
-        }
-        if (empty($action)) {
-            return redirect()->back()->with('error', __('Please select an action!'));
-        }
-
-        $animal = $this->animalClass::find($id);
+        $animal = $this->animalClass::find($animalId);
 
         if (!$animal) {
             return redirect()->back()->with('error', __('Not Found'));
         }
 
-        switch ($action){
-            case "add":
-                $animal->hotels()->syncWithoutDetaching([$userHotelId]);
-                return redirect()->back()->with('success', __('Attach success!'));
-            case "delete":
-                $animal->hotels()->detach($userHotelId);
-                return redirect()->back()->with('success', __('Detach success!'));
+        $animal->hotels()->syncWithoutDetaching([$userHotelId]);
+        return response()->json(['success' => true, 'message' => __('Attach success!')]);
+    }
+
+    public function bulkEDetach($id)
+    {
+        $this->checkPermission('animal_update');
+        $userHotelId = get_user_hotel_id();
+        $animal = $this->animalClass::find($id);
+
+        if (!$animal) {
+            return redirect()->back()->with('error', __('Not Found'));
         }
+        $animal->hotels()->detach($userHotelId);
+        return redirect()->back()->with('success', __('Detach success!'));
     }
 
     public function delete($id)

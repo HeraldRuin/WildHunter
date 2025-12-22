@@ -4,6 +4,7 @@
         data:{
             id:'',
             periods: [],
+            animalIdToAttach: ''
         },
         mounted() {
             var vm = this;
@@ -69,6 +70,31 @@
                     },
                 })
             },
+            attachAnimal() {
+                if (!this.animalIdToAttach) return;
+
+                let url = $('#animal-app').data('bulk-url');
+                $.ajax({
+                    url: url,
+                    type: 'POST',
+                    dataType: 'json',
+                    data: {
+                        action: 'add',
+                        animal_id: this.animalIdToAttach
+                    },
+                    success: function(res) {
+                        if(res.success){
+                            this.animalIdToAttach = '';
+                            location.reload(); // или динамически обновить список
+                        }
+                    }.bind(this),
+                    error: function(err) {
+                        console.error(err);
+                    }
+                });
+            }
+
+
         }
 
     });
