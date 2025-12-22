@@ -140,6 +140,11 @@ return [
 
     //Weapon
     'weapon_view',
+    'weapon_create',
+
+    //Caliber
+    'caliber_view',
+    'caliber_create',
 
     'media_manage_others'
 ];
