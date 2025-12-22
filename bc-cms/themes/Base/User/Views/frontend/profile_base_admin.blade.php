@@ -49,11 +49,6 @@
                     <input type="text" value="{{old('phone',$user->phone)}}" name="phone" placeholder="{{__("Phone Number")}}" class="form-control">
                     <i class="fa fa-phone input-icon"></i>
                 </div>
-{{--                <div class="form-group">--}}
-{{--                    <label>{{__("Birthday")}}</label>--}}
-{{--                    <input type="text" value="{{ old('birthday',$user->birthday? display_date($user->birthday) :'') }}" name="birthday" placeholder="{{__("Birthday")}}" class="form-control date-picker">--}}
-{{--                    <i class="fa fa-birthday-cake input-icon"></i>--}}
-{{--                </div>--}}
                 <div class="form-group">
                     <label>{{__("About Yourself")}}</label>
                     <textarea name="bio" rows="5" class="form-control">{{old('bio',$user->bio)}}</textarea>
@@ -83,36 +78,6 @@
                     <input type="text" value="{{old('address',$user->address)}}" name="address" placeholder="{{__("Address")}}" class="form-control">
                     <i class="fa fa-location-arrow input-icon"></i>
                 </div>
-{{--                <div class="form-group">--}}
-{{--                    <label>{{__("Address Line 2")}}</label>--}}
-{{--                    <input type="text" value="{{old('address2',$user->address2)}}" name="address2" placeholder="{{__("Address2")}}" class="form-control">--}}
-{{--                    <i class="fa fa-location-arrow input-icon"></i>--}}
-{{--                </div>--}}
-{{--                <div class="form-group">--}}
-{{--                    <label>{{__("City")}}</label>--}}
-{{--                    <input type="text" value="{{old('city',$user->city)}}" name="city" placeholder="{{__("City")}}" class="form-control">--}}
-{{--                    <i class="fa fa-street-view input-icon"></i>--}}
-{{--                </div>--}}
-{{--                <div class="form-group">--}}
-{{--                    <label>{{__("State")}}</label>--}}
-{{--                    <input type="text" value="{{old('state',$user->state)}}" name="state" placeholder="{{__("State")}}" class="form-control">--}}
-{{--                    <i class="fa fa-map-signs input-icon"></i>--}}
-{{--                </div>--}}
-{{--                <div class="form-group">--}}
-{{--                    <label>{{__("Country")}}</label>--}}
-{{--                    <select name="country" class="form-control">--}}
-{{--                        <option value="">{{__('-- Select --')}}</option>--}}
-{{--                        @foreach(get_country_lists() as $id=>$name)--}}
-{{--                            <option @if((old('country',$user->country ?? '')) == $id) selected @endif value="{{$id}}">{{$name}}</option>--}}
-{{--                        @endforeach--}}
-{{--                    </select>--}}
-{{--                </div>--}}
-{{--                <div class="form-group">--}}
-{{--                    <label>{{__("Zip Code")}}</label>--}}
-{{--                    <input type="text" value="{{old('zip_code',$user->zip_code)}}" name="zip_code" placeholder="{{__("Zip Code")}}" class="form-control">--}}
-{{--                    <i class="fa fa-map-pin input-icon"></i>--}}
-{{--                </div>--}}
-
             </div>
             <div class="col-md-12">
                 <hr>
