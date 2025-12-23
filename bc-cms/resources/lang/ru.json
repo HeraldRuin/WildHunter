@@ -3906,6 +3906,14 @@
     "Add Caliber": "Выберите калибр оружия",
     "License": "Лицензия",
     "Add License": "Укажите лицензию",
-    "Numb": "Номер"
+    "Numb": "Номер",
+    "Weapon": "Оружие",
+    "Weapon Management": "Управление оружием",
+    "All Weapons": "Все оружие",
+    "Add new weapon": "Добавить оружие",
+    "No weapons found": "Оружие не найдено",
+    "Weapon Content": "Контент оружия",
+    "Weapon updated": "Оружие обновлено",
+    "Weapon created'": "Оружие сохранено"
 
 }
