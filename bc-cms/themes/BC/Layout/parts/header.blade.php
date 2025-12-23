@@ -1,7 +1,7 @@
 <div class="bc_header {{ setting_item('enable_header_sticky', 0) == 1 ? 'has_sticky' : '' }}">
     <div class="{{ $container_class ?? 'container' }}">
         <div class="content">
-            <div class="header-left">
+            <div class="header-left d-flex align-items-center justify-content-between w-100">
                 <div class="bc-menu">
                     <?php
                     generate_menu('primary', [
@@ -11,18 +11,20 @@
                     ?>
                 </div>
 
-                <a href="{{ url(app_get_locale(false, '/')) }}" class="bc-logo">
-                    @php
-                        $logo_id = setting_item('logo_id');
-                        if (!empty($row->custom_logo)) {
-                            $logo_id = $row->custom_logo;
-                        }
-                    @endphp
-                    @if ($logo_id)
-                            <?php $logo = get_file_url($logo_id, 'full'); ?>
-                        <img src="{{ $logo }}" alt="{{ setting_item('site_title') }}">
-                    @endif
-                </a>
+                <div class="logo-center" style="margin-right: 540px;">
+                    <a href="{{ url(app_get_locale(false, '/')) }}" class="bc-logo">
+                        @php
+                            $logo_id = setting_item('logo_id');
+                            if (!empty($row->custom_logo)) {
+                                $logo_id = $row->custom_logo;
+                            }
+                        @endphp
+                        @if ($logo_id)
+                                <?php $logo = get_file_url($logo_id, 'full'); ?>
+                            <img src="{{ $logo }}" alt="{{ setting_item('site_title') }}">
+                        @endif
+                    </a>
+                </div>
 
             </div>
             <div class="header-right">
