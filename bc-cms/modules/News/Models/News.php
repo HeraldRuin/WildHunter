@@ -4,6 +4,8 @@ namespace Modules\News\Models;
 use App\BaseModel;
 use App\User;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Modules\Core\Models\SEO;
 use Modules\Review\Models\Review;
 
@@ -23,8 +25,17 @@ class News extends BaseModel
     protected $slugFromField = 'title';
     protected $seo_type = 'news';
     public $type = 'news';
+    protected $userWishListClass;
+    protected $reviewClass;
 
     protected $sitemap_type = 'page';
+
+    public function __construct(array $attributes = [])
+    {
+        parent::__construct($attributes);
+        $this->reviewClass = Review::class;
+
+    }
 
     public function getDetailUrlAttribute()
     {
@@ -177,7 +188,7 @@ class News extends BaseModel
     }
 
     public function getRelatedQuery(){
-        
+
         $query = parent::isPublic()->whereNotIn('id', [$this->id]);
 
         if (!empty($cat_id = $this->cat_id)) {
@@ -185,6 +196,36 @@ class News extends BaseModel
         }
         return $query;
 
+    }
+
+    public function isWishList()
+    {
+        if (Auth::check()) {
+            if (!empty($this->hasWishList) and !empty($this->hasWishList->id)) {
+                return 'active';
+            }
+        }
+        return '';
+    }
+
+    public function hasWishList()
+    {
+        return $this->hasOne($this->userWishListClass, 'object_id', 'id')->where('object_model', $this->type)->where('user_id', Auth::id() ?? 0);
+    }
+
+    public function getScoreReview()
+    {
+        $hotel_id = $this->id;
+        $list_score = Cache::rememberForever('review_' . $this->type . '_' . $hotel_id, function () use ($hotel_id) {
+            $dataReview = $this->reviewClass::selectRaw(" AVG(rate_number) as score_total , COUNT(id) as total_review ")->where('object_id', $hotel_id)->where('object_model', "hotel")->where("status", "approved")->first();
+            $score_total = !empty($dataReview->score_total) ? number_format($dataReview->score_total, 1) : 0;
+            return [
+                'score_total'  => $score_total,
+                'total_review' => !empty($dataReview->total_review) ? $dataReview->total_review : 0,
+            ];
+        });
+        $list_score['review_text'] = $list_score['score_total'] ? Review::getDisplayTextScoreByLever(round($list_score['score_total'])) : __("Not rated");
+        return $list_score;
     }
 
 }
