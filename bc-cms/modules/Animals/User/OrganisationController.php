@@ -1,5 +1,5 @@
 <?php
-namespace Modules\Animals\user;
+namespace Modules\Animals\User;
 
 use Modules\Animals\Models\Animal;
 use Modules\Animals\Models\AnimalDate;

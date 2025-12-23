@@ -1,7 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use Modules\Animals\user\OrganisationController;
+use Modules\Animals\User\OrganisationController;
 
 Route::group(['prefix'=>config('animal.animal_route_prefix')],function(){
     Route::get('/','AnimalController@index')->name('animal.search'); // Search
