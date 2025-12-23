@@ -565,6 +565,7 @@
                             hunting_adults: this.hunting_adults,
                             animal_id: this.getSelectAnimalId(),
                             hotel_id: this.id,
+                            animal_price: this.animalPrice
                         }
                     };
                 }
@@ -603,6 +604,7 @@
                             children: this.children,
                             animal_id: this.getSelectAnimalId(),
                             hotel_id: this.id,
+                            animal_price: this.animalPrice,
                             rooms: this.rooms.map(item =>
                                 objectPick(item, ['id', 'number_selected'])
                             )

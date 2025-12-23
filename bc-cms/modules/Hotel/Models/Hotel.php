@@ -267,6 +267,7 @@ class Hotel extends Bookable
         $booking->vendor_id = $this->author_id;
         $booking->customer_id = Auth::id();
         $booking->total = $total;
+        $booking->amount_hunting = $request->input('hunting_adults') * $request->input('animal_price');
         $booking->total_guests = $total_guests;
         $booking->total_hunting = $request->input('hunting_adults') ?? null;
         $booking->start_date = $start_date;

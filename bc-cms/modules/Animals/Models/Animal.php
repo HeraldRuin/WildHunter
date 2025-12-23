@@ -51,7 +51,7 @@ class Animal extends Bookable
         $booking->object_model = $request->input('service_type');
         $booking->vendor_id = $this->author_id;
         $booking->customer_id = Auth::id();
-//        $booking->total = $total;
+        $booking->amount_hunting = $request->input('hunting_adults') * $request->input('animal_price');
         $booking->animal_id = $request->input('animal_id') ?? null;
         $booking->type = $request->input('type') ?? null;
         $booking->total_hunting = $request->input('hunting_adults');
