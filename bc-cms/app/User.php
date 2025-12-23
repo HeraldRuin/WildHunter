@@ -571,7 +571,7 @@ class User extends Authenticatable implements MustVerifyEmail
 
     public function hotels(): HasMany
     {
-        return $this->hasMany(Hotel::class, 'create_user');
+        return $this->hasMany(Hotel::class, 'admin_base');
     }
 
     public function weaponType(): BelongsTo
