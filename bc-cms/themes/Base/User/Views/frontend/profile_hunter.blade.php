@@ -100,7 +100,7 @@
                         @foreach($weapons as $weapon)
                             <option value="{{ $weapon->id }}"
                                 {{ $user->weapon_type_id == $weapon->id ? 'selected' : '' }}>
-                                {{ $weapon->name }}
+                                {{ $weapon->title }}
                             </option>
                         @endforeach
                     </select>
@@ -112,7 +112,7 @@
                         @foreach($calibers as $caliber)
                             <option value="{{ $caliber->id }}"
                                 {{ $user->caliber == $caliber->id ? 'selected' : '' }}>
-                                {{ $caliber->name }}
+                                {{ $caliber->title }}
                             </option>
                         @endforeach
                     </select>
