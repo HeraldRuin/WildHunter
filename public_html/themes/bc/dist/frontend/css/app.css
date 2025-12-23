@@ -7984,7 +7984,7 @@ body .daterangepicker .full-book-event:before {
 }
 
 .bc_wrap .bc_topbar .content .topbar-items li a {
-    color: #fff;
+    color: black;
     font-weight: 400;
     font-size: 12px;
     text-decoration: none
@@ -8001,7 +8001,6 @@ body .daterangepicker .full-book-event:before {
 }
 
 .bc_wrap .bc_topbar .content .topbar-left a {
-    color: #fff;
     font-weight: 400;
     font-size: 13px;
     text-decoration: none
