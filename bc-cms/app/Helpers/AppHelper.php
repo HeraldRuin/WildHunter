@@ -1187,15 +1187,20 @@ function is_image_data($data){
     return $checkMimeType && $checkExtension;
 }
 
-if (!function_exists('get_user_hotel_id')) {
-    function get_user_hotel_id() {
-        $authUser = Auth::user();
-        if ($authUser && $authUser->hotels->isNotEmpty()) {
-            return $authUser->hotels->first()->id;
-        }
-        return null;
+function get_user_hotel_id() {
+    $authUser = Auth::user();
+
+    if ($authUser && $authUser->hotels->isNotEmpty()) {
+        $hotel = $authUser->hotels
+            ->where('status', '!=', 'draft')
+            ->first();
+
+        return $hotel?->id;
     }
+
+    return null;
 }
+
 
 
 
