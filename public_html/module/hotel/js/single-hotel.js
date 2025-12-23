@@ -47,6 +47,8 @@
             show_confirm_only_hotel: false,
             animal_id: '',
             animalCheckPassed: false,
+            animalPrice: 0,
+            hunterCount: 0
         },
         watch:{
             extra_price:{
@@ -486,6 +488,7 @@
 			},
             checkAvailabilityForAnimal:function () {
                 var me  = this;
+                me.animalPrice = 0
                 if(!this.start_date_animal){
                     bookingCoreApp.showError( 'Пожалуйста, выберите дату');
                     return;
@@ -499,6 +502,7 @@
                 this.onLoadAvailability = true;
 
                 $.ajax({
+
                     url:bookingCore.module.animal+'/checkAvailability',
                     data:{
                         hotel_id:this.id,
@@ -514,6 +518,8 @@
 
                         if (json.available === true) {
                             me.animalCheckPassed = true;
+                            me.animalPrice = json.price
+                            me.hunterCount = json.adults
                         }
 
                         if(json.message){

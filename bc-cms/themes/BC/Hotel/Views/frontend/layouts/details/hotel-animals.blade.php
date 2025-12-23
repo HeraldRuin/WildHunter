@@ -5,12 +5,6 @@
             @include('Hotel::frontend.layouts.search.fields.booking_animals')
 
     </div>
-
-    <div class="nav-enquiry" v-if="is_form_enquiry_and_book">
-        <div class="enquiry-item active" >
-            <span>{{ __("Book") }}</span>
-        </div>
-    </div>
     <div class="form-book">
         <div class="form-search-rooms">
             <div class="d-flex form-search-row">
@@ -60,10 +54,44 @@
                 </div>
             </div>
         </div>
-
+        <div class="hotel_room_book_status" v-if="animalPrice > 0">
+            <div class="row row_total_price">
+                <div class="col-md-6">
+                    <div class="extra-price-wrap d-flex justify-content-between">
+                        <div class="flex-grow-1">
+                            <label>
+                                {{__("Total Hunting")}}:
+                            </label>
+                        </div>
+                        <div class="flex-shrink-0">
+                            @{{hunting_adults}}
+                        </div>
+                    </div>
+                    <div class="extra-price-wrap d-flex justify-content-between is_mobile">
+                        <div class="flex-grow-1">
+                            <label>
+                                {{__("Total Hunting")}}:
+                            </label>
+                        </div>
+                        <div class="total-room-price">@{{hunting_adults}}</div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="control-book">
+                        <div class="total-room-price">
+                            <span> {{__("Total Price")}}:</span> @{{'₽' + animalPrice * hunting_adults}}
+                        </div>
+{{--                        <div v-if="is_deposit_ready" class="total-room-price">--}}
+{{--                            <span>{{__("Pay now")}}</span>--}}
+{{--                            @{{animalPrice}}--}}
+{{--                        </div>--}}
+                    </div>
+                </div>
+            </div>
+        </div>
 
         <div class="pt-2">
-            <div class="alert alert-success" v-if="animalCheckPassed">
+            <div class="alert alert-success" v-if="animalCheckPassed && animalPrice > 0">
                 {{__("On this day there is an animal hunt. You can continue booking")}}
             </div>
         </div>

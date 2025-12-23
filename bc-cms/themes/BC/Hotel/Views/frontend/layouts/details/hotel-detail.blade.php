@@ -46,14 +46,6 @@
 @endif
 <div id="hotel-rooms" class="hotel_rooms_form" v-cloak="" v-bind:class="{'d-none':enquiry_type!='book'}">
     <h3 class="heading-section">{{__('Available Rooms')}}</h3>
-{{--    <div class="nav-enquiry" v-if="is_form_enquiry_and_book">--}}
-{{--        <div class="enquiry-item active" >--}}
-{{--            <span>{{ __("Book") }}</span>--}}
-{{--        </div>--}}
-{{--        <div class="enquiry-item" data-toggle="modal" data-target="#enquiry_form_modal">--}}
-{{--            <span>{{ __("Enquiry") }}</span>--}}
-{{--        </div>--}}
-{{--    </div>--}}
     <div class="form-book">
         <div class="form-search-rooms">
             <div class="d-flex form-search-row">
@@ -218,27 +210,27 @@
             </div>
         </div>
         <div class="hotel_room_book_status" v-if="total_price">
-            <div class="row row_extra_service" v-if="extra_price.length">
-                <div class="col-md-12">
-                    <div class="form-section-group">
-                        <label>{{__('Extra prices:')}}</label>
-                        <div class="row">
-                            <div class="col-md-6 extra-item" v-for="(type,index) in extra_price">
-                                <div class="extra-price-wrap d-flex justify-content-between">
-                                    <div class="flex-grow-1">
-                                        <label>
-                                            <input type="checkbox" true-value="1" false-value="0" v-model="type.enable"> @{{type.name}}
-                                            <div class="render" v-if="type.price_type">(@{{type.price_type}})</div>
-                                        </label>
-                                    </div>
-                                    <div class="flex-shrink-0">@{{type.price_html}}
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+{{--            <div class="row row_extra_service" v-if="extra_price.length">--}}
+{{--                <div class="col-md-12">--}}
+{{--                    <div class="form-section-group">--}}
+{{--                        <label>{{__('Extra prices:')}}</label>--}}
+{{--                        <div class="row">--}}
+{{--                            <div class="col-md-6 extra-item" v-for="(type,index) in extra_price">--}}
+{{--                                <div class="extra-price-wrap d-flex justify-content-between">--}}
+{{--                                    <div class="flex-grow-1">--}}
+{{--                                        <label>--}}
+{{--                                            <input type="checkbox" true-value="1" false-value="0" v-model="type.enable"> @{{type.name}}--}}
+{{--                                            <div class="render" v-if="type.price_type">(@{{type.price_type}})</div>--}}
+{{--                                        </label>--}}
+{{--                                    </div>--}}
+{{--                                    <div class="flex-shrink-0">@{{type.price_html}}--}}
+{{--                                    </div>--}}
+{{--                                </div>--}}
+{{--                            </div>--}}
+{{--                        </div>--}}
+{{--                    </div>--}}
+{{--                </div>--}}
+{{--            </div>--}}
             <div class="row row_total_price">
                 <div class="col-md-6">
                     <div class="extra-price-wrap d-flex justify-content-between">

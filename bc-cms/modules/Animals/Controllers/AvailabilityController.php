@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 use Modules\Animals\Models\Animal;
 use Modules\Animals\Models\AnimalDate;
+use Modules\Animals\Models\AnimalPricePeriod;
 use Modules\Booking\Models\Booking;
 use Modules\FrontendController;
 use Modules\Hotel\Models\Hotel;
@@ -203,6 +204,16 @@ class AvailabilityController extends FrontendController{
             return $this->sendError('На эту дату охота на это животное недоступна');
         }
 
+        $period = AnimalPricePeriod::query()
+            ->where('animal_id', $animal_id)
+            ->whereDate('start_date', '<=', $start_date)
+            ->whereDate('end_date', '>=', $start_date)
+            ->first();
+
+        if (!$period) {
+            return $this->sendError('На выбранную дату нет ценового периода');
+        }
+
         $animalBookedCount = Booking::where('object_model', 'animal')
             ->whereDate('start_date', '=', $start_date)
             ->where('hotel_id', $hotel_id)
@@ -215,6 +226,6 @@ class AvailabilityController extends FrontendController{
         if ($animalBookedCount + 1 > $maxTotalHunts) {
             return $this->sendError('На эту дату лимит охот на выбранное животное исчерпан');
         }
-        return $this->sendSuccess(['available' => true]);
+        return $this->sendSuccess(['available' => true, 'price' => $period->price]);
     }
 }
