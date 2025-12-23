@@ -8561,12 +8561,11 @@ body .daterangepicker .full-book-event:before {
     }
 
     .frontend-page.header-transparent .bc_wrap .bc_topbar {
-        background: transparent;
-        color: #000;
         position: absolute;
         top: 0;
         width: 100%;
-        z-index: 11
+        z-index: 11;
+        background-color: white;
     }
 
     .frontend-page.header-transparent .bc_wrap .bc_topbar .content .topbar-right .topbar-items .dropdown-menu {
