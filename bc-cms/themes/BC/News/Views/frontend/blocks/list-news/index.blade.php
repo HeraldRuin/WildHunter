@@ -29,4 +29,5 @@
             @endif
         </div>
     </div>
+    @include('News::frontend.blocks.seo.index')
 </div>
