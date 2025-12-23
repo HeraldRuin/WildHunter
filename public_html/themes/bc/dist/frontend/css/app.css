@@ -8607,7 +8607,7 @@ body .daterangepicker .full-book-event:before {
     }
 
     .frontend-page.header-transparent .bc_wrap .bc_header .content .header-left .bc-menu > ul > li > a {
-        color: #fff
+        color: black;
     }
 
     .frontend-page.header-transparent .page-template-content > div:first-child {
