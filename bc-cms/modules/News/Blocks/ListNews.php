@@ -13,6 +13,7 @@ class ListNews extends BaseBlock
     public $category_id;
     public $order;
     public $order_by;
+    public $style;
 
     function getOptions()
     {
@@ -35,6 +36,21 @@ class ListNews extends BaseBlock
                     'type'      => 'input',
                     'inputType' => 'number',
                     'label'     => __('Number Item')
+                ],
+                [
+                    'id'            => 'style',
+                    'type'          => 'radios',
+                    'label'         => __('Style'),
+                    'values'        => [
+                        [
+                            'value'   => 'normal',
+                            'name' => __("Normal")
+                        ],
+                        [
+                            'value'   => 'carousel',
+                            'name' => __("Slider Carousel")
+                        ]
+                    ]
                 ],
                 [
                     'id'      => 'category_id',
@@ -96,6 +112,7 @@ class ListNews extends BaseBlock
         $model = [
             'title' => $this->title,
             'desc' => $this->desc,
+            'style' => $this->style,
             'number' => $this->number,
             'category_id' => $this->category_id,
             'order' => $this->order,
@@ -104,6 +121,7 @@ class ListNews extends BaseBlock
         $list = $this->query($model);
         $data = [
             'rows'       => $list,
+            'style_list' => $model['style'] ?? 'carousel',
             'title'      => $model['title'] ?? "",
             'desc'      => $model['desc'] ?? "",
         ];

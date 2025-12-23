@@ -12,6 +12,7 @@
             @endphp
             <a target="_blank" href="{{$service->getDetailUrl()}}">
                 {{$translation->title}}
+                Охота на {{ $booking->animal?->title}}
             </a>
         @else
             {{__("[Deleted]")}}

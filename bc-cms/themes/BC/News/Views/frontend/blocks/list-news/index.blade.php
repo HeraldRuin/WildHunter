@@ -1,23 +1,32 @@
-<div class="bc-list-news">
-    <div class="container">
+<div class="container">
+    <div class="bc-list-hotel layout_{{$style_list}}">
         @if($title)
             <div class="title">
                 {{$title}}
-                @if(!empty($desc))
-                    <div class="sub-title">
-                        {{$desc}}
-                    </div>
-                @endif
+            </div>
+        @endif
+        @if($desc)
+            <div class="sub-title">
+                {{$desc}}
             </div>
         @endif
         <div class="list-item">
-            <div class="row">
-                @foreach($rows as $row)
-                    <div class="col-lg-4 col-md-6">
-                        @include('News::frontend.blocks.list-news.loop')
-                    </div>
-                @endforeach
-            </div>
+            @if($style_list === "normal")
+                <div class="row">
+                    @foreach($rows as $row)
+                        <div class="col-lg-{{$col ?? 3}} col-md-6">
+                            @include('News::frontend.layouts.search.loop-grid')
+                        </div>
+                    @endforeach
+                </div>
+            @endif
+            @if($style_list === "carousel")
+                <div class="owl-carousel">
+                    @foreach($rows as $row)
+                        @include('News::frontend.layouts.search.loop-grid')
+                    @endforeach
+                </div>
+            @endif
         </div>
     </div>
 </div>
