@@ -12,6 +12,6 @@ Route::get('/recovery','WeaponController@recovery')->name('weapon.admin.recovery
 Route::get('/caliber','CaliberController@index')->name('caliber.admin.index');
 Route::get('/create/caliber','CaliberController@create')->name('caliber.admin.create');
 Route::get('/caliber/edit/{id}','CaliberController@edit')->name('caliber.admin.edit');
-Route::post('/store/{id}','CaliberController@store')->name('caliber.admin.store');
+Route::post('/caliber.store/{id}','CaliberController@store')->name('caliber.admin.store');
 Route::post('/caliber/bulkEdit','CaliberController@bulkEdit')->name('caliber.admin.bulkEdit');
 
