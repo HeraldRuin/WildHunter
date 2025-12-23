@@ -8591,7 +8591,7 @@ body .daterangepicker .full-book-event:before {
         top: 50px;
         z-index: 10;
         width: 100%;
-        background: transparent
+        background-color: white;
     }
 
     .frontend-page.header-transparent .bc_wrap .bc_header.is_sticky {
