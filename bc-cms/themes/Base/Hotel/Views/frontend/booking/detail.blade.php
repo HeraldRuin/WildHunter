@@ -141,7 +141,7 @@
 						@endif
 					@endif
 				</li>
-                @include ('Booking::frontend/booking/checkout-deposit-amount')
+{{--                @include ('Booking::frontend/booking/checkout-deposit-amount')--}}
 			</ul>
 		</div>
 	</div>
