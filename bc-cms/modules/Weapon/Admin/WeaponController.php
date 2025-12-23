@@ -206,4 +206,85 @@ class WeaponController extends AdminController
         ];
         return view('Animals::admin.detail', $data);
     }
+
+    public function bulkEdit(Request $request)
+    {
+
+        $ids = $request->input('ids');
+        $action = $request->input('action');
+        if (empty($ids) or !is_array($ids)) {
+            return redirect()->back()->with('error', __('No items selected!'));
+        }
+        if (empty($action)) {
+            return redirect()->back()->with('error', __('Please select an action!'));
+        }
+        switch ($action) {
+            case "delete":
+                foreach ($ids as $id) {
+                    $query = $this->weaponType::where("id", $id);
+                    if (!$this->hasPermission('animal_manage_others')) {
+                        $query->where("create_user", Auth::id());
+                        $this->checkPermission('animal_delete');
+                    }
+                    $row = $query->first();
+                    if (!empty($row)) {
+                        $row->delete();
+                        event(new UpdatedServiceEvent($row));
+                    }
+                }
+                return redirect()->back()->with('success', __('Deleted success!'));
+                break;
+            case "permanently_delete":
+                foreach ($ids as $id) {
+                    $query = $this->weaponType::where("id", $id);
+                    if (!$this->hasPermission('animal_manage_others')) {
+                        $query->where("create_user", Auth::id());
+                        $this->checkPermission('animal_delete');
+                    }
+                    $row = $query->withTrashed()->first();
+                    if ($row) {
+                        $row->forceDelete();
+                    }
+                }
+                return redirect()->back()->with('success', __('Permanently delete success!'));
+                break;
+            case "recovery":
+                foreach ($ids as $id) {
+                    $query = $this->weaponType::withTrashed()->where("id", $id);
+                    if (!$this->hasPermission('animal_manage_others')) {
+                        $query->where("create_user", Auth::id());
+                        $this->checkPermission('animal_delete');
+                    }
+                    $row = $query->first();
+                    if (!empty($row)) {
+                        $row->restore();
+                        event(new UpdatedServiceEvent($row));
+                    }
+                }
+                return redirect()->back()->with('success', __('Recovery success!'));
+                break;
+            case "clone":
+                $this->checkPermission('animal_create');
+                foreach ($ids as $id) {
+                    (new $this->weaponType())->saveCloneByID($id);
+                }
+                return redirect()->back()->with('success', __('Clone success!'));
+                break;
+            default:
+                // Change status
+                foreach ($ids as $id) {
+                    $query = $this->weaponType::where("id", $id);
+                    if (!$this->hasPermission('animal_manage_others')) {
+                        $query->where("create_user", Auth::id());
+                        $this->checkPermission('animal_update');
+                    }
+                    $row = $query->first();
+                    $row->status = $action;
+                    $row->save();
+                    event(new UpdatedServiceEvent($row));
+                }
+                return redirect()->back()->with('success', __('Update success!'));
+                break;
+        }
+    }
 }
