@@ -2,18 +2,6 @@
     <div class="{{ $container_class ?? 'container' }}">
         <div class="content">
             <div class="header-left">
-                <a href="{{ url(app_get_locale(false, '/')) }}" class="bc-logo">
-                    @php
-                        $logo_id = setting_item('logo_id');
-                        if (!empty($row->custom_logo)) {
-                            $logo_id = $row->custom_logo;
-                        }
-                    @endphp
-                    @if ($logo_id)
-                        <?php $logo = get_file_url($logo_id, 'full'); ?>
-                        <img src="{{ $logo }}" alt="{{ setting_item('site_title') }}">
-                    @endif
-                </a>
                 <div class="bc-menu">
                     <?php
                     generate_menu('primary', [
@@ -22,6 +10,20 @@
                     ]);
                     ?>
                 </div>
+
+                <a href="{{ url(app_get_locale(false, '/')) }}" class="bc-logo">
+                    @php
+                        $logo_id = setting_item('logo_id');
+                        if (!empty($row->custom_logo)) {
+                            $logo_id = $row->custom_logo;
+                        }
+                    @endphp
+                    @if ($logo_id)
+                            <?php $logo = get_file_url($logo_id, 'full'); ?>
+                        <img src="{{ $logo }}" alt="{{ setting_item('site_title') }}">
+                    @endif
+                </a>
+
             </div>
             <div class="header-right">
                 @if (!empty($header_right_menu))
