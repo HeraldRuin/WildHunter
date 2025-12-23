@@ -10029,9 +10029,13 @@ ul, ol {
     position: absolute;
     bottom: 0;
     content: "";
-    width: 120px;
+    width: 220px;
     border-bottom: 1px solid #ebebeb;
     left: 0
+}
+.bc_wrap .bc_footer .main-footer .row > div:first-child .nav-footer .title:before {
+    display: none;
+    content: none;
 }
 
 @media (max-width: 768px) {

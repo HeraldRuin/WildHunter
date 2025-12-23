@@ -12,7 +12,7 @@
                                     </div>
                                     <div class="media-body">
                                         <h4 class="media-heading">{{ __('Get Updates & More') }}</h4>
-                                        <p>{{ __('Thoughtful thoughts to your inbox') }}</p>
+{{--                                        <p>{{ __('Thoughtful thoughts to your inbox') }}</p>--}}
                                     </div>
                                 </div>
                             </div>
@@ -40,15 +40,31 @@
             <div class="container">
                 <div class="row">
                     @if ($list_widget_footers = setting_item_with_lang('list_widget_footer'))
-                        <?php $list_widget_footers = json_decode($list_widget_footers); ?>
-                        @foreach ($list_widget_footers as $key => $item)
-                            <div class="col-lg-{{ $item->size ?? '3' }} col-md-6">
-                                <div class="nav-footer">
+                            <?php
+                            $list_widget_footers = json_decode($list_widget_footers, true);
+                            $first = array_shift($list_widget_footers);
+                            ?>
+                        @if ($first)
+                            <div class="col-lg-{{ $first['size'] ?? '3' }} col-md-6">
+                                <div class="nav-footer special-footer">
                                     <div class="title">
-                                        {{ $item->title }}
+                                        {{ $first['title'] }}
                                     </div>
                                     <div class="context">
-                                        {!! $item->content !!}
+                                        {!! $first['content'] !!}
+                                    </div>
+                                </div>
+                            </div>
+                        @endif
+
+                        @foreach ($list_widget_footers as $item)
+                            <div class="col-lg-{{ $item['size'] ?? '3' }} col-md-6">
+                                <div class="nav-footer">
+                                    <div class="title">
+                                        {{ $item['title'] }}
+                                    </div>
+                                    <div class="context">
+                                        {!! $item['content'] !!}
                                     </div>
                                 </div>
                             </div>
