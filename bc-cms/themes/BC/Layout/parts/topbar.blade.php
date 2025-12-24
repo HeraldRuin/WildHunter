@@ -16,8 +16,8 @@
             </div>
             <div class="topbar-right">
                 <ul class="topbar-items">
-                    @include('Core::frontend.currency-switcher')
-                    @include('Language::frontend.switcher')
+{{--                    @include('Core::frontend.currency-switcher')--}}
+{{--                    @include('Language::frontend.switcher')--}}
                     @if (!Auth::check())
                         <li class="login-item">
                             <a href="#login" data-toggle="modal" data-target="#login"
