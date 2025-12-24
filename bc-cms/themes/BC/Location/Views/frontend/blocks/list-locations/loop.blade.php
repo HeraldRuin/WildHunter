@@ -26,7 +26,10 @@
                     @if(is_array($service_type))
                         <div class="desc">
                             @foreach($service_type as $type)
-                                @php $count = $row->getDisplayNumberServiceInLocation($type) @endphp
+                                @php $count = $row->getDisplayNumberServiceInLocation($type);
+                                   $count = str_replace(['отель', 'отеля', 'отелей'], 'базы', $count);
+                                @endphp
+
                                 @if(!empty($count))
                                     @if(empty($link_location))
                                         <a class="text-white" href="{{ $row->getLinkForPageSearch( $type ) }}" target="_blank">
