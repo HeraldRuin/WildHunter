@@ -82,16 +82,16 @@ use Illuminate\Support\Facades\URL;
                                 data-confirm="{{__('"Do you want to delete?"')}}"
                         >{{__("Del")}}</a>
                     @endif
-                    @if($row->status == 'publish')
-                        <a
-                                href="{{ Url::signedRoute("hotel.vendor.bulk_edit",[$row->id,'action' => "make-hide",'user' => $user->id, 'viewAdminCabinet' => $viewAdminCabinet]) }}" class="btn btn-secondary"
-                        >{{__("Make hide")}}</a>
-                    @endif
-                    @if($row->status == 'draft')
-                        <a
-                                href="{{ Url::signedRoute("hotel.vendor.bulk_edit",[$row->id,'action' => "make-publish",'user' => $user->id, 'viewAdminCabinet' => $viewAdminCabinet]) }}" class="btn btn-success"
-                        >{{__("Make publish")}}</a>
-                    @endif
+{{--                    @if($row->status == 'publish')--}}
+{{--                        <a--}}
+{{--                                href="{{ Url::signedRoute("hotel.vendor.bulk_edit",[$row->id,'action' => "make-hide",'user' => $user->id, 'viewAdminCabinet' => $viewAdminCabinet]) }}" class="btn btn-secondary"--}}
+{{--                        >{{__("Make hide")}}</a>--}}
+{{--                    @endif--}}
+{{--                    @if($row->status == 'draft')--}}
+{{--                        <a--}}
+{{--                                href="{{ Url::signedRoute("hotel.vendor.bulk_edit",[$row->id,'action' => "make-publish",'user' => $user->id, 'viewAdminCabinet' => $viewAdminCabinet]) }}" class="btn btn-success"--}}
+{{--                        >{{__("Make publish")}}</a>--}}
+{{--                    @endif--}}
                 @endif
             </div>
         </div>
