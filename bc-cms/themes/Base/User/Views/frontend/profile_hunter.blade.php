@@ -7,7 +7,7 @@
     @include('admin.message')
     <form action="{{route('user.profile.update')}}" method="post" class="input-has-icon">
         @csrf
-        <div class="row">
+        <div class="row row-profile-width">
             <div class="col-md-6">
                 <div class="form-title">
                     <strong>{{__("Personal Information")}}</strong>
