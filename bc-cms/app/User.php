@@ -24,6 +24,7 @@ use Modules\User\Emails\UserPermanentlyDelete;
 use Modules\User\Events\UpdatePlanRequest;
 use Modules\User\Models\Plan;
 use Modules\User\Models\UserPlan;
+use Modules\User\Models\UserWeapon;
 use Modules\User\Traits\HasWallet;
 use Modules\Vendor\Models\VendorPayout;
 use Modules\Vendor\Models\VendorRequest;
@@ -581,5 +582,9 @@ class User extends Authenticatable implements MustVerifyEmail
     public function caliber(): BelongsTo
     {
         return $this->belongsTo(Caliber::class, 'caliber_id');
+    }
+    public function weapons(): HasMany
+    {
+        return $this->hasMany(UserWeapon::class);
     }
 }
