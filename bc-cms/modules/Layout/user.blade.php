@@ -118,9 +118,9 @@
         @include('Layout::parts.header')
 
         <div class="bc_user_profile">
-            <div class="container-fluid">
-                <div class="row row-eq-height">
-                    <div class="col-md-3">
+            <div class="container-fluid container_col">
+                <div class="row row-eq-height row-col">
+                    <div class="col-md-3 sidebar-col">
                         @include('User::frontend.layouts.sidebar')
                     </div>
                     <div class="col-md-9">
@@ -138,6 +138,7 @@
         src="{{ asset('libs/filerobot-image-editor/filerobot-image-editor.min.js?_ver=' . config('app.asset_version')) }}">
     </script>
     <script type="text/javascript" src="{{ asset('module/animal/js/single-animal.js?_ver=' . config('app.asset_version')) }}"></script>
+    <script type="text/javascript" src="{{ asset('module/weapon/js/weapon.js?_ver=' . config('app.asset_version')) }}"></script>
     @if (!is_demo_mode())
         {!! setting_item('footer_scripts') !!}
     @endif

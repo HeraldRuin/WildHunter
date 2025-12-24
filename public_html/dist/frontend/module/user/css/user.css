@@ -296,7 +296,7 @@
   background: white;
   display: table;
   position: relative;
-  width: 100%;
+  width: 89%;
   color: #1a2b47;
   border: 1px solid #e8e8e8;
 }
@@ -319,6 +319,7 @@
   margin: 0 0 15px;
   border-bottom: 1px solid #ccc;
   position: relative;
+  width: 89%;
 }
 @media (max-width: 990px) {
   .bc_wrap .bc_user_profile .user-form-settings .title-bar {
@@ -1672,4 +1673,23 @@
 .btn-generate-password:hover {
   background-color: #0056b3;
 }
-
+@media (min-width: 768px) {
+  .sidebar-col {
+    max-width: 14% !important;
+    flex: 0 0 25%;
+  }
+}
+.container_col {
+  width: 130% !important;
+  padding-left: 0px !important;
+  padding-right: 0px !important;
+}
+.user-panel-col {
+  max-width: 12% !important;
+}
+.row-col {
+  margin-left: -83px !important;
+}
+.number-col {
+  margin-right: 11%;
+}

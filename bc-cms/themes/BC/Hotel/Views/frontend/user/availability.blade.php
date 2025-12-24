@@ -4,14 +4,14 @@
     <h2 class="title-bar no-border-bottom">
         {{ __('Availability Rooms') }}
         <div class="title-action">
-            <a class="btn btn-info" href="{{ route('hotel.vendor.room.index', ['hotel_id' => $hotel->id,'user' => $user->id, 'viewAdminCabinet' => $viewAdminCabinet]) }}">
+            <a class="btn btn-info" href="{{ route('hotel.vendor.room.index', ['hotel_id' => 42,'user' => 65, 'viewAdminCabinet' => $viewAdminCabinet]) }}">
                 <i class="fa fa-hand-o-right"></i> {{ __('Manage Rooms') }}
             </a>
         </div>
     </h2>
     <div class="language-navigation">
         <div class="panel-body">
-            <div class="filter-div d-flex justify-content-between ">
+            <div class="filter-div d-flex justify-content-between">
                 <div class="col-left">
                     <form method="get" action="" class="filter-form filter-form-left d-flex flex-column flex-sm-row"
                         role="search">
@@ -20,7 +20,7 @@
                         <button class="btn-info btn btn-icon btn_search btn-sm" type="submit">{{ __('Search') }}</button>
                     </form>
                 </div>
-                <div class="col-right">
+                <div class="col-right number-col">
                     @if ($rows->total() > 0)
                         <span
                             class="count-string">{{ __('Showing :from - :to of :total rooms', ['from' => $rows->firstItem(), 'to' => $rows->lastItem(), 'total' => $rows->total()]) }}</span>
@@ -34,7 +34,7 @@
             <div class="panel-title"><strong>{{ __('Availability') }}</strong></div>
             <div class="panel-body no-padding" style="background: #f4f6f8;padding: 0px 15px;">
                 <div class="row">
-                    <div class="col-md-3" style="border-right: 1px solid #dee2e6;">
+                    <div class="col-md-3 user-panel-col" style="border-right: 1px solid #dee2e6;">
                         <ul class="nav nav-tabs  flex-column vertical-nav" id="items_tab" role="tablist">
                             @foreach ($rows as $k => $item)
                                 <li class="nav-item event-name ">
@@ -173,6 +173,26 @@
         }
 
         #dates-calendar .loading {}
+
+        /*.fc-event.full-book-event {*/
+        /*    background-color: #fe2727 !important;*/
+        /*    color: #fff !important;*/
+        /*    border: 1px solid #fe2727 !important;*/
+        /*}*/
+
+        /* Частично забронированные события */
+        .fc-event.active-event {
+            background-color: rgba(40, 167, 69, 0.5) !important; /* зеленый полупрозрачный фон */
+            color: #000 !important;                                /* черный текст для читаемости */
+            border: 1px solid #28a745 !important;                 /* зеленая граница */
+        }
+
+        /* По желанию: заблокированные события */
+        .fc-event.blocked-event {
+            background-color: #999 !important; /* серый фон */
+            color: #fff !important;
+            border: 1px solid #666 !important;
+        }
     </style>
 @endpush
 
@@ -182,6 +202,7 @@
     <script src="{{ asset('libs/fullcalendar-4.2.0/core/main.js') }}"></script>
     <script src="{{ asset('libs/fullcalendar-4.2.0/interaction/main.js') }}"></script>
     <script src="{{ asset('libs/fullcalendar-4.2.0/daygrid/main.js') }}"></script>
+    <script src="{{ asset('libs/fullcalendar-4.2.0/core/locales/ru.js') }}"></script>
 
     <script>
         var calendarEl, calendar, lastId, formModal;
@@ -192,6 +213,7 @@
                 calendar.destroy();
             }
             calendar = new FullCalendar.Calendar(calendarEl, {
+                locale: 'ru',
                 buttonText: {
                     today: '{{ __('Today') }}',
                 },
@@ -228,12 +250,27 @@
                     var form = Object.assign({}, info.event.extendedProps);
                     form.start_date = moment(info.event.start).format('YYYY-MM-DD');
                     form.end_date = moment(info.event.start).format('YYYY-MM-DD');
-                    console.log(form);
                     formModal.show(form);
                 },
+                // eventRender: function(info) {
+                //     console.log(info.event.title)
+                //     $(info.el).find('.fc-title').html(info.event.title);
+                // }
                 eventRender: function(info) {
+                    // Добавляем классы из extendedProps.classNames
+                    if(info.event.extendedProps.classNames){
+                        info.el.classList.add(...info.event.extendedProps.classNames);
+                    }
+
+                    // Обновляем текст события
                     $(info.el).find('.fc-title').html(info.event.title);
+
+                    // Если событие полностью забронировано, делаем его красным
+                    if(info.event.title === '{{ __("Full Book") }}'){
+                        info.el.style.pointerEvents = 'none'; // необязательно, если нужно заблокировать клик
+                    }
                 }
+
             });
             calendar.render();
         });
