@@ -23,7 +23,7 @@
             method="post">
 
             @csrf
-            <div class="form-add-service">
+            <div class="form-add-service hotel-add-width">
                 <div class="nav nav-tabs nav-fill" id="nav-tab" role="tablist">
                     <a data-toggle="tab" href="#nav-tour-content" aria-selected="true"
                         class="active">{{ __('1. Content') }}</a>
