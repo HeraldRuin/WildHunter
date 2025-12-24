@@ -14,7 +14,7 @@
             @endif
         </h2>
 
-        <div class="container-fluid">
+        <div class="container-fluid list-animal-width">
         <div class="panel">
             <div class="panel-body">
                 <form action="" class="bc-form-item">
