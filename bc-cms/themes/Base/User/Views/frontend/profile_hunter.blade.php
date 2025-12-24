@@ -68,56 +68,139 @@
                     </div>
                 </div>
             </div>
+{{--            <div class="col-md-6" style="margin-top:33px;">--}}
+{{--                <div class="form-group">--}}
+{{--                    <label>{{__("Number hunter billet")}}</label>--}}
+{{--                    <input type="text" value="{{old('address',$user->hunter_billet_number)}}" name="hunter_billet_number" placeholder="{{__("Add Number")}}" class="form-control">--}}
+{{--                </div>--}}
+{{--                <div class="form-group">--}}
+{{--                    <label>{{ __("License") }}</label>--}}
+{{--                    <div class="row align-items-center">--}}
+{{--                        <div class="col-md-6 d-flex align-items-center">--}}
+{{--                            <span class="mr-2">{{ __('Numb') }}</span>--}}
+{{--                            <input type="text"--}}
+{{--                                   name="hunter_license_number"--}}
+{{--                                   value="{{ old('hunter_license_number', $user->hunter_license_number) }}"--}}
+{{--                                   placeholder="{{ __('Add License') }}"--}}
+{{--                                   class="form-control">--}}
+{{--                        </div>--}}
+{{--                        <div class="col-md-6 d-flex align-items-center">--}}
+{{--                            <span class="mr-2">{{ __('Date') }}</span>--}}
+{{--                            <input type="date"--}}
+{{--                                   name="hunter_license_date"--}}
+{{--                                   value="{{ old('hunter_license_date', $user->hunter_license_date) }}"--}}
+{{--                                   class="form-control">--}}
+{{--                        </div>--}}
+{{--                    </div>--}}
+{{--                </div>--}}
+{{--                <div class="form-group" id="weapon-app">--}}
+{{--                    <label>{{ __("Weapon type") }}</label>--}}
+{{--                    <select name="weapon_type_id" class="form-control">--}}
+{{--                        <option value="">{{ __('Add Weapon') }}</option>--}}
+{{--                        @foreach($weapons as $weapon)--}}
+{{--                            <option value="{{ $weapon->id }}"--}}
+{{--                                {{ $user->weapon_type_id == $weapon->id ? 'selected' : '' }}>--}}
+{{--                                {{ $weapon->title }}--}}
+{{--                            </option>--}}
+{{--                        @endforeach--}}
+{{--                    </select>--}}
+{{--                </div>--}}
+{{--                <div class="form-group">--}}
+{{--                    <label>{{__("Caliber")}}</label>--}}
+{{--                    <select name="caliber" class="form-control">--}}
+{{--                        <option value="">{{ __('Add Caliber') }}</option>--}}
+{{--                        @foreach($calibers as $caliber)--}}
+{{--                            <option value="{{ $caliber->id }}"--}}
+{{--                                {{ $user->caliber == $caliber->id ? 'selected' : '' }}>--}}
+{{--                                {{ $caliber->title }}--}}
+{{--                            </option>--}}
+{{--                        @endforeach--}}
+{{--                    </select>--}}
+{{--                </div>--}}
+{{--            </div>--}}
             <div class="col-md-6" style="margin-top:33px;">
                 <div class="form-group">
                     <label>{{__("Number hunter billet")}}</label>
                     <input type="text" value="{{old('address',$user->hunter_billet_number)}}" name="hunter_billet_number" placeholder="{{__("Add Number")}}" class="form-control">
                 </div>
-                <div class="form-group">
-                    <label>{{ __("License") }}</label>
-                    <div class="row align-items-center">
-                        <div class="col-md-6 d-flex align-items-center">
-                            <span class="mr-2">{{ __('Numb') }}</span>
-                            <input type="text"
-                                   name="hunter_license_number"
-                                   value="{{ old('hunter_license_number', $user->hunter_license_number) }}"
-                                   placeholder="{{ __('Add License') }}"
-                                   class="form-control">
+                <div id="weapon-app">
+                    <div class="weapon-row border p-3 mb-2"
+                         v-for="(weaponItem, index) in weapons"
+                         :key="weaponItem.id ">
+
+                        <div class="form-group">
+                            <label>{{ __("License") }}</label>
+                            <div class="row align-items-center">
+                                <div class="col-md-6 d-flex align-items-center">
+                                    <span class="mr-2">{{ __('Numb') }}</span>
+                                    <input type="text"
+                                           :name="`hunter_license_number`"
+                                           v-model="weaponItem.hunter_license_number"
+                                           oninput="this.value = this.value.replace(/\D/g, '')"
+                                           placeholder="{{ __('Add License') }}"
+                                           class="form-control">
+                                </div>
+
+                                <div class="col-md-6 d-flex align-items-center">
+                                    <span class="mr-2">{{ __('Date') }}</span>
+                                    <input type="date"
+                                           :name="`hunter_license_date`"
+                                           v-model="weaponItem.hunter_license_date"
+                                           class="form-control">
+                                </div>
+                            </div>
                         </div>
-                        <div class="col-md-6 d-flex align-items-center">
-                            <span class="mr-2">{{ __('Date') }}</span>
-                            <input type="date"
-                                   name="hunter_license_date"
-                                   value="{{ old('hunter_license_date', $user->hunter_license_date) }}"
-                                   class="form-control">
+
+                        <div class="form-group">
+                            <label>{{ __("Weapon type") }}</label>
+                            <select class="form-control"
+                                    :name="`weapon_type_id`"
+                                    v-model="weaponItem.weapon_type_id">
+                                <option value="">{{ __('Add Weapon') }}</option>
+                                @foreach($weapons as $weapon)
+                                    <option value="{{ $weapon->id }}">
+                                        {{ $weapon->title }}
+                                    </option>
+                                @endforeach
+                            </select>
                         </div>
+
+                        <div class="form-group">
+                            <label>{{__("Caliber")}}</label>
+                            <select class="form-control"
+                                    :name="`caliber`"
+                                    v-model="weaponItem.caliber">
+                                <option value="">{{ __('Add Caliber') }}</option>
+                                @foreach($calibers as $caliber)
+                                    <option value="{{ $caliber->id }}">
+                                        {{ $caliber->title }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        <button v-if="weaponItem.id" type="button" class="btn btn-danger"
+                                @click="removeWeapon(weaponItem.id)">
+                            Удалить оружие
+                        </button>
                     </div>
+
+                    <button type="button"
+                            class="btn btn-primary mt-2"
+                            @click="addNewRow()">
+                        Добавить оружие
+                    </button>
+                    <button type="button"
+                            class="btn btn-secondary mt-2 ml-2"
+                            v-if="hasUnsavedWeapon"
+                            @click="cancelLastWeapon()">
+                        Отмена
+                    </button>
+
                 </div>
-                <div class="form-group" id="weapon-app">
-                    <label>{{ __("Weapon type") }}</label>
-                    <select name="weapon_type_id" class="form-control">
-                        <option value="">{{ __('Add Weapon') }}</option>
-                        @foreach($weapons as $weapon)
-                            <option value="{{ $weapon->id }}"
-                                {{ $user->weapon_type_id == $weapon->id ? 'selected' : '' }}>
-                                {{ $weapon->title }}
-                            </option>
-                        @endforeach
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>{{__("Caliber")}}</label>
-                    <select name="caliber" class="form-control">
-                        <option value="">{{ __('Add Caliber') }}</option>
-                        @foreach($calibers as $caliber)
-                            <option value="{{ $caliber->id }}"
-                                {{ $user->caliber == $caliber->id ? 'selected' : '' }}>
-                                {{ $caliber->title }}
-                            </option>
-                        @endforeach
-                    </select>
-                </div>
+
             </div>
+
             <div class="col-md-12">
                 <hr>
                 <button class="btn btn-primary" type="submit"><i class="fa fa-save"></i> {{__('Save Changes')}}</button>
@@ -164,3 +247,6 @@
     @endif
 
 @endsection
+<script>
+    window.initialWeapons = @json($userWeapons);
+</script>

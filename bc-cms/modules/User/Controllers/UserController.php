@@ -23,6 +23,7 @@ use Modules\Tour\Models\Tour;
 use Modules\User\Events\NewVendorRegistered;
 use Modules\User\Events\UserSubscriberSubmit;
 use Modules\User\Models\Subscriber;
+use Modules\User\Models\UserWeapon;
 use Modules\Vendor\Models\VendorRequest;
 use Modules\Weapon\Models\Caliber;
 use Modules\Weapon\Models\WeaponType;
@@ -103,12 +104,21 @@ class UserController extends FrontendController
     public function profile(Request $request)
     {
         $user = Auth::user();
-
+        $userWeapons = $user->weapons->map(function ($weapon) {
+            return [
+                'id'                    => $weapon->id,
+                'hunter_license_number' => $weapon->hunter_license_number,
+                'hunter_license_date'   => $weapon->hunter_license_date,
+                'weapon_type_id'        => $weapon->weapon_type_id,
+                'caliber'               => $weapon->caliber,
+            ];
+        })->values();
         $data = [
             'user'         => $user,
             'page_title'       => __("Profile"),
             'weapons' => WeaponType::all(),
             'calibers' => Caliber::all(),
+            'userWeapons'  => $userWeapons,
             'breadcrumbs'      => [
                 [
                     'name'  => __('Setting'),
@@ -160,12 +170,17 @@ class UserController extends FrontendController
         $user->bio = clean($request->input('bio'));
         $user->birthday = date("Y-m-d", strtotime($user->birthday));
         $user->user_name = Str::slug( $request->input('user_name') ,"_");
-        $user->hunter_billet_number = $request->input('hunter_billet_number');
-        $user->hunter_license_number = $request->input('hunter_license_number');
-        $user->hunter_license_date = $request->input('hunter_license_date');
-        $user->weapon_type_id = $request->input('weapon_type_id');
-        $user->caliber = $request->input('caliber');
         $user->save();
+
+        UserWeapon::create([
+            'user_id' => Auth::id(),
+            'hunter_billet_number' => $request->input('hunter_billet_number'),
+            'hunter_license_number' => $request->input('hunter_license_number'),
+            'hunter_license_date' => $request->input('hunter_license_date'),
+            'weapon_type_id' => $request->input('weapon_type_id'),
+            'caliber' => $request->input('caliber')
+        ]);
+
         return redirect()->back()->with('success', __('Update successfully'));
     }
 

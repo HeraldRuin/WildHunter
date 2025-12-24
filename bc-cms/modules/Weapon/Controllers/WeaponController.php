@@ -2,6 +2,7 @@
 namespace Modules\Weapon\Controllers;
 
 use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Auth;
 use Modules\Animals\Models\Animal;
 use Illuminate\Http\Request;
 use Modules\Animals\Models\AnimalBooking;
@@ -12,6 +13,7 @@ use Modules\Location\Models\Location;
 use Modules\Review\Models\Review;
 use Modules\Core\Models\Attributes;
 use DB;
+use Modules\User\Models\UserWeapon;
 
 class WeaponController extends Controller
 {
@@ -139,5 +141,24 @@ class WeaponController extends Controller
         ];
         $this->setActiveMenu($row);
         return view('Animal::frontend.detail', $data);
+    }
+
+    public function destroy($id)
+    {
+        $weapon = UserWeapon::find($id);
+        if(!$weapon) {
+            return response()->json(['message' => 'Оружие не найдено'], 404);
+        }
+
+        $weapon->delete();
+
+        return response()->json();
+    }
+    public function create()
+    {
+        UserWeapon::create([
+            'user_id' => Auth::id()
+        ]);
+        return response()->json();
     }
 }
