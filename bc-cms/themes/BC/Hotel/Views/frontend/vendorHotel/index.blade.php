@@ -19,7 +19,7 @@
             <div class="list-item">
                 <div class="row">
                     @foreach($rows as $row)
-                        <div class="col-md-12">
+                        <div class="col-md-12 hotel-width">
                             @include('Hotel::frontend.vendorHotel.loop-list', ['user' => $user, 'viewAdminCabinet' => $viewAdminCabinet])
                         </div>
                     @endforeach

@@ -1700,3 +1700,6 @@
 .row-width {
   width: 90% !important;
 }
+.hotel-width {
+  max-width: 90% !important;
+}
