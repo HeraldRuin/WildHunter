@@ -21,7 +21,7 @@
             </ul>
             @if(!empty($bookings) and $bookings->total() > 0)
                 <div class="tab-content">
-                    <div class="table-responsive">
+                    <div class="table-responsive table-width">
                         <table class="table table-bordered table-striped table-booking-history">
                             <thead>
                             <tr>
