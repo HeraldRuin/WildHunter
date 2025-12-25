@@ -51,7 +51,7 @@ new Vue({
             const hasInvalid = this.weapons.some(w => !this.isWeaponValid(w));
 
             if (hasInvalid) {
-                alert('Заполните все поля текущего оружия');
+                bookingCoreApp.showAjaxMessage({message: 'Заполните все поля текущего оружия'});
                 return;
             }
 
