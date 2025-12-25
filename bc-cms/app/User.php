@@ -464,10 +464,10 @@ class User extends Authenticatable implements MustVerifyEmail
         return [];
     }
 
-    public function getNameAttribute()
-    {
-        return $this->business_name ? $this->business_name : $this->first_name . ' ' . $this->last_name;
-    }
+//    public function getNameAttribute()
+//    {
+//        return $this->business_name ? $this->business_name : $this->first_name . ' ' . $this->last_name;
+//    }
 
     public function getUnseenMessageCountAttribute()
     {
