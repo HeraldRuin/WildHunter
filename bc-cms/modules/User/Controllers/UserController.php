@@ -135,7 +135,8 @@ class UserController extends FrontendController
         }
     }
 
-    public function profileUpdate(Request $request){
+    public function profileUpdate(Request $request)
+    {
         if(is_demo_mode()){
             return back()->with('error',"Demo mode: disabled");
         }
@@ -172,15 +173,37 @@ class UserController extends FrontendController
         $user->user_name = Str::slug( $request->input('user_name') ,"_");
         $user->save();
 
-        UserWeapon::create([
-            'user_id' => Auth::id(),
-            'hunter_billet_number' => $request->input('hunter_billet_number'),
-            'hunter_license_number' => $request->input('hunter_license_number'),
-            'hunter_license_date' => $request->input('hunter_license_date'),
-            'weapon_type_id' => $request->input('weapon_type_id'),
-            'caliber' => $request->input('caliber')
-        ]);
+        if ($request->filled('weapons')) {
+            foreach($request->weapons as $weapon) {
+                if (
+                    empty($weapon['hunter_license_number']) &&
+                    empty($weapon['hunter_license_date']) &&
+                    empty($weapon['weapon_type_id']) &&
+                    empty($weapon['caliber'])
+                ) {
+                    continue;
+                }
 
+                $validatedWeapon = validator($weapon, [
+                    'hunter_license_number' => 'required|string|max:255',
+                    'hunter_license_date' => 'required|date',
+                    'weapon_type_id' => 'required|integer',
+                    'caliber' => 'required|integer',
+                ])->validate();
+
+                UserWeapon::updateOrCreate(
+                    ['id' => $weapon['id'] ?? null],
+                    [
+                        'user_id' => $user->id,
+                        'hunter_billet_number' => $request->hunter_billet_number,
+                        'hunter_license_number' => $validatedWeapon['hunter_license_number'],
+                        'hunter_license_date' => $validatedWeapon['hunter_license_date'],
+                        'weapon_type_id' => $validatedWeapon['weapon_type_id'],
+                        'caliber' => $validatedWeapon['caliber'],
+                    ]
+                );
+            }
+        }
         return redirect()->back()->with('success', __('Update successfully'));
     }
 

@@ -13,10 +13,54 @@ new Vue({
     computed: {
         hasUnsavedWeapon() {
             return this.weapons.some(w => !w.id);
+        },
+        isFormValid() {
+            return this.weapons.every(w =>
+                w.hunter_license_number &&
+                w.hunter_license_date &&
+                w.weapon_type_id &&
+                w.caliber
+            );
         }
     },
     methods: {
+        isWeaponTouched(w) {
+            return w.hunter_license_number ||
+                w.hunter_license_date ||
+                w.weapon_type_id ||
+                w.caliber;
+        },
+
+        isWeaponValid(w) {
+            return w.hunter_license_number &&
+                w.hunter_license_date &&
+                w.weapon_type_id &&
+                w.caliber;
+        },
+        beforeSubmit() {
+
+            // берём только те оружия, которые начали заполнять
+            const touchedWeapons = this.weapons.filter(w => this.isWeaponTouched(w));
+
+            // если есть начатые, но невалидные — блокируем
+            const hasInvalid = touchedWeapons.some(w => !this.isWeaponValid(w));
+
+            if (hasInvalid) {
+                alert('Если вы добавили оружие — заполните все его поля');
+                return;
+            }
+
+            // всё ок — отправляем форму
+            this.$el.querySelector('form').submit();
+        },
         addNewRow() {
+            const hasInvalid = this.weapons.some(w => !this.isWeaponValid(w));
+
+            if (hasInvalid) {
+                alert('Заполните все поля текущего оружия');
+                return;
+            }
+
             this.weapons.push({
                 hunter_license_number: '',
                 hunter_license_date: '',

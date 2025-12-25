@@ -5,7 +5,8 @@
         <a href="{{route('user.change_password')}}" class="btn-change-password">{{__("Change Password")}}</a>
     </h2>
     @include('admin.message')
-    <form action="{{route('user.profile.update')}}" method="post" class="input-has-icon">
+    <div id="weapon-app">
+    <form @submit.prevent="beforeSubmit" action="{{route('user.profile.update')}}" method="post" class="input-has-icon">
         @csrf
         <div class="row row-profile-width">
             <div class="col-md-6">
@@ -73,18 +74,17 @@
                     <label>{{__("Number hunter billet")}}</label>
                     <input type="text" value="{{old('address',$user->hunter_billet_number)}}" name="hunter_billet_number" placeholder="{{__("Add Number")}}" class="form-control">
                 </div>
-                <div id="weapon-app">
-                    <div class="weapon-row border p-3 mb-2"
-                         v-for="(weaponItem, index) in weapons"
-                         :key="weaponItem.id ">
-
+{{--                <div id="weapon-app">--}}
+                    <div class="weapon-row border p-3 mb-2" v-for="(weaponItem, index) in weapons" :key="weaponItem.id ">
+                        <input type="hidden" :name="`weapons[${index}][id]`" :value="weaponItem.id ?? ''">
                         <div class="form-group">
                             <label>{{ __("License") }}</label>
                             <div class="row align-items-center">
                                 <div class="col-md-6 d-flex align-items-center">
                                     <span class="mr-2">{{ __('Numb') }}</span>
                                     <input type="text"
-                                           :name="`hunter_license_number`"
+                                           :name="`weapons[${index}][hunter_license_number]`"
+                                           :class="{ 'invalid-field': !weaponItem.hunter_license_number }"
                                            v-model="weaponItem.hunter_license_number"
                                            oninput="this.value = this.value.replace(/\D/g, '')"
                                            placeholder="{{ __('Add License') }}"
@@ -94,7 +94,8 @@
                                 <div class="col-md-6 d-flex align-items-center">
                                     <span class="mr-2">{{ __('Date') }}</span>
                                     <input type="date"
-                                           :name="`hunter_license_date`"
+                                           :name="`weapons[${index}][hunter_license_date]`"
+                                           :class="{ 'invalid-field': !weaponItem.hunter_license_date }"
                                            v-model="weaponItem.hunter_license_date"
                                            class="form-control">
                                 </div>
@@ -104,9 +105,10 @@
                         <div class="form-group">
                             <label>{{ __("Weapon type") }}</label>
                             <select class="form-control"
-                                    :name="`weapon_type_id`"
+                                    :name="`weapons[${index}][weapon_type_id]`"
+                                    :class="{ 'invalid-field': !weaponItem.weapon_type_id }"
                                     v-model="weaponItem.weapon_type_id">
-                                <option value="">{{ __('Add Weapon') }}</option>
+                                <option value="" disabled hidden selected>{{ __('Add Weapon') }}</option>
                                 @foreach($weapons as $weapon)
                                     <option value="{{ $weapon->id }}">
                                         {{ $weapon->title }}
@@ -118,9 +120,10 @@
                         <div class="form-group">
                             <label>{{__("Caliber")}}</label>
                             <select class="form-control"
-                                    :name="`caliber`"
+                                    :name="`weapons[${index}][caliber]`"
+                                    :class="{ 'invalid-field': !weaponItem.caliber }"
                                     v-model="weaponItem.caliber">
-                                <option value="">{{ __('Add Caliber') }}</option>
+                                <option value="" disabled hidden selected>{{ __('Add Caliber') }}</option>
                                 @foreach($calibers as $caliber)
                                     <option value="{{ $caliber->id }}">
                                         {{ $caliber->title }}
@@ -137,7 +140,8 @@
 
                     <button type="button"
                             class="btn btn-primary mt-2"
-                            @click="addNewRow()">
+                            @click="addNewRow()"
+                            :disabled="weapons.some(w => !isWeaponValid(w))">
                         Добавить оружие
                     </button>
                     <button type="button"
@@ -146,9 +150,7 @@
                             @click="cancelLastWeapon()">
                         Отмена
                     </button>
-
-                </div>
-
+{{--                </div>--}}
             </div>
 
             <div class="col-md-12">
@@ -157,6 +159,7 @@
             </div>
         </div>
     </form>
+    </div>
     @if(!empty(setting_item('user_enable_permanently_delete')) and !is_admin())
     <hr>
     <div class="row">
