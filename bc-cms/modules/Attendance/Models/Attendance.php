@@ -43,7 +43,7 @@ class Attendance
     }
     public static function getServiceIconFeatured()
     {
-        return "icofont-car";
+        return "icofont-read-book";
     }
 }
 

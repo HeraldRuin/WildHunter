@@ -71,6 +71,11 @@ class Animal extends Bookable
         return $this->sendError(__("Can not check availability"));
     }
 
+    public static function getServiceIconFeatured()
+    {
+        return "icofont-paw";
+    }
+
     public function getCheckoutUrl()
     {
         return route('animal.booking.checkout', ['booking_code' => $this->id]);

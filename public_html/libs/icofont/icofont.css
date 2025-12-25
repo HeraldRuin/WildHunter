@@ -7872,6 +7872,10 @@ url("./fonts/icofont.woff") format("woff");
 {
   content: "\ee1f";
 }
+.icofont-paw:before
+{
+  content: "\e878";
+}
 
 .icofont-delivery-time:before
 {
