@@ -1,5 +1,5 @@
 <?php
-namespace Modules\Animals\Controllers;
+namespace Modules\Attendance\Controllers;
 
 use Carbon\Carbon;
 use ICal\ICal;
