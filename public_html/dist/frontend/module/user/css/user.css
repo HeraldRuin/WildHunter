@@ -1712,3 +1712,36 @@
 .table-width {
   max-width: 90% !important;
 }
+.number-booking {
+  width: 6%;
+}
+.data-booking {
+  width: 6%;
+}
+.client-booking {
+  width: 6%;
+}
+.type-booking {
+  width: 6%;
+}
+.detail-booking {
+  width: 6%;
+}
+.status-booking {
+  width: 6%;
+}
+.amount-booking {
+  width: 6%;
+}
+.paid-booking {
+  width: 6%;
+}
+.remnant-booking {
+  width: 6%;
+}
+.event-booking {
+  width: 6%;
+}
+.invalid-field {
+  border-color: #dc3545;
+}
