@@ -3924,6 +3924,17 @@
     "Weapon Content": "Контент оружия",
     "Weapon updated": "Оружие обновлено",
     "Weapon created'": "Оружие сохранено",
-    "Manage Attendances": "Услуги"
+    "Manage Attendances": "Услуги",
+    "Number Booking": "№ брони",
+    "Date Booking": "дата брони",
+    "Client Booking": "Заказчик",
+    "Type Booking": "Тип",
+    "Detail Booking": "Детали",
+    "Status Booking": "Статус",
+    "Amount Booking": "Всего",
+    "Paid Booking": "Оплачен",
+    "Remnant Booking": "Остаток",
+    "Event Booking": "Действия",
+    "Nik": "Ник"
 
 }

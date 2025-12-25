@@ -19,7 +19,7 @@
                         <i class="fa fa-user input-icon"></i>
                     </div>
                 <div class="form-group">
-                    <label>{{__("User name")}} <span class="text-danger">*</span></label>
+                    <label>{{__("Nik")}} <span class="text-danger">*</span></label>
                     <input type="text" required minlength="4" name="user_name" value="{{old('user_name',$user->user_name)}}" placeholder="{{__("User name")}}" class="form-control">
                     <i class="fa fa-user input-icon"></i>
                 </div>

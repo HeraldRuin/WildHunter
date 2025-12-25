@@ -13,7 +13,7 @@
                     <strong>{{__("Personal Information")}}</strong>
                 </div>
                 <div class="form-group">
-                    <label>{{__("User name")}} <span class="text-danger">*</span></label>
+                    <label>{{__("Nik")}} <span class="text-danger">*</span></label>
                     <input type="text" required minlength="4" name="user_name" value="{{old('user_name',$user->user_name)}}" placeholder="{{__("User name")}}" class="form-control">
                     <i class="fa fa-user input-icon"></i>
                 </div>
@@ -68,56 +68,6 @@
                     </div>
                 </div>
             </div>
-{{--            <div class="col-md-6" style="margin-top:33px;">--}}
-{{--                <div class="form-group">--}}
-{{--                    <label>{{__("Number hunter billet")}}</label>--}}
-{{--                    <input type="text" value="{{old('address',$user->hunter_billet_number)}}" name="hunter_billet_number" placeholder="{{__("Add Number")}}" class="form-control">--}}
-{{--                </div>--}}
-{{--                <div class="form-group">--}}
-{{--                    <label>{{ __("License") }}</label>--}}
-{{--                    <div class="row align-items-center">--}}
-{{--                        <div class="col-md-6 d-flex align-items-center">--}}
-{{--                            <span class="mr-2">{{ __('Numb') }}</span>--}}
-{{--                            <input type="text"--}}
-{{--                                   name="hunter_license_number"--}}
-{{--                                   value="{{ old('hunter_license_number', $user->hunter_license_number) }}"--}}
-{{--                                   placeholder="{{ __('Add License') }}"--}}
-{{--                                   class="form-control">--}}
-{{--                        </div>--}}
-{{--                        <div class="col-md-6 d-flex align-items-center">--}}
-{{--                            <span class="mr-2">{{ __('Date') }}</span>--}}
-{{--                            <input type="date"--}}
-{{--                                   name="hunter_license_date"--}}
-{{--                                   value="{{ old('hunter_license_date', $user->hunter_license_date) }}"--}}
-{{--                                   class="form-control">--}}
-{{--                        </div>--}}
-{{--                    </div>--}}
-{{--                </div>--}}
-{{--                <div class="form-group" id="weapon-app">--}}
-{{--                    <label>{{ __("Weapon type") }}</label>--}}
-{{--                    <select name="weapon_type_id" class="form-control">--}}
-{{--                        <option value="">{{ __('Add Weapon') }}</option>--}}
-{{--                        @foreach($weapons as $weapon)--}}
-{{--                            <option value="{{ $weapon->id }}"--}}
-{{--                                {{ $user->weapon_type_id == $weapon->id ? 'selected' : '' }}>--}}
-{{--                                {{ $weapon->title }}--}}
-{{--                            </option>--}}
-{{--                        @endforeach--}}
-{{--                    </select>--}}
-{{--                </div>--}}
-{{--                <div class="form-group">--}}
-{{--                    <label>{{__("Caliber")}}</label>--}}
-{{--                    <select name="caliber" class="form-control">--}}
-{{--                        <option value="">{{ __('Add Caliber') }}</option>--}}
-{{--                        @foreach($calibers as $caliber)--}}
-{{--                            <option value="{{ $caliber->id }}"--}}
-{{--                                {{ $user->caliber == $caliber->id ? 'selected' : '' }}>--}}
-{{--                                {{ $caliber->title }}--}}
-{{--                            </option>--}}
-{{--                        @endforeach--}}
-{{--                    </select>--}}
-{{--                </div>--}}
-{{--            </div>--}}
             <div class="col-md-6" style="margin-top:33px;">
                 <div class="form-group">
                     <label>{{__("Number hunter billet")}}</label>
