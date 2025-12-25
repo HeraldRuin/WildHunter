@@ -38,19 +38,13 @@ new Vue({
                 w.caliber;
         },
         beforeSubmit() {
-
-            // берём только те оружия, которые начали заполнять
             const touchedWeapons = this.weapons.filter(w => this.isWeaponTouched(w));
-
-            // если есть начатые, но невалидные — блокируем
             const hasInvalid = touchedWeapons.some(w => !this.isWeaponValid(w));
 
             if (hasInvalid) {
-                alert('Если вы добавили оружие — заполните все его поля');
+                bookingCoreApp.showAjaxMessage({message: 'Если вы добавили оружие — заполните все его поля'});
                 return;
             }
-
-            // всё ок — отправляем форму
             this.$el.querySelector('form').submit();
         },
         addNewRow() {
