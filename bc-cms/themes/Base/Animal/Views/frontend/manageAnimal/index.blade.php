@@ -3,7 +3,7 @@
         <h2 class="title-bar">
             {{!empty($recovery) ?__('Recovery Animal') : __("Manage Animals")}}
             @if(Auth::user()->hasPermission('animal_create') && empty($recovery))
-                <div style="position:absolute; z-index:1000; background:#fff; width:460px; top:10px; right:30px;" id="animal-app" data-bulk-url="{{ route('animal.vendor.bulk_attach') }}">
+                <div style="position:absolute; z-index:1000; background:#fff; width:460px; top:19px; right:30px;" id="animal-app" data-bulk-url="{{ route('animal.vendor.bulk_attach') }}">
                     <select v-model="animalIdToAttach" class="form-control" @change="attachAnimal">
                         <option value="">{{ __('Select animal') }}</option>
                         @foreach($animal_list as $animal)
