@@ -68,7 +68,7 @@ class ModuleProvider extends ModuleServiceProvider
         $res = [];
         if(Attendance::isEnable()){
             $res['attendance'] = [
-                'url'   => route('attendance.vendor.index'),
+                'url'   => route('animal.vendor.organisation'),
                 'title'      => __("Manage Attendances"),
                 'icon'       => Attendance::getServiceIconFeatured(),
                 'position'   => 30,
