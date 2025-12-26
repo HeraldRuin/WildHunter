@@ -5,7 +5,7 @@ use Modules\Animals\Models\Animal;
 use Modules\Animals\Models\AnimalDate;
 use Modules\Booking\Models\Booking;
 
-class OrganisationController extends \Modules\Animals\Controllers\OrganisationController
+class OrganisationController extends \Modules\Attendance\Controllers\OrganisationController
 {
     protected $animalClass;
     protected $animalDateClass;
