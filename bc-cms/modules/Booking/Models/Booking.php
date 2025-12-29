@@ -15,6 +15,8 @@ use Modules\Booking\Emails\StatusUpdatedEmail;
 use Modules\Booking\Events\BookingUpdatedEvent;
 use Modules\Booking\Traits\HasPassenger;
 use Modules\Coupon\Models\CouponBookings;
+use Modules\Hotel\Models\Hotel;
+use Modules\Hotel\Models\HotelRoom;
 use Modules\Hotel\Models\HotelRoomBooking;
 use Modules\Space\Models\Space;
 use Modules\Tour\Models\Tour;
@@ -436,43 +438,43 @@ class Booking extends BaseModel
         }
         return $data;
     }
-
     public static function getBookingHistory($booking_status = false, $customer_id_or_name = false , $vendor_id = false , $service = false , $from = false ,  $to = false )
     {
+        $list_booking = parent::query()->with(['animal', 'creator', 'hotel', 'hotelRooms'])->orderBy('id', 'desc');
+//        $list_booking->where('status','=','processing');
+//        if (!empty($booking_status)) {
+//            $list_booking->where("status", $booking_status);
+//        }else{
+//            $list_booking->where('status','=','processing');
+////            $list_booking->where('status','=','draft');
+//        }
+//        if (!empty($customer_id_or_name)) {
+//            $list_booking->where(function($q) use($customer_id_or_name){
+//                $q->orWhere('customer_id',$customer_id_or_name)->orWhere('first_name','like',"%$customer_id_or_name%")->orWhere('last_name','like',"%$customer_id_or_name%");
+//            });
+//        }
+//        if (!empty($vendor_id)) {
+//            $list_booking->where("vendor_id", $vendor_id);
+//        }
+//        if (!empty($service)) {
+//            $list_booking->where("object_model", $service);
+//        }
+//        if(!empty($from) and !empty($to)){
+//            $list_booking->whereBetween('created_at', [
+//                $from." 00:00",
+//                $to." 23:59",
+//            ]);
+//        }
 
-        $list_booking = parent::query()->with('animal')->orderBy('id', 'desc');
-        if (!empty($booking_status)) {
-            $list_booking->where("status", $booking_status);
-        }else{
-            $list_booking->where('status','=','processing');
-//            $list_booking->where('status','=','draft');
-        }
-        if (!empty($customer_id_or_name)) {
-            $list_booking->where(function($q) use($customer_id_or_name){
-                $q->orWhere('customer_id',$customer_id_or_name)->orWhere('first_name','like',"%$customer_id_or_name%")->orWhere('last_name','like',"%$customer_id_or_name%");
-            });
-        }
-        if (!empty($vendor_id)) {
-            $list_booking->where("vendor_id", $vendor_id);
-        }
-        if (!empty($service)) {
-            $list_booking->where("object_model", $service);
-        }
-        if(!empty($from) and !empty($to)){
-            $list_booking->whereBetween('created_at', [
-                $from." 00:00",
-                $to." 23:59",
-            ]);
-        }
-
-        $list_booking->whereIn('object_model', array_keys(get_bookable_services()));
+//        $list_booking->whereIn('object_model', array_keys(get_bookable_services()));
 
         return $list_booking->paginate(10);
     }
 
-    public static function getBookingHistoryForAdminBase($booking_status = false, $hotel_id)
+    public static function getBookingHistoryForAdminBase($hotel_id, $booking_status = false)
     {
-        $list_booking = parent::query()->with('animal')->orderBy('id', 'desc');
+        $list_booking = parent::query()->with(['animal', 'creator', 'hotel', 'hotelRooms'])->orderBy('id', 'desc');
+
         $list_booking->where('hotel_id', $hotel_id);
 
         if (!empty($booking_status)) {
@@ -480,7 +482,7 @@ class Booking extends BaseModel
         }else{
             $list_booking->where('status','=','processing');
         }
-
+        $list_booking->whereIn('object_model', array_keys(get_bookable_services()));
         return $list_booking->paginate(10);
     }
 
@@ -1142,5 +1144,39 @@ class Booking extends BaseModel
     {
         return $this->belongsTo(Animal::class, 'animal_id');
     }
+    public function hotel()
+    {
+        return $this->belongsTo(Hotel::class, 'hotel_id');
+    }
 
+//    public function hotelRooms()
+//    {
+//        return $this->hasManyThrough(
+//            HotelRoom::class,
+//            Hotel::class,
+//            'id',
+//            'parent_id',
+//            'hotel_id',
+//            'id'
+//        );
+//    }
+
+    public function hotelRooms()
+    {
+        return $this->hasMany(HotelRoom::class, 'parent_id', 'hotel_id');
+    }
+
+    public function creator()
+    {
+        return $this->belongsTo(User::class, 'create_user');
+    }
+    public function getTypeTextAttribute()
+    {
+        return match ($this->type) {
+            'hotel' => __('HotelType'),
+            'animal' => __('AnimalType'),
+            'hotel_animal' => __('HotelAnimalType'),
+            default => ucfirst($this->type ?? ''),
+        };
+    }
 }
