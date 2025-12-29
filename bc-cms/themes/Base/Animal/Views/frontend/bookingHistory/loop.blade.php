@@ -1,50 +1,173 @@
 <tr>
     <td class="booking-history-type">
-        @if($service = $booking->service)
-            <i class="{{$service->getServiceIconFeatured()}}"></i>
-        @endif
-        <small>{{$booking->object_model}}</small>
+        {{ $booking->service ? $booking->id : $booking->id }}
     </td>
-    <td>
-        @if($service = $booking->service)
-            @php
-                $translation = $service->translate();
-            @endphp
-            <a target="_blank" href="{{$service->getDetailUrl()}}">
-                {{$translation->title}}
-            </a>
-        @else
-            {{__("[Deleted]")}}
-        @endif
-    </td>
+
     <td class="a-hidden">{{display_date($booking->created_at)}}</td>
+        <td>
+<span
+    class="user-popover cursor-pointer user-link"
+    data-bs-toggle="popover"
+    data-bs-trigger="hover"
+    data-bs-html="true"
+    data-bs-placement="right"
+    data-bs-content="<strong>{{ $booking->creator->first_name }} {{ $booking->creator->last_name }}</strong><br>Email: {{ $booking->creator->email }}<br>Phone: {{ $booking->creator->phone }}"
+    @click="openUserModal({{ $booking->creator->id }}, {{ $booking->id }})">
+    {{ $booking->creator->user_name }}
+</span>
+        </td>
+
+    <td class="type a-hidden">{{ $booking->typeText }}</td>
+
     <td class="a-hidden">
-        {{__("Start date")}} : {{display_date($booking->start_date)}} <br>
-        {{__("End date")}} : {{display_date($booking->end_date)}} <br>
-        {{__("Duration")}} :
-        @if($booking->duration_days <= 1)
-            {{__(':count day',['count'=>$booking->duration_days])}}
-        @else
-            {{__(':count days',['count'=>$booking->duration_days])}}
+        @if($booking->type === 'animal')
+           <strong>Охота:</strong>
+            <div>
+                {{__("Hunting Date")}} : {{display_date($booking->start_date_animal)}} <br>
+                @php
+                    $animal = json_decode($booking->animal);
+                @endphp
+
+                {{ __("Animals") }}:
+                @if($animal && $animal->title)
+                    {{ $animal->title }}
+                @else
+                    <span style="color: red;">Удалено админом</span>
+                @endif
+                <br>
+
+                {{__(':total guest',['count'=>$booking->total_hunting])}}
+            </div>
         @endif
     </td>
-    <td>{{format_money($booking->total)}}</td>
+    <td class="{{$booking->status}} a-hidden">{{$booking->statusName}}</td>
+    <td class="price-cell">
+        <div>{{ format_money($booking->amount_hunting) }}</div>
+
+        <button
+            type="button"
+            class="btn btn-info btn-sm details-btn mt-2"
+            data-bs-toggle="popover"
+            data-bs-trigger="click"
+            data-bs-html="true"
+            data-bs-placement="right"
+            data-bs-content="
+            <strong>Start:</strong> {{ display_date($booking->start_date) }}<br>
+            <strong>End:</strong> {{ display_date($booking->end_date) }}<br>
+            <strong>Duration:</strong> {{ $booking->duration_days }} {{ __('days') }}">
+            Подробности
+        </button>
+    </td>
+
     <td>{{format_money($booking->paid)}}</td>
     <td>{{format_money($booking->total - $booking->paid)}}</td>
-    <td class="{{$booking->status}} a-hidden">{{$booking->statusName}}</td>
-    <td width="2%">
-        @if($service = $booking->service)
-            <a class="btn btn-xs btn-primary btn-info-booking" data-ajax="{{route('booking.modal',['booking'=>$booking])}}" data-toggle="modal" data-id="{{$booking->id}}" data-target="#modal_booking_detail">
-                <i class="fa fa-info-circle"></i>{{__("Details")}}
-            </a>
+    <td>
+        @if($booking->status === 'processing' && $animal && $animal->title)
+            <button type="button" class="btn btn-success" data-bs-toggle="modal"
+                    data-bs-target="#confirmBookingModal{{ $booking->id }}">
+                {{ __("Booking apply") }}
+            </button>
         @endif
-        <a href="{{route('user.booking.invoice',['code'=>$booking->code])}}" class="btn btn-xs btn-primary btn-info-booking open-new-window mt-1" onclick="window.open(this.href); return false;">
-            <i class="fa fa-print"></i>{{__("Invoice")}}
-        </a>
-        @if($booking->status == 'unpaid')
-            <a href="{{route('booking.checkout',['code'=>$booking->code])}}" class="btn btn-xs btn-primary btn-info-booking open-new-window mt-1">
-                {{__("Pay now")}}
-            </a>
-        @endif
+        <button
+            type="button"
+            class="btn btn-info btn-sm mt-2"
+            data-bs-toggle="modal"
+            data-bs-target="#bookingAddServiceModal{{ $booking->id }}">
+            {{__("Add services")}}
+        </button>
     </td>
+
 </tr>
+
+<div class="modal fade" id="confirmBookingModal{{ $booking->id }}" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Подтверждение брони #{{ $booking->id }}</h5>
+
+            </div>
+            <div class="modal-body">
+                <p>Вы уверены, что хотите подтвердить эту бронь?</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                <button type="button" class="btn btn-success" @click="confirmBooking({{$booking->id}})">Подтвердить</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div class="modal fade" id="bookingAddServiceModal{{ $booking->id }}" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Добавить услуги для брони #{{ $booking->id }}</h5>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>Услуги отеля</h6>
+                        <div class="card card-body">
+                            <button type="button" class="btn btn-primary btn-sm">Добавить услугу</button>
+
+
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <h6>Услуги охоты</h6>
+                        <div class="card card-body">
+                            <button type="button" class="btn btn-success btn-sm">Добавить услугу</button>
+                            {{-- Можно добавить список услуг здесь --}}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+        <div class="modal fade" id="userModal" tabindex="-1">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-body">
+                        <label for="changeUserInput">Найти нового заказчика по нику:</label>
+                        <input
+                            type="text"
+                            id="changeUserInput"
+                            v-model="userSearchQuery"
+                            class="form-control mb-2"
+                            placeholder="Введите ник пользователя"
+                            @input="searchUserDebounced">
+
+                        <div v-if="searchResults.length" class="mt-2">
+                            <div
+                                v-for="user in searchResults"
+                                :key="user.id"
+                                class="d-flex align-items-center justify-content-between p-2 mb-2 border rounded shadow-sm"
+                                style="background-color: #f8f9fa;">
+                                <div>
+                                    <strong class="text-dark">@{{ user.user_name }}</strong><br>
+                                </div>
+                                <button v-if="!selectedUser || selectedUser.id !== user.id" class="btn btn-sm btn-primary" @click="selectUser(user)">
+                                    Выбрать
+                                </button>
+                            </div>
+                        </div>
+
+                        <div v-if="isSearching" class="text-muted">
+                            Поиск...
+                        </div>
+                        <div v-if="noResults" class="text-danger">
+                            Пользователь не найден
+                        </div>
+
+                        <button class="btn btn-primary mt-2" @click="saveUserChange">Сохранить</button>
+                    </div>
+                </div>
+            </div>
+        </div>

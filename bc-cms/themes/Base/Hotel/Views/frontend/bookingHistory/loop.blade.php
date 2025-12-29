@@ -1,52 +1,211 @@
 <tr>
     <td class="booking-history-type">
-        @if($service = $booking->service)
-            <i class="{{$service->getServiceIconFeatured()}}"></i>
-        @endif
-        <small>{{$booking->object_model}}</small>
+        {{ $booking->service ? $booking->id : $booking->id }}
     </td>
-    <td>
-        @if($service = $booking->service)
-            @php
-                $translation = $service->translate();
-            @endphp
-            <a target="_blank" href="{{$service->getDetailUrl()}}">
-                {{$translation->title}}
-                Охота на {{ $booking->animal?->title}}
-            </a>
-        @else
-            {{__("[Deleted]")}}
-        @endif
-    </td>
-    <td class="a-hidden">{{display_date($booking->created_at)}}</td>
-    <td class="a-hidden">
-        {{__("Check in")}} : {{display_date($booking->start_date)}} <br>
-        {{__("Check out")}} : {{display_date($booking->end_date)}} <br>
-        {{__("Duration")}} :
 
-        @if($booking->duration_nights <= 1)
-            {{__(':count night',['count'=>$booking->duration_nights])}}
-        @else
-            {{__(':count nights',['count'=>$booking->duration_nights])}}
+    <td class="a-hidden">{{display_date($booking->created_at)}}</td>
+
+    <td>
+<span
+    class="user-popover cursor-pointer user-link"
+    data-bs-toggle="popover"
+    data-bs-trigger="hover"
+    data-bs-html="true"
+    data-bs-placement="right"
+    data-bs-content="<strong>{{ $booking->creator->first_name }} {{ $booking->creator->last_name }}</strong><br>Email: {{ $booking->creator->email }}<br>Phone: {{ $booking->creator->phone }}"
+    @click="openUserModal({{ $booking->creator->id }}, {{ $booking->id }})">
+    {{ $booking->creator->user_name }}
+</span>
+    </td>
+
+    <td class="type a-hidden">{{ $booking->typeText }}</td>
+
+    <td class="a-hidden">
+        @if($booking->type === 'hotel')
+            <strong>Проживание:</strong>
+            <div>
+                {{__("CheckIn")}} : {{display_date($booking->start_date)}} <br>
+                {{__("Exit")}} : {{display_date($booking->end_date)}} <br>
+                {{__("Duration")}} :
+                @if($booking->duration_days <= 1)
+                    {{__(':count nights',['count'=>$booking->duration_days])}} <br>
+                @else
+                    {{__(':count nights',['count'=>$booking->duration_days])}} <br>
+                @endif
+
+                {{__(':total guest',['count'=>$booking->duration_days])}} <br>
+                <button
+                    type="button"
+                    class="btn btn-info btn-sm details-btn mt-2"
+                    data-bs-toggle="popover"
+                    data-bs-trigger="click"
+                    data-bs-html="true"
+                    data-bs-placement="right"
+                    data-bs-content="
+              {{__(':count rooms',['count'=>$booking->hotelRooms->first()->number])}}<br>
+              {{__(':type rooms',['type'=>$booking->duration_days])}}<br>
+              {{ 7 }}/{{ $booking->hotelRooms->first()->number }}">
+                    Подробности
+                </button>
+            </div>
+        @endif
+        @if($booking->type === 'hotel_animal')
+            <strong>Проживание:</strong>
+            <div>
+                {{__("CheckIn")}} : {{display_date($booking->start_date)}} <br>
+                {{__("Exit")}} : {{display_date($booking->end_date)}} <br>
+                {{__("Duration")}} :
+                @if($booking->duration_days <= 1)
+                    {{__(':count nights',['count'=>$booking->duration_days])}} <br>
+                @else
+                    {{__(':count nights',['count'=>$booking->duration_days])}} <br>
+                @endif
+
+                {{__(':total guest',['count'=>$booking->duration_days])}} <br>
+                <button
+                    type="button"
+                    class="btn btn-info btn-sm details-btn mt-2"
+                    data-bs-toggle="popover"
+                    data-bs-trigger="click"
+                    data-bs-html="true"
+                    data-bs-placement="right"
+                    data-bs-content="
+              {{__(':count rooms',['count'=>$booking->hotelRooms->first()->number])}}<br>
+              {{__(':type rooms',['type'=>$booking->duration_days])}}<br>
+              {{ 7 }}/{{ $booking->hotelRooms->first()->number }}">
+                    Подробности
+                </button>
+            </div>
+            <strong>Охота:</strong>
+            <div>
+                {{__("Hunting Date")}} : {{display_date($booking->start_date_animal)}} <br>
+                @php
+                    $animal = json_decode($booking->animal);
+                @endphp
+
+                {{ __("Animals") }}:
+                @if($booking->animal && $booking->animal->title)
+                    {{ $booking->animal->title }}
+                @else
+                    <span style="color: red;">Удалено админом</span>
+                @endif
+                <br>
+                {{__(':total guest',['count'=>$booking->total_hunting])}} <br>
+                {{--            <button--}}
+                {{--                type="button"--}}
+                {{--                class="btn btn-info btn-sm mt-2"--}}
+                {{--                data-bs-toggle="modal"--}}
+                {{--                data-bs-target="#bookingDetailModal{{ $booking->id }}">--}}
+                {{--                Подробности--}}
+                {{--            </button>--}}
+            </div>
         @endif
     </td>
-    <td>{{format_money_main($booking->total)}}</td>
+    <td class="{{$booking->status}} a-hidden">{{$booking->statusName}}</td>
+
+    <td class="price-cell">
+        @if($booking->type === 'hotel')
+            <div>{{ format_money($booking->total) }}</div>
+        @endif
+        @if($booking->type === 'hotel_animal')
+            <div>{{ format_money($booking->total + $booking->amount_hunting) }}</div>
+        @endif
+        <button
+            type="button"
+            class="btn btn-info btn-sm details-btn mt-2"
+            data-bs-toggle="popover"
+            data-bs-trigger="click"
+            data-bs-html="true"
+            data-bs-placement="right"
+            data-bs-content="
+            <strong>Start:</strong> {{ display_date($booking->start_date) }}<br>
+            <strong>End:</strong> {{ display_date($booking->end_date) }}<br>
+            <strong>Duration:</strong> {{ $booking->duration_days }} {{ __('days') }}">
+            Подробности
+        </button>
+    </td>
+
     <td>{{format_money($booking->paid)}}</td>
     <td>{{format_money($booking->total - $booking->paid)}}</td>
-    <td class="{{$booking->status}} a-hidden">{{$booking->statusName}}</td>
-    <td width="2%">
-        @if($service = $booking->service)
-            <a class="btn btn-xs btn-primary btn-info-booking" data-ajax="{{route('booking.modal',['booking'=>$booking])}}" data-toggle="modal" data-id="{{$booking->id}}" data-target="#modal_booking_detail">
-                <i class="fa fa-info-circle"></i>{{__("Details")}}
-            </a>
-        @endif
-        <a href="{{route('user.booking.invoice',['code'=>$booking->code])}}" class="btn btn-xs btn-primary btn-info-booking open-new-window mt-1" onclick="window.open(this.href); return false;">
-            <i class="fa fa-print"></i>{{__("Invoice")}}
-        </a>
-        @if($booking->status == 'unpaid')
-            <a href="{{route('booking.checkout',['code'=>$booking->code])}}" class="btn btn-xs btn-primary btn-info-booking open-new-window mt-1">
-                {{__("Pay now")}}
-            </a>
-        @endif
+    <td>
+@if($booking->status === 'processing' && $booking->animal && $booking->animal->title)
+            <button type="button" class="btn btn-success" data-bs-toggle="modal"
+                    data-bs-target="#confirmBookingModal{{ $booking->id }}">
+                {{ __("Booking apply") }}
+            </button>
+@endif
+        <button
+            type="button"
+            class="btn btn-info btn-sm mt-2"
+            data-bs-toggle="modal"
+            data-bs-target="#bookingAddServiceModal{{ $booking->id }}">
+            {{__("Add services")}}
+        </button>
     </td>
 </tr>
+
+<div class="modal fade" id="confirmBookingModal{{ $booking->id }}" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Подтверждение брони #{{ $booking->id }}</h5>
+
+            </div>
+            <div class="modal-body">
+                <p>Вы уверены, что хотите подтвердить эту бронь?</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                <button type="button" class="btn btn-success" @click="confirmBooking({{$booking->id}})">Подтвердить</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div class="modal fade" id="bookingAddServiceModal{{ $booking->id }}" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Добавить услуги для брони #{{ $booking->id }}</h5>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>Услуги отеля</h6>
+                        <div class="card card-body">
+                            <button type="button" class="btn btn-primary btn-sm">Добавить услугу</button>
+
+
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <h6>Услуги охоты</h6>
+                        <div class="card card-body">
+                            <button type="button" class="btn btn-success btn-sm">Добавить услугу</button>
+                            {{-- Можно добавить список услуг здесь --}}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        document
+            .querySelectorAll('[data-bs-toggle="popover"]')
+            .forEach(el => {
+                new bootstrap.Popover(el);
+            });
+    });
+</script>
+
+
+
