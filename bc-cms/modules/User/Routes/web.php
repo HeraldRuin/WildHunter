@@ -15,6 +15,7 @@ Route::group(['prefix'=>'user','middleware' => ['auth','verified']],function(){
     Route::post('/profile/change-password','PasswordController@changePasswordUpdate')->name("user.change_password.update");
     Route::get('/booking-history','UserController@bookingHistory')->name("user.booking_history");
 
+    Route::get('search','UserController@searchUser')->name('search');
 
     Route::post('/wishlist','UserWishListController@handleWishList')->name("user.wishList.handle");
     Route::get('/wishlist','UserWishListController@index')->name("user.wishList.index");

@@ -10,6 +10,9 @@ Route::group(['prefix'=>config('booking.booking_route_prefix')],function(){
     Route::get('/{code}','BookingController@detail');
     Route::get('/{code}/checkout','BookingController@checkout')->name('booking.checkout');
     Route::get('/{code}/check-status','BookingController@checkStatusCheckout');
+    Route::post('/{booking}/change-user','BookingController@changeUserBooking');
+    Route::post('/{booking}/confirm','BookingController@confirmBooking');
+
 
     //ical
 	Route::get('/export-ical/{type}/{id}','BookingController@exportIcal')->name('booking.admin.export-ical');
