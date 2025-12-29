@@ -79,10 +79,6 @@
             <strong>Охота:</strong>
             <div>
                 {{__("Hunting Date")}} : {{display_date($booking->start_date_animal)}} <br>
-                @php
-                    $animal = json_decode($booking->animal);
-                @endphp
-
                 {{ __("Animals") }}:
                 @if($booking->animal && $booking->animal->title)
                     {{ $booking->animal->title }}

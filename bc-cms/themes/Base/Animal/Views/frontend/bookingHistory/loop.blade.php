@@ -24,13 +24,9 @@
            <strong>Охота:</strong>
             <div>
                 {{__("Hunting Date")}} : {{display_date($booking->start_date_animal)}} <br>
-                @php
-                    $animal = json_decode($booking->animal);
-                @endphp
-
                 {{ __("Animals") }}:
-                @if($animal && $animal->title)
-                    {{ $animal->title }}
+                @if($booking->animal && $booking->animal->title)
+                    {{ $booking->animal->title }}
                 @else
                     <span style="color: red;">Удалено админом</span>
                 @endif
@@ -62,7 +58,7 @@
     <td>{{format_money($booking->paid)}}</td>
     <td>{{format_money($booking->total - $booking->paid)}}</td>
     <td>
-        @if($booking->status === 'processing' && $animal && $animal->title)
+        @if($booking->status === 'processing' && $booking->animal && $booking->animal->title)
             <button type="button" class="btn btn-success" data-bs-toggle="modal"
                     data-bs-target="#confirmBookingModal{{ $booking->id }}">
                 {{ __("Booking apply") }}
