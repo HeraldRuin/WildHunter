@@ -1,8 +1,15 @@
 @extends('layouts.user')
 @section('content')
-    <h2 class="title-bar no-border-bottom">
-        {{__("Booking History")}}
-    </h2>
+    <div class="pb-2 mb-3">
+        <div class="d-flex align-items-center justify-content-between border-bottom" style="height: 90px;">
+            <h2 class="m-0">{{ __("Booking History") }}</h2>
+            @if($userRole === 'baseadmin')
+                <a href="" class="btn btn-primary text-nowrap" style="margin-right: 220px;">Создать событие</a>
+            @endif
+        </div>
+    </div>
+
+
     @include('admin.message')
     <div class="booking-history-manager">
         <div class="tabbable">
@@ -19,21 +26,29 @@
                     @endforeach
                 @endif
             </ul>
+
             @if(!empty($bookings) and $bookings->total() > 0)
-                <div class="tab-content">
+                <div class="tab-content" id="booking-history">
                     <div class="table-responsive table-width">
-                        <table class="table table-bordered table-striped table-booking-history">
+                        <table class="table table-bordered  table-booking-history">
                             <thead>
                             <tr>
-                                <th width="2%">{{__("Type")}}</th>
-                                <th>{{__("Title")}}</th>
-                                <th class="a-hidden">{{__("Order Date")}}</th>
-                                <th class="a-hidden">{{__("Execution Time")}}</th>
-                                <th>{{__("Total")}}</th>
-                                <th>{{__("Paid")}}</th>
-                                <th>{{__("Remain")}}</th>
-                                <th class="a-hidden">{{__("Status")}}</th>
-                                <th>{{__("Action")}}</th>
+                                <th class="number-booking">{{__("Number Booking")}}</th>
+                                <th class="data-booking">{{__("Date Booking")}}</th>
+                                <th class="client-booking">{{__("Client Booking")}}</th>
+                                <th class="type-booking">{{__("Type Booking")}}</th>
+                                <th class="detail-booking">{{__("Detail Booking")}}</th>
+                                <th class="status-booking">{{__("Status Booking")}}</th>
+                                <th class="amount-booking">{{__("Amount Booking")}}</th>
+                                <th class="paid-booking">{{__("Paid Booking")}}</th>
+                                <th class="remnant-booking">{{__("Remnant Booking")}}</th>
+                                <th class="event-booking">{{__("Event Booking")}}</th>
+{{--                                <th class="a-hidden">{{__("Execution Time")}}</th>--}}
+{{--                                <th>{{__("Total")}}</th>--}}
+{{--                                <th>{{__("Paid")}}</th>--}}
+{{--                                <th>{{__("Remain")}}</th>--}}
+{{--                                <th class="a-hidden">{{__("Status")}}</th>--}}
+{{--                                <th>{{__("Event click")}}</th>--}}
                             </tr>
                             </thead>
                             <tbody>
