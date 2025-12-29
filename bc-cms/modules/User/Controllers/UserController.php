@@ -23,6 +23,7 @@ use Modules\Tour\Models\Tour;
 use Modules\User\Events\NewVendorRegistered;
 use Modules\User\Events\UserSubscriberSubmit;
 use Modules\User\Models\Subscriber;
+use Modules\User\Models\User;
 use Modules\User\Models\UserWeapon;
 use Modules\Vendor\Models\VendorRequest;
 use Modules\Weapon\Models\Caliber;
@@ -214,13 +215,16 @@ class UserController extends FrontendController
         $authUser = Auth::user();
 
         if ($authUser->hasRole('baseadmin')){
+            $userRole = 'baseadmin';
             $hotelId = $authUser->hotels->first()->id;
-            $bookings = $this->booking->getBookingHistoryForAdminBase($request->input('status'), $hotelId);
+            $bookings = $this->booking->getBookingHistoryForAdminBase($hotelId, $request->input('status'));
         }else {
+            $userRole = 'hunter';
             $bookings = $this->booking->getBookingHistory($request->input('status'), $authUser->id);
         }
 
         $data = array_merge($cabinetData, [
+            'userRole' => $userRole,
             'bookings' => $bookings,
             'statues'     => config('booking.statuses'),
             'breadcrumbs' => [
@@ -325,5 +329,21 @@ class UserController extends FrontendController
 
     }
 
+    public function searchUser(Request $request)
+    {
+        $query = trim($request->get('query'));
+
+        if (mb_strlen($query) < 3) {
+            return response()->json([]);
+        }
+
+        $users = User::query()
+            ->where('user_name', 'LIKE', $query.'%')
+            ->select(['id', 'user_name'])
+            ->limit(10)
+            ->get();
+
+        return response()->json($users);
+    }
 
 }
