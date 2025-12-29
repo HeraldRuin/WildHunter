@@ -833,11 +833,6 @@ class Hotel extends Bookable
         return "fa fa-building-o";
     }
 
-    public function rooms()
-    {
-        return $this->hasMany($this->roomClass, 'parent_id')->where('status', "publish");
-    }
-
     public function getRoomsAvailability($filters = [])
     {
         $rooms = $this->rooms;

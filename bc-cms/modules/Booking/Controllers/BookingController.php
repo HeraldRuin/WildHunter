@@ -5,6 +5,7 @@ namespace Modules\Booking\Controllers;
 use App\User;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
@@ -770,5 +771,33 @@ class BookingController extends \App\Http\Controllers\Controller
         if (!is_admin() and $booking->vendor_id != auth()->id() and $booking->customer_id != auth()->id()) abort(404);
 
         return view('Booking::frontend.detail.modal', ['booking' => $booking, 'service' => $booking->service]);
+    }
+
+    public function changeUserBooking(Request $request, Booking $booking): JsonResponse
+    {
+        $userId = $request->input('user_id');
+
+        $booking->create_user = $userId;
+        $booking->save();
+
+        return $this->sendSuccess([
+            'message' => __('Заказчик изменён')
+        ]);
+    }
+
+    public function confirmBooking( Booking $booking)
+    {
+        if ($booking->status !== 'processing') {
+            return response()->json([
+                'status' => false,
+                'message' => 'Эта бронь уже подтверждена или недоступна для подтверждения.'
+            ]);
+        }
+        $booking->status = Booking::CONFIRMED;
+        $booking->save();
+
+        return $this->sendSuccess([
+            'message' => __('Бронь успешно подтверждена')
+        ]);
     }
 }
