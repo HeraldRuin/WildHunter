@@ -1054,7 +1054,7 @@
   float: left;
 }
 .bc_wrap .bc_user_profile .bc-pagination ul.pagination {
-  float: right;
+  float: left;
 }
 .bc_wrap .bc_user_profile .bc-pagination ul.pagination .page-item:last-child {
   margin-right: 0;
@@ -1713,34 +1713,34 @@
   max-width: 90% !important;
 }
 .number-booking {
-  width: 4%;
+  width: 1%;
 }
 .data-booking {
-  width: 6%;
+  width: 1%;
 }
 .client-booking {
-  width: 6%;
+  width: 2%;
 }
 .type-booking {
   width: 6%;
 }
 .detail-booking {
-  width: 9%;
+  width: 15%;
 }
 .status-booking {
-  width: 6%;
+  width: 3%;
 }
 .amount-booking {
-  width: 6%;
+  width: 4%;
 }
 .paid-booking {
-  width: 6%;
+  width: 4%;
 }
 .remnant-booking {
-  width: 6%;
+  width: 4%;
 }
 .event-booking {
-  width: 6%;
+  width: 9%;
 }
 .invalid-field {
   border-color: #dc3545;
