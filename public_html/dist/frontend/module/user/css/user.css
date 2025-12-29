@@ -837,7 +837,6 @@
   color: #ff0000;
 }
 .bc_wrap .bc_user_profile .booking-history-manager {
-  padding: 32px 31px;
   background: #FFF;
 }
 @media (max-width: 1024px) {
@@ -862,6 +861,7 @@
   display: block;
 }
 .bc_wrap .bc_user_profile .booking-history-manager .tabbable .ht-nav-tabs {
+  padding: 0px 20px;
   border: none;
   margin-bottom: 37px;
 }
@@ -1713,7 +1713,7 @@
   max-width: 90% !important;
 }
 .number-booking {
-  width: 6%;
+  width: 4%;
 }
 .data-booking {
   width: 6%;
@@ -1725,7 +1725,7 @@
   width: 6%;
 }
 .detail-booking {
-  width: 6%;
+  width: 9%;
 }
 .status-booking {
   width: 6%;
@@ -1745,3 +1745,15 @@
 .invalid-field {
   border-color: #dc3545;
 }
+
+.user-link {
+  color: #0d6efd !important;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.user-link:hover {
+  color: #0a58ca !important;
+  text-decoration: none;
+}
+
