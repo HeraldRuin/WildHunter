@@ -83,7 +83,7 @@ class Animal extends Bookable
 
     public static function isEnable(): bool
     {
-        return setting_item('animal_disable');
+        return true;
     }
     public static function isEnableForAdmin(): bool
     {
