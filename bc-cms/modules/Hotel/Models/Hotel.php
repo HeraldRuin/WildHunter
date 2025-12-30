@@ -1220,5 +1220,18 @@ class Hotel extends Bookable
     {
         return $this->belongsToMany(Animal::class, 'bc_hotel_animals', 'hotel_id', 'animal_id')->withPivot('status');
     }
+    public function rooms()
+    {
+        return $this->hasMany($this->roomClass, 'parent_id')->where('status', "publish");
+    }
+    public function hotelRooms()
+    {
+        return $this->hasMany(HotelRoom::class, 'parent_id', 'hotel_id');
+    }
+    public function bookings()
+    {
+        return $this->hasMany(\Modules\Booking\Models\Booking::class, 'hotel_id');
+    }
+
 
 }
