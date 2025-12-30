@@ -71,7 +71,7 @@
                     data-bs-placement="right"
                     data-bs-content="
               {{__(':count rooms',['count'=>$booking->hotelRooms->first()->number])}}<br>
-              {{__(':type rooms',['type'=>$booking->duration_days])}}<br>
+              {{__(':type rooms',['type'=>$booking->hotelRooms->first()->title])}}<br>
               {{ 7 }}/{{ $booking->hotelRooms->first()->number }}">
                     Подробности
                 </button>
