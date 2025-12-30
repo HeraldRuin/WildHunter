@@ -124,7 +124,7 @@
     <td>{{format_money($booking->paid)}}</td>
     <td>{{format_money($booking->total - $booking->paid)}}</td>
     <td>
-@if($booking->status === 'processing' && $booking->animal && $booking->animal->title)
+@if($booking->status === 'processing')
             <button type="button" class="btn btn-success" data-bs-toggle="modal"
                     data-bs-target="#confirmBookingModal{{ $booking->id }}">
                 {{ __("Booking apply") }}
