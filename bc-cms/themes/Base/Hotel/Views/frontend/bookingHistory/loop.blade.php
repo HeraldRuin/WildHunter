@@ -33,7 +33,7 @@
                     {{__(':count nights',['count'=>$booking->duration_days])}} <br>
                 @endif
 
-                {{__(':total guest',['count'=>$booking->duration_days])}} <br>
+                {{__(':total guest',['count'=>$booking->total_guests])}} <br>
                 <button
                     type="button"
                     class="btn btn-info btn-sm details-btn mt-2"
@@ -61,7 +61,7 @@
                     {{__(':count nights',['count'=>$booking->duration_days])}} <br>
                 @endif
 
-                {{__(':total guest',['count'=>$booking->duration_days])}} <br>
+                {{__(':total guest',['count'=>$booking->total_guests])}} <br>
                 <button
                     type="button"
                     class="btn btn-info btn-sm details-btn mt-2"
