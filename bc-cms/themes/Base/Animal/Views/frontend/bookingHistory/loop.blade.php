@@ -13,7 +13,7 @@
     data-bs-placement="right"
     data-bs-content="<strong>{{ $booking->creator->first_name }} {{ $booking->creator->last_name }}</strong><br>Email: {{ $booking->creator->email }}<br>Phone: {{ $booking->creator->phone }}"
     @click="openUserModal({{ $booking->creator->id }}, {{ $booking->id }})">
-    {{ $booking->creator->user_name }}
+         {{ !empty($booking->creator->user_name) ? $booking->creator->user_name : $booking->creator->first_name }}
 </span>
         </td>
 
