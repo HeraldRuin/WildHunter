@@ -438,7 +438,7 @@ class Booking extends BaseModel
         }
         return $data;
     }
-    public static function getBookingHistory($booking_status = false, $customer_id_or_name = false , $vendor_id = false , $service = false , $from = false ,  $to = false )
+    public static function getBookingHistory($booking_status = false, $customer_id_or_name = false, $service = false , $from = false ,  $to = false )
     {
         $list_booking = parent::query()->with(['animal', 'creator', 'hotel', 'hotelRooms'])->orderBy('id', 'desc');
 
@@ -454,18 +454,18 @@ class Booking extends BaseModel
 //                $q->orWhere('customer_id',$customer_id_or_name)->orWhere('first_name','like',"%$customer_id_or_name%")->orWhere('last_name','like',"%$customer_id_or_name%");
 //            });
 //        }
-//        if (!empty($vendor_id)) {
-//            $list_booking->where("vendor_id", $vendor_id);
-//        }
-//        if (!empty($service)) {
-//            $list_booking->where("object_model", $service);
-//        }
-//        if(!empty($from) and !empty($to)){
-//            $list_booking->whereBetween('created_at', [
-//                $from." 00:00",
-//                $to." 23:59",
-//            ]);
-//        }
+        if (!empty($customer_id_or_name)) {
+            $list_booking->where("create_user", $customer_id_or_name);
+        }
+        if (!empty($service)) {
+            $list_booking->where("object_model", $service);
+        }
+        if(!empty($from) and !empty($to)){
+            $list_booking->whereBetween('created_at', [
+                $from." 00:00",
+                $to." 23:59",
+            ]);
+        }
 
         $list_booking->whereIn('object_model', array_keys(get_bookable_services()));
 
