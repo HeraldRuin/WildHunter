@@ -42,9 +42,9 @@
                     data-bs-html="true"
                     data-bs-placement="right"
                     data-bs-content="
-              {{__(':count rooms',['count'=>$booking->hotelRooms->first()->number])}}<br>
-              {{__(':type rooms',['type'=>$booking->hotelRooms->first()->title])}}<br>
-              {{ 7 }}/{{ $booking->hotelRooms->first()->number }}">
+                    {{ __(':count rooms', ['count' => $booking->hotelRooms->first()?->number ?? 0]) }}<br>
+                    {{ __(':type rooms', ['type' => $booking->hotelRooms->first()?->title ?? '—']) }}<br>
+                    {{ 7 }}/{{ $booking->hotelRooms->first()?->number ?? 0 }}">
                     Подробности
                 </button>
             </div>
@@ -70,9 +70,9 @@
                     data-bs-html="true"
                     data-bs-placement="right"
                     data-bs-content="
-              {{__(':count rooms',['count'=>$booking->hotelRooms->first()->number])}}<br>
-              {{__(':type rooms',['type'=>$booking->hotelRooms->first()->title])}}<br>
-              {{ 7 }}/{{ $booking->hotelRooms->first()->number }}">
+                    {{ __(':count rooms', ['count' => $booking->hotelRooms->first()?->number ?? 0]) }}<br>
+                    {{ __(':type rooms', ['type' => $booking->hotelRooms->first()?->title ?? '—']) }}<br>
+                    {{ 7 }}/{{ $booking->hotelRooms->first()?->number ?? 0 }}">
                     Подробности
                 </button>
             </div>
