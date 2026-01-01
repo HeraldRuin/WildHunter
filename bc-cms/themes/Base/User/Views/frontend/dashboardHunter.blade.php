@@ -4,7 +4,7 @@
         {{__("Dashboard")}}
     </h2>
     @include('admin.message')
-    <div class="bc-user-dashboard">
+    <div class="bc-user-dashboard dashboard-width">
         <div class="row dashboard-price-info row-eq-height">
             @if(!empty($cards_report))
                 @foreach($cards_report as $item)
@@ -27,7 +27,7 @@
             @endif
         </div>
     </div>
-    <div class="bc-user-chart">
+    <div class="bc-user-chart chart-width">
         <div class="chart-title">
             {{__("Earning statistics")}}
             <div class="action-control">
