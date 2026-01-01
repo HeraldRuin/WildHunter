@@ -1768,3 +1768,9 @@
 .chart-width {
   width: 90% !important;
 }
+.custom-nav-style {
+  border-bottom: 0px;
+}
+.nav-tabs .nav-link.active {
+border-color: #fff !important;
+}

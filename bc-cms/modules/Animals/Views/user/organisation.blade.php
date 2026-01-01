@@ -6,9 +6,8 @@
     @if($rows->count())
         <div id="animal-app" class="row mt-4 row-width">
 
-            {{-- LEFT --}}
             <div class="col-md-3">
-                <ul class="nav nav-tabs flex-column">
+                <ul class="nav nav-tabs flex-column custom-nav-style">
                     @foreach($rows as $k => $animal)
                         <li class="nav-item">
                             <a class="nav-link {{ $k === 0 ? 'active' : '' }}"
@@ -21,7 +20,6 @@
                 </ul>
             </div>
 
-            {{-- RIGHT --}}
             <div class="col-md-9">
                 <div class="tab-content">
 
