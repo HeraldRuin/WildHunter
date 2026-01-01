@@ -1567,10 +1567,10 @@
 }
 .dates-calendar .fc-event {
   position: relative;
-  height: 41px;
+  height: 88px;
   border-radius: 0px;
   top: -25px;
-  padding-top: 25px;
+  padding-top: 40px;
   background: none !important;
   border: none;
   display: flex;
@@ -1685,7 +1685,7 @@
   padding-right: 0px !important;
 }
 .user-panel-col {
-  max-width: 12% !important;
+  max-width: 8% !important;
 }
 .row-col {
   margin-left: -83px !important;
@@ -1756,4 +1756,15 @@
   color: #0a58ca !important;
   text-decoration: none;
 }
-
+.calendar-block{
+  margin-right: -11% !important;
+}
+.custom-padding {
+  padding-left: 0px !important;
+}
+.dashboard-width {
+  width: 90% !important;
+}
+.chart-width {
+  width: 90% !important;
+}
