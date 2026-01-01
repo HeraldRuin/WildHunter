@@ -132,7 +132,7 @@
 @endif
         <button
             type="button"
-            class="btn btn-info btn-sm mt-2"
+            class="btn btn-primary btn-sm mt-2"
             data-bs-toggle="modal"
             data-bs-target="#bookingAddServiceModal{{ $booking->id }}">
             {{__("Add services")}}
