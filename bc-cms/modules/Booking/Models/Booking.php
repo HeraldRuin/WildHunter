@@ -441,10 +441,11 @@ class Booking extends BaseModel
     public static function getBookingHistory($booking_status = false, $customer_id_or_name = false , $vendor_id = false , $service = false , $from = false ,  $to = false )
     {
         $list_booking = parent::query()->with(['animal', 'creator', 'hotel', 'hotelRooms'])->orderBy('id', 'desc');
-//        $list_booking->where('status','=','processing');
-//        if (!empty($booking_status)) {
-//            $list_booking->where("status", $booking_status);
-//        }else{
+
+        if (!empty($booking_status)) {
+            $list_booking->where("status", $booking_status);
+        }
+//        else{
 //            $list_booking->where('status','=','processing');
 ////            $list_booking->where('status','=','draft');
 //        }
@@ -466,7 +467,7 @@ class Booking extends BaseModel
 //            ]);
 //        }
 
-//        $list_booking->whereIn('object_model', array_keys(get_bookable_services()));
+        $list_booking->whereIn('object_model', array_keys(get_bookable_services()));
 
         return $list_booking->paginate(10);
     }
@@ -479,9 +480,10 @@ class Booking extends BaseModel
 
         if (!empty($booking_status)) {
             $list_booking->where("status", $booking_status);
-        }else{
-            $list_booking->where('status','=','processing');
         }
+//        else{
+//            $list_booking->where('status','=','processing');
+//        }
         $list_booking->whereIn('object_model', array_keys(get_bookable_services()));
         return $list_booking->paginate(10);
     }
@@ -1148,22 +1150,13 @@ class Booking extends BaseModel
     {
         return $this->belongsTo(Hotel::class, 'hotel_id');
     }
-
-//    public function hotelRooms()
-//    {
-//        return $this->hasManyThrough(
-//            HotelRoom::class,
-//            Hotel::class,
-//            'id',
-//            'parent_id',
-//            'hotel_id',
-//            'id'
-//        );
-//    }
-
     public function hotelRooms()
     {
-        return $this->hasMany(HotelRoom::class, 'parent_id', 'hotel_id');
+        return $this->hasMany(HotelRoom::class, 'parent_id', 'id');
+    }
+    public function roomsBooking()
+    {
+        return $this->hasMany(HotelRoomBooking::class, 'booking_id');
     }
 
     public function creator()
