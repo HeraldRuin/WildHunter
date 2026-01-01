@@ -4,7 +4,7 @@
     <h2 class="title-bar no-border-bottom">
         {{ __('Availability Rooms') }}
         <div class="title-action">
-            <a class="btn btn-info" href="{{ route('hotel.vendor.room.index', ['hotel_id' => 42,'user' => 65, 'viewAdminCabinet' => $viewAdminCabinet]) }}">
+            <a class="btn btn-info" href="{{ route('hotel.vendor.room.index', ['hotel_id' => $hotel->id,'user' => $user->id, 'viewAdminCabinet' => $viewAdminCabinet]) }}">
                 <i class="fa fa-hand-o-right"></i> {{ __('Manage Rooms') }}
             </a>
         </div>
@@ -31,7 +31,6 @@
     </div>
     @if (count($rows))
         <div class="user-panel">
-            <div class="panel-title"><strong>{{ __('Availability') }}</strong></div>
             <div class="panel-body no-padding" style="background: #f4f6f8;padding: 0px 15px;">
                 <div class="row">
                     <div class="col-md-3 user-panel-col" style="border-right: 1px solid #dee2e6;">
@@ -62,7 +61,7 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title">{{ __('Date Information') }}</h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <button type="button" class="close" @click="hide" aria-label="Close">
                         <span aria-hidden="true">&times;</span>
                     </button>
                 </div>
@@ -152,7 +151,7 @@
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">{{ __('Close') }}</button>
+{{--                    <button type="button" class="btn btn-secondary" @click="hide">{{ __('Close') }}</button>--}}
                     <button type="button" class="btn btn-primary" @click="saveForm">{{ __('Save changes') }}</button>
                 </div>
             </div>
@@ -193,6 +192,23 @@
             color: #fff !important;
             border: 1px solid #666 !important;
         }
+        .fc-day-custom {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+
+        .fc-bookings {
+            font-size: 11px;
+            line-height: 1.2;
+            margin-bottom: 4px;
+        }
+
+        .fc-price {
+            margin-top: auto;
+            font-weight: 600;
+        }
+
     </style>
 @endpush
 
@@ -256,20 +272,46 @@
                 //     console.log(info.event.title)
                 //     $(info.el).find('.fc-title').html(info.event.title);
                 // }
+                {{--eventRender: function(info) {--}}
+                {{--    // Добавляем классы из extendedProps.classNames--}}
+                {{--    if(info.event.extendedProps.classNames){--}}
+                {{--        info.el.classList.add(...info.event.extendedProps.classNames);--}}
+                {{--    }--}}
+
+                {{--    // Обновляем текст события--}}
+                {{--    $(info.el).find('.fc-title').html(info.event.title);--}}
+
+                {{--    // Если событие полностью забронировано, делаем его красным--}}
+                {{--    if(info.event.title === '{{ __("Full Book") }}'){--}}
+                {{--        info.el.style.pointerEvents = 'none'; // необязательно, если нужно заблокировать клик--}}
+                {{--    }--}}
+                {{--}--}}
+
                 eventRender: function(info) {
-                    // Добавляем классы из extendedProps.classNames
-                    if(info.event.extendedProps.classNames){
+                    // Классы
+                    if (info.event.extendedProps.classNames) {
                         info.el.classList.add(...info.event.extendedProps.classNames);
                     }
 
-                    // Обновляем текст события
-                    $(info.el).find('.fc-title').html(info.event.title);
+                    // Формируем HTML: сначала брони, потом цена
+                    const bookings = info.event.extendedProps.bookings_html || '';
+                    const price = info.event.title || '';
 
-                    // Если событие полностью забронировано, делаем его красным
-                    if(info.event.title === '{{ __("Full Book") }}'){
-                        info.el.style.pointerEvents = 'none'; // необязательно, если нужно заблокировать клик
+                    $(info.el).html(`
+        <div class="fc-day-custom">
+            <div class="fc-bookings">${bookings}</div>
+            <div class="fc-price">${price}</div>
+        </div>
+    `);
+
+                    // Полная бронь красим красным
+                    if (info.event.extendedProps.classNames && info.event.extendedProps.classNames.includes('full-book-event')) {
+                        info.el.style.backgroundColor = '#f8d7da';
+                        info.el.style.color = '#721c24';
+                        info.el.style.pointerEvents = 'none';
                     }
                 }
+
 
             });
             calendar.render();
