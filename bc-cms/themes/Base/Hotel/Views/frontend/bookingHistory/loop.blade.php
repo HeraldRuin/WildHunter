@@ -196,7 +196,7 @@
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-body">
-                <label for="changeUserInput">Найти нового заказчика по нику:</label>
+                <label for="changeUserInput">Найти нового заказчика по нику или фамилии:</label>
                 <input
                     type="text"
                     id="changeUserInput"
@@ -212,7 +212,9 @@
                         class="d-flex align-items-center justify-content-between p-2 mb-2 border rounded shadow-sm"
                         style="background-color: #f8f9fa;">
                         <div>
-                            <strong class="text-dark">@{{ user.user_name }}</strong><br>
+                            <strong class="text-dark">@{{ user.user_name }}</strong><span>@{{ user.user_name ? '(ник)' : '(ник не задан)' }}</span>
+                            <strong class="text-dark">@{{ user.first_name }}</strong><span>(фамилия)</span>
+                            <br>
                         </div>
                         <button v-if="!selectedUser || selectedUser.id !== user.id" class="btn btn-sm btn-primary" @click="selectUser(user)">
                             Выбрать

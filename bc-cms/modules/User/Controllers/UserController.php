@@ -338,12 +338,13 @@ class UserController extends FrontendController
         }
 
         $users = User::query()
-            ->where('user_name', 'LIKE', $query.'%')
-            ->select(['id', 'user_name'])
-            ->limit(10)
+            ->where(function($q) use ($query) {
+                $q->where('user_name', 'LIKE', $query.'%')
+                    ->orWhere('first_name', 'LIKE', $query.'%');
+            })
+            ->select(['id', 'user_name', 'first_name'])
             ->get();
 
         return response()->json($users);
     }
-
 }
