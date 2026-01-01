@@ -1154,6 +1154,10 @@ class Booking extends BaseModel
     {
         return $this->hasMany(HotelRoom::class, 'parent_id', 'id');
     }
+    public function hotelRoom()
+    {
+        return $this->hasMany(HotelRoom::class, 'parent_id', 'hotel_id');
+    }
     public function roomsBooking()
     {
         return $this->hasMany(HotelRoomBooking::class, 'booking_id');
