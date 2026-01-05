@@ -48,7 +48,7 @@
                     <div class="g-button-submit">
                         <button class="btn btn-primary btn-search" @click="checkAvailabilityForAnimal" v-bind:class="{'loading':onLoadAvailability}" type="submit">
                             {{__("Check Presence")}}
-                            <i v-show="onLoadAvailability" class="fa fa-spinner fa-spin"></i>
+                            <i v-show="onLoadAnimalAvailability" class="fa fa-spinner fa-spin"></i>
                         </button>
                     </div>
                 </div>

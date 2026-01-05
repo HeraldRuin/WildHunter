@@ -499,7 +499,7 @@
                     return;
                 }
 
-                this.onLoadAvailability = true;
+                this.onLoadAnimalAvailability = true;
 
                 $.ajax({
 
@@ -513,7 +513,7 @@
                     },
                     method:'post',
                     success:function (json) {
-                        me.onLoadAvailability = false;
+                        me.onLoadAnimalAvailability = false;
                         me.firstLoad = false;
 
                         if (json.available === true) {
