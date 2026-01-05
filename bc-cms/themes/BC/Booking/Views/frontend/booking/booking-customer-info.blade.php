@@ -1,5 +1,9 @@
 <div class="booking-review">
-    <h4 class="booking-review-title">{{__('Your Information')}}</h4>
+    @if($ifAdminBase)
+        <h4 class="booking-review-title">{{__('Client Information')}}</h4>
+    @else
+        <h4 class="booking-review-title">{{__('Your Information')}}</h4>
+    @endif
     <div class="booking-review-content">
         <div class="review-section">
             <div class="info-form">

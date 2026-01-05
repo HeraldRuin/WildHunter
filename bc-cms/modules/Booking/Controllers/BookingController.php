@@ -417,7 +417,7 @@ class BookingController extends \App\Http\Controllers\Controller
 //        }
         $booking->status = $booking::PROCESSING;
         $booking->save();
-        event(new BookingCreatedEvent($booking));
+//        event(new BookingCreatedEvent($booking));
         return $this->sendSuccess([
             'url' => $booking->getDetailUrl()
         ], __("You payment has been processed successfully"));
@@ -569,6 +569,7 @@ class BookingController extends \App\Http\Controllers\Controller
 
     public function detail(Request $request, $code)
     {
+        $ifAdminBase = $request->boolean('adminBase');
         if (!is_enable_guest_checkout() and !Auth::check()) {
             if (\request()->isJson()) {
                 return $this->sendError(__("You have to login in to do this"))->setStatusCode(401);
@@ -581,18 +582,22 @@ class BookingController extends \App\Http\Controllers\Controller
             abort(404);
         }
 
-        if ($booking->status == 'draft') {
-            return redirect($booking->getCheckoutUrl());
-        }
-        if (!is_enable_guest_checkout() and $booking->customer_id != Auth::id()) {
+//        if ($booking->status == 'draft') {
+//            return redirect($booking->getCheckoutUrl());
+//        }
+
+        if (!$ifAdminBase && !is_enable_guest_checkout() && $booking->customer_id != Auth::id())
+        {
             abort(404);
         }
+
         $data = [
             'page_title' => __('Booking Details'),
             'booking'    => $booking,
             'service'    => $booking->service,
             'animal_service' => Animal::where('id', $booking->animal_id)->first(),
             'user'       => auth()->user(),
+            'ifAdminBase' => $ifAdminBase,
             'booking_type'  => $booking->type,
             'all_total'  => $this->getAllPay($booking->total, $booking->amount_hunting)
         ];

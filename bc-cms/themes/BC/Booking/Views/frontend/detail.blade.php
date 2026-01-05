@@ -5,10 +5,12 @@
 @section('content')
     <div class="bc-booking-page padding-content" >
         <div class="container">
-            @include ('Booking::frontend/global/booking-detail-notice')
+            @if(!$ifAdminBase)
+                @include ('Booking::frontend/global/booking-detail-notice')
+            @endif
             <div class="row booking-success-detail">
                 <div class="col-md-8">
-                    @include ($service->booking_customer_info_file ?? 'Booking::frontend/booking/booking-customer-info')
+                    @include ($service->booking_customer_info_file ?? 'Booking::frontend/booking/booking-customer-info', ['ifAdminBase' => $ifAdminBase])
                     <div class="text-center">
                         <a href="{{route('user.booking_history')}}" class="btn btn-primary">{{__('Booking History')}}</a>
                     </div>
