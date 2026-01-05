@@ -32,14 +32,14 @@
     @if (count($rows))
         <div class="user-panel">
             <div class="panel-body no-padding" style="background: #f4f6f8;padding: 0px 15px;">
-                <div class="row">
-                    <div class="col-md-3 user-panel-col" style="border-right: 1px solid #dee2e6;">
+                <div class="row calendar-block">
+                    <div class="col-md-3 user-panel-col custom-padding" style="border-right: 1px solid #dee2e6;">
                         <ul class="nav nav-tabs  flex-column vertical-nav" id="items_tab" role="tablist">
                             @foreach ($rows as $k => $item)
                                 <li class="nav-item event-name ">
                                     <a class="nav-link" data-id="{{ $item->id }}" data-toggle="tab"
                                         href="#calendar-{{ $item->id }}"
-                                        title="{{ $item->title }}">#{{ $item->id }} - {{ $item->title }}</a>
+                                        title="{{ $item->title }}">{{ $item->title }}</a>
                                 </li>
                             @endforeach
                         </ul>
@@ -57,7 +57,7 @@
         {{ $rows->appends($request->query())->links() }}
     </div>
     <div id="bc_modal_calendar" class="modal fade">
-        <div class="modal-dialog modal-lg " role="document">
+        <div class="modal-dialog modal-lg" role="document">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title">{{ __('Date Information') }}</h5>
@@ -132,7 +132,7 @@
                         <div class="col-md-6" v-show="form.active">
                             <div class="form-group">
                                 <label>{{ __('Number of room') }}</label>
-                                <input type="number" v-model="form.number" class="form-control">
+                                <input type="number" v-model="form.number" :max="form.max_number" min="1" class="form-control">
                             </div>
                         </div>
                         <div class="col-md-6 d-none" v-show="form.active">
@@ -157,6 +157,20 @@
             </div>
         </div>
     </div>
+
+    <div class="modal fade" id="bc_modal_booking" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Бронь <span id="modalBookingId"></span></h5>
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                </div>
+                <div class="modal-body" id="modalBookingBody">
+                    Загрузка...
+                </div>
+            </div>
+        </div>
+    </div>
 @endsection
 
 @push('css')
@@ -173,42 +187,62 @@
 
         #dates-calendar .loading {}
 
-        /*.fc-event.full-book-event {*/
-        /*    background-color: #fe2727 !important;*/
-        /*    color: #fff !important;*/
-        /*    border: 1px solid #fe2727 !important;*/
-        /*}*/
+        .fc-event.available-event {
+            /*background-color: rgba(255, 255, 255, 0.5) !important;*/
+            /*color: #000 !important;*/
+            /*border-bottom: 4px solid #28a745 !important;*/
+        }
+
+        .fc-event.full-book-event {
+            background-color: #fe2727 !important;
+            color: #fff !important;
+            border: 1px solid #fe2727 !important;
+        }
 
         /* Частично забронированные события */
         .fc-event.active-event {
-            background-color: rgba(40, 167, 69, 0.5) !important; /* зеленый полупрозрачный фон */
-            color: #000 !important;                                /* черный текст для читаемости */
-            border: 1px solid #28a745 !important;                 /* зеленая граница */
+            /*background-color: rgba(40, 167, 69, 0.5) !important;*/
+            /*color: #000 !important; */
+            /*border: 1px solid #28a745 !important;*/
         }
 
         /* По желанию: заблокированные события */
         .fc-event.blocked-event {
-            background-color: #999 !important; /* серый фон */
-            color: #fff !important;
-            border: 1px solid #666 !important;
+            background-color: rgba(255, 255, 255, 0.5) !important;
+        }
+        .fc table {
+            /*width: 120% !important;*/
         }
         .fc-day-custom {
             display: flex;
             flex-direction: column;
-            height: 100%;
         }
 
-        .fc-bookings {
-            font-size: 11px;
-            line-height: 1.2;
-            margin-bottom: 4px;
+        .fc-bookings .booking-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 2px;
         }
 
-        .fc-price {
-            margin-top: auto;
+        .fc-bookings .booking-id {
             font-weight: 600;
         }
 
+        .fc-bookings .booking-status {
+            font-size: 13px;
+            color: #555;
+        }
+
+        .fc-price-block {
+            background-color: #2791fe;
+            color: #fff;
+            font-weight: 600;
+            text-align: center;
+            border-radius: 3px;
+            padding: 2px 12px;
+            margin-top: auto;
+        }
     </style>
 @endpush
 
@@ -263,56 +297,94 @@
                     });
                 },
                 eventClick: function(info) {
+                    // const maxNumber = info.event.extendedProps.max_number;
+                    // const events = calendar.getEvents();
+
+                    // const dayEvent = events.find(e =>
+                    //     moment(e.start).format('YYYY-MM-DD') === info.dateStr
+                    // );
+                    //
+                    // if (!dayEvent) return;
+
+                    // const maxNumber  = dayEvent.extendedProps.max_number ?? 0;
+                    // const freeNumber = dayEvent.extendedProps.number ?? dayEvent.extendedProps.max_number ?? 0;
+
+                    // formModal.show({
+                    //     start_date: info.dateStr,
+                    //     end_date: info.dateStr,
+                    //     max_number: maxNumber,
+                    //     free_number: freeNumber,
+                    //     number: Math.min(1, freeNumber)
+                    // });
+
+
                     var form = Object.assign({}, info.event.extendedProps);
                     form.start_date = moment(info.event.start).format('YYYY-MM-DD');
                     form.end_date = moment(info.event.start).format('YYYY-MM-DD');
+                    form.max_number = info.event.extendedProps.max_number;
                     formModal.show(form);
                 },
-                // eventRender: function(info) {
-                //     console.log(info.event.title)
-                //     $(info.el).find('.fc-title').html(info.event.title);
-                // }
-                {{--eventRender: function(info) {--}}
-                {{--    // Добавляем классы из extendedProps.classNames--}}
-                {{--    if(info.event.extendedProps.classNames){--}}
-                {{--        info.el.classList.add(...info.event.extendedProps.classNames);--}}
-                {{--    }--}}
-
-                {{--    // Обновляем текст события--}}
-                {{--    $(info.el).find('.fc-title').html(info.event.title);--}}
-
-                {{--    // Если событие полностью забронировано, делаем его красным--}}
-                {{--    if(info.event.title === '{{ __("Full Book") }}'){--}}
-                {{--        info.el.style.pointerEvents = 'none'; // необязательно, если нужно заблокировать клик--}}
-                {{--    }--}}
-                {{--}--}}
-
                 eventRender: function(info) {
-                    // Классы
-                    if (info.event.extendedProps.classNames) {
-                        info.el.classList.add(...info.event.extendedProps.classNames);
-                    }
-
-                    // Формируем HTML: сначала брони, потом цена
-                    const bookings = info.event.extendedProps.bookings_html || '';
-                    const price = info.event.title || '';
+                    const bookingsHtml = info.event.extendedProps.bookings_html || '';
+                    const priceHtml = `<div class="fc-price-block">${info.event.title}</div>`;
 
                     $(info.el).html(`
         <div class="fc-day-custom">
-            <div class="fc-bookings">${bookings}</div>
-            <div class="fc-price">${price}</div>
+            <div class="fc-bookings">${bookingsHtml}</div>
+            ${priceHtml}
         </div>
     `);
 
-                    // Полная бронь красим красным
-                    if (info.event.extendedProps.classNames && info.event.extendedProps.classNames.includes('full-book-event')) {
-                        info.el.style.backgroundColor = '#f8d7da';
-                        info.el.style.color = '#721c24';
+                    $(info.el).find('.booking-id').each(function() {
+                        const idText = $(this).text().replace('Б', '');
+                        const bookingCode = $(this).data('code');
+                        $(this).css({
+                            'color': '#2791fe',
+                            'cursor': 'pointer',
+                            'text-decoration': 'underline',
+                            'margin-right': '6px'
+                        });
+                        $(this).off('click').on('click', function(e) {
+                            e.stopPropagation();
+
+                            if (!bookingCode) return;
+
+                            let url = '/booking/' + encodeURIComponent(bookingCode);
+
+                                url += '?adminBase=true';
+
+                            window.open(url, '_blank');
+                            // window.open('/booking/' + encodeURIComponent(bookingCode), '_blank');
+
+
+                            // Загружаем данные через AJAX и открываем новое модальное окно
+                            // $('#modalBookingId').text('Б' + idText);
+                            // $('#modalBookingBody').html('Загрузка...');
+                            //
+                            // $.ajax({
+                            //     url: '/booking/' + idText, // или ваш route('booking.show', idText)
+                            //     method: 'GET',
+                            //     success: function(response) {
+                            //         // response может быть HTML для модального окна
+                            //         $('#modalBookingBody').html(response);
+                            //     },
+                            //     error: function() {
+                            //         $('#modalBookingBody').html('Ошибка загрузки брони');
+                            //     }
+                            // });
+
+                            // $('#bc_modal_booking').modal('show');
+                        });
+                    });
+
+                    // Полная бронь — красим красным
+                    if (info.event.extendedProps.classNames?.includes('full-book-event')) {
+                        info.el.style.backgroundColor = '#fe2727';
+                        info.el.style.color = '#fff';
+                        info.el.style.border = '1px solid #fe2727';
                         info.el.style.pointerEvents = 'none';
                     }
                 }
-
-
             });
             calendar.render();
         });
@@ -442,7 +514,6 @@
                             }
                         })
                         .on('apply.daterangepicker', function(e, picker) {
-                            console.log(picker);
                             me.form.start_date = picker.startDate.format('YYYY-MM-DD');
                             me.form.end_date = picker.endDate.format('YYYY-MM-DD');
                         });
