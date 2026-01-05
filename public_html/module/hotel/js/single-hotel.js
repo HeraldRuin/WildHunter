@@ -31,6 +31,7 @@
             allEvents:[],
             rooms:[],
             onLoadAvailability:false,
+            onLoadAnimalAvailability:false,
             firstLoad:true,
             i18n:[],
             total_price_before_fee:0,
