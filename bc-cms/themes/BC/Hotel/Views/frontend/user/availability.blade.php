@@ -206,10 +206,6 @@
             /*border: 1px solid #28a745 !important;*/
         }
 
-        /* По желанию: заблокированные события */
-        .fc-event.blocked-event {
-            background-color: rgba(255, 255, 255, 0.5) !important;
-        }
         .fc table {
             /*width: 120% !important;*/
         }
@@ -383,6 +379,14 @@
                         info.el.style.color = '#fff';
                         info.el.style.border = '1px solid #fe2727';
                         info.el.style.pointerEvents = 'none';
+                    }
+                    if (info.event.classNames.includes('blocked-event')) {
+                        info.el.style.pointerEvents = 'none';
+
+                        $(info.el).find('.fc-price-block').css({
+                            backgroundColor: '#fe2727',
+                            color: '#fff'
+                        });
                     }
                 }
             });
