@@ -510,45 +510,66 @@ var vendorPayout = {
     },
 };
 jQuery(function($){
-    document.getElementById('toggle-change-password-icon-old').addEventListener('click', function () {
-        const input = document.getElementById('old-password');
+    $(document).ready(function () {
+        const toggleIconOld = document.getElementById('toggle-change-password-icon-old');
 
-        if (input.type === "password") {
-            input.type = "text";
-            this.classList.remove('icofont-eye-blocked');
-            this.classList.add('icofont-eye');
-        } else {
-            input.type = "password";
-            this.classList.add('icofont-eye-blocked');
-            this.classList.remove('icofont-eye');
+        if (toggleIconOld) {
+            toggleIconOld.addEventListener('click', function () {
+                const input = document.getElementById('old-password');
+                if (!input) return;
+
+                if (input.type === "password") {
+                    input.type = "text";
+                    this.classList.remove('icofont-eye-blocked');
+                    this.classList.add('icofont-eye');
+                } else {
+                    input.type = "password";
+                    this.classList.add('icofont-eye-blocked');
+                    this.classList.remove('icofont-eye');
+                }
+            });
         }
     });
 
-    document.getElementById('toggle-change-password-icon-new').addEventListener('click', function () {
-        const input = document.getElementById('new-password');
+    $(document).ready(function () {
+        const toggleIconNew = document.getElementById('toggle-change-password-icon-new');
 
-        if (input.type === "password") {
-            input.type = "text";
-            this.classList.remove('icofont-eye-blocked');
-            this.classList.add('icofont-eye');
-        } else {
-            input.type = "password";
-            this.classList.add('icofont-eye-blocked');
-            this.classList.remove('icofont-eye');
+        if (toggleIconNew) {
+            toggleIconNew.addEventListener('click', function () {
+                const input = document.getElementById('new-password');
+                if (!input) return;
+
+                if (input.type === "password") {
+                    input.type = "text";
+                    this.classList.remove('icofont-eye-blocked');
+                    this.classList.add('icofont-eye');
+                } else {
+                    input.type = "password";
+                    this.classList.add('icofont-eye-blocked');
+                    this.classList.remove('icofont-eye');
+                }
+            });
         }
     });
 
-    document.getElementById('toggle-change-password-icon-confirm').addEventListener('click', function () {
-        const input = document.getElementById('new-password_confirmation');
+    $(document).ready(function () {
+        const toggleIconNew = document.getElementById('toggle-change-password-icon-confirm');
 
-        if (input.type === "password") {
-            input.type = "text";
-            this.classList.remove('icofont-eye-blocked');
-            this.classList.add('icofont-eye');
-        } else {
-            input.type = "password";
-            this.classList.add('icofont-eye-blocked');
-            this.classList.remove('icofont-eye');
+        if (toggleIconNew) {
+            toggleIconNew.addEventListener('click', function () {
+                const input = document.getElementById('new-password_confirmation');
+                if (!input) return;
+
+                if (input.type === "password") {
+                    input.type = "text";
+                    this.classList.remove('icofont-eye-blocked');
+                    this.classList.add('icofont-eye');
+                } else {
+                    input.type = "password";
+                    this.classList.add('icofont-eye-blocked');
+                    this.classList.remove('icofont-eye');
+                }
+            });
         }
     });
     $(document).ready(function() {

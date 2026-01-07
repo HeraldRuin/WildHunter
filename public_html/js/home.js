@@ -1058,7 +1058,10 @@ jQuery(function ($) {
         const $form = $("form");
 
         function updateClearButton() {
-            $btnClearAnimal.toggle($animalInput.val().trim().length > 0);
+            if ($animalInput && $animalInput.val) {
+                const val = $animalInput.val() || '';
+                $btnClearAnimal.toggle(val.trim().length > 0);
+            }
         }
         const urlParams = new URLSearchParams(window.location.search);
         const animalId = urlParams.get('animal_id');
@@ -1110,55 +1113,6 @@ jQuery(function ($) {
         });
     });
 
-    // $(document).ready(function () {
-    //     const $animalInput = $(".smart-search-booking-animal");
-    //     const $animalHidden = $(".child_id");
-    //     const $btnClearAnimal = $("#clear-animal");
-    //     const $locationInput = $(".smart-search-location");
-    //     const $form = $("form");
-    //
-    //     function updateClearButton() {
-    //         $btnClearAnimal.toggle($animalInput.val().trim().length > 0);
-    //     }
-    //
-    //     $btnClearAnimal.on("click", function (e) {
-    //         e.preventDefault();
-    //
-    //         $animalInput.val('');
-    //         $animalHidden.val('');
-    //         updateClearButton();
-    //
-    //         var locations = JSON.parse($locationInput.attr('data-default'));
-    //         var selectedText = $locationInput.val().trim();
-    //         var selectedLocation = locations.find(function(loc) {
-    //             return loc.title.trim() === selectedText;
-    //         });
-    //
-    //         var selectedLocationId = selectedLocation ? selectedLocation.id : '';
-    //         const selectedLocationText = $locationInput.find("option:selected").text();
-    //
-    //         $("input[name='location_id']").val(selectedLocationId ? selectedLocationId : '');
-    //         $("input[name='map_place']").val(selectedLocationText);
-    //         $("input[name='map_lat']").val($("input[name='map_lat']").val() || '');
-    //         $("input[name='map_lng']").val($("input[name='map_lng']").val() || '');
-    //
-    //         $.get($form.attr('action'), $form.serialize(), function(response) {
-    //             console.log("Form submitted with data:", $form.serialize());
-    //         });
-    //     });
-    //
-    //     $animalInput.on("input change", updateClearButton);
-    //     updateClearButton();
-    //
-    //     $locationInput.on('change', function() {
-    //         const selectedLocationId = $(this).val();
-    //         const selectedLocationText = $(this).find("option:selected").text();
-    //
-    //         $("input[name='location_id']").val(selectedLocationId);
-    //         $("input[name='map_place']").val(selectedLocationText);
-    //     });
-    // });
-
     $(document).ready(function () {
         const $locationInput = $(".smart-search-location");
         const $locationHidden = $("input[name='location_id']");
@@ -1166,7 +1120,10 @@ jQuery(function ($) {
         const $form = $("form");
 
         function updateClearButton() {
-            $btnClearLocation.toggle($locationInput.val().trim().length > 0);
+            if ($locationInput && $locationInput.val) {
+                const val = $locationInput.val() || '';
+                $btnClearLocation.toggle(val.trim().length > 0);
+            }
         }
 
         $btnClearLocation.on("click", function(e) {
@@ -1635,31 +1592,45 @@ jQuery(function($){
         });
     });
 
-    document.getElementById('toggle-reset-password-icon').addEventListener('click', function () {
-        const input = document.getElementById('password');
+    $(document).ready(function () {
+        const toggleIconNew = document.getElementById('toggle-reset-password-icon');
 
-        if (input.type === "password") {
-            input.type = "text";
-            this.classList.remove('icofont-eye-blocked');
-            this.classList.add('icofont-eye');
-        } else {
-            input.type = "password";
-            this.classList.add('icofont-eye-blocked');
-            this.classList.remove('icofont-eye');
+        if (toggleIconNew) {
+            toggleIconNew.addEventListener('click', function () {
+                const input = document.getElementById('password');
+                if (!input) return;
+
+                if (input.type === "password") {
+                    input.type = "text";
+                    this.classList.remove('icofont-eye-blocked');
+                    this.classList.add('icofont-eye');
+                } else {
+                    input.type = "password";
+                    this.classList.add('icofont-eye-blocked');
+                    this.classList.remove('icofont-eye');
+                }
+            });
         }
     });
 
-    document.getElementById('toggle-reset-password-icon-confirm').addEventListener('click', function () {
-        const input = document.getElementById('password-confirm');
+    $(document).ready(function () {
+        const toggleIconNew = document.getElementById('toggle-reset-password-icon-confirm');
 
-        if (input.type === "password") {
-            input.type = "text";
-            this.classList.remove('icofont-eye-blocked');
-            this.classList.add('icofont-eye');
-        } else {
-            input.type = "password";
-            this.classList.add('icofont-eye-blocked');
-            this.classList.remove('icofont-eye');
+        if (toggleIconNew) {
+            toggleIconNew.addEventListener('click', function () {
+                const input = document.getElementById('password-confirm');
+                if (!input) return;
+
+                if (input.type === "password") {
+                    input.type = "text";
+                    this.classList.remove('icofont-eye-blocked');
+                    this.classList.add('icofont-eye');
+                } else {
+                    input.type = "password";
+                    this.classList.add('icofont-eye-blocked');
+                    this.classList.remove('icofont-eye');
+                }
+            });
         }
     });
 });
