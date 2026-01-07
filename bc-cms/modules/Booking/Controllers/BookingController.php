@@ -417,7 +417,7 @@ class BookingController extends \App\Http\Controllers\Controller
 //        }
         $booking->status = $booking::PROCESSING;
         $booking->save();
-//        event(new BookingCreatedEvent($booking));
+        event(new BookingCreatedEvent($booking));
         return $this->sendSuccess([
             'url' => $booking->getDetailUrl()
         ], __("You payment has been processed successfully"));
