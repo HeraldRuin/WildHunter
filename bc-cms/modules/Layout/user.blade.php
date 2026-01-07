@@ -137,6 +137,16 @@
     <script
         src="{{ asset('libs/filerobot-image-editor/filerobot-image-editor.min.js?_ver=' . config('app.asset_version')) }}">
     </script>
+
+    <script src="https://js.pusher.com/8.0/pusher.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/laravel-echo@1.11.0/dist/echo.iife.js"></script>
+    <script>
+        window.EchoConfig = {
+            host: '{{ env("ECHO_HOST") }}',
+            key: '{{ env("PUSHER_APP_KEY") }}',
+        };
+    </script>
+    <script src="{{ asset('module/booking/js/echo-setup.js') }}"></script>
     <script type="text/javascript" src="{{ asset('module/animal/js/single-animal.js?_ver=' . config('app.asset_version')) }}"></script>
     <script type="text/javascript" src="{{ asset('module/weapon/js/weapon.js?_ver=' . config('app.asset_version')) }}"></script>
     <script type="text/javascript" src="{{ asset('module/booking/js/booking_history.js?_ver=' . config('app.asset_version')) }}"></script>
