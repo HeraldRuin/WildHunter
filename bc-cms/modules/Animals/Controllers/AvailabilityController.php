@@ -124,15 +124,12 @@ class AvailabilityController extends FrontendController{
                 $event = [
                     'id' => $row->id . '-' . $date->format('Ymd'),
                     'start' => $dateStr,
-                    'display' => 'background',
-                    'backgroundColor' => '#27ae60',
+                    'allDay' => true,
                 ];
 
                 if ($row->active) {
                     $event['title'] = 'Доступно';
-                    $event['backgroundColor'] = '#fe2727';
-                    $event['borderColor'] = '#fe2727';
-                    $event['classNames'] = ['blocked-event'];
+                    $event['classNames'] = ['available-event'];
                 }
 
                 $events[] = $event;

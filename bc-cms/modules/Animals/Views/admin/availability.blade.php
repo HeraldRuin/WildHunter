@@ -109,10 +109,19 @@
 
         #dates-calendar .loading {}
 
-        .fc-event.blocked-event {
-            background-color: rgba(40, 167, 69, 0.5) !important;
+        #dates-calendar .fc-event.available-event .fc-title {
+            background: transparent !important;
             color: #fff !important;
-            border: 1px solid #666 !important;
+            font-weight: 600;
+            text-align: center;
+        }
+        .fc-day-grid-event.available-event {
+            background-color: rgba(40, 167, 69, 0.7) !important;
+            border-color: rgba(40, 167, 69, 0.7) !important;
+        }
+        .fc-day-grid-event.available-event .fc-title {
+            color: #fff !important;
+            font-weight: 900 !important;
         }
     </style>
 @endpush
@@ -174,13 +183,8 @@
                     console.log(form);
                     formModal.show(form);
                 },
-
-
                 eventRender: function(info) {
-                    $(info.el).find('.fc-event-dot').remove();
-                    $(info.el).find('.fc-title').html(info.event.title);
                 }
-
             });
             calendar.render();
         });
