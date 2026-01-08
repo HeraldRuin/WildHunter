@@ -35,7 +35,8 @@
                                             @if($row->is_featured)
                                                 <span class="badge badge-primary">{{ __("Featured") }}</span>
                                             @endif
-                                            <a href="{{route('animal.admin.edit',['id'=>$row->id])}}">{{$row->title}}</a>
+{{--                                            <a href="{{route('animal.admin.edit',['id'=>$row->id])}}">{{$row->title}}</a>--}}
+                                            <span>{{$row->title}}</span>
                                         </td>
                                         <td>
                                             <a href="{{ route("animal.vendor.bulk_detach",[$row->id]) }}" class="btn btn-danger btn-sm">{{__("Delete")}}</a>
