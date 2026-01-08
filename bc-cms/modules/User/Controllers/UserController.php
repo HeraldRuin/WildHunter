@@ -226,7 +226,7 @@ class UserController extends FrontendController
         $data = array_merge($cabinetData, [
             'userRole' => $userRole,
             'bookings' => $bookings,
-            'hotelSlug' => $authUser->hotels->first()->slug,
+            'hotelSlug' => $authUser->hotels?->first()?->slug,
             'statues'     => config('booking.statuses'),
             'breadcrumbs' => [
                 [
