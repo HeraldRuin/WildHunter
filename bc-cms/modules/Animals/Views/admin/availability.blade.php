@@ -37,7 +37,7 @@
                                     <li class="nav-item event-name ">
                                         <a class="nav-link" data-id="{{ $item->id }}" data-toggle="tab"
                                             href="#calendar-{{ $item->id }}"
-                                            title="{{ $item->title }}">#{{ $item->id }} - {{ $item->title }}</a>
+                                            title="{{ $item->title }}">{{ $item->title }}</a>
                                     </li>
                                 @endforeach
                             </ul>
