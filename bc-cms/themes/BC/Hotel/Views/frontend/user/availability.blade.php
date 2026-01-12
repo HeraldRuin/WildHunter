@@ -129,10 +129,19 @@
                                 <input type="number" v-model="form.price" class="form-control">
                             </div>
                         </div>
-                        <div class="col-md-6" v-show="form.active">
+                        <div class="col-md-6">
                             <div class="form-group">
-                                <label>{{ __('Number of room') }}</label>
-                                <input type="number" v-model="form.number" :max="form.max_number" min="1" class="form-control">
+                                <label>{{ __('Number of room') }} 
+                                    <span v-if="form.max_number && form.active" class="text-muted">({{ __('Max') }}: @{{ form.max_number }})</span>
+                                </label>
+                                <input type="number" v-model.number="form.number" :max="form.max_number" :min="form.active ? 1 : 0" class="form-control" 
+                                       @input="validateNumber" :disabled="!form.active">
+                                <small v-if="form.max_number && form.active && form.number > form.max_number" class="text-danger">
+                                    {{ __('Number cannot exceed maximum') }} (@{{ form.max_number }})
+                                </small>
+                                <small v-if="!form.active" class="text-muted">
+                                    {{ __('Set room as available to change number') }}
+                                </small>
                             </div>
                         </div>
                         <div class="col-md-6 d-none" v-show="form.active">
@@ -194,9 +203,7 @@
         }
 
         .fc-event.full-book-event {
-            background-color: #fe2727 !important;
-            color: #fff !important;
-            border: 1px solid #fe2727 !important;
+            /* Убрали красный цвет ячейки - окрашиваем только блок с надписью */
         }
 
         /* Частично забронированные события */
@@ -318,6 +325,10 @@
                     form.start_date = moment(info.event.start).format('YYYY-MM-DD');
                     form.end_date = moment(info.event.start).format('YYYY-MM-DD');
                     form.max_number = info.event.extendedProps.max_number;
+                    // Передаем number и active из события
+                    form.number = info.event.extendedProps.number !== undefined ? info.event.extendedProps.number : info.event.number;
+                    form.active = info.event.extendedProps.active !== undefined ? info.event.extendedProps.active : (info.event.classNames && !info.event.classNames.includes('blocked-event') ? 1 : 0);
+                    form.price = info.event.extendedProps.price !== undefined ? info.event.extendedProps.price : info.event.price;
                     formModal.show(form);
                 },
                 eventRender: function(info) {
@@ -330,6 +341,12 @@
             ${priceHtml}
         </div>
     `);
+                    
+                    // Сначала сбрасываем все стили блока
+                    $(info.el).find('.fc-price-block').css({
+                        backgroundColor: '',
+                        color: ''
+                    });
 
                     $(info.el).find('.booking-id').each(function() {
                         const idText = $(this).text().replace('Б', '');
@@ -372,13 +389,7 @@
                         });
                     });
 
-                    // Полная бронь — красим красным
-                    if (info.event.extendedProps.classNames?.includes('full-book-event')) {
-                        info.el.style.backgroundColor = '#fe2727';
-                        info.el.style.color = '#fff';
-                        info.el.style.border = '1px solid #fe2727';
-                        info.el.style.pointerEvents = 'none';
-                    }
+                    // Заблокированные дни - красный цвет блока (приоритет над всеми остальными)
                     if (info.event.classNames.includes('blocked-event')) {
                         info.el.style.pointerEvents = 'none';
 
@@ -386,6 +397,30 @@
                             backgroundColor: '#fe2727',
                             color: '#fff'
                         });
+                    }
+                    // Полная бронь — красим только блок с надписью в оранжевый (приоритет над изменениями)
+                    else if (info.event.classNames.includes('full-book-event') || info.event.extendedProps.classNames?.includes('full-book-event')) {
+                        $(info.el).find('.fc-price-block').css({
+                            backgroundColor: '#ff9800',
+                            color: '#fff'
+                        });
+                    } else {
+                        // Изменение цены - меняем цвет блока с ценой и количеством (желтый)
+                        // Только для активных дней (не заблокированных и не полной брони)
+                        if (info.event.extendedProps.price_changed) {
+                            $(info.el).find('.fc-price-block').css({
+                                backgroundColor: '#fff3cd',
+                                color: '#856404'
+                            });
+                        }
+                        // Изменение количества номеров - меняем цвет блока с ценой и количеством (синий)
+                        // Только если цена не изменена
+                        else if (info.event.extendedProps.number_changed) {
+                            $(info.el).find('.fc-price-block').css({
+                                backgroundColor: '#d1ecf1',
+                                color: '#0c5460'
+                            });
+                        }
                     }
                 }
             });
@@ -412,6 +447,7 @@
                     max_guests: 0,
                     active: 0,
                     number: 1,
+                    max_number: null,
                     day_of_week_select: []
                 },
                 formDefault: {
@@ -425,6 +461,7 @@
                     max_guests: 0,
                     active: 0,
                     number: 1,
+                    max_number: null,
                     day_of_week_select: []
                 },
                 person_types: [
@@ -448,6 +485,14 @@
                     if (typeof form != 'undefined') {
                         form.day_of_week_select = []
                         this.form = Object.assign({}, form);
+                        
+                        // Убеждаемся, что number - это число, а не null/undefined
+                        if (this.form.number === null || this.form.number === undefined || this.form.number === '') {
+                            this.form.number = this.form.active ? 1 : 0;
+                        } else {
+                            this.form.number = parseInt(this.form.number) || (this.form.active ? 1 : 0);
+                        }
+                        
                         if (typeof this.form.person_types == 'object') {
                             this.person_types = Object.assign({}, this.form.person_types);
                         }
@@ -475,9 +520,17 @@
 
                     this.onSubmit = true;
                     this.form.person_types = Object.assign({}, this.person_types);
+                    
+                    // Убеждаемся, что number всегда передается, даже если 0
+                    var formData = Object.assign({}, this.form);
+                    if (formData.number === null || formData.number === undefined || formData.number === '') {
+                        formData.number = formData.active ? 1 : 0;
+                    }
+                    formData.number = parseInt(formData.number) || (formData.active ? 1 : 0);
+                    
                     $.ajax({
                         url: '{{ route('hotel.vendor.room.availability.store', ['hotel_id' => $hotel->id]) }}',
-                        data: this.form,
+                        data: formData,
                         dataType: 'json',
                         method: 'post',
                         success: function(json) {
@@ -498,7 +551,47 @@
                     if (!this.form.start_date) return false;
                     if (!this.form.end_date) return false;
 
+                    // Валидация количества номеров
+                    if (this.form.active && this.form.max_number) {
+                        if (this.form.number > this.form.max_number) {
+                            this.lastResponse = {
+                                status: false,
+                                message: '{{ __("Number of rooms cannot exceed maximum") }} (' + this.form.max_number + ')'
+                            };
+                            return false;
+                        }
+                        if (this.form.number < 1) {
+                            this.lastResponse = {
+                                status: false,
+                                message: '{{ __("Number of rooms must be at least 1 for available days") }}'
+                            };
+                            return false;
+                        }
+                    }
+                    // Для неактивных дней разрешаем 0
+                    if (!this.form.active && this.form.number < 0) {
+                        this.lastResponse = {
+                            status: false,
+                            message: '{{ __("Number of rooms cannot be negative") }}'
+                        };
+                        return false;
+                    }
+
                     return true;
+                },
+                validateNumber: function() {
+                    // Автоматически ограничиваем значение, если превышает максимум
+                    if (this.form.max_number && this.form.number > this.form.max_number) {
+                        this.form.number = this.form.max_number;
+                    }
+                    // Минимум 1 только для активных дней
+                    if (this.form.active && this.form.number < 1) {
+                        this.form.number = 1;
+                    }
+                    // Для неактивных дней разрешаем 0
+                    if (!this.form.active && this.form.number < 0) {
+                        this.form.number = 0;
+                    }
                 },
                 addItem: function() {
                     console.log(this.person_types);

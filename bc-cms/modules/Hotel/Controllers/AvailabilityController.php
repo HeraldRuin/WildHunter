@@ -345,26 +345,53 @@ class AvailabilityController extends FrontendController{
          * ---------------------------------------- */
         foreach ($rows as $dateKey => $row) {
             $price = $row->price ?: $room->price;
+            // Если number явно установлен (включая 0), используем его, иначе базовое значение
+            $number = ($row->number !== null) ? (int)$row->number : $room->number;
 
             $existing = $allDates[$dateKey];
+
+            // Определяем, изменилась ли цена или количество
+            // Только для активных дней (не заблокированных)
+            $isActive = (int) $row->active;
+            $priceChanged = false;
+            $numberChanged = false;
+            
+            if ($isActive) {
+                // Цена изменена, если явно установлена и отличается от базовой
+                $priceChanged = $row->price !== null && abs((float)$row->price - (float)$room->price) > 0.01;
+                // Количество изменено, если явно установлено и отличается от базового
+                $numberChanged = $row->number !== null && (int)$row->number != (int)$room->number;
+            }
+
+            // Определяем title в зависимости от статуса
+            $title = '';
+            if (!$isActive) {
+                // День заблокирован
+                $title = __('Blocked');
+            } elseif ($number == 0) {
+                // Нет номеров (полная бронь)
+                $title = __('Full Books');
+            } else {
+                // Обычный день с доступными номерами
+                $title = format_money_main($price) . ' x ' . $number;
+            }
 
             $allDates[$dateKey] = array_merge(
                 $existing,
                 [
                     'price' => $price,
-                    'number' => $row->number ?? $existing['number'],
-                    'active' => (int) $row->active,
-                    'classNames' => $row->active ? ['available-event'] : ['blocked-event'],
-                    'title' => $row->active
-                        ? format_money_main($price) . ' x ' . ($row->number ?? $existing['number'])
-                        : __('Blocked'),
+                    'number' => $number,
+                    'active' => $isActive,
+                    'classNames' => $isActive ? ['available-event'] : ['blocked-event'],
+                    'title' => $title,
                 ],
                 [
-                    // ✅ extendedProps СОХРАНЯЕМ
                     'extendedProps' => array_merge(
                         $existing['extendedProps'],
                         [
                             'max_number' => $room->number,
+                            'price_changed' => $priceChanged,
+                            'number_changed' => $numberChanged,
                         ]
                     ),
                 ]
@@ -402,26 +429,29 @@ class AvailabilityController extends FrontendController{
                     'statusName' => $booking->statusName,
                 ];
 
-                $day['occupiedBeds'] = ($day['occupiedBeds'] ?? 0)
-                    + ($booking->total_guests ?? 0);
+                // Используем количество забронированных номеров из roomBooking, а не количество гостей
+                $bookedRooms = (int)($roomBooking->number ?? 0);
+                $day['occupiedRooms'] = ($day['occupiedRooms'] ?? 0) + $bookedRooms;
 
-                $totalBeds = $room->number * $room->beds;
-                $freeBeds = max($totalBeds - $day['occupiedBeds'], 0);
-                $freeRooms = floor($freeBeds / $room->beds);
+                // Используем базовое количество из кастомной даты или базовое количество номера
+                $baseNumber = $day['number'] ?? $room->number;
+                
+                // Вычисляем количество свободных номеров
+                $freeRooms = max($baseNumber - ($day['occupiedRooms'] ?? 0), 0);
 
-                $requestedGuests = $request->query('adults') ?? 1;
-
-                if ($freeBeds < $requestedGuests) {
-                    $day['active'] = 0;
+                if ($freeRooms <= 0) {
+                    // Полное бронирование - нет свободных номеров
+                    $day['active'] = 1; // Оставляем active = 1, чтобы отличать от заблокированного
                     $day['number'] = 0;
                     $day['classNames'] = ['full-book-event'];
+                    $day['title'] = __('Full Books');
                 } else {
+                    // Есть свободные номера
                     $day['active'] = 1;
-                    $day['number'] = 0;
+                    $day['number'] = $freeRooms;
                     $day['classNames'] = ['available-event'];
+                    $day['title'] = format_money_main($day['price']) . ' x ' . $day['number'];
                 }
-
-                $day['title'] = format_money_main($day['price']) . ' x ' . $day['number'];
             }
         }
 
@@ -447,32 +477,8 @@ class AvailabilityController extends FrontendController{
         }
         unset($day);
 
-        /** ----------------------------------------
-         * 6. Отдаём в FullCalendar
-         * ---------------------------------------- */
         return response()->json(array_values($allDates));
     }
-
-
-//    public function loadDates(Request $request, $hotel_id)
-//    {
-//        $roomId = 72; // пример
-//        $start = '2026-01-01';
-//        $end = '2026-01-31';
-//
-//        $rows = $this->roomDateClass::query()
-//            ->where('target_id', $roomId)
-//            ->where('start_date', '>=', $start)
-//            ->where('end_date', '<=', $end)
-//            ->orderBy('start_date')
-//            ->get();
-//
-//        dd($rows->toArray());
-//        return $rows->toArray();
-//    }
-
-
-
 
 //    public function loadDates(Request $request, $hotel_id)
 //    {
@@ -675,6 +681,13 @@ class AvailabilityController extends FrontendController{
             }
             $postData['start_date'] = $dt->format('Y-m-d H:i:s');
             $postData['end_date'] = $dt->format('Y-m-d H:i:s');
+
+            // Убеждаемся, что number передается, даже если это 0
+            if (!isset($postData['number'])) {
+                $postData['number'] = $room->number;
+            }
+            // Преобразуем в int, чтобы 0 не считался пустым
+            $postData['number'] = (int)($postData['number'] ?? $room->number);
 
             $date->fillByAttr([
                 'start_date','end_date','price',
