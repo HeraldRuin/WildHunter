@@ -343,14 +343,13 @@
                         $(this).off('click').on('click', function(e) {
                             e.stopPropagation();
 
-                            if (!bookingCode) return;
-
-                            let url = '/booking/' + encodeURIComponent(bookingCode);
-
-                                url += '?adminBase=true';
-
+                            {{--let url = `/user/booking-history/?user={{ $user->id }}&viewAdminCabinet=@json($viewAdminCabinet)`;--}}
+                            let url = `/user/booking-history/?user={{ $user->id }}`;
+                            //
+                            //     url += '?adminBase=true';
+                            //
                             window.open(url, '_blank');
-                            // window.open('/booking/' + encodeURIComponent(bookingCode), '_blank');
+
 
 
                             // Загружаем данные через AJAX и открываем новое модальное окно
