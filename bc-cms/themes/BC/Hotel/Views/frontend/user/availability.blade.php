@@ -131,10 +131,10 @@
                         </div>
                         <div class="col-md-6">
                             <div class="form-group">
-                                <label>{{ __('Number of room') }} 
+                                <label>{{ __('Number of room') }}
                                     <span v-if="form.max_number && form.active" class="text-muted">({{ __('Max') }}: @{{ form.max_number }})</span>
                                 </label>
-                                <input type="number" v-model.number="form.number" :max="form.max_number" :min="form.active ? 1 : 0" class="form-control" 
+                                <input type="number" v-model.number="form.number" :max="form.max_number" :min="form.active ? 1 : 0" class="form-control"
                                        @input="validateNumber" :disabled="!form.active">
                                 <small v-if="form.max_number && form.active && form.number > form.max_number" class="text-danger">
                                     {{ __('Number cannot exceed maximum') }} (@{{ form.max_number }})
@@ -256,6 +256,7 @@
     <script src="{{ asset('libs/fullcalendar-4.2.0/interaction/main.js') }}"></script>
     <script src="{{ asset('libs/fullcalendar-4.2.0/daygrid/main.js') }}"></script>
     <script src="{{ asset('libs/fullcalendar-4.2.0/core/locales/ru.js') }}"></script>
+    <script src="{{ asset('module/hotel/js/availability.js?_ver=' . config('app.asset_version')) }}"></script>
 
     <script>
         var calendarEl, calendar, lastId, formModal;
@@ -264,6 +265,7 @@
             lastId = $(e.target).data('id');
             if (calendar) {
                 calendar.destroy();
+                window.calendar = null;
             }
             calendar = new FullCalendar.Calendar(calendarEl, {
                 locale: 'ru',
@@ -341,7 +343,7 @@
             ${priceHtml}
         </div>
     `);
-                    
+
                     // Сначала сбрасываем все стили блока
                     $(info.el).find('.fc-price-block').css({
                         backgroundColor: '',
@@ -359,15 +361,8 @@
                         });
                         $(this).off('click').on('click', function(e) {
                             e.stopPropagation();
-
-                            {{--let url = `/user/booking-history/?user={{ $user->id }}&viewAdminCabinet=@json($viewAdminCabinet)`;--}}
                             let url = `/user/booking-history/?user={{ $user->id }}`;
-                            //
-                            //     url += '?adminBase=true';
-                            //
                             window.open(url, '_blank');
-
-
 
                             // Загружаем данные через AJAX и открываем новое модальное окно
                             // $('#modalBookingId').text('Б' + idText);
@@ -425,6 +420,8 @@
                 }
             });
             calendar.render();
+
+            window.calendar = calendar;
         });
 
         $('.event-name:first-child a').trigger('click');
@@ -485,14 +482,14 @@
                     if (typeof form != 'undefined') {
                         form.day_of_week_select = []
                         this.form = Object.assign({}, form);
-                        
+
                         // Убеждаемся, что number - это число, а не null/undefined
                         if (this.form.number === null || this.form.number === undefined || this.form.number === '') {
                             this.form.number = this.form.active ? 1 : 0;
                         } else {
                             this.form.number = parseInt(this.form.number) || (this.form.active ? 1 : 0);
                         }
-                        
+
                         if (typeof this.form.person_types == 'object') {
                             this.person_types = Object.assign({}, this.form.person_types);
                         }
@@ -520,14 +517,14 @@
 
                     this.onSubmit = true;
                     this.form.person_types = Object.assign({}, this.person_types);
-                    
+
                     // Убеждаемся, что number всегда передается, даже если 0
                     var formData = Object.assign({}, this.form);
                     if (formData.number === null || formData.number === undefined || formData.number === '') {
                         formData.number = formData.active ? 1 : 0;
                     }
                     formData.number = parseInt(formData.number) || (formData.active ? 1 : 0);
-                    
+
                     $.ajax({
                         url: '{{ route('hotel.vendor.room.availability.store', ['hotel_id' => $hotel->id]) }}',
                         data: formData,
