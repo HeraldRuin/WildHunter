@@ -3949,5 +3949,6 @@
     "Exit": "Выезд",
     "Event click": "Событие",
     "Booking apply": "Подтвердить бронь",
-    "Add services": "Добавить услуги"
+    "Add services": "Добавить услуги",
+    "Number cannot exceed maximum": "Число не может превышать максимальное"
 }
