@@ -58,6 +58,9 @@ class Animal extends Bookable
         $booking->start_date = Carbon::parse($request->input('start_date_animal'))->startOfDay();
         $booking->start_date_animal = Carbon::parse($request->input('start_date_animal'))->startOfDay();
         $booking->hotel_id = $request->input('hotel_id');
+        if ($request->input('userRole') === 'baseadmin') {
+            $booking->event = true;
+        }
 
         $check = $booking->save();
 

@@ -272,6 +272,9 @@ class Hotel extends Bookable
         $booking->total_hunting = $request->input('hunting_adults') ?? null;
         $booking->start_date = $start_date;
         $booking->end_date = $end_date;
+        if ($request->input('userRole') === 'baseadmin') {
+            $booking->event = true;
+        }
 
         $booking->vendor_service_fee_amount = $total_service_fee ?? '';
         $booking->vendor_service_fee = $list_service_fee ?? '';
@@ -397,6 +400,7 @@ class Hotel extends Bookable
         // Validate Date and Booking
         $rooms = $this->getRoomsAvailability(request()->input());
         $rooms_by_id = [];
+
         if (empty($rooms))
             return $this->sendError(__("There is no room available at your selected dates"));
         foreach ($this->tmp_rooms as $room) {
@@ -1224,10 +1228,18 @@ class Hotel extends Bookable
     {
         return $this->hasMany($this->roomClass, 'parent_id')->where('status', "publish");
     }
+//    public function hotelRooms()
+//    {
+//        return $this->hasMany(HotelRoom::class, 'parent_id', 'hotel_id');
+//    }
     public function hotelRooms()
     {
-        return $this->hasMany(HotelRoom::class, 'parent_id', 'hotel_id');
+        return $this->hasMany(HotelRoom::class, 'parent_id', 'id');
     }
+//    public function hotelRoom()
+//    {
+//        return $this->hasMany(HotelRoom::class, 'parent_id', 'id');
+//    }
     public function bookings()
     {
         return $this->hasMany(\Modules\Booking\Models\Booking::class, 'hotel_id');

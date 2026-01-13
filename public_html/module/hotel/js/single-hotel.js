@@ -349,6 +349,10 @@
                 this.animal_id = '';
                 this.animalCheckPassed = false;
             },
+            getUserRoleFromUrl: function() {
+                var urlParams = new URLSearchParams(window.location.search);
+                return urlParams.get('userRole') || null;
+            },
 
             validate(){
                 var me = this;
@@ -556,6 +560,7 @@
                 let request = null;
 
                 if (type === 'animal') {
+                    var userRole = this.getUserRoleFromUrl();
                     request = {
                         url: bookingCore.url + '/booking/addToCartAnimal',
                         data: {
@@ -569,8 +574,12 @@
                             animal_price: this.animalPrice
                         }
                     };
+                    if (userRole) {
+                        request.data.userRole = userRole;
+                    }
                 }
                 else if (type === 'hotel') {
+                    var userRole = this.getUserRoleFromUrl();
                     request = {
                         url: bookingCore.url + '/booking/addToCart',
                         data: {
@@ -588,8 +597,12 @@
                             )
                         }
                     };
+                    if (userRole) {
+                        request.data.userRole = userRole;
+                    }
                 }
                 else {
+                    var userRole = this.getUserRoleFromUrl();
                     request = {
                         url: bookingCore.url + '/booking/addToCart',
                         data: {
@@ -611,6 +624,9 @@
                             )
                         }
                     };
+                    if (userRole) {
+                        request.data.userRole = userRole;
+                    }
                 }
 
 
