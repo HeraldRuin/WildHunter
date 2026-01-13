@@ -11,9 +11,9 @@
                 data-bs-trigger="hover"
                 data-bs-html="true"
                 data-bs-placement="right"
-                data-bs-content="<strong>{{ $booking->creator->first_name }} {{ $booking->creator->last_name }}</strong><br>Email: {{ $booking->creator->email }}<br>Phone: {{ $booking->creator->phone }}"
-                @click="{{ $userRole !== 'hunter' ? "openUserModal({$booking->creator->id}, {$booking->id})" : '' }}">
-                {{ !empty($booking->creator->user_name) ? $booking->creator->user_name : $booking->creator->first_name }}
+                data-bs-content="<strong>{{ $booking->creator?->first_name ?? '' }} {{ $booking->creator?->last_name ?? '' }}</strong><br>Email: {{ $booking->creator?->email ?? '' }}<br>Phone: {{ $booking->creator?->phone ?? '' }}"
+                @click="{{ $userRole !== 'hunter' && $booking->creator ? "openUserModal({$booking->creator->id}, {$booking->id})" : '' }}">
+                {{ $booking->creator ? (!empty($booking->creator->user_name) ? $booking->creator->user_name : $booking->creator->first_name) : 'N/A' }}
             </span>
     </td>
 
@@ -71,6 +71,15 @@
             data-bs-target="#bookingAddServiceModal{{ $booking->id }}">
             {{__("Add services")}}
         </button>
+        @if(!in_array($booking->status, [\Modules\Booking\Models\Booking::CANCELLED, \Modules\Booking\Models\Booking::COMPLETED]))
+            <button
+                type="button"
+                class="btn btn-danger btn-sm mt-2"
+                data-bs-toggle="modal"
+                data-bs-target="#cancelBookingModal{{ $booking->id }}">
+                {{__("Cancel")}}
+            </button>
+        @endif
     </td>
 
 </tr>
@@ -88,6 +97,24 @@
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
                 <button type="button" class="btn btn-success" @click="confirmBooking({{$booking->id}})">Подтвердить</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="cancelBookingModal{{ $booking->id }}" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">{{__('Cancel booking')}} #{{ $booking->id }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>{{__('Are you sure you want to cancel this booking?')}}</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{__('No, keep booking')}}</button>
+                <button type="button" class="btn btn-danger" @click="cancelBooking($event, {{ $booking->id }})">{{__('Yes, cancel')}}</button>
             </div>
         </div>
     </div>
