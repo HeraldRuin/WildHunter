@@ -124,19 +124,22 @@
     <td>{{format_money($booking->paid)}}</td>
     <td>{{format_money($booking->total - $booking->paid)}}</td>
     <td>
-        @if($userRole === 'baseadmin' && $booking->status === 'processing')
+        @if($userRole === 'baseadmin' && $booking->status === 'processing' && $booking->status != 'completed')
             <button type="button" class="btn btn-success" data-bs-toggle="modal"
                     data-bs-target="#confirmBookingModal{{ $booking->id }}">
                 {{ __("Booking apply") }}
             </button>
         @endif
-        <button
-            type="button"
-            class="btn btn-primary btn-sm mt-2"
-            data-bs-toggle="modal"
-            data-bs-target="#bookingAddServiceModal{{ $booking->id }}">
-            {{__("Add services")}}
-        </button>
+            @if($userRole === 'baseadmin' && $booking->status !== 'cancelled')
+                <button
+                    type="button"
+                    class="btn btn-primary btn-sm mt-2"
+                    data-bs-toggle="modal"
+                    data-bs-target="#bookingAddServiceModal{{ $booking->id }}">
+                    {{__("Add services")}}
+                </button>
+        @endif
+
         @if(!in_array($booking->status, [\Modules\Booking\Models\Booking::CANCELLED, \Modules\Booking\Models\Booking::COMPLETED]))
             <button
                 type="button"
@@ -179,7 +182,7 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{__('No, keep booking')}}</button>
-                <button type="button" class="btn btn-danger" @click="cancelBooking($event, {{ $booking->id }})">{{__('Yes, cancel')}}</button>
+                <button type="button" class="btn btn-danger btn-cancel-booking-confirm-vue" data-booking-id="{{ $booking->id }}">{{__('Yes, cancel')}}</button>
             </div>
         </div>
     </div>
