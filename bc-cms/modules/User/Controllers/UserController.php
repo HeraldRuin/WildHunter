@@ -223,11 +223,21 @@ class UserController extends FrontendController
             $bookings = $this->booking->getBookingHistory($request->input('status'), $authUser->id);
         }
 
+        $allStatuses = config('booking.statuses');
+
+        if ($userRole === 'baseadmin') {
+            $statuses = array_values(array_filter($allStatuses, function($status) {
+                return $status !== 'collection';
+            }));
+        } else {
+            $statuses = $allStatuses;
+        }
+
         $data = array_merge($cabinetData, [
             'userRole' => $userRole,
             'bookings' => $bookings,
             'hotelSlug' => $authUser->hotels?->first()?->slug,
-            'statues'     => config('booking.statuses'),
+            'statues'     => $statuses,
             'breadcrumbs' => [
                 [
                     'name'  => __('Booking History'),
