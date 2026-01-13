@@ -245,4 +245,77 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
     });
+
+    $(document).on('click', '.btn-cancel-booking-confirm-vue', function(e) {
+        e.preventDefault();
+        var btn = $(this);
+        var bookingId = btn.data('booking-id');
+
+        if (!bookingId) {
+            console.error('Booking ID not found');
+            return;
+        }
+
+        var bookingIdNum = parseInt(bookingId, 10);
+
+        if (!btn.data('originalHtml')) {
+            btn.data('originalHtml', btn.html());
+        }
+
+        btn.prop('disabled', true).addClass('disabled').html(
+            '<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>' +
+            '<span> ' + (btn.text().trim() || '...') + '</span>'
+        );
+
+        var restoreButton = function() {
+            btn.prop('disabled', false).removeClass('disabled');
+            if (btn.data('originalHtml')) {
+                btn.html(btn.data('originalHtml'));
+            }
+        };
+
+        $.ajax({
+            url: `/booking/${bookingIdNum}/cancel`,
+            type: 'POST',
+            dataType: 'json',
+            data: {
+                _token: $('meta[name="csrf-token"]').attr('content') || ''
+            },
+            success: function(res) {
+                restoreButton();
+
+                if (res.status) {
+                    var modal = bootstrap.Modal.getInstance(document.getElementById('cancelBookingModal' + bookingIdNum));
+                    if (modal) {
+                        modal.hide();
+                    }
+                    if (typeof bookingCoreApp !== 'undefined' && bookingCoreApp.showAjaxMessage) {
+                        bookingCoreApp.showAjaxMessage(res);
+                    } else {
+                        alert(res.message || 'Бронь успешно отменена');
+                    }
+                    setTimeout(function() {
+                        window.location.reload();
+                    }, 500);
+                } else if (res.message) {
+                    if (typeof bookingCoreApp !== 'undefined' && bookingCoreApp.showAjaxMessage) {
+                        bookingCoreApp.showAjaxMessage(res);
+                    } else {
+                        alert(res.message);
+                    }
+                }
+            },
+            error: function(e) {
+                restoreButton();
+
+                if (e.status === 419) {
+                    alert('Сессия истекла, обновите страницу');
+                } else if (e.responseJSON && e.responseJSON.message) {
+                    alert('Ошибка: ' + e.responseJSON.message);
+                } else {
+                    alert('Произошла ошибка при отмене бронирования');
+                }
+            }
+        });
+    });
 });
