@@ -2,6 +2,8 @@ document.addEventListener('DOMContentLoaded', function () {
     const el = document.getElementById('booking-history');
     if (!el) return;
 
+    const COMPLETED = 'completed';
+
     new Vue({
         el: '#booking-history',
         data: {
@@ -242,6 +244,35 @@ document.addEventListener('DOMContentLoaded', function () {
                 .listen('.booking.created', (e) => {
                     location.reload();
                 });
+
+            const updateCollectionTimers = () => {
+                const nodes = document.querySelectorAll('.collection-timer[data-start]');
+                const now = Date.now();
+
+                nodes.forEach(el => {
+                    const start = parseInt(el.dataset.start, 10);
+                    if (!start || start > now) return;
+
+                    let diffMs = now - start;
+                    let totalMinutes = Math.floor(diffMs / 60000);
+
+                    const days = Math.floor(totalMinutes / (60 * 24));
+                    totalMinutes -= days * 60 * 24;
+
+                    const hours = Math.floor(totalMinutes / 60);
+                    const minutes = totalMinutes - hours * 60;
+
+                    const parts = [];
+                    if (days > 0) parts.push(days + 'д');
+                    if (hours > 0 || days > 0) parts.push(hours + ' ч');
+                    parts.push(minutes + ' мин');
+
+                    el.textContent = '[' + parts.join(', ') + ']';
+                });
+            };
+
+            updateCollectionTimers();
+            setInterval(updateCollectionTimers, 60000);
         }
 
     });
