@@ -139,6 +139,14 @@
                     {{__("Add services")}}
                 </button>
         @endif
+        @if($userRole === 'baseadmin' && !in_array($booking->status, [\Modules\Booking\Models\Booking::CANCELLED, \Modules\Booking\Models\Booking::COMPLETED]))
+            <button
+                type="button"
+                class="btn btn-success btn-sm mt-2"
+                @click="completeBooking($event, {{ $booking->id }})">
+                {{__("Complete booking")}}
+            </button>
+        @endif
 
         @if(!in_array($booking->status, [\Modules\Booking\Models\Booking::CANCELLED, \Modules\Booking\Models\Booking::COMPLETED]))
             <button

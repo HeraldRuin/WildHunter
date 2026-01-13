@@ -887,11 +887,55 @@ class BookingController extends \App\Http\Controllers\Controller
 
             app()->setLocale($old);
         } catch(\Exception | \Swift_TransportException $e){
-            Log::warning('sendCancelledStatusEmail: '.$e->getMessage());
+            Log::warning('sendCompletedStatusEmail: '.$e->getMessage());
         }
 
         return $this->sendSuccess([
             'message' => __('Booking has been cancelled successfully')
+        ]);
+    }
+
+    public function completeBooking(Booking $booking)
+    {
+        if (!Auth::check()) {
+            return $this->sendError('Необходима авторизация')->setStatusCode(401);
+        }
+
+        $isBaseAdmin = Auth::user()->hasRole('baseadmin') || Auth::user()->hasPermission('baseAdmin_dashboard_access');
+
+        if (!$isBaseAdmin) {
+            return $this->sendError(__("You don't have access."))->setStatusCode(403);
+        }
+
+        if (in_array($booking->status, [Booking::CANCELLED, Booking::COMPLETED])) {
+            return $this->sendError(__('This booking cannot be completed'));
+        }
+
+        $booking->status = Booking::COMPLETED;
+        $booking->save();
+        event(new BookingUpdatedEvent($booking));
+
+        try {
+            $old = app()->getLocale();
+            $bookingLocale = $booking->getMeta('locale');
+            if($bookingLocale){
+                app()->setLocale($bookingLocale);
+            }
+
+            if($booking->create_user) {
+                $creator = User::find($booking->create_user);
+                if($creator && !empty($creator->email)) {
+                    Mail::to($creator->email)->send(new StatusUpdatedEmail($booking, 'customer'));
+                }
+            }
+
+            app()->setLocale($old);
+        } catch(\Exception | \Swift_TransportException $e){
+            Log::warning('sendCompletedStatusEmail: '.$e->getMessage());
+        }
+
+        return $this->sendSuccess([
+            'message' => __('Booking has been completed successfully')
         ]);
     }
 }
