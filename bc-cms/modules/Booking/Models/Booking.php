@@ -442,7 +442,7 @@ class Booking extends BaseModel
         }
         return $data;
     }
-    public static function getBookingHistory($booking_status = false, $customer_id_or_name = false, $service = false , $from = false ,  $to = false )
+    public static function getBookingHistory($booking_status = false, $customer_id_or_name = false, $service = false , $from = false ,  $to = false, $booking_id = false )
     {
         $list_booking = parent::query()->with(['animal', 'creator', 'hotel.translation', 'hotelRooms'])->orderBy('id', 'desc');
 
@@ -470,13 +470,16 @@ class Booking extends BaseModel
                 $to." 23:59",
             ]);
         }
+        if (!empty($booking_id)) {
+            $list_booking->where("id", $booking_id);
+        }
 
         $list_booking->whereIn('object_model', array_keys(get_bookable_services()));
 
         return $list_booking->paginate(10);
     }
 
-    public static function getBookingHistoryForAdminBase($hotel_id, $booking_status = false)
+    public static function getBookingHistoryForAdminBase($hotel_id, $booking_status = false, $booking_id = false)
     {
         $list_booking = parent::query()->with(['animal', 'creator', 'hotel.translation', 'hotelRooms'])->orderBy('id', 'desc');
 
@@ -484,6 +487,9 @@ class Booking extends BaseModel
 
         if (!empty($booking_status)) {
             $list_booking->where("status", $booking_status);
+        }
+        if (!empty($booking_id)) {
+            $list_booking->where("id", $booking_id);
         }
 //        else{
 //            $list_booking->where('status','=','processing');

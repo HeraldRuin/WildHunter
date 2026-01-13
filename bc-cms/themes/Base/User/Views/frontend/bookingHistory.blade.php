@@ -27,6 +27,23 @@
                 @endif
             </ul>
 
+            @if(!empty($bookingId))
+                <div class="d-flex align-items-center justify-content-between mt-3 mb-3">
+{{--                    <span class="text-muted"><i class="fa fa-filter"></i> {{__("Showing filtered results for booking")}} #{{ $bookingId }}</span>--}}
+                    <div style="margin-right: 180px;">
+                        @php
+                            $clearAllUrl = route('user.booking_history');
+                            if (request()->has('user')) {
+                                $clearAllUrl .= '?user=' . request()->query('user');
+                            }
+                        @endphp
+                        <a href="{{ $clearAllUrl }}" class="btn btn-sm btn-outline-secondary">
+                            <i class="fa fa-times-circle"></i> {{__("Clear filter and show all bookings")}}
+                        </a>
+                    </div>
+                </div>
+            @endif
+
             @if(!empty($bookings) and $bookings->total() > 0)
                 <div class="tab-content" id="booking-history">
                     <div class="table-responsive table-width">
