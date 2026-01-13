@@ -3958,5 +3958,10 @@
     "Select bed place": "Выбрать койко-место",
     "Reservation successfully confirmed": "Бронь успешно подтверждена",
     "The gathering of hunters has begun": "Сбор охотников начат",
-    "Customer changed": "Заказчик изменён"
+    "Customer changed": "Заказчик изменён",
+    "Cancel booking": "Отменить бронирование",
+    "Are you sure you want to cancel this booking?": "Вы уверены, что хотите отменить это бронирование?",
+    "No, keep booking": "Нет, оставить бронь",
+    "Yes, cancel": "Да, отменить",
+    "Booking has been cancelled successfully": "Бронь успешно отменена"
 }
