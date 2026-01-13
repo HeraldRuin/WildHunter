@@ -3951,5 +3951,8 @@
     "Booking apply": "Подтвердить бронь",
     "Add services": "Добавить услуги",
     "Number cannot exceed maximum": "Число не может превышать максимальное",
-    "Number of rooms cannot exceed maximum": "Число комнат не должен превышать"
+    "Number of rooms cannot exceed maximum": "Число комнат не должен превышать",
+    "Base Name": "Охота.База",
+    "Open collection": "Открыть сбор",
+    "Select bed place": "Выбрать койко-место"
 }
