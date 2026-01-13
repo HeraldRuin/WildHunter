@@ -4,7 +4,7 @@
         <div class="d-flex align-items-center justify-content-between border-bottom" style="height: 90px;">
             <h2 class="m-0">{{ __("Booking History") }}</h2>
             @if($userRole === 'baseadmin')
-                <a href="/hotel/{{$hotelSlug}}?userRole=baseadmin" class="btn btn-primary text-nowrap" style="margin-right: 220px;" target="_blank">Создать событие</a>
+                <a href="/hotel/{{$hotelSlug}}?userRole=baseadmin" class="btn btn-success text-nowrap" style="margin-right: 220px;" target="_blank">Создать событие</a>
             @endif
         </div>
     </div>
