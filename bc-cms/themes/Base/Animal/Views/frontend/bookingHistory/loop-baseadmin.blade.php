@@ -4,24 +4,24 @@
     </td>
 
     <td class="a-hidden">{{display_date($booking->created_at)}}</td>
-        <td>
-<span
-    class="user-popover cursor-pointer user-link"
-    data-bs-toggle="popover"
-    data-bs-trigger="hover"
-    data-bs-html="true"
-    data-bs-placement="right"
-    data-bs-content="<strong>{{ $booking->creator->first_name }} {{ $booking->creator->last_name }}</strong><br>Email: {{ $booking->creator->email }}<br>Phone: {{ $booking->creator->phone }}"
-    @click="openUserModal({{ $booking->creator->id }}, {{ $booking->id }})">
-         {{ !empty($booking->creator->user_name) ? $booking->creator->user_name : $booking->creator->first_name }}
-</span>
-        </td>
+    <td>
+            <span
+                class="user-popover cursor-pointer user-link"
+                data-bs-toggle="popover"
+                data-bs-trigger="hover"
+                data-bs-html="true"
+                data-bs-placement="right"
+                data-bs-content="<strong>{{ $booking->creator->first_name }} {{ $booking->creator->last_name }}</strong><br>Email: {{ $booking->creator->email }}<br>Phone: {{ $booking->creator->phone }}"
+                @click="{{ $userRole !== 'hunter' ? "openUserModal({$booking->creator->id}, {$booking->id})" : '' }}">
+                {{ !empty($booking->creator->user_name) ? $booking->creator->user_name : $booking->creator->first_name }}
+            </span>
+    </td>
 
     <td class="type a-hidden">{{ $booking->typeText }}</td>
 
     <td class="a-hidden">
         @if($booking->type === 'animal')
-           <strong>Охота:</strong>
+            <strong>Охота:</strong>
             <div>
                 {{__("Hunting Date")}} : {{display_date($booking->start_date_animal)}} <br>
                 {{ __("Animals") }}:
@@ -58,7 +58,7 @@
     <td>{{format_money($booking->paid)}}</td>
     <td>{{format_money($booking->total - $booking->paid)}}</td>
     <td>
-        @if($booking->status === 'processing')
+        @if($userRole === 'baseadmin' && $booking->status === 'processing')
             <button type="button" class="btn btn-success" data-bs-toggle="modal"
                     data-bs-target="#confirmBookingModal{{ $booking->id }}">
                 {{ __("Booking apply") }}
@@ -127,45 +127,45 @@
     </div>
 </div>
 
-        <div class="modal fade" id="userModal" tabindex="-1">
-            <div class="modal-dialog modal-lg">
-                <div class="modal-content">
-                    <div class="modal-body">
-                        <label for="changeUserInput">Найти нового заказчика по нику или фамилии:</label>
-                        <input
-                            type="text"
-                            id="changeUserInput"
-                            v-model="userSearchQuery"
-                            class="form-control mb-2"
-                            placeholder="Введите ник пользователя"
-                            @input="searchUserDebounced">
+<div class="modal fade" id="userModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-body">
+                <label for="changeUserInput">Найти нового заказчика по нику или фамилии:</label>
+                <input
+                    type="text"
+                    id="changeUserInput"
+                    v-model="userSearchQuery"
+                    class="form-control mb-2"
+                    placeholder="Введите ник пользователя"
+                    @input="searchUserDebounced">
 
-                        <div v-if="searchResults.length" class="mt-2">
-                            <div
-                                v-for="user in searchResults"
-                                :key="user.id"
-                                class="d-flex align-items-center justify-content-between p-2 mb-2 border rounded shadow-sm"
-                                style="background-color: #f8f9fa;">
-                                <div>
-                                    <strong class="text-dark">@{{ user.user_name }}</strong><span>@{{ user.user_name ? '(ник)' : '(ник не задан)' }}</span>
-                                    <strong class="text-dark">@{{ user.first_name }}</strong><span>(фамилия)</span>
-                                    <br>
-                                </div>
-                                <button v-if="!selectedUser || selectedUser.id !== user.id" class="btn btn-sm btn-primary" @click="selectUser(user)">
-                                    Выбрать
-                                </button>
-                            </div>
+                <div v-if="searchResults.length" class="mt-2">
+                    <div
+                        v-for="user in searchResults"
+                        :key="user.id"
+                        class="d-flex align-items-center justify-content-between p-2 mb-2 border rounded shadow-sm"
+                        style="background-color: #f8f9fa;">
+                        <div>
+                            <strong class="text-dark">@{{ user.user_name }}</strong><span>@{{ user.user_name ? '(ник)' : '(ник не задан)' }}</span>
+                            <strong class="text-dark">@{{ user.first_name }}</strong><span>(фамилия)</span>
+                            <br>
                         </div>
-
-                        <div v-if="isSearching" class="text-muted">
-                            Поиск...
-                        </div>
-                        <div v-if="noResults" class="text-danger">
-                            Пользователь не найден
-                        </div>
-
-                        <button class="btn btn-primary mt-2" @click="saveUserChange">Сохранить</button>
+                        <button v-if="!selectedUser || selectedUser.id !== user.id" class="btn btn-sm btn-primary" @click="selectUser(user)">
+                            Выбрать
+                        </button>
                     </div>
                 </div>
+
+                <div v-if="isSearching" class="text-muted">
+                    Поиск...
+                </div>
+                <div v-if="noResults" class="text-danger">
+                    Пользователь не найден
+                </div>
+
+                <button class="btn btn-primary mt-2" @click="saveUserChange">Сохранить</button>
             </div>
         </div>
+    </div>
+</div>

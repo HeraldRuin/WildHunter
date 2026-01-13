@@ -32,6 +32,7 @@
                     <div class="table-responsive table-width">
                         <table class="table table-bordered  table-booking-history">
                             <thead>
+                            @if($userRole === 'baseadmin')
                             <tr>
                                 <th class="number-booking">{{__("Number Booking")}}</th>
                                 <th class="data-booking">{{__("Date Booking")}}</th>
@@ -43,17 +44,36 @@
                                 <th class="paid-booking">{{__("Paid Booking")}}</th>
                                 <th class="remnant-booking">{{__("Remnant Booking")}}</th>
                                 <th class="event-booking">{{__("Event Booking")}}</th>
-{{--                                <th class="a-hidden">{{__("Execution Time")}}</th>--}}
-{{--                                <th>{{__("Total")}}</th>--}}
-{{--                                <th>{{__("Paid")}}</th>--}}
-{{--                                <th>{{__("Remain")}}</th>--}}
-{{--                                <th class="a-hidden">{{__("Status")}}</th>--}}
-{{--                                <th>{{__("Event click")}}</th>--}}
                             </tr>
+                            @else
+                                <th class="number-booking">{{__("Number Booking")}}</th>
+                                <th class="data-booking">{{__("Date Booking")}}</th>
+                                <th class="client-booking">{{__("Base Name")}}</th>
+                                <th class="type-booking">{{__("Type Booking")}}</th>
+                                <th class="detail-booking">{{__("Detail Booking")}}</th>
+                                <th class="status-booking">{{__("Status Booking")}}</th>
+                                <th class="amount-booking">{{__("Amount Booking")}}</th>
+                                <th class="paid-booking">{{__("Paid Booking")}}</th>
+                                <th class="remnant-booking">{{__("Remnant Booking")}}</th>
+                                <th class="event-booking">{{__("Event Booking")}}</th>
+                            @endif
                             </thead>
                             <tbody>
                             @foreach($bookings as $booking)
-                                @include(ucfirst($booking->object_model).'::frontend.bookingHistory.loop')
+                                @php
+                                    if (in_array($booking->type, ['hotel', 'animal', 'hotel_animal'])) {
+                                        $loopFile = 'loop-' . $userRole;
+                                        if (in_array($booking->type, ['hotel', 'hotel_animal'])) {
+                                            $moduleName = 'Hotel';
+                                        } else {
+                                            $moduleName = 'Animal';
+                                        }
+                                    } else {
+                                        $loopFile = 'loop';
+                                        $moduleName = ucfirst($booking->object_model);
+                                    }
+                                @endphp
+                                @include($moduleName.'::frontend.bookingHistory.' . $loopFile)
                             @endforeach
                             </tbody>
                         </table>
