@@ -7,11 +7,13 @@ use Illuminate\Auth\Events\Registered;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 use Mockery\Exception;
 use Modules\Animals\Models\Animal;
+use Modules\Booking\Emails\StatusUpdatedEmail;
 use Modules\Booking\Events\BookingCreatedEvent;
 use Modules\Booking\Events\BookingUpdatedEvent;
 use Modules\Booking\Events\EnquirySendEvent;
@@ -801,6 +803,22 @@ class BookingController extends \App\Http\Controllers\Controller
         $booking->status = Booking::CONFIRMED;
         $booking->save();
 
+        try {
+            $old = app()->getLocale();
+            $bookingLocale = $booking->getMeta('locale');
+            if($bookingLocale){
+                app()->setLocale($bookingLocale);
+            }
+
+            if($booking->create_user) {
+                Mail::to(User::find($booking->create_user))->send(new StatusUpdatedEmail($booking, 'customer'));
+            }
+
+            app()->setLocale($old);
+        } catch(\Exception | \Swift_TransportException $e){
+            Log::warning('sendConfirmedStatusEmail: '.$e->getMessage());
+        }
+
         return $this->sendSuccess([
             'message' => __('Reservation successfully confirmed')
         ]);
@@ -818,6 +836,68 @@ class BookingController extends \App\Http\Controllers\Controller
 
         return $this->sendSuccess([
             'message' => __('The gathering of hunters has begun')
+        ]);
+    }
+
+    public function cancelBooking(Booking $booking)
+    {
+        if (!Auth::check()) {
+            return $this->sendError('Необходима авторизация')->setStatusCode(401);
+        }
+
+        // Проверяем права доступа: охотник может отменить только свои брони, админ базы - любые
+        if (!Auth::user()->hasPermission('dashboard_vendor_access')) {
+            // Для охотника проверяем, что это его бронь
+            if ($booking->customer_id != Auth::id() && $booking->create_user != Auth::id()) {
+                return $this->sendError(__("You don't have access."))->setStatusCode(403);
+            }
+        }
+
+        if (in_array($booking->status, [Booking::CANCELLED, Booking::COMPLETED])) {
+            return $this->sendError(__('This booking cannot be cancelled'));
+        }
+
+        $booking->status = Booking::CANCELLED;
+        $booking->save();
+        event(new BookingUpdatedEvent($booking));
+
+        try {
+            $old = app()->getLocale();
+            $bookingLocale = $booking->getMeta('locale');
+            if($bookingLocale){
+                app()->setLocale($bookingLocale);
+            }
+
+            // Определяем, кто отменяет бронь
+            $isBaseAdmin = Auth::user()->hasPermission('dashboard_vendor_access');
+            
+            if($isBaseAdmin) {
+                // Если отменяет админ базы - отправляем письмо охотнику
+                if($booking->create_user) {
+                    Mail::to(User::find($booking->create_user))->send(new StatusUpdatedEmail($booking, 'customer'));
+                }
+            } else {
+                // Если отменяет охотник - отправляем письмо администратору базы
+                // Загружаем связь hotel, если она не загружена
+                if(!$booking->relationLoaded('hotel')) {
+                    $booking->load('hotel');
+                }
+                
+                if($booking->hotel && $booking->hotel->admin_base) {
+                    $baseAdmin = User::find($booking->hotel->admin_base);
+                    if($baseAdmin && $baseAdmin->email) {
+                        Mail::to($baseAdmin->email)->send(new StatusUpdatedEmail($booking, 'admin'));
+                    }
+                }
+            }
+
+            app()->setLocale($old);
+        } catch(\Exception | \Swift_TransportException $e){
+            Log::warning('sendCancelledStatusEmail: '.$e->getMessage());
+        }
+
+        return $this->sendSuccess([
+            'message' => __('Booking has been cancelled successfully')
         ]);
     }
 }
