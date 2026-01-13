@@ -440,7 +440,7 @@ class Booking extends BaseModel
     }
     public static function getBookingHistory($booking_status = false, $customer_id_or_name = false, $service = false , $from = false ,  $to = false )
     {
-        $list_booking = parent::query()->with(['animal', 'creator', 'hotel', 'hotelRooms'])->orderBy('id', 'desc');
+        $list_booking = parent::query()->with(['animal', 'creator', 'hotel.translation', 'hotelRooms'])->orderBy('id', 'desc');
 
         if (!empty($booking_status)) {
             $list_booking->where("status", $booking_status);
@@ -474,7 +474,7 @@ class Booking extends BaseModel
 
     public static function getBookingHistoryForAdminBase($hotel_id, $booking_status = false)
     {
-        $list_booking = parent::query()->with(['animal', 'creator', 'hotel', 'hotelRooms'])->orderBy('id', 'desc');
+        $list_booking = parent::query()->with(['animal', 'creator', 'hotel.translation', 'hotelRooms'])->orderBy('id', 'desc');
 
         $list_booking->where('hotel_id', $hotel_id);
 
