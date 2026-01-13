@@ -64,7 +64,7 @@
                 {{ __("Booking apply") }}
             </button>
         @endif
-        @if($userRole === 'baseadmin' && $booking->status !== 'cancelled')
+            @if($userRole === 'baseadmin' && !in_array($booking->status, [\Modules\Booking\Models\Booking::CANCELLED, \Modules\Booking\Models\Booking::COMPLETED]))
             <button
                 type="button"
                 class="btn btn-primary btn-sm mt-2"
