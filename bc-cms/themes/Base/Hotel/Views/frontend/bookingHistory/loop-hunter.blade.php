@@ -6,7 +6,6 @@
     <td class="a-hidden">{{display_date($booking->created_at)}}</td>
 
     <td>
-        {{-- Для hunter показываем данные отеля без popover, но кликабельно --}}
         @if($booking->hotel)
             @php
                 $hotelTranslation = $booking->hotel->translate();
@@ -125,24 +124,28 @@
     <td>{{format_money($booking->paid)}}</td>
     <td>{{format_money($booking->total - $booking->paid)}}</td>
     <td>
-        @if($booking->status === 'confirmed')
-            <button
-                type="button"
-                class="btn btn-primary btn-sm mt-2"
-                @click="startCollection($event, {{ $booking->id }})">
-                {{__("Open collection")}}
-            </button>
-        @endif
-        <button
-            type="button"
-            class="btn btn-primary btn-sm mt-2"
-            data-bs-toggle="modal"
-            data-bs-target="#bookingAddServiceModal{{ $booking->id }}">
-            {{__("Add services")}}
-        </button>
-        <a href="{{ $booking->getDetailUrl() }}?select_place=1" target="_blank" class="btn btn-primary btn-sm mt-2">
-            {{__("Select bed place")}}
-        </a>
+            @if($booking->status === 'confirmed')
+                <button
+                    type="button"
+                    class="btn btn-primary btn-sm mt-2"
+                    @click="startCollection($event, {{ $booking->id }})">
+                    {{__("Open collection")}}
+                </button>
+            @endif
+            @if($userRole === 'hunter' && $booking->status !== 'cancelled')
+                <button
+                    type="button"
+                    class="btn btn-primary btn-sm mt-2"
+                    data-bs-toggle="modal"
+                    data-bs-target="#bookingAddServiceModal{{ $booking->id }}">
+                    {{__("Add services")}}
+                </button>
+            @endif
+            @if($userRole === 'hunter' && $booking->status !== 'cancelled')
+                <a href="{{ $booking->getDetailUrl() }}?select_place=1" target="_blank" class="btn btn-primary btn-sm mt-2">
+                    {{__("Select bed place")}}
+                </a>
+            @endif
         @if(!in_array($booking->status, [\Modules\Booking\Models\Booking::CANCELLED, \Modules\Booking\Models\Booking::COMPLETED]))
             <button
                 type="button"
