@@ -845,9 +845,9 @@ class BookingController extends \App\Http\Controllers\Controller
             return $this->sendError('Необходима авторизация')->setStatusCode(401);
         }
 
-        // Проверяем права доступа: охотник может отменить только свои брони, админ базы - любые
-        if (!Auth::user()->hasPermission('dashboard_vendor_access')) {
-            // Для охотника проверяем, что это его бронь
+        $isBaseAdmin = Auth::user()->hasRole('baseadmin') || Auth::user()->hasPermission('baseAdmin_dashboard_access');
+
+        if (!$isBaseAdmin && !Auth::user()->hasPermission('dashboard_vendor_access')) {
             if ($booking->customer_id != Auth::id() && $booking->create_user != Auth::id()) {
                 return $this->sendError(__("You don't have access."))->setStatusCode(403);
             }
@@ -868,21 +868,15 @@ class BookingController extends \App\Http\Controllers\Controller
                 app()->setLocale($bookingLocale);
             }
 
-            // Определяем, кто отменяет бронь
-            $isBaseAdmin = Auth::user()->hasPermission('dashboard_vendor_access');
-            
             if($isBaseAdmin) {
-                // Если отменяет админ базы - отправляем письмо охотнику
                 if($booking->create_user) {
                     Mail::to(User::find($booking->create_user))->send(new StatusUpdatedEmail($booking, 'customer'));
                 }
             } else {
-                // Если отменяет охотник - отправляем письмо администратору базы
-                // Загружаем связь hotel, если она не загружена
                 if(!$booking->relationLoaded('hotel')) {
                     $booking->load('hotel');
                 }
-                
+
                 if($booking->hotel && $booking->hotel->admin_base) {
                     $baseAdmin = User::find($booking->hotel->admin_base);
                     if($baseAdmin && $baseAdmin->email) {
