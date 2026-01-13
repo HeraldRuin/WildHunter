@@ -3963,5 +3963,7 @@
     "Are you sure you want to cancel this booking?": "Вы уверены, что хотите отменить это бронирование?",
     "No, keep booking": "Нет, оставить бронь",
     "Yes, cancel": "Да, отменить",
-    "Booking has been cancelled successfully": "Бронь успешно отменена"
+    "Booking has been cancelled successfully": "Бронь успешно отменена",
+    "Complete booking": "Завершить",
+    "Booking has been completed successfully": "Бронь успешно завершена"
 }
