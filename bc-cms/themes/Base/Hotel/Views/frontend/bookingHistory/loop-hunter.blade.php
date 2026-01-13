@@ -93,7 +93,12 @@
             </div>
         @endif
     </td>
-    <td class="{{$booking->status}} a-hidden">{{$booking->statusName}}</td>
+    <td class="{{$booking->status}} a-hidden">
+        <div>{{$booking->statusName}}</div>
+        @if($booking->status === \Modules\Booking\Models\Booking::START_COLLECTION && $booking->updated_at)
+            <div class="text-muted collection-timer" data-start="{{ $booking->updated_at->timestamp * 1000 }}">[0 мин]</div>
+        @endif
+    </td>
 
     <td class="price-cell">
         @if($booking->type === 'hotel')
@@ -120,9 +125,14 @@
     <td>{{format_money($booking->paid)}}</td>
     <td>{{format_money($booking->total - $booking->paid)}}</td>
     <td>
-        <a href="{{ $booking->getDetailUrl() }}" target="_blank" class="btn btn-primary btn-sm mt-2">
-            {{__("Open collection")}}
-        </a>
+        @if($booking->status === 'confirmed')
+            <button
+                type="button"
+                class="btn btn-primary btn-sm mt-2"
+                @click="startCollection($event, {{ $booking->id }})">
+                {{__("Open collection")}}
+            </button>
+        @endif
         <button
             type="button"
             class="btn btn-primary btn-sm mt-2"
@@ -133,8 +143,35 @@
         <a href="{{ $booking->getDetailUrl() }}?select_place=1" target="_blank" class="btn btn-primary btn-sm mt-2">
             {{__("Select bed place")}}
         </a>
+        @if(!in_array($booking->status, [\Modules\Booking\Models\Booking::CANCELLED, \Modules\Booking\Models\Booking::COMPLETED]))
+            <button
+                type="button"
+                class="btn btn-danger btn-sm mt-2"
+                data-bs-toggle="modal"
+                data-bs-target="#cancelBookingModal{{ $booking->id }}">
+                {{__("Cancel")}}
+            </button>
+        @endif
     </td>
 </tr>
+
+<div class="modal fade" id="cancelBookingModal{{ $booking->id }}" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">{{__('Cancel booking')}} #{{ $booking->id }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>{{__('Are you sure you want to cancel this booking?')}}</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{__('No, keep booking')}}</button>
+                <button type="button" class="btn btn-danger" @click="cancelBooking($event, {{ $booking->id }})">{{__('Yes, cancel')}}</button>
+            </div>
+        </div>
+    </div>
+</div>
 
 <div class="modal fade" id="bookingAddServiceModal{{ $booking->id }}" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-lg">
