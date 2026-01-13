@@ -715,6 +715,9 @@ function status_to_text($status)
         case "partial_payment":
             return __('Partial Payment');
             break;
+        case "collection":
+            return __('Collection');
+            break;
         case "fail":
         case "failed":
             return __('Failed');

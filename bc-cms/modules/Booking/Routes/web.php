@@ -12,6 +12,7 @@ Route::group(['prefix'=>config('booking.booking_route_prefix')],function(){
     Route::get('/{code}/check-status','BookingController@checkStatusCheckout');
     Route::post('/{booking}/change-user','BookingController@changeUserBooking');
     Route::post('/{booking}/confirm','BookingController@confirmBooking');
+    Route::post('/{booking}/start-collection','BookingController@startCollection');
 
 
     //ical

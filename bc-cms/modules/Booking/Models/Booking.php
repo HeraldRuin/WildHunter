@@ -35,6 +35,7 @@ class Booking extends BaseModel
     const DRAFT      = 'draft'; // New booking, before payment processing
     const UNPAID     = 'unpaid'; // Require payment
     const PROCESSING = 'processing'; // like offline - payment
+    const START_COLLECTION = 'collection';
     const CONFIRMED  = 'confirmed'; // after processing -> confirmed (for offline payment)
     const COMPLETED  = 'completed'; //
     const CANCELLED  = 'cancelled';
@@ -79,6 +80,9 @@ class Booking extends BaseModel
                 return "info";
                 break;
             case "partial_payment":
+                return "warning";
+                break;
+            case "collection":
                 return "warning";
                 break;
         }

@@ -786,7 +786,7 @@ class BookingController extends \App\Http\Controllers\Controller
         $booking->save();
 
         return $this->sendSuccess([
-            'message' => __('Заказчик изменён')
+            'message' => __('Customer changed')
         ]);
     }
 
@@ -802,7 +802,22 @@ class BookingController extends \App\Http\Controllers\Controller
         $booking->save();
 
         return $this->sendSuccess([
-            'message' => __('Бронь успешно подтверждена')
+            'message' => __('Reservation successfully confirmed')
+        ]);
+    }
+
+    public function startCollection(Booking $booking)
+    {
+        if (!Auth::check()) {
+            return $this->sendError('Необходима авторизация')->setStatusCode(401);
+        }
+
+        $booking->status = Booking::START_COLLECTION;
+        $booking->save();
+        event(new BookingUpdatedEvent($booking));
+
+        return $this->sendSuccess([
+            'message' => __('The gathering of hunters has begun')
         ]);
     }
 }
