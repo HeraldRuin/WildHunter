@@ -61,19 +61,38 @@
                             <tbody>
                             @foreach($bookings as $booking)
                                 @php
-                                    if (in_array($booking->type, ['hotel', 'animal', 'hotel_animal'])) {
+                                    $bookingType = $booking->type ?? null;
+                                    $objectModel = $booking->object_model ?? null;
+
+                                    $isHotel = in_array($bookingType, ['hotel', 'hotel_animal']) || $objectModel === 'hotel';
+                                    $isAnimal = $bookingType === 'animal' || $objectModel === 'animal';
+
+                                    if ($isHotel || $isAnimal) {
                                         $loopFile = 'loop-' . $userRole;
-                                        if (in_array($booking->type, ['hotel', 'hotel_animal'])) {
+                                        if ($isHotel) {
                                             $moduleName = 'Hotel';
                                         } else {
                                             $moduleName = 'Animal';
                                         }
                                     } else {
                                         $loopFile = 'loop';
-                                        $moduleName = ucfirst($booking->object_model);
+                                        if (!empty($objectModel)) {
+                                            $moduleName = ucfirst(strtolower($objectModel));
+                                        } else {
+                                            $moduleName = 'Booking';
+                                            $loopFile = 'detail';
+                                        }
                                     }
                                 @endphp
-                                @include($moduleName.'::frontend.bookingHistory.' . $loopFile)
+                                @if(view()->exists($moduleName.'::frontend.bookingHistory.' . $loopFile))
+                                    @include($moduleName.'::frontend.bookingHistory.' . $loopFile)
+                                @else
+                                    <tr>
+                                        <td colspan="10" class="text-center text-danger">
+                                            {{__("View not found for booking type")}}: {{ $bookingType ?? $objectModel ?? 'unknown' }}
+                                        </td>
+                                    </tr>
+                                @endif
                             @endforeach
                             </tbody>
                         </table>
