@@ -213,14 +213,15 @@ class UserController extends FrontendController
         $cabinetData = $this->cabinetService->getCabinetData();
 
         $authUser = Auth::user();
+        $bookingId = $request->input('booking_id');
 
         if ($authUser->hasRole('baseadmin')){
             $userRole = 'baseadmin';
             $hotelId = $authUser->hotels->first()->id;
-            $bookings = $this->booking->getBookingHistoryForAdminBase($hotelId, $request->input('status'));
+            $bookings = $this->booking->getBookingHistoryForAdminBase($hotelId, $request->input('status'), $bookingId);
         }else {
             $userRole = 'hunter';
-            $bookings = $this->booking->getBookingHistory($request->input('status'), $authUser->id);
+            $bookings = $this->booking->getBookingHistory($request->input('status'), $authUser->id, false, false, false, $bookingId);
         }
 
         $allStatuses = config('booking.statuses');
@@ -238,6 +239,7 @@ class UserController extends FrontendController
             'bookings' => $bookings,
             'hotelSlug' => $authUser->hotels?->first()?->slug,
             'statues'     => $statuses,
+            'bookingId' => $bookingId,
             'breadcrumbs' => [
                 [
                     'name'  => __('Booking History'),

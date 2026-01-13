@@ -353,6 +353,7 @@
                     $(info.el).find('.booking-id').each(function() {
                         const idText = $(this).text().replace('Б', '');
                         const bookingCode = $(this).data('code');
+                        const bookingId = $(this).data('id');
                         $(this).css({
                             'color': '#2791fe',
                             'cursor': 'pointer',
@@ -362,7 +363,10 @@
                         $(this).off('click').on('click', function(e) {
                             e.stopPropagation();
                             let url = `/user/booking-history/?user={{ $user->id }}`;
-                            window.open(url, '_blank');
+                            if (bookingId) {
+                                url += '&booking_id=' + bookingId;
+                            }
+                            window.location.href = url;
 
                             // Загружаем данные через AJAX и открываем новое модальное окно
                             // $('#modalBookingId').text('Б' + idText);
