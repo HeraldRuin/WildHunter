@@ -3965,5 +3965,7 @@
     "Yes, cancel": "Да, отменить",
     "Booking has been cancelled successfully": "Бронь успешно отменена",
     "Complete booking": "Завершить",
-    "Booking has been completed successfully": "Бронь успешно завершена"
+    "Booking has been completed successfully": "Бронь успешно завершена",
+    "Showing filtered results for booking": "Показаны отфильтрованные результаты для брони",
+    "Clear filter and show all bookings": "Очистить фильтр и показать все брони"
 }
