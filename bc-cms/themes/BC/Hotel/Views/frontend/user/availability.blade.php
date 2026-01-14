@@ -366,7 +366,7 @@
                             if (bookingId) {
                                 url += '&booking_id=' + bookingId;
                             }
-                            window.location.href = url;
+                            window.open(url, '_blank');
 
                             // Загружаем данные через AJAX и открываем новое модальное окно
                             // $('#modalBookingId').text('Б' + idText);
