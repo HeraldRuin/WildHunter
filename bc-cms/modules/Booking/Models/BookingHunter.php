@@ -15,6 +15,7 @@ class BookingHunter extends Model
         'booking_id',
         'invited_by',
         'is_master',
+        'creator_role',
         'note',
     ];
 
