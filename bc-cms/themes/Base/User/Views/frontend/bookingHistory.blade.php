@@ -13,6 +13,7 @@
     @include('admin.message')
     <div class="booking-history-manager">
         <div class="tabbable">
+            @if(empty($bookingId))
             <ul class="nav nav-tabs ht-nav-tabs">
                 <?php $status_type = Request::query('status'); ?>
                 <li class="@if(empty($status_type)) active @endif">
@@ -26,6 +27,7 @@
                     @endforeach
                 @endif
             </ul>
+            @endif
 
             @if(!empty($bookingId))
                 <div class="d-flex align-items-center justify-content-between mt-3 mb-3">
