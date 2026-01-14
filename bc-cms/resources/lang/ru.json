@@ -619,7 +619,7 @@
     "Booking Detail": "\u0414\u0435\u0442\u0430\u043b\u0438 \u0431\u0440\u043e\u043d\u0438\u0440\u043e\u0432\u0430\u043d\u0438\u044f",
     "Booking Details": "\u0414\u0435\u0442\u0430\u043b\u0438 \u0431\u0440\u043e\u043d\u0438\u0440\u043e\u0432\u0430\u043d\u0438\u044f",
     "Booking details has been sent to:": "\u0418\u043d\u0444\u043e\u0440\u043c\u0430\u0446\u0438\u044f \u043e \u0431\u0440\u043e\u043d\u0438\u0440\u043e\u0432\u0430\u043d\u0438\u0438 \u043e\u0442\u043f\u0440\u0430\u0432\u043b\u0435\u043d\u0430 \u043f\u043e \u0430\u0434\u0440\u0435\u0441\u0443:",
-    "Booking History": "\u0418\u0441\u0442\u043e\u0440\u0438\u044f \u0431\u0440\u043e\u043d\u0438\u0440\u043e\u0432\u0430\u043d\u0438\u044f",
+    "Booking History": "Бронирования",
     "Booking ID": "\u0418\u0434\u0435\u043d\u0442\u0438\u0444\u0438\u043a\u0430\u0442\u043e\u0440 \u0431\u0440\u043e\u043d\u0438\u0440\u043e\u0432\u0430\u043d\u0438\u044f",
     "Booking ID: #": "\u0418\u0434\u0435\u043d\u0442\u0438\u0444\u0438\u043a\u0430\u0442\u043e\u0440 \u0431\u0440\u043e\u043d\u0438\u0440\u043e\u0432\u0430\u043d\u0438\u044f: #",
     "Booking not found": "\u0411\u0440\u043e\u043d\u044c \u043d\u0435 \u043d\u0430\u0439\u0434\u0435\u043d\u0430",
@@ -3967,5 +3967,14 @@
     "Complete booking": "Завершить",
     "Booking has been completed successfully": "Бронь успешно завершена",
     "Showing filtered results for booking": "Показаны отфильтрованные результаты для брони",
-    "Clear filter and show all bookings": "Очистить фильтр и показать все брони"
+    "Clear filter and show all bookings": "Очистить фильтр и показать все брони",
+    "Find by nickname or last name": "Найти по нику или фамилии",
+    "Start typing nickname or last name": "Начните вводить ник или фамилию",
+    "Open collection for booking": "Открыть сбор для брони",
+    "Extend collection": "Продлить сбор",
+    "Cancel collection": "Отменить сбор",
+    "Finish collection": "Завершить сбор",
+    "Hunter nickname / name": "Ник / имя охотника",
+    "Searching...": "Поиск...",
+    "Hunters not found": "Охотники не найдены"
 }
