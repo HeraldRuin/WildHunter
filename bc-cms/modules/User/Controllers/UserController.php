@@ -215,6 +215,8 @@ class UserController extends FrontendController
         $authUser = Auth::user();
         $bookingId = $request->input('booking_id');
 
+        $isMasterHunter = false;
+
         if ($authUser->hasRole('baseadmin')){
             $userRole = 'baseadmin';
             $hotelId = $authUser->hotels->first()->id;
@@ -238,8 +240,9 @@ class UserController extends FrontendController
             'userRole' => $userRole,
             'bookings' => $bookings,
             'hotelSlug' => $authUser->hotels?->first()?->slug,
-            'statues'     => $statuses,
+            'statues'     => config('booking.statuses'),
             'bookingId' => $bookingId,
+            'isMasterHunter' => $isMasterHunter,
             'breadcrumbs' => [
                 [
                     'name'  => __('Booking History'),

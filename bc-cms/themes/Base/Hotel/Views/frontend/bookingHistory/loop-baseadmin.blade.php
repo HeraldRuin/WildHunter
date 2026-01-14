@@ -97,7 +97,12 @@
             </div>
         @endif
     </td>
-    <td class="{{$booking->status}} a-hidden">{{$booking->statusName}}</td>
+    <td class="{{$booking->status}} a-hidden">
+        <div>{{$booking->statusName}}</div>
+        @if($booking->status === \Modules\Booking\Models\Booking::START_COLLECTION && $booking->updated_at)
+            <div class="text-muted collection-timer" data-start="{{ $booking->updated_at->timestamp * 1000 }}">[0 мин]</div>
+        @endif
+    </td>
 
     <td class="price-cell">
         @if($booking->type === 'hotel')
