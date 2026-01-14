@@ -81,48 +81,48 @@
                                     {{ __('Available for booking?') }}</label>
                             </div>
                         </div>
-                        <div class="col-md-12">
-                            <div class="form-group mb-1">
-                                <label>{{ __('Day of week') }}</label>
-                            </div>
-                            <div class="form-group">
-                                <div class="form-check form-check-inline">
-                                    <input class="form-check-input" type="checkbox" v-model="form.day_of_week_select"
-                                        id="monday" value="1">
-                                    <label class="form-check-label" for="monday">{{ __('Monday') }}</label>
-                                </div>
-                                <div class="form-check form-check-inline">
-                                    <input class="form-check-input" type="checkbox" v-model="form.day_of_week_select"
-                                        id="tuesday" value="2">
-                                    <label class="form-check-label" for="tuesday">{{ __('Tuesday') }}</label>
-                                </div>
-                                <div class="form-check form-check-inline">
-                                    <input class="form-check-input" type="checkbox" v-model="form.day_of_week_select"
-                                        id="wednesday" value="3">
-                                    <label class="form-check-label" for="wednesday">{{ __('Wednesday') }}</label>
-                                </div>
-                                <div class="form-check form-check-inline">
-                                    <input class="form-check-input" type="checkbox" v-model="form.day_of_week_select"
-                                        id="thursday" value="4">
-                                    <label class="form-check-label" for="thursday">{{ __('Thursday') }}</label>
-                                </div>
-                                <div class="form-check form-check-inline">
-                                    <input class="form-check-input" type="checkbox" v-model="form.day_of_week_select"
-                                        id="friday" value="5">
-                                    <label class="form-check-label" for="friday">{{ __('Friday') }}</label>
-                                </div>
-                                <div class="form-check form-check-inline">
-                                    <input class="form-check-input" type="checkbox" v-model="form.day_of_week_select"
-                                        id="saturday" value="6">
-                                    <label class="form-check-label" for="saturday">{{ __('Saturday') }}</label>
-                                </div>
-                                <div class="form-check form-check-inline">
-                                    <input class="form-check-input" type="checkbox" v-model="form.day_of_week_select"
-                                        id="sunday" value="7">
-                                    <label class="form-check-label" for="sunday">{{ __('Sunday') }}</label>
-                                </div>
-                            </div>
-                        </div>
+{{--                        <div class="col-md-12">--}}
+{{--                            <div class="form-group mb-1">--}}
+{{--                                <label>{{ __('Day of week') }}</label>--}}
+{{--                            </div>--}}
+{{--                            <div class="form-group">--}}
+{{--                                <div class="form-check form-check-inline">--}}
+{{--                                    <input class="form-check-input" type="checkbox" v-model="form.day_of_week_select"--}}
+{{--                                        id="monday" value="1">--}}
+{{--                                    <label class="form-check-label" for="monday">{{ __('Monday') }}</label>--}}
+{{--                                </div>--}}
+{{--                                <div class="form-check form-check-inline">--}}
+{{--                                    <input class="form-check-input" type="checkbox" v-model="form.day_of_week_select"--}}
+{{--                                        id="tuesday" value="2">--}}
+{{--                                    <label class="form-check-label" for="tuesday">{{ __('Tuesday') }}</label>--}}
+{{--                                </div>--}}
+{{--                                <div class="form-check form-check-inline">--}}
+{{--                                    <input class="form-check-input" type="checkbox" v-model="form.day_of_week_select"--}}
+{{--                                        id="wednesday" value="3">--}}
+{{--                                    <label class="form-check-label" for="wednesday">{{ __('Wednesday') }}</label>--}}
+{{--                                </div>--}}
+{{--                                <div class="form-check form-check-inline">--}}
+{{--                                    <input class="form-check-input" type="checkbox" v-model="form.day_of_week_select"--}}
+{{--                                        id="thursday" value="4">--}}
+{{--                                    <label class="form-check-label" for="thursday">{{ __('Thursday') }}</label>--}}
+{{--                                </div>--}}
+{{--                                <div class="form-check form-check-inline">--}}
+{{--                                    <input class="form-check-input" type="checkbox" v-model="form.day_of_week_select"--}}
+{{--                                        id="friday" value="5">--}}
+{{--                                    <label class="form-check-label" for="friday">{{ __('Friday') }}</label>--}}
+{{--                                </div>--}}
+{{--                                <div class="form-check form-check-inline">--}}
+{{--                                    <input class="form-check-input" type="checkbox" v-model="form.day_of_week_select"--}}
+{{--                                        id="saturday" value="6">--}}
+{{--                                    <label class="form-check-label" for="saturday">{{ __('Saturday') }}</label>--}}
+{{--                                </div>--}}
+{{--                                <div class="form-check form-check-inline">--}}
+{{--                                    <input class="form-check-input" type="checkbox" v-model="form.day_of_week_select"--}}
+{{--                                        id="sunday" value="7">--}}
+{{--                                    <label class="form-check-label" for="sunday">{{ __('Sunday') }}</label>--}}
+{{--                                </div>--}}
+{{--                            </div>--}}
+{{--                        </div>--}}
                         <div class="col-md-6" v-show="form.active">
                             <div class="form-group">
                                 <label>{{ __('Price') }}</label>
