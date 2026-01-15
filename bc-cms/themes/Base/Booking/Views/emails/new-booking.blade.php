@@ -22,7 +22,25 @@
 
             @include($service->email_new_booking_file ?? '')
         </div>
-        @include('Booking::emails.parts.panel-customer')
-        @include('Booking::emails.parts.panel-passengers')
+
+        @php
+            $showCustomerPanel = true;
+
+            if ($to === 'customer') {
+                $userId = $booking->customer_id ?? $booking->create_user ?? null;
+
+                if ($userId) {
+                    $emailCustomerUser = \App\User::find($userId);
+                    if ($emailCustomerUser && $emailCustomerUser->hasRole('hunter')) {
+                        $showCustomerPanel = false;
+                    }
+                }
+            }
+        @endphp
+
+        @if($showCustomerPanel)
+            @include('Booking::emails.parts.panel-customer')
+        @endif
+{{--        @include('Booking::emails.parts.panel-passengers')--}}
     </div>
 @endsection
