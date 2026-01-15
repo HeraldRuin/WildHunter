@@ -11,7 +11,10 @@
         public function handle(BookingUpdatedEvent $event)
         {
             $booking = $event->booking;
-            $booking->sendStatusUpdatedEmails();
+
+            if (empty($booking->skip_status_email)) {
+                $booking->sendStatusUpdatedEmails();
+            }
 
             //case guest checkout
             if(!Auth::id()){

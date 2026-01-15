@@ -26,10 +26,11 @@ $lang_local = app()->getLocale();
             </tr>
         @endif
         <tr>
-            <td class="label">{{__('Hotel name')}}</td>
+            <td class="label">{{__('Car name')}}</td>
             <td class="val">
                 <a href="{{$service->getDetailUrl()}}">{!! clean($translation->title) !!}</a>
             </td>
+
         </tr>
         <tr>
             @if($translation->address)
@@ -41,19 +42,19 @@ $lang_local = app()->getLocale();
         </tr>
         @if($booking->start_date && $booking->end_date)
             <tr>
-                <td class="label">{{__('Check in')}}</td>
+                <td class="label">{{__('Start date')}}</td>
                 <td class="val">{{display_date($booking->start_date)}}</td>
             </tr>
             <tr>
-                <td class="label">{{__('Check out:')}}</td>
+                <td class="label">{{__('End date:')}}</td>
                 <td class="val">
                     {{display_date($booking->end_date)}}
                 </td>
             </tr>
             <tr>
-                <td class="label">{{__('Nights:')}}</td>
+                <td class="label">{{__('Days:')}}</td>
                 <td class="val">
-                    {{$booking->duration_nights}}
+                    {{$booking->duration_days}}
                 </td>
             </tr>
         @endif
@@ -78,18 +79,18 @@ $lang_local = app()->getLocale();
             <td class="label">{{__('Pricing')}}</td>
             <td class="val">
                 <table class="pricing-list" width="100%">
-                    @php $rooms = \Modules\Hotel\Models\HotelRoomBooking::getByBookingId($booking->id) @endphp
-                    @if(!empty($rooms))
-                        @foreach($rooms as $room)
-                            <tr>
-                                <td class="label">{{$room->room->title}} * {{$room->number}}
-                                    :</td>
-                                <td class="val no-r-padding">
-                                    <strong>{{format_money($room->price * $room->number)}}</strong>
-                                </td>
-                            </tr>
-                        @endforeach
-                    @endif
+                    <tr>
+                        <td class="label">{{format_money($booking->total_before_fees/$booking->duration_days)}} *
+                            @if($booking->duration_days <= 1)
+                                {{__(':count day',['count'=>$booking->duration_days])}}
+                            @else
+                                {{__(':count days',['count'=>$booking->duration_days])}}
+                            @endif
+                            :</td>
+                        <td class="val no-r-padding">
+                            <strong>{{format_money($booking->total_before_fees)}}</strong>
+                        </td>
+                    </tr>
                     @php $extra_price = $booking->getJsonMeta('extra_price')@endphp
 
                     @if(!empty($extra_price))
@@ -174,10 +175,10 @@ $lang_local = app()->getLocale();
             <td class="val fsz21"><strong style="color: #FA5636">{{format_money($booking->paid)}}</strong></td>
         </tr>
         @if($booking->total > $booking->paid)
-            <tr>
-                <td class="label fsz21">{{__('Remain')}}</td>
-                <td class="val fsz21"><strong style="color: #FA5636">{{format_money($booking->total - $booking->paid)}}</strong></td>
-            </tr>
+        <tr>
+            <td class="label fsz21">{{__('Remain')}}</td>
+            <td class="val fsz21"><strong style="color: #FA5636">{{format_money($booking->total - $booking->paid)}}</strong></td>
+        </tr>
         @endif
     </table>
 </div>

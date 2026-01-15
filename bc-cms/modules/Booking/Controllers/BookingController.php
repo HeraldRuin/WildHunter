@@ -873,6 +873,8 @@ class BookingController extends \App\Http\Controllers\Controller
 
         $booking->status = Booking::CANCELLED;
         $booking->save();
+
+        $booking->skip_status_email = true;
         event(new BookingUpdatedEvent($booking));
 
         try {
@@ -896,6 +898,10 @@ class BookingController extends \App\Http\Controllers\Controller
                     if($baseAdmin && $baseAdmin->email) {
                         Mail::to($baseAdmin->email)->send(new StatusUpdatedEmail($booking, 'admin'));
                     }
+                }
+
+                if (!empty($booking->email)) {
+                    Mail::to($booking->email)->send(new StatusUpdatedEmail($booking, 'customer'));
                 }
             }
 
