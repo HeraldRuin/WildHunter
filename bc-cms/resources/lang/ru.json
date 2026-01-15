@@ -3969,13 +3969,14 @@
     "Booking has been completed successfully": "Бронь успешно завершена",
     "Showing filtered results for booking": "Показаны отфильтрованные результаты для брони",
     "Clear filter and show all bookings": "Очистить фильтр и показать все брони",
-    "Find by nickname or last name": "Найти по нику или фамилии",
-    "Start typing nickname or last name": "Начните вводить ник или фамилию",
+    "Find by nickname or last name": "Найти по нику, фамилии или email",
+    "Start typing nickname or last name": "Начните вводить ник, фамилию или email",
     "Open collection for booking": "Открыть сбор для брони",
     "Extend collection": "Продлить сбор",
     "Cancel collection": "Отменить сбор",
     "Finish collection": "Завершить сбор",
     "Hunter nickname / name": "Ник / имя охотника",
     "Searching...": "Поиск...",
-    "Hunters not found": "Охотники не найдены"
+    "Hunters not found": "Охотники не найдены",
+    "Invite": "Пригласить"
 }
