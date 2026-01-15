@@ -18,6 +18,7 @@ use Modules\Booking\Events\BookingCreatedEvent;
 use Modules\Booking\Events\BookingUpdatedEvent;
 use Modules\Booking\Events\EnquirySendEvent;
 use Modules\Booking\Events\SetPaidAmountEvent;
+use Modules\Booking\Models\BookingHunter;
 use Modules\Booking\Models\BookingPassenger;
 use Modules\User\Events\SendMailUserRegistered;
 use Illuminate\Http\Request;
@@ -786,6 +787,19 @@ class BookingController extends \App\Http\Controllers\Controller
 
         $booking->create_user = $userId;
         $booking->save();
+
+        if ($userId) {
+            $user = User::find($userId);
+            if ($user) {
+                $bookingHunter = BookingHunter::where('booking_id', $booking->id)->first();
+                if ($bookingHunter) {
+                    $bookingHunter->invited_by = $userId;
+                    $bookingHunter->is_master = $user->hasRole('hunter');
+                    $bookingHunter->creator_role = $user->role->code ?? null;
+                    $bookingHunter->save();
+                }
+            }
+        }
 
         return $this->sendSuccess([
             'message' => __('Customer changed')
