@@ -327,6 +327,22 @@
                         ' <i class="fa fa-long-arrow-right" style="font-size: inherit"></i> ' +
                         picker.endDate.format(bookingCore.date_format);
 
+                    // Ограничиваем календарь охоты датами проживания
+                    var animalPicker = $(this.$refs.animalStartDate).data('daterangepicker');
+                    if (animalPicker) {
+                        animalPicker.minDate = picker.startDate.clone();
+                        animalPicker.maxDate = picker.endDate.clone().subtract(1, 'day');
+                        // Если текущая выбранная дата охоты выходит за диапазон — сбрасываем
+                        if (this.start_date_animal) {
+                            var hunt = moment(this.start_date_animal, 'YYYY-MM-DD');
+                            if (hunt.isBefore(animalPicker.minDate) || hunt.isAfter(animalPicker.maxDate)) {
+                                this.start_date_animal = '';
+                                this.start_date_animal_html = bookingCoreApp && bookingCoreApp.i18n && bookingCoreApp.i18n.select_date
+                                    ? bookingCoreApp.i18n.select_date
+                                    : 'Выберите пожалуйста';
+                            }
+                        }
+                    }
                 });
             });
 
@@ -493,9 +509,10 @@
 			},
             checkAvailabilityForAnimal:function () {
                 var me  = this;
-                me.animalPrice = 0
+                me.animalPrice = 0;
+
                 if(!this.start_date_animal){
-                    bookingCoreApp.showError( 'Пожалуйста, выберите дату');
+                    bookingCoreApp.showError('Пожалуйста, выберите дату охоты');
                     return;
                 }
 
@@ -504,18 +521,40 @@
                     return;
                 }
 
+                // Проверяем диапазон дат проживания ТОЛЬКО если выбраны даты проживания
+                // Если выбрано только животное (без номера) - проверку не делаем
+                if (this.start_date && this.end_date) {
+                    var stayStart = moment(this.start_date, 'YYYY-MM-DD');
+                    var stayEnd = moment(this.end_date, 'YYYY-MM-DD'); // дата выезда
+                    var huntDate = moment(this.start_date_animal, 'YYYY-MM-DD');
+
+                    // Дата охоты должна быть в интервале [заезд; выезд)
+                    if (huntDate.isBefore(stayStart) || !huntDate.isBefore(stayEnd)) {
+                        bookingCoreApp.showError('Дата охоты должна быть в пределах дат проживания');
+                        return;
+                    }
+                }
+
                 this.onLoadAnimalAvailability = true;
 
-                $.ajax({
+                // Формируем данные для запроса
+                var requestData = {
+                    hotel_id: this.id,
+                    animal_id: this.getSelectAnimalId(),
+                    start_date: this.start_date_animal,
+                    firstLoad: me.firstLoad,
+                    adults: this.adults,
+                };
 
+                // Передаем даты проживания только если они выбраны
+                if (this.start_date && this.end_date) {
+                    requestData.start_date_hotel = this.start_date;
+                    requestData.end_date_hotel = this.end_date;
+                }
+
+                $.ajax({
                     url:bookingCore.module.animal+'/checkAvailability',
-                    data:{
-                        hotel_id:this.id,
-                        animal_id:this.getSelectAnimalId(),
-                        start_date:this.start_date_animal,
-                        firstLoad:me.firstLoad,
-                        adults:this.adults,
-                    },
+                    data: requestData,
                     method:'post',
                     success:function (json) {
                         me.onLoadAnimalAvailability = false;
@@ -523,8 +562,8 @@
 
                         if (json.available === true) {
                             me.animalCheckPassed = true;
-                            me.animalPrice = json.price
-                            me.hunterCount = json.adults
+                            me.animalPrice = json.price;
+                            me.hunterCount = json.adults;
                         }
 
                         if(json.message){
@@ -546,6 +585,32 @@
 
                 if(e && e.preventDefault) e.preventDefault();
                 if(this.onSubmit) return false;
+
+                // --- ДОПОЛНИТЕЛЬНАЯ ПРОВЕРКА ДЛЯ ЖИВОТНОГО ---
+                // Если выбрано животное, запрещаем продолжать,
+                // пока не была выполнена проверка доступности (кнопкой «Проверить наличие»)
+                var animalId = Number(this.getSelectAnimalId() || 0);
+                if (animalId > 0 && !options.skipValidate) {
+                    if (!this.start_date_animal) {
+                        bookingCoreApp.showError('Пожалуйста, выберите дату охоты');
+                        return false;
+                    }
+                    if (!this.animalCheckPassed) {
+                        bookingCoreApp.showError('Пожалуйста, сначала проверьте доступность выбранного животного');
+                        return false;
+                    }
+                    // Если выбраны и номера, и животное - проверяем диапазон дат проживания
+                    if (this.start_date && this.end_date) {
+                        var stayStart = moment(this.start_date, 'YYYY-MM-DD');
+                        var stayEnd = moment(this.end_date, 'YYYY-MM-DD');
+                        var huntDate = moment(this.start_date_animal, 'YYYY-MM-DD');
+                        if (huntDate.isBefore(stayStart) || !huntDate.isBefore(stayEnd)) {
+                            bookingCoreApp.showError('Дата охоты должна быть в пределах дат проживания');
+                            return false;
+                        }
+                    }
+                }
+
                 if (!options.skipValidate && !this.validate()) return false;
 
                 this.onSubmit = true;

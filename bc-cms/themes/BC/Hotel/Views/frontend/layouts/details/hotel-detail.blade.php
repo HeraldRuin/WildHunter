@@ -335,7 +335,7 @@
             {{__("No room available with your selected date. Please change your search critical")}}
         </div>
     </div>
-    @include('Hotel::frontend.layouts.details.hotel-animals')
+        @include('Hotel::frontend.layouts.details.hotel-animals')
             <div class="pt-2">
                 <div v-if="total_price > 0 || animalCheckPassed">
                     <button type="button" class="btn btn-primary w-100"

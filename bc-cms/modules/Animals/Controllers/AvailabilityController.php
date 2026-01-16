@@ -177,6 +177,8 @@ class AvailabilityController extends FrontendController{
         $hotel_id = \request('hotel_id');
         $start_date = request('start_date');
         $adults = request('adults');
+        $start_date_hotel = request('start_date_hotel');
+        $end_date_hotel = request('end_date_hotel');
 
         if(\request()->input('firstLoad') == "false") {
             $rules = [
@@ -192,6 +194,19 @@ class AvailabilityController extends FrontendController{
 
             if(empty($start_date)){
                 return $this->sendError(__("Please select a date"));
+            }
+        }
+
+        // ДОПОЛНИТЕЛЬНАЯ ПРОВЕРКА: если выбраны даты проживания, проверяем диапазон
+        // Если выбрано только животное (без номера) - проверку не делаем
+        if ($start_date_hotel && $end_date_hotel) {
+            $stayStart = Carbon::parse($start_date_hotel)->startOfDay();
+            $stayEnd = Carbon::parse($end_date_hotel)->startOfDay();
+            $huntDate = Carbon::parse($start_date)->startOfDay();
+
+            // Дата охоты должна быть >= даты заезда И < даты выезда
+            if ($huntDate->lt($stayStart) || $huntDate->gte($stayEnd)) {
+                return $this->sendError('Дата охоты должна быть в пределах дат проживания');
             }
         }
 
