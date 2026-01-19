@@ -92,9 +92,9 @@
             </div>
         @endif
     </td>
-    <td class="{{$booking->status}} a-hidden">
-        <div>{{$booking->statusName}}</div>
-        @if($booking->status === \Modules\Booking\Models\Booking::START_COLLECTION && $booking->updated_at)
+    <td class="{{$booking->status_for_user}} a-hidden">
+        <div>{{$booking->statusNameForUser}}</div>
+        @if($booking->status_for_user === \Modules\Booking\Models\Booking::START_COLLECTION && $booking->updated_at)
             <div class="text-muted collection-timer" data-start="{{ $booking->updated_at->timestamp * 1000 }}">[0 мин]</div>
         @endif
     </td>
@@ -124,11 +124,30 @@
     <td>{{format_money($booking->paid)}}</td>
     <td>{{format_money($booking->total - $booking->paid)}}</td>
     <td>
+        @php
+            $isInvited = $booking->isInvited();
+            $isCollectionStatus = $booking->status_for_user === \Modules\Booking\Models\Booking::START_COLLECTION;
+        @endphp
+
+        @if($isInvited && $isCollectionStatus)
+            {{-- Для приглашенного охотника в статусе "сбор охотников" показываем только кнопку "Открыть приглашение" --}}
+            <button
+                type="button"
+                class="btn btn-primary btn-sm mt-2"
+                data-bs-toggle="modal"
+                data-bs-target="#invitationModal{{ $booking->id }}"
+                onclick="openInvitationModal({{ $booking->id }})">
+                {{__("Open invitation")}}
+            </button>
+        @else
+            {{-- Обычные кнопки для создателя брони или вендора --}}
             @if($booking->status === 'confirmed')
                 <button
                     type="button"
                     class="btn btn-primary btn-sm mt-2"
-                    @click="startCollection($event, {{ $booking->id }})">
+                    data-bs-toggle="modal"
+                    data-bs-target="#collectionModal{{ $booking->id }}"
+                    @click="openCollectionModal({{ $booking->id }})">
                     {{__("Open collection")}}
                 </button>
             @endif
@@ -146,18 +165,29 @@
                     {{__("Select bed place")}}
                 </a>
             @endif
-        @if(!in_array($booking->status, [\Modules\Booking\Models\Booking::CANCELLED, \Modules\Booking\Models\Booking::COMPLETED]))
-            <button
-                type="button"
-                class="btn btn-danger btn-sm mt-2"
-                data-bs-toggle="modal"
-                data-bs-target="#cancelBookingModal{{ $booking->id }}">
-                {{__("Cancel")}}
-            </button>
+            @if(!in_array($booking->status, [\Modules\Booking\Models\Booking::CANCELLED, \Modules\Booking\Models\Booking::COMPLETED]))
+                <button
+                    type="button"
+                    class="btn btn-danger btn-sm mt-2"
+                    data-bs-toggle="modal"
+                    data-bs-target="#cancelBookingModal{{ $booking->id }}">
+                    {{__("Cancel")}}
+                </button>
+            @endif
         @endif
     </td>
 </tr>
 
+{{-- Модальное окно для сбора охотников --}}
+@include('Booking::frontend.collection-modal', ['booking' => $booking])
+
+{{-- Модальное окно для добавления услуг --}}
+@include('Booking::frontend.add-services-modal', ['booking' => $booking])
+
+{{-- Модальное окно для просмотра приглашения --}}
+@include('Booking::frontend.invitation-modal', ['booking' => $booking])
+
+{{-- Отмена бронирования --}}
 <div class="modal fade" id="cancelBookingModal{{ $booking->id }}" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -170,115 +200,6 @@
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{__('No, keep booking')}}</button>
                 <button type="button" class="btn btn-danger" @click="cancelBooking($event, {{ $booking->id }})">{{__('Yes, cancel')}}</button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<div class="modal fade" id="bookingAddServiceModal{{ $booking->id }}" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Добавить услуги для брони #{{ $booking->id }}</h5>
-            </div>
-            <div class="modal-body">
-                <form id="addServicesForm{{ $booking->id }}">
-                    <div class="row">
-                        <div class="col-md-6">
-                            <h6 class="mb-3">Услуги отеля</h6>
-                            <div class="card card-body">
-                                @if(isset($hotelServices) && count($hotelServices) > 0)
-                                    @foreach($hotelServices as $service)
-                                        <div class="mb-2 d-flex align-items-center">
-                                            <input
-                                                class="me-3"
-                                                type="checkbox"
-                                                name="hotel_services[]"
-                                                value="{{ $service->id }}"
-                                                id="hotel_service_{{ $booking->id }}_{{ $service->id }}"
-                                                style="width: 18px; height: 18px; flex-shrink: 0;"
-                                                @if(isset($selectedServices) && in_array($service->id, $selectedServices)) checked @endif>
-                                            <label class="mb-0" for="hotel_service_{{ $booking->id }}_{{ $service->id }}" style="cursor: pointer;">
-                                                {{ $service->title ?? $service->name }}
-                                                @if(isset($service->price))
-                                                    <span class="text-muted">({{ format_money($service->price) }})</span>
-                                                @endif
-                                            </label>
-                                        </div>
-                                    @endforeach
-                                @else
-                                    <div class="mb-2 d-flex align-items-center">
-                                        <input class="me-3" type="checkbox" name="hotel_services[]" value="1" id="hotel_service_{{ $booking->id }}_1" style="width: 18px; height: 18px; flex-shrink: 0;">
-                                        <label class="mb-0" for="hotel_service_{{ $booking->id }}_1" style="cursor: pointer;">
-                                            Завтрак
-                                        </label>
-                                    </div>
-                                    <div class="mb-2 d-flex align-items-center">
-                                        <input class="me-3" type="checkbox" name="hotel_services[]" value="2" id="hotel_service_{{ $booking->id }}_2" style="width: 18px; height: 18px; flex-shrink: 0;">
-                                        <label class="mb-0" for="hotel_service_{{ $booking->id }}_2" style="cursor: pointer;">
-                                            Ужин
-                                        </label>
-                                    </div>
-                                    <div class="mb-2 d-flex align-items-center">
-                                        <input class="me-3" type="checkbox" name="hotel_services[]" value="3" id="hotel_service_{{ $booking->id }}_3" style="width: 18px; height: 18px; flex-shrink: 0;">
-                                        <label class="mb-0" for="hotel_service_{{ $booking->id }}_3" style="cursor: pointer;">
-                                            Трансфер
-                                        </label>
-                                    </div>
-                                @endif
-                            </div>
-                        </div>
-
-                        <div class="col-md-6">
-                            <h6 class="mb-3">Услуги охоты</h6>
-                            <div class="card card-body">
-                                @if(isset($huntingServices) && count($huntingServices) > 0)
-                                    @foreach($huntingServices as $service)
-                                        <div class="mb-2 d-flex align-items-center">
-                                            <input
-                                                class="me-3"
-                                                type="checkbox"
-                                                name="hunting_services[]"
-                                                value="{{ $service->id }}"
-                                                id="hunting_service_{{ $booking->id }}_{{ $service->id }}"
-                                                style="width: 18px; height: 18px; flex-shrink: 0;"
-                                                @if(isset($selectedServices) && in_array($service->id, $selectedServices)) checked @endif>
-                                            <label class="mb-0" for="hunting_service_{{ $booking->id }}_{{ $service->id }}" style="cursor: pointer;">
-                                                {{ $service->title ?? $service->name }}
-                                                @if(isset($service->price))
-                                                    <span class="text-muted">({{ format_money($service->price) }})</span>
-                                                @endif
-                                            </label>
-                                        </div>
-                                    @endforeach
-                                @else
-                                    <div class="mb-2 d-flex align-items-center">
-                                        <input class="me-2" type="checkbox" name="hunting_services[]" value="1" id="hunting_service_{{ $booking->id }}_1" style="width: 18px; height: 18px; flex-shrink: 0;">
-                                        <label class="mb-0" for="hunting_service_{{ $booking->id }}_1" style="cursor: pointer;">
-                                            Гид
-                                        </label>
-                                    </div>
-                                    <div class="mb-2 d-flex align-items-center">
-                                        <input class="me-2" type="checkbox" name="hunting_services[]" value="2" id="hunting_service_{{ $booking->id }}_2" style="width: 18px; height: 18px; flex-shrink: 0;">
-                                        <label class="mb-0" for="hunting_service_{{ $booking->id }}_2" style="cursor: pointer;">
-                                            Оружие
-                                        </label>
-                                    </div>
-                                    <div class="mb-2 d-flex align-items-center">
-                                        <input class="me-2" type="checkbox" name="hunting_services[]" value="3" id="hunting_service_{{ $booking->id }}_3" style="width: 18px; height: 18px; flex-shrink: 0;">
-                                        <label class="mb-0" for="hunting_service_{{ $booking->id }}_3" style="cursor: pointer;">
-                                            Лицензия
-                                        </label>
-                                    </div>
-                                @endif
-                            </div>
-                        </div>
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
-                <button type="button" class="btn btn-primary" onclick="saveServices({{ $booking->id }})">Сохранить</button>
             </div>
         </div>
     </div>

@@ -38,9 +38,9 @@
             </div>
         @endif
     </td>
-    <td class="{{$booking->status}} a-hidden">
-        <div>{{$booking->statusName}}</div>
-        @if($booking->status === \Modules\Booking\Models\Booking::START_COLLECTION && $booking->updated_at)
+    <td class="{{$booking->status_for_user}} a-hidden">
+        <div>{{$booking->statusNameForUser}}</div>
+        @if($booking->status_for_user === \Modules\Booking\Models\Booking::START_COLLECTION && $booking->updated_at)
             <div class="text-muted collection-timer" data-start="{{ $booking->updated_at->timestamp * 1000 }}">[0 мин]</div>
         @endif
     </td>
@@ -65,11 +65,30 @@
     <td>{{format_money($booking->paid)}}</td>
     <td>{{format_money($booking->total - $booking->paid)}}</td>
     <td>
+        @php
+            $isInvited = $booking->isInvited();
+            $isCollectionStatus = $booking->status_for_user === \Modules\Booking\Models\Booking::START_COLLECTION;
+        @endphp
+
+        @if($isInvited && $isCollectionStatus)
+            {{-- Для приглашенного охотника в статусе "сбор охотников" показываем только кнопку "Открыть приглашение" --}}
+            <button
+                type="button"
+                class="btn btn-primary btn-sm mt-2"
+                data-bs-toggle="modal"
+                data-bs-target="#invitationModal{{ $booking->id }}"
+                onclick="openInvitationModal({{ $booking->id }})">
+                {{__("Open invitation")}}
+            </button>
+        @else
+            {{-- Обычные кнопки для создателя брони или вендора --}}
             @if($booking->status === 'confirmed')
                 <button
                     type="button"
                     class="btn btn-primary btn-sm mt-2"
-                    @click="startCollection($event, {{ $booking->id }})">
+                    data-bs-toggle="modal"
+                    data-bs-target="#collectionModal{{ $booking->id }}"
+                    @click="openCollectionModal({{ $booking->id }})">
                     {{__("Open collection")}}
                 </button>
             @endif
@@ -87,19 +106,30 @@
                     {{__("Select bed place")}}
                 </a>
             @endif
-        @if(!in_array($booking->status, [\Modules\Booking\Models\Booking::CANCELLED, \Modules\Booking\Models\Booking::COMPLETED]))
-            <button
-                type="button"
-                class="btn btn-danger btn-sm mt-2"
-                data-bs-toggle="modal"
-                data-bs-target="#cancelBookingModal{{ $booking->id }}">
-                {{__("Cancel")}}
-            </button>
+            @if(!in_array($booking->status, [\Modules\Booking\Models\Booking::CANCELLED, \Modules\Booking\Models\Booking::COMPLETED]))
+                <button
+                    type="button"
+                    class="btn btn-danger btn-sm mt-2"
+                    data-bs-toggle="modal"
+                    data-bs-target="#cancelBookingModal{{ $booking->id }}">
+                    {{__("Cancel")}}
+                </button>
+            @endif
         @endif
     </td>
 
 </tr>
 
+{{-- Модальное окно для сбора охотников --}}
+@include('Booking::frontend.collection-modal', ['booking' => $booking])
+
+{{-- Модальное окно для добавления услуг --}}
+@include('Booking::frontend.add-services-modal', ['booking' => $booking])
+
+{{-- Модальное окно для просмотра приглашения --}}
+@include('Booking::frontend.invitation-modal', ['booking' => $booking])
+
+{{-- Отмена бронирования --}}
 <div class="modal fade" id="cancelBookingModal{{ $booking->id }}" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -117,37 +147,6 @@
     </div>
 </div>
 
-<div class="modal fade" id="bookingAddServiceModal{{ $booking->id }}" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Добавить услуги для брони #{{ $booking->id }}</h5>
-            </div>
-            <div class="modal-body">
-                <div class="row">
-                    <div class="col-md-6">
-                        <h6>Услуги отеля</h6>
-                        <div class="card card-body">
-                            <button type="button" class="btn btn-primary btn-sm">Добавить услугу</button>
-                        </div>
-                    </div>
-
-                    <div class="col-md-6">
-                        <h6>Услуги охоты</h6>
-                        <div class="card card-body">
-                            <button type="button" class="btn btn-success btn-sm">Добавить услугу</button>
-                            {{-- Можно добавить список услуг здесь --}}
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
-            </div>
-        </div>
-    </div>
-</div>
-
 @push('js')
     <script>
         document.addEventListener('DOMContentLoaded', function () {
@@ -155,5 +154,6 @@
                 new bootstrap.Popover(el);
             });
         });
+
     </script>
 @endpush
