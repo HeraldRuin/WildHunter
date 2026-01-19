@@ -1021,8 +1021,8 @@ class BookingController extends \App\Http\Controllers\Controller
             return $this->sendError($message)->setStatusCode(422);
         }
 
-        // Завершаем сбор - переводим в статус "подтверждено"
-        $booking->status = Booking::CONFIRMED;
+        // Завершаем сбор - переводим в статус "завершенный сбор"
+        $booking->status = Booking::FINISHED_COLLECTION;
         $booking->save();
         event(new BookingUpdatedEvent($booking));
 
@@ -1047,7 +1047,7 @@ class BookingController extends \App\Http\Controllers\Controller
         }
 
         return $this->sendSuccess([
-            'message' => __('Сбор охотников завершён. Бронь подтверждена.')
+            'message' => __('Сбор охотников завершён.')
         ]);
     }
 

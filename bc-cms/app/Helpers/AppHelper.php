@@ -718,6 +718,10 @@ function status_to_text($status)
         case "collection":
             return __('Collection');
             break;
+        case "finished_collection":
+            return __('Finished collection');
+            break;
+            break;
         case "fail":
         case "failed":
             return __('Failed');

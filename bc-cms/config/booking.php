@@ -10,5 +10,6 @@ return [
         'unpaid',
         'partial_payment',
         'collection',
+        'finished_collection',
     ]
 ];

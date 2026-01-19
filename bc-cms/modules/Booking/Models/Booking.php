@@ -38,6 +38,7 @@ class Booking extends BaseModel
     const UNPAID     = 'unpaid'; // Require payment
     const PROCESSING = 'processing'; // like offline - payment
     const START_COLLECTION = 'collection';
+    const FINISHED_COLLECTION = 'finished_collection'; // Завершенный сбор охотников
     const CONFIRMED  = 'confirmed'; // after processing -> confirmed (for offline payment)
     const COMPLETED  = 'completed'; //
     const CANCELLED  = 'cancelled';
@@ -170,6 +171,9 @@ class Booking extends BaseModel
                 break;
             case "collection":
                 return "warning";
+                break;
+            case "finished_collection":
+                return "success";
                 break;
         }
     }
