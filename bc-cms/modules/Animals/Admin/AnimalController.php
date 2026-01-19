@@ -274,21 +274,42 @@ class AnimalController extends AdminController
     public function saveTrophies($row, $request)
     {
         $trophy_types = $request->input('trophy_types', []);
-        
-        // Удаляем все существующие трофеи
-        AnimalTrophy::where('animal_id', $row->id)->delete();
-        
-        // Сохраняем новые трофеи
+
+        $existingTrophies = AnimalTrophy::where('animal_id', $row->id)->get()->keyBy('id');
+
+        $keepIds = [];
+
         if (!empty($trophy_types) && is_array($trophy_types)) {
-            foreach ($trophy_types as $type) {
-                if (!empty(trim($type))) {
-                    AnimalTrophy::create([
-                        'animal_id' => $row->id,
-                        'type' => trim($type),
-                    ]);
+            foreach ($trophy_types as $trophy_data) {
+                if (!is_array($trophy_data)) continue;
+
+                $type = trim($trophy_data['type'] ?? '');
+                $trophy_id = !empty($trophy_data['id']) ? $trophy_data['id'] : null;
+
+                if (!empty($type)) {
+                    if ($trophy_id && $existingTrophies->has($trophy_id)) {
+                        $existingTrophy = $existingTrophies->get($trophy_id);
+                        AnimalTrophy::where('id', $trophy_id)
+                            ->where('animal_id', $row->id)
+                            ->update([
+                                'type' => $type,
+                                'price' => $existingTrophy->price,
+                            ]);
+                        $keepIds[] = $trophy_id;
+                    } else {
+                        $newTrophy = AnimalTrophy::create([
+                            'animal_id' => $row->id,
+                            'type' => $type,
+                            'price' => null,
+                        ]);
+                        $keepIds[] = $newTrophy->id;
+                    }
                 }
             }
         }
+        AnimalTrophy::where('animal_id', $row->id)
+            ->whereNotIn('id', $keepIds)
+            ->delete();
     }
 
     public function bulkEdit(Request $request)
