@@ -49,7 +49,8 @@
             animal_id: '',
             animalCheckPassed: false,
             animalPrice: 0,
-            hunterCount: 0
+            hunterCount: 0,
+            urlParams: {}
         },
         watch:{
             extra_price:{
@@ -212,7 +213,13 @@
             for(var k in bc_booking_data){
                 this[k] = bc_booking_data[k];
             }
-            this.checkAvailability();
+            // Инициализируем параметры из URL перед проверкой доступности
+            this.initFromUrlParams();
+            // Проверяем, есть ли параметры из URL - если есть, проверку доступности сделаем после их применения
+            var hasUrlParams = this.urlParams && (this.urlParams.start || this.urlParams.adults !== null || this.urlParams.children !== null || this.urlParams.animal_id);
+            if (!hasUrlParams) {
+                this.checkAvailability();
+            }
         },
         mounted(){
             var me = this;
@@ -354,8 +361,131 @@
                     })
             })
 
+            // Применяем параметры из URL после инициализации всех компонентов
+            // Используем setTimeout для гарантии, что все компоненты (включая smart-search) загружены
+            var me = this;
+            setTimeout(() => {
+                me.applyUrlParams();
+            }, 500);
+
         },
         methods:{
+            // Читает параметры из URL и сохраняет их в переменные компонента
+            initFromUrlParams: function() {
+                var urlParams = new URLSearchParams(window.location.search);
+                var startParam = urlParams.get('start');
+                var endParam = urlParams.get('end');
+                var adultsParam = urlParams.get('adults');
+                var childrenParam = urlParams.get('children');
+                var animalIdParam = urlParams.get('animal_id');
+
+                // Сохраняем параметры для последующего применения
+                this.urlParams = {
+                    start: startParam,
+                    end: endParam,
+                    adults: adultsParam ? parseInt(adultsParam) : null,
+                    children: childrenParam ? parseInt(childrenParam) : null,
+                    animal_id: animalIdParam
+                };
+            },
+            // Применяет параметры из URL к форме
+            applyUrlParams: function() {
+                var me = this;
+                var params = this.urlParams || {};
+
+                // Применяем даты заезда-выезда
+                if (params.start && params.end) {
+                    try {
+                        // Преобразуем даты в нужный формат (DD.MM.YYYY -> YYYY-MM-DD)
+                        var startMoment = moment(params.start, ['DD.MM.YYYY', 'YYYY-MM-DD', 'MM/DD/YYYY'], true);
+                        var endMoment = moment(params.end, ['DD.MM.YYYY', 'YYYY-MM-DD', 'MM/DD/YYYY'], true);
+
+                        if (startMoment.isValid() && endMoment.isValid()) {
+                            // Устанавливаем даты в Vue модель
+                            this.start_date = startMoment.format('YYYY-MM-DD');
+                            this.end_date = endMoment.format('YYYY-MM-DD');
+                            this.start_date_html = startMoment.format(bookingCore.date_format) +
+                                ' <i class="fa fa-long-arrow-right" style="font-size: inherit"></i> ' +
+                                endMoment.format(bookingCore.date_format);
+
+                            // Устанавливаем даты в datepicker
+                            var datePicker = $(this.$refs.hotelStartDate).data('daterangepicker');
+                            if (datePicker) {
+                                datePicker.setStartDate(startMoment);
+                                datePicker.setEndDate(endMoment);
+                            }
+                        }
+                    } catch (e) {
+                        console.error('Error parsing dates from URL:', e);
+                    }
+                }
+
+                // Применяем количество гостей
+                if (params.adults !== null && params.adults > 0) {
+                    this.adults = params.adults;
+                }
+                if (params.children !== null && params.children >= 0) {
+                    this.children = params.children;
+                }
+
+                // Применяем выбор животного
+                if (params.animal_id) {
+                    var me = this;
+                    var animalInput = document.querySelector('.child_id');
+                    var animalTextInput = document.querySelector('.smart-search-booking-animal');
+                    
+                    if (animalInput && animalTextInput) {
+                        // Находим название животного из списка по умолчанию
+                        var defaultListStr = animalTextInput.getAttribute('data-default');
+                        if (defaultListStr) {
+                            try {
+                                var defaultList = JSON.parse(defaultListStr);
+                                var selectedAnimal = defaultList.find(function(item) {
+                                    return item.id == params.animal_id;
+                                });
+                                
+                                if (selectedAnimal) {
+                                    var animalText = selectedAnimal.title || selectedAnimal.name || '';
+                                    var animalId = params.animal_id;
+                                    
+                                    // Находим родительский элемент smart-search
+                                    var smartSearch = $(animalTextInput).closest('.smart-search');
+                                    
+                                    // Устанавливаем текст в видимом поле
+                                    $(animalTextInput).val(animalText);
+                                    
+                                    // Устанавливаем значение в hidden input и триггерим событие
+                                    $(animalInput).val(animalId).trigger('change');
+                                    
+                                    // Обновляем Vue модель
+                                    me.animal_id = animalId;
+                                    
+                                    // Пытаемся программно выбрать элемент в списке autocomplete
+                                    var itemElement = smartSearch.find('.bc-autocomplete .item[data-id="' + animalId + '"]');
+                                    if (itemElement.length > 0) {
+                                        // Имитируем клик на элемент для полной инициализации
+                                        itemElement.trigger('click');
+                                    }
+                                }
+                            } catch (e) {
+                                console.error('Error parsing animal list:', e);
+                            }
+                        } else {
+                            // Если список еще не загружен, просто устанавливаем ID
+                            $(animalInput).val(params.animal_id);
+                            me.animal_id = params.animal_id;
+                        }
+                    }
+                }
+                
+                // Если были установлены даты заезда-выезда, вызываем проверку доступности
+                if (params.start && params.end && this.start_date && this.end_date) {
+                    // Используем setTimeout для гарантии, что все изменения применены
+                    setTimeout(() => {
+                        this.checkAvailability();
+                    }, 100);
+                }
+            },
             handleTotalPrice:function() {
             },
             formatMoney: function (m) {

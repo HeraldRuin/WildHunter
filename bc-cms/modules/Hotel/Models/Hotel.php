@@ -133,7 +133,15 @@ class Hotel extends Bookable
     {
         $param = [];
         if ($include_param) {
-            if (!empty($date = request()->input('date'))) {
+            // Поддержка прямых параметров start и end
+            if (!empty($start = request()->input('start'))) {
+                $param['start'] = $start;
+            }
+            if (!empty($end = request()->input('end'))) {
+                $param['end'] = $end;
+            }
+            // Поддержка параметра date для обратной совместимости
+            if (empty($param['start']) && !empty($date = request()->input('date'))) {
                 $dates = explode(" - ", $date);
                 if (!empty($dates)) {
                     $param['start'] = $dates[0] ?? "";
@@ -148,6 +156,9 @@ class Hotel extends Bookable
             }
             if (!empty($room = request()->input('room'))) {
                 $param['room'] = $room;
+            }
+            if (!empty($animal_id = request()->input('animal_id'))) {
+                $param['animal_id'] = $animal_id;
             }
         }
         $urlDetail = app_get_locale(false, false, '/') . config('hotel.hotel_route_prefix') . "/" . $this->slug;
