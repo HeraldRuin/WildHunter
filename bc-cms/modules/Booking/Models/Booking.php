@@ -25,6 +25,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Modules\User\Models\Wallet\Transaction;
 use Modules\Booking\Models\BookingTimeSlots;
 use Modules\Booking\Models\BookingHunter;
+use Modules\Booking\Models\BookingHunterInvitation;
 
 class Booking extends BaseModel
 {
@@ -60,6 +61,90 @@ class Booking extends BaseModel
     public function getStatusNameAttribute()
     {
         return booking_status_to_text($this->status);
+    }
+
+    /**
+     * Проверяет, приглашен ли указанный пользователь на эту бронь
+     */
+    public function isInvited($userId = null)
+    {
+        if (!$userId) {
+            $userId = \Illuminate\Support\Facades\Auth::id();
+        }
+        
+        if (!$userId) {
+            return false;
+        }
+        
+        return BookingHunterInvitation::whereHas('bookingHunter', function($q) {
+                $q->where('booking_id', $this->id)
+                  ->whereNull('deleted_at');
+            })
+            ->where('hunter_id', $userId)
+            ->whereNotIn('status', ['declined', 'removed'])
+            ->whereNull('deleted_at')
+            ->exists();
+    }
+
+    /**
+     * Получает приглашение текущего пользователя для этой брони
+     */
+    public function getCurrentUserInvitation()
+    {
+        $userId = \Illuminate\Support\Facades\Auth::id();
+        
+        if (!$userId) {
+            return null;
+        }
+        
+        return BookingHunterInvitation::whereHas('bookingHunter', function($q) {
+                $q->where('booking_id', $this->id)
+                  ->whereNull('deleted_at');
+            })
+            ->where('hunter_id', $userId)
+            ->whereNotIn('status', ['declined', 'removed'])
+            ->whereNull('deleted_at')
+            ->with(['bookingHunter', 'hunter'])
+            ->first();
+    }
+
+    /**
+     * Получает все приглашения охотников для этой брони
+     */
+    public function getAllInvitations()
+    {
+        return BookingHunterInvitation::whereHas('bookingHunter', function($q) {
+                $q->where('booking_id', $this->id)
+                  ->whereNull('deleted_at');
+            })
+            ->whereNull('deleted_at')
+            ->with(['bookingHunter', 'hunter'])
+            ->orderBy('invited_at', 'desc')
+            ->get();
+    }
+
+    /**
+     * Получает статус брони с учетом приглашения для текущего пользователя
+     * Если пользователь приглашен, возвращает 'collection' (сбор охотников)
+     */
+    public function getStatusForUserAttribute()
+    {
+        $userId = \Illuminate\Support\Facades\Auth::id();
+        
+        // Если пользователь приглашен на эту бронь, показываем статус "сбор охотников"
+        if ($userId && $this->isInvited($userId)) {
+            return self::START_COLLECTION;
+        }
+        
+        return $this->status;
+    }
+
+    /**
+     * Получает название статуса с учетом приглашения для текущего пользователя
+     */
+    public function getStatusNameForUserAttribute()
+    {
+        return booking_status_to_text($this->status_for_user);
     }
 
     public function getStatusClassAttribute()
@@ -480,26 +565,57 @@ class Booking extends BaseModel
     {
         $list_booking = parent::query()->with(['animal', 'creator', 'hotel.translation', 'hotelRooms'])->orderBy('id', 'desc');
 
-        if (!empty($booking_status)) {
-            $list_booking->where("status", $booking_status);
-        }
 //        else{
 //            $list_booking->where('status','=','processing');
 ////            $list_booking->where('status','=','draft');
 //        }
-//        if (!empty($customer_id_or_name)) {
-//            $list_booking->where(function($q) use($customer_id_or_name){
-//                $q->orWhere('customer_id',$customer_id_or_name)->orWhere('first_name','like',"%$customer_id_or_name%")->orWhere('last_name','like',"%$customer_id_or_name%");
-//            });
-//        }
-//        if (!empty($customer_id_or_name)) {
-//            // Для мастер-охотников: учитываем как create_user, так и vendor_id
-//            // (номинирован на бронь базой или создал бронь сам)
-//            $list_booking->where(function($q) use ($customer_id_or_name) {
-//                $q->where("create_user", $customer_id_or_name)
-//                  ->orWhere("vendor_id", $customer_id_or_name);
-//            });
-//        }
+        if (!empty($customer_id_or_name)) {
+            // Получаем ID броней, на которые пользователь приглашен через join
+            // Показываем приглашенные брони ТОЛЬКО когда статус = 'collection' (сбор охотников)
+            $bookingIdsFromInvitations = [];
+            if ($booking_status === 'collection') {
+                $bookingIdsFromInvitations = DB::table('bc_booking_hunter_invitations as invitations')
+                    ->join('bc_booking_hunters as hunters', 'invitations.booking_hunter_id', '=', 'hunters.id')
+                    ->where('invitations.hunter_id', $customer_id_or_name)
+                    ->whereNotIn('invitations.status', ['declined', 'removed'])
+                    ->whereNull('invitations.deleted_at')
+                    ->whereNull('hunters.deleted_at')
+                    ->pluck('hunters.booking_id')
+                    ->toArray();
+            }
+            
+            $list_booking->where(function($q) use ($customer_id_or_name, $bookingIdsFromInvitations, $booking_status) {
+                // Брони, созданные пользователем или где он вендор
+                // Фильтр по статусу применяется к каждому условию отдельно
+                if (!empty($booking_status)) {
+                    $q->where(function($subQ) use ($customer_id_or_name, $booking_status) {
+                        $subQ->where(function($createQ) use ($customer_id_or_name, $booking_status) {
+                            $createQ->where("create_user", $customer_id_or_name)
+                                    ->where("status", $booking_status);
+                        })
+                        ->orWhere(function($vendorQ) use ($customer_id_or_name, $booking_status) {
+                            $vendorQ->where("vendor_id", $customer_id_or_name)
+                                     ->where("status", $booking_status);
+                        });
+                    });
+                } else {
+                    $q->where("create_user", $customer_id_or_name)
+                      ->orWhere("vendor_id", $customer_id_or_name);
+                }
+                
+                // Брони, на которые пользователь приглашен через систему приглашений
+                // Показываем ТОЛЬКО в фильтре "сбор охотников" (status = 'collection')
+                // Приглашенные брони показываются независимо от их статуса
+                if (!empty($bookingIdsFromInvitations)) {
+                    $q->orWhereIn("id", $bookingIdsFromInvitations);
+                }
+            });
+        } else {
+            // Если не указан customer_id_or_name, применяем фильтр по статусу как обычно
+            if (!empty($booking_status)) {
+                $list_booking->where("status", $booking_status);
+            }
+        }
         if (!empty($service)) {
             $list_booking->where("object_model", $service);
         }
