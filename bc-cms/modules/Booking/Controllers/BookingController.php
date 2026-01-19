@@ -957,6 +957,49 @@ class BookingController extends \App\Http\Controllers\Controller
     }
 
     /**
+     * Получить список приглашенных охотников для брони
+     */
+    public function getInvitedHunters(Request $request, Booking $booking): JsonResponse
+    {
+        if (!Auth::check()) {
+            return $this->sendError('Необходима авторизация')->setStatusCode(401);
+        }
+
+        // Получаем все приглашения (метод возвращает коллекцию, не query builder)
+        $allInvitations = $booking->getAllInvitations();
+        // Фильтруем отклоненные и удаленные на коллекции
+        $invitations = $allInvitations->whereNotIn('status', ['declined', 'removed']);
+        
+        Log::info('getInvitedHunters: найдено приглашений', [
+            'booking_id' => $booking->id,
+            'total' => $allInvitations->count(),
+            'filtered' => $invitations->count()
+        ]);
+        
+        $hunters = $invitations->map(function($invitation) {
+            $hunter = $invitation->hunter;
+            if (!$hunter) {
+                return null;
+            }
+            
+            return [
+                'id' => $hunter->id,
+                'user_name' => $hunter->user_name,
+                'first_name' => $hunter->first_name,
+                'last_name' => $hunter->last_name,
+                'email' => $hunter->email,
+                'phone' => $hunter->phone,
+                'invited' => true,
+                'invitation_status' => $invitation->status,
+            ];
+        })->filter()->values();
+
+        return $this->sendSuccess([
+            'hunters' => $hunters,
+        ]);
+    }
+
+    /**
      * Принять приглашение на бронь
      */
     public function acceptInvitation(Request $request, Booking $booking): JsonResponse
