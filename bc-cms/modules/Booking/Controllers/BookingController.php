@@ -847,8 +847,48 @@ class BookingController extends \App\Http\Controllers\Controller
             return $this->sendError('Необходима авторизация')->setStatusCode(401);
         }
 
+        // Получаем отель из брони
+        $hotel = $booking->hotel;
+
+        // Получаем таймер сбора из отеля (в часах)
+        $timerHours = 24; // Значение по умолчанию
+        if ($hotel) {
+            $timerHours = (int) ($hotel->collection_timer_hours ?? 24);
+        }
+
+        // Вычисляем время окончания сбора (текущее время + часы таймера)
+        // Используем now() чтобы гарантировать актуальное время
+        // ВАЖНО: Используем текущее время, а не updated_at брони
+        $now = \Carbon\Carbon::now();
+        $collectionEndAt = $now->copy()->addHours($timerHours);
+
+        // Сохраняем статус
         $booking->status = Booking::START_COLLECTION;
+
+        // ВАЖНО: Сохраняем время окончания сбора ДО сохранения брони,
+        // чтобы избежать проблем с обновлением updated_at
+        // Используем формат ISO 8601 для лучшей совместимости
+        // addMeta автоматически обновит существующее значение, если оно есть
+        $collectionEndAtString = $collectionEndAt->toIso8601String();
+
+        // Проверяем, было ли старое значение
+        $oldCollectionEndAt = $booking->getMeta('collection_end_at');
+
+        $booking->addMeta('collection_end_at', $collectionEndAtString);
+
+        // Логируем для отладки
+        \Log::info('startCollection: установка времени окончания сбора', [
+            'booking_id' => $booking->id,
+            'hotel_id' => $hotel ? $hotel->id : null,
+            'timer_hours' => $timerHours,
+            'now' => $now->toDateTimeString(),
+            'old_collection_end_at' => $oldCollectionEndAt,
+            'new_collection_end_at' => $collectionEndAtString,
+        ]);
+
+        // Сохраняем бронь
         $booking->save();
+
         event(new BookingUpdatedEvent($booking));
 
         return $this->sendSuccess([
@@ -886,6 +926,14 @@ class BookingController extends \App\Http\Controllers\Controller
         // Если бронь сейчас в режиме сбора, переводим её в статус "отменено"
         if ($booking->status === Booking::START_COLLECTION) {
             $booking->status = Booking::CANCELLED;
+
+            // Очищаем мета-данные времени окончания сбора
+            $booking->addMeta('collection_end_at', '');
+
+            \Log::info('cancelCollection: очистка таймера сбора', [
+                'booking_id' => $booking->id,
+            ]);
+
             $booking->save();
             event(new BookingUpdatedEvent($booking));
         }
@@ -990,11 +1038,32 @@ class BookingController extends \App\Http\Controllers\Controller
             return $this->sendError(__('Сбор охотников не начат или уже завершён'))->setStatusCode(422);
         }
 
-        // Получаем все приглашения с принятым статусом
-        $acceptedInvitations = $booking->getAllInvitations()
-            ->where('status', 'accepted');
+        // Получаем все приглашения
+        $allInvitations = $booking->getAllInvitations();
 
-        $acceptedCount = $acceptedInvitations->count();
+        // Логируем статусы всех приглашений для отладки
+        $invitationStatuses = $allInvitations->map(function ($invitation) {
+            return [
+                'id' => $invitation->id,
+                'hunter_id' => $invitation->hunter_id,
+                'status' => $invitation->status,
+            ];
+        })->toArray();
+        Log::info('finishCollection: статусы всех приглашений', [
+            'booking_id' => $booking->id,
+            'invitations' => $invitationStatuses,
+        ]);
+
+        // Фильтруем приглашения: учитываем все статусы, кроме 'declined' и 'removed'
+        // Это соответствует логике метода isInvited() - приглашенные охотники считаются участниками
+        // до тех пор, пока они не отклонят приглашение
+        $acceptedInvitations = $allInvitations->filter(function ($invitation) {
+            return !in_array($invitation->status, ['declined', 'removed']);
+        });
+
+        // Считаем только приглашенных охотников (без создателя брони)
+        // Минимальное количество охотников относится только к приглашенным, а не к создателю
+        $invitedHuntersCount = $acceptedInvitations->count();
 
         // Загружаем модель заново из базы данных, чтобы получить актуальные данные
         $booking = Booking::find($booking->id);
@@ -1014,13 +1083,31 @@ class BookingController extends \App\Http\Controllers\Controller
                     ->where('hotel_id', $booking->hotel_id)
                     ->first();
 
-                if ($hotelAnimal && isset($hotelAnimal->hunters_count)) {
+                Log::info('finishCollection: получение hunters_count из базы', [
+                    'booking_id' => $booking->id,
+                    'animal_id' => $booking->animal_id,
+                    'hotel_id' => $booking->hotel_id,
+                    'hotel_animal_found' => $hotelAnimal ? true : false,
+                    'hunters_count_raw' => $hotelAnimal->hunters_count ?? null,
+                    'hunters_count_type' => $hotelAnimal ? gettype($hotelAnimal->hunters_count) : null,
+                ]);
+
+                if ($hotelAnimal && isset($hotelAnimal->hunters_count) && $hotelAnimal->hunters_count !== null) {
                     $requiredHunters = (int) $hotelAnimal->hunters_count;
+                    Log::info('finishCollection: установлено requiredHunters из базы', [
+                        'required_hunters' => $requiredHunters,
+                    ]);
+                } else {
+                    Log::warning('finishCollection: hunters_count не найден или равен NULL, используем значение по умолчанию', [
+                        'hotel_animal_exists' => $hotelAnimal ? true : false,
+                        'hunters_count_set' => $hotelAnimal && isset($hotelAnimal->hunters_count),
+                    ]);
                 }
 
                 // Если значение не найдено или равно 0, используем минимальное значение 1
                 if ($requiredHunters <= 0) {
                     $requiredHunters = 1;
+                    Log::info('finishCollection: requiredHunters <= 0, установлено в 1');
                 }
             }
         } else {
@@ -1045,8 +1132,9 @@ class BookingController extends \App\Http\Controllers\Controller
             }
         }
 
-        // Проверяем, что собрано достаточное количество охотников
-        if ($acceptedCount < $requiredHunters) {
+        // Проверяем, что собрано достаточное количество приглашенных охотников
+        // Минимальное количество относится только к приглашенным охотникам, создатель не учитывается
+        if ($invitedHuntersCount < $requiredHunters) {
             $message = __('Минимальное кол-во охотников для :animal :count', [
                 'animal' => $animalName ?: __('животного'),
                 'count' => $requiredHunters
@@ -1056,6 +1144,14 @@ class BookingController extends \App\Http\Controllers\Controller
 
         // Завершаем сбор - переводим в статус "завершенный сбор"
         $booking->status = Booking::FINISHED_COLLECTION;
+
+        // Очищаем мета-данные времени окончания сбора
+        $booking->addMeta('collection_end_at', '');
+
+        \Log::info('finishCollection: очистка таймера сбора', [
+            'booking_id' => $booking->id,
+        ]);
+
         $booking->save();
         event(new BookingUpdatedEvent($booking));
 
