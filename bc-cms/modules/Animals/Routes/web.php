@@ -16,6 +16,7 @@ Route::group(['prefix'=>'user/'.config('animal.animal_route_prefix'),'middleware
     Route::post('/store/{id}','ManageAnimalController@store')->name('animal.vendor.store');
     Route::get('bulkEdit/{id}','ManageAnimalController@bulkEDetach')->name("animal.vendor.bulk_detach");
     Route::post('bulkEdit','ManageAnimalController@bulkEAttach')->name("animal.vendor.bulk_attach");
+    Route::post('update-hunters-count/{id}','ManageAnimalController@updateHuntersCount')->name("animal.vendor.update_hunters_count");
     Route::get('/booking-report/bulkEdit/{id}','ManageAnimalController@bookingReportBulkEdit')->name("animal.vendor.booking_report.bulk_edit");
     Route::get('/recovery','ManageAnimalController@recovery')->name('animal.vendor.recovery');
     Route::get('/restore/{id}','ManageAnimalController@restore')->name('animal.vendor.restore');

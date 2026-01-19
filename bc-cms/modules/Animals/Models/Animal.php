@@ -99,7 +99,7 @@ class Animal extends Bookable
     }
     public function hotels(): BelongsToMany
     {
-        return $this->belongsToMany(Hotel::class, 'bc_hotel_animals','animal_id','hotel_id')->withPivot('status');
+        return $this->belongsToMany(Hotel::class, 'bc_hotel_animals','animal_id','hotel_id')->withPivot('status', 'hunters_count');
     }
     public function periods(): HasMany
     {

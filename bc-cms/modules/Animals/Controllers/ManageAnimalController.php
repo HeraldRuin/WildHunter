@@ -12,6 +12,7 @@ use Modules\Core\Events\UpdatedServiceEvent;
 use Modules\FrontendController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Modules\Location\Models\Location;
 use Modules\Core\Models\Attributes;
 use Modules\Booking\Models\Booking;
@@ -59,7 +60,8 @@ class ManageAnimalController extends FrontendController
             })
             ->select([
                 'bc_animals.*',
-                'bha.status as animal_status'
+                'bha.status as animal_status',
+                'bha.hunters_count as hunters_count'
             ])
             ->orderBy('bc_animals.id', 'desc');
 
@@ -293,6 +295,50 @@ class ManageAnimalController extends FrontendController
         }
         $animal->hotels()->detach($userHotelId);
         return redirect()->back()->with('success', __('Detach success!'));
+    }
+
+    public function updateHuntersCount(Request $request, $id)
+    {
+        $this->checkPermission('animal_update');
+        $userHotelId = get_user_hotel_id();
+        $animal = $this->animalClass::find($id);
+
+        if (!$animal) {
+            return redirect()->back()->with('error', __('Animal not found'));
+        }
+
+        $huntersCount = (int)$request->input('hunters_count', 1);
+        
+        if ($huntersCount < 1) {
+            return redirect()->back()->with('error', __('Number of hunters must be at least 1'));
+        }
+
+        // Update the pivot table directly using DB
+        $updated = DB::table('bc_hotel_animals')
+            ->where('hotel_id', $userHotelId)
+            ->where('animal_id', $id)
+            ->update([
+                'hunters_count' => $huntersCount,
+                'updated_at' => now()
+            ]);
+
+        if ($updated === 0) {
+            // If no rows were updated, try to insert or update
+            DB::table('bc_hotel_animals')
+                ->updateOrInsert(
+                    [
+                        'hotel_id' => $userHotelId,
+                        'animal_id' => $id
+                    ],
+                    [
+                        'hunters_count' => $huntersCount,
+                        'created_at' => now(),
+                        'updated_at' => now()
+                    ]
+                );
+        }
+
+        return redirect()->back()->with('success', __('Hunters count updated successfully'));
     }
 
     public function delete($id)
