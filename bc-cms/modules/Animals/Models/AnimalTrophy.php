@@ -11,6 +11,7 @@ class AnimalTrophy extends Model
     protected $fillable = [
         'animal_id',
         'type',
+        'price',
     ];
 
     public function animal()
