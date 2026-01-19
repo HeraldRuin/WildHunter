@@ -363,10 +363,11 @@
 
             // Применяем параметры из URL после инициализации всех компонентов
             // Используем setTimeout для гарантии, что все компоненты (включая smart-search) загружены
+            // Увеличиваем задержку для smart-search, так как он инициализируется в home.js при document.ready
             var me = this;
             setTimeout(() => {
                 me.applyUrlParams();
-            }, 500);
+            }, 800);
 
         },
         methods:{
@@ -431,51 +432,7 @@
                 // Применяем выбор животного
                 if (params.animal_id) {
                     var me = this;
-                    var animalInput = document.querySelector('.child_id');
-                    var animalTextInput = document.querySelector('.smart-search-booking-animal');
-                    
-                    if (animalInput && animalTextInput) {
-                        // Находим название животного из списка по умолчанию
-                        var defaultListStr = animalTextInput.getAttribute('data-default');
-                        if (defaultListStr) {
-                            try {
-                                var defaultList = JSON.parse(defaultListStr);
-                                var selectedAnimal = defaultList.find(function(item) {
-                                    return item.id == params.animal_id;
-                                });
-                                
-                                if (selectedAnimal) {
-                                    var animalText = selectedAnimal.title || selectedAnimal.name || '';
-                                    var animalId = params.animal_id;
-                                    
-                                    // Находим родительский элемент smart-search
-                                    var smartSearch = $(animalTextInput).closest('.smart-search');
-                                    
-                                    // Устанавливаем текст в видимом поле
-                                    $(animalTextInput).val(animalText);
-                                    
-                                    // Устанавливаем значение в hidden input и триггерим событие
-                                    $(animalInput).val(animalId).trigger('change');
-                                    
-                                    // Обновляем Vue модель
-                                    me.animal_id = animalId;
-                                    
-                                    // Пытаемся программно выбрать элемент в списке autocomplete
-                                    var itemElement = smartSearch.find('.bc-autocomplete .item[data-id="' + animalId + '"]');
-                                    if (itemElement.length > 0) {
-                                        // Имитируем клик на элемент для полной инициализации
-                                        itemElement.trigger('click');
-                                    }
-                                }
-                            } catch (e) {
-                                console.error('Error parsing animal list:', e);
-                            }
-                        } else {
-                            // Если список еще не загружен, просто устанавливаем ID
-                            $(animalInput).val(params.animal_id);
-                            me.animal_id = params.animal_id;
-                        }
-                    }
+                    this.selectAnimalFromUrl(params.animal_id);
                 }
                 
                 // Если были установлены даты заезда-выезда, вызываем проверку доступности
@@ -494,6 +451,98 @@
             clearAnimal() {
                 this.animal_id = '';
                 this.animalCheckPassed = false;
+            },
+            // Выбирает животное по ID из URL
+            selectAnimalFromUrl: function(animalId) {
+                var me = this;
+                var attempts = 0;
+                var maxAttempts = 20;
+                
+                // Функция для попытки выбора животного
+                var trySelectAnimal = function() {
+                    attempts++;
+                    // Ищем элементы внутри секции с животными (более точный селектор)
+                    var animalSection = document.querySelector('#hotel-rooms') || document.querySelector('.hotel_rooms_form');
+                    var animalInput = animalSection ? animalSection.querySelector('.smart-search .child_id') : document.querySelector('.smart-search .child_id');
+                    var animalTextInput = animalSection ? animalSection.querySelector('.smart-search-booking-animal') : document.querySelector('.smart-search-booking-animal');
+                    
+                    // Если элементы не найдены и не достигнут лимит попыток - пробуем еще раз
+                    if ((!animalInput || !animalTextInput) && attempts < maxAttempts) {
+                        setTimeout(trySelectAnimal, 100);
+                        return;
+                    }
+                    
+                    if (!animalInput || !animalTextInput) {
+                        console.warn('Animal input elements not found after', attempts, 'attempts');
+                        return;
+                    }
+                    
+                    // Находим название животного из списка по умолчанию
+                    var defaultListStr = animalTextInput.getAttribute('data-default');
+                    if (defaultListStr && defaultListStr.length > 0) {
+                        try {
+                            var defaultList = JSON.parse(defaultListStr);
+                            var selectedAnimal = defaultList.find(function(item) {
+                                return String(item.id) === String(animalId);
+                            });
+                            
+                            if (selectedAnimal) {
+                                // Находим родительский элемент smart-search
+                                var smartSearch = $(animalTextInput).closest('.smart-search');
+                                
+                                // Пытаемся найти элемент в списке autocomplete и программно кликнуть на него
+                                // Это гарантирует правильную инициализацию smart-search
+                                var itemElement = smartSearch.find('.bc-autocomplete .item[data-id="' + animalId + '"]');
+                                if (itemElement.length > 0) {
+                                    // Если элемент найден в списке - просто кликаем на него
+                                    // bcAutocomplete сам установит все нужные значения
+                                    itemElement[0].click();
+                                    
+                                    // Обновляем Vue модель
+                                    me.animal_id = animalId;
+                                } else {
+                                    // Если элемент еще не найден в списке, пробуем еще раз через небольшую задержку
+                                    if (attempts < maxAttempts) {
+                                        setTimeout(trySelectAnimal, 150);
+                                        return;
+                                    } else {
+                                        // Если после всех попыток элемент не найден, устанавливаем значения вручную
+                                        var animalText = selectedAnimal.title || selectedAnimal.name || '';
+                                        
+                                        // Очищаем текст от дефисов как делает bcAutocomplete
+                                        var cleanText = animalText.replace(/-/g, "").trim();
+                                        cleanText = cleanText.replace(/^-+|-+$/g, '');
+                                        
+                                        // Устанавливаем текст в видимом поле
+                                        $(animalTextInput).val(cleanText).trigger("change");
+                                        
+                                        // Устанавливаем значение в hidden input и триггерим событие
+                                        $(animalInput).val(animalId).trigger("change");
+                                        
+                                        // Обновляем Vue модель
+                                        me.animal_id = animalId;
+                                    }
+                                }
+                            } else {
+                                console.warn('Animal with id', animalId, 'not found in list');
+                            }
+                        } catch (e) {
+                            console.error('Error parsing animal list:', e);
+                        }
+                    } else {
+                        // Если список еще не загружен, пробуем еще раз
+                        if (attempts < maxAttempts) {
+                            setTimeout(trySelectAnimal, 100);
+                            return;
+                        }
+                        // В крайнем случае просто устанавливаем ID
+                        $(animalInput).val(animalId);
+                        me.animal_id = animalId;
+                    }
+                };
+                
+                // Начинаем попытки выбора животного
+                trySelectAnimal();
             },
             getUserRoleFromUrl: function() {
                 var urlParams = new URLSearchParams(window.location.search);
