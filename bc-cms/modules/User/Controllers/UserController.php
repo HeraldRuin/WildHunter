@@ -226,15 +226,15 @@ class UserController extends FrontendController
             $bookings = $this->booking->getBookingHistory($request->input('status'), $authUser->id, false, false, false, $bookingId);
         }
 
-        $allStatuses = config('booking.statuses');
-
-        if ($userRole === 'baseadmin') {
-            $statuses = array_values(array_filter($allStatuses, function($status) {
-                return $status !== 'collection';
-            }));
-        } else {
-            $statuses = $allStatuses;
-        }
+//        $allStatuses = config('booking.statuses');
+//
+//        if ($userRole === 'baseadmin') {
+//            $statuses = array_values(array_filter($allStatuses, function($status) {
+//                return $status !== 'collection';
+//            }));
+//        } else {
+//            $statuses = $allStatuses;
+//        }
 
         $data = array_merge($cabinetData, [
             'userRole' => $userRole,
@@ -360,6 +360,61 @@ class UserController extends FrontendController
             })
             ->select(['id', 'user_name', 'first_name'])
             ->get();
+
+        return response()->json($users);
+    }
+
+    public function searchHunters(Request $request)
+    {
+        $query = trim($request->get('query'));
+        $bookingId = (int) $request->get('booking_id');
+
+        if (mb_strlen($query) < 3) {
+            return response()->json([]);
+        }
+
+        // Базовый поиск охотников по нику / имени / email
+        $users = User::query()
+            ->where(function($q) use ($query) {
+                $q->where('user_name', 'LIKE', $query.'%')
+                    ->orWhere('first_name', 'LIKE', $query.'%')
+                    ->orWhere('last_name', 'LIKE', $query.'%')
+                    ->orWhere('email', 'LIKE', $query.'%');
+            })
+            ->limit(10)
+            ->get(['id','user_name','first_name','last_name','email','phone']);
+
+        // По умолчанию считаем, что никто не приглашён
+        foreach ($users as $user) {
+            $user->invited = false;
+            $user->invitation_status = null;
+        }
+
+        // Если есть конкретная бронь — проверяем статус приглашений
+        if ($bookingId) {
+            $invitations = \Modules\Booking\Models\BookingHunterInvitation::query()
+                ->whereHas('bookingHunter', function ($q) use ($bookingId) {
+                    $q->where('booking_id', $bookingId);
+                })
+                ->whereIn('hunter_id', $users->pluck('id'))
+                ->whereNull('deleted_at')
+                ->get(['hunter_id', 'status']);
+
+            foreach ($users as $user) {
+                $invitation = $invitations->firstWhere('hunter_id', $user->id);
+                if ($invitation) {
+                    // Если статус 'declined', то не считаем приглашённым
+                    if ($invitation->status === 'declined') {
+                        $user->invited = false;
+                        $user->invitation_status = 'declined';
+                    } else {
+                        // Для других статусов (pending, accepted) считаем приглашённым
+                        $user->invited = true;
+                        $user->invitation_status = $invitation->status;
+                    }
+                }
+            }
+        }
 
         return response()->json($users);
     }
