@@ -12,7 +12,8 @@
 @endphp
 
 <div class="modal fade" id="collectionModal{{ $booking->id }}" tabindex="-1" aria-hidden="true"
-     data-hunters-count="{{ $huntersCount }}">
+     data-hunters-count="{{ $huntersCount }}"
+     data-booking-id="{{ $booking->id }}">
     <div class="modal-dialog modal-xl">
         <div class="modal-content">
             <div class="modal-header">
