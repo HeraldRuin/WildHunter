@@ -11,8 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('users', function (Blueprint $table) {
-            $table->boolean('is_master_hunter')->default(false)->after('caliber');
+        Schema::table('bc_animal_trophies', function (Blueprint $table) {
+            $table->decimal('price', 10, 2)->nullable()->after('type');
         });
     }
 
@@ -21,8 +21,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('users', function (Blueprint $table) {
-            $table->dropColumn('is_master_hunter');
+        Schema::table('bc_animal_trophies', function (Blueprint $table) {
+            $table->dropColumn('price');
         });
     }
 };
