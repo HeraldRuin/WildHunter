@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use Modules\Animals\User\OrganisationController;
+use Modules\Animals\User\TrophyCostController;
 
 Route::group(['prefix'=>config('animal.animal_route_prefix')],function(){
     Route::get('/','AnimalController@index')->name('animal.search'); // Search
@@ -32,6 +33,12 @@ Route::group(['prefix'=>'user/'.config('animal.animal_route_prefix')],function()
 
 Route::group(['prefix'=>'organisation'],function(){
     Route::get('/','OrganisationController@index')->name('animal.vendor.organisation');
+});
+
+Route::group(['prefix'=>'trophy-cost','middleware' => ['auth','verified']],function(){
+    Route::get('/',[TrophyCostController::class, 'index'])->name('animal.vendor.trophy_cost');
+    Route::post('/store',[TrophyCostController::class, 'store'])->name('animal.vendor.trophy_cost.store');
+    Route::post('/update-single',[TrophyCostController::class, 'updateSingle'])->name('animal.vendor.trophy_cost.update_single');
 });
 
 Route::group(['prefix'=>config('animal.animal_route_prefix')],function(){
