@@ -1774,3 +1774,6 @@
 .nav-tabs .nav-link.active {
 border-color: #fff !important;
 }
+.timer-width {
+  max-width: 90% !important;
+}
