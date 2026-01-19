@@ -94,7 +94,7 @@
     </td>
     <td class="{{$booking->status_for_user}} a-hidden">
         <div>{{$booking->statusNameForUser}}</div>
-        @if($booking->status_for_user === \Modules\Booking\Models\Booking::START_COLLECTION && $booking->updated_at)
+        @if($booking->status === \Modules\Booking\Models\Booking::START_COLLECTION && $booking->updated_at)
             <div class="text-muted collection-timer" data-start="{{ $booking->updated_at->timestamp * 1000 }}">[0 мин]</div>
         @endif
     </td>
@@ -141,7 +141,8 @@
             </button>
         @else
             {{-- Обычные кнопки для создателя брони или вендора --}}
-            @if($booking->status === 'confirmed')
+            {{-- Кнопка "Открыть сбор" доступна когда бронь подтверждена или уже идет сбор охотников --}}
+            @if(in_array($booking->status, ['confirmed', \Modules\Booking\Models\Booking::START_COLLECTION]))
                 <button
                     type="button"
                     class="btn btn-primary btn-sm mt-2"
