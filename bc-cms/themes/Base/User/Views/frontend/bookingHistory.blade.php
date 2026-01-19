@@ -47,7 +47,14 @@
             @endif
 
             @if(!empty($bookings) and $bookings->total() > 0)
-                <div class="tab-content" id="booking-history">
+                <div class="tab-content" id="booking-history" 
+                     data-user-id="{{ Auth::id() }}" 
+                     data-invite-text="{{ __('Invite') }}" 
+                     data-invited-text="{{ __('Invited') }}"
+                     data-accept-confirm="{{ __('Are you sure you want to accept this invitation?') }}"
+                     data-decline-confirm="{{ __('Are you sure you want to decline this invitation?') }}"
+                     data-invitation-accepted="{{ __('Invitation accepted') }}"
+                     data-invitation-declined="{{ __('Invitation declined') }}">
                     <div class="table-responsive table-width">
                         <table class="table table-bordered  table-booking-history">
                             <thead>
