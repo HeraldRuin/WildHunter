@@ -36,7 +36,7 @@ class ModuleProvider extends ModuleServiceProvider
             $res['settings'] = [
                 'url'   => route('settings.vendor.collection-timer'),
                 'title'      => __("Settings"),
-                'icon'       => '',
+                'icon'       => 'icofont-settings',
                 'position'   => 70,
                 'permission' => 'settings_view',
                 'children' => [
