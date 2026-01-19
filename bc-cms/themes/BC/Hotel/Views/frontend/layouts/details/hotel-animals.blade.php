@@ -26,7 +26,7 @@
                             <div class="render">
                                 <span class="adults" >
                                     <span class="one" >@{{hunting_adults}}
-                                        <span v-if="adults < 2">{{__('Adult')}}</span>
+                                        <span v-if="hunting_adults < 2">{{__('Adult')}}</span>
                                         <span v-else>{{__('Adults')}}</span>
                                     </span>
                                 </span>

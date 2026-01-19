@@ -5,6 +5,7 @@ use Carbon\Carbon;
 use ICal\ICal;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Modules\Animals\Models\Animal;
 use Modules\Animals\Models\AnimalDate;
@@ -224,6 +225,19 @@ class AvailabilityController extends FrontendController{
 
         if (!$period) {
             return $this->sendError('На выбранную дату нет ценового периода');
+        }
+
+        // Проверка минимального количества охотников
+        if ($adults && $hotel_id && $animal_id) {
+            $minHuntersCount = DB::table('bc_hotel_animals')
+                ->where('hotel_id', $hotel_id)
+                ->where('animal_id', $animal_id)
+                ->value('hunters_count');
+
+            // Если минимальное количество установлено и выбрано меньше охотников
+            if ($minHuntersCount && (int)$adults < (int)$minHuntersCount) {
+                return $this->sendError("Минимальное количество охотников для этого животного: {$minHuntersCount}. Вы выбрали: {$adults}");
+            }
         }
 
         $animalBookedCount = Booking::where('object_model', 'animal')

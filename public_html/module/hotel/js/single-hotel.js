@@ -535,46 +535,55 @@
                     }
                 }
 
-                this.onLoadAnimalAvailability = true;
+                var me = this;
+                
+                // Используем $nextTick чтобы Vue точно обновил модель перед чтением
+                this.$nextTick(function() {
+                    // Читаем значение из Vue модели hunting_adults
+                    var huntingAdultsValue = parseInt(me.hunting_adults) || 1;
+                    
+                    me.onLoadAnimalAvailability = true;
+                    
+                    // Формируем данные для запроса
+                    var requestData = {
+                        hotel_id: me.id,
+                        animal_id: me.getSelectAnimalId(),
+                        start_date: me.start_date_animal,
+                        firstLoad: me.firstLoad,
+                        adults: huntingAdultsValue,
+                    };
 
-                // Формируем данные для запроса
-                var requestData = {
-                    hotel_id: this.id,
-                    animal_id: this.getSelectAnimalId(),
-                    start_date: this.start_date_animal,
-                    firstLoad: me.firstLoad,
-                    adults: this.adults,
-                };
-
-                // Передаем даты проживания только если они выбраны
-                if (this.start_date && this.end_date) {
-                    requestData.start_date_hotel = this.start_date;
-                    requestData.end_date_hotel = this.end_date;
-                }
-
-                $.ajax({
-                    url:bookingCore.module.animal+'/checkAvailability',
-                    data: requestData,
-                    method:'post',
-                    success:function (json) {
-                        me.onLoadAnimalAvailability = false;
-                        me.firstLoad = false;
-
-                        if (json.available === true) {
-                            me.animalCheckPassed = true;
-                            me.animalPrice = json.price;
-                            me.hunterCount = json.adults;
-                        }
-
-                        if(json.message){
-                            bookingCoreApp.showAjaxMessage(json);
-                        }
-                    },
-                    error:function (e) {
-                        me.firstLoad = false;
-                        bookingCoreApp.showAjaxError(e);
+                    // Передаем даты проживания только если они выбраны
+                    if (me.start_date && me.end_date) {
+                        requestData.start_date_hotel = me.start_date;
+                        requestData.end_date_hotel = me.end_date;
                     }
-                })
+
+                    $.ajax({
+                        url:bookingCore.module.animal+'/checkAvailability',
+                        data: requestData,
+                        method:'post',
+                        success:function (json) {
+                            me.onLoadAnimalAvailability = false;
+                            me.firstLoad = false;
+
+                            if (json.available === true) {
+                                me.animalCheckPassed = true;
+                                me.animalPrice = json.price;
+                                me.hunterCount = json.adults;
+                            }
+
+                            if(json.message){
+                                bookingCoreApp.showAjaxMessage(json);
+                            }
+                        },
+                        error:function (e) {
+                            me.onLoadAnimalAvailability = false;
+                            me.firstLoad = false;
+                            bookingCoreApp.showAjaxError(e);
+                        }
+                    });
+                });
             },
             getSelectAnimalId(){
                 var animalInput = document.querySelector('.child_id');
