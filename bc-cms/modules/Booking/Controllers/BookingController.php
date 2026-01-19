@@ -963,6 +963,95 @@ class BookingController extends \App\Http\Controllers\Controller
     }
 
     /**
+     * Завершает сбор охотников и переводит бронь в статус "подтверждено"
+     * Проверяет минимальное количество принятых охотников
+     */
+    public function finishCollection(Booking $booking): JsonResponse
+    {
+        if (!Auth::check()) {
+            return $this->sendError('Необходима авторизация')->setStatusCode(401);
+        }
+
+        $user = Auth::user();
+        $isBaseAdmin = $user->hasRole('baseadmin') || $user->hasPermission('baseAdmin_dashboard_access');
+
+        // Только владелец брони, вендор или base-admin могут завершить сбор
+        if (
+            !$isBaseAdmin
+            && $booking->vendor_id !== $user->id
+            && $booking->create_user !== $user->id
+        ) {
+            return $this->sendError(__("You don't have access."))->setStatusCode(403);
+        }
+
+        // Проверяем, что бронь в режиме сбора
+        if ($booking->status !== Booking::START_COLLECTION) {
+            return $this->sendError(__('Сбор охотников не начат или уже завершён'))->setStatusCode(422);
+        }
+
+        // Получаем все приглашения с принятым статусом
+        $acceptedInvitations = $booking->getAllInvitations()
+            ->where('status', 'accepted');
+
+        $acceptedCount = $acceptedInvitations->count();
+
+        // Определяем минимальное количество охотников (по умолчанию 1)
+        $minHunters = 1;
+        $animalName = '';
+
+        // Если есть животное, получаем его название и минимальное количество
+        if ($booking->animal_id) {
+            $animal = Animal::find($booking->animal_id);
+            if ($animal) {
+                $animalName = $animal->title ?? '';
+                // Минимальное количество можно хранить в мета-данных животного
+                // Если метод getMeta доступен, используем его, иначе используем значение по умолчанию
+                if (method_exists($animal, 'getMeta')) {
+                    $minHunters = (int) $animal->getMeta('min_hunters', 1);
+                }
+            }
+        }
+
+        // Проверяем минимальное количество
+        if ($acceptedCount < $minHunters) {
+            $message = __('Минимальное кол-во охотников для :animal :count', [
+                'animal' => $animalName ?: __('животного'),
+                'count' => $minHunters
+            ]);
+            return $this->sendError($message)->setStatusCode(422);
+        }
+
+        // Завершаем сбор - переводим в статус "подтверждено"
+        $booking->status = Booking::CONFIRMED;
+        $booking->save();
+        event(new BookingUpdatedEvent($booking));
+
+        // Уведомляем создателя брони о смене статуса
+        try {
+            $old = app()->getLocale();
+            $bookingLocale = $booking->getMeta('locale');
+            if ($bookingLocale) {
+                app()->setLocale($bookingLocale);
+            }
+
+            if ($booking->create_user) {
+                $creator = User::find($booking->create_user);
+                if ($creator && !empty($creator->email)) {
+                    Mail::to($creator->email)->send(new StatusUpdatedEmail($booking, 'customer'));
+                }
+            }
+
+            app()->setLocale($old);
+        } catch (\Exception | \Swift_TransportException $e) {
+            Log::warning('finishCollection: failed to send status email to creator: ' . $e->getMessage());
+        }
+
+        return $this->sendSuccess([
+            'message' => __('Сбор охотников завершён. Бронь подтверждена.')
+        ]);
+    }
+
+    /**
      * Сохраняет приглашение охотника для брони
      *
      * @param \Illuminate\Http\Request $request

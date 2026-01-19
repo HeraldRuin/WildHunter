@@ -159,7 +159,10 @@
                             @click="cancelCollection($event, {{ $booking->id }})">
                             {{ __('Cancel collection') }}
                         </button>
-                        <button type="button" class="btn btn-info mx-2">
+                        <button
+                            type="button"
+                            class="btn btn-info mx-2"
+                            @click="finishCollection($event, {{ $booking->id }})">
                             {{ __('Finish collection') }}
                         </button>
                     </div>
