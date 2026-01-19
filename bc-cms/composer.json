@@ -32,7 +32,7 @@
         "omnipay/stripe": "^3.0",
         "payrexx/payrexx": "dev-master",
         "propaganistas/laravel-phone": "^5.1",
-        "pusher/pusher-php-server": "^7.0",
+        "pusher/pusher-php-server": "^7.2",
         "bc/installer": "*",
         "rap2hpoutre/laravel-log-viewer": "^2.5.0",
         "spatie/laravel-google-cloud-storage": "^2.0.3",
@@ -46,7 +46,7 @@
         "bc/qrcode": "*"
     },
     "require-dev": {
-        "barryvdh/laravel-debugbar": "^3.7",
+        "barryvdh/laravel-debugbar": "^3.16",
         "fakerphp/faker": "^1.9.1",
         "laravel/pint": "^1.13",
         "laravel/sail": "^1.41",
