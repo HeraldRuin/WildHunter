@@ -105,5 +105,9 @@ class Animal extends Bookable
     {
         return $this->hasMany(AnimalPricePeriod::class);
     }
+    public function trophies(): HasMany
+    {
+        return $this->hasMany(AnimalTrophy::class);
+    }
 }
 

@@ -13,6 +13,7 @@ use Modules\AdminController;
 use Modules\Animals\Hook;
 use Modules\Animals\Models\Animal;
 use Modules\Animals\Models\AnimalTranslation;
+use Modules\Animals\Models\AnimalTrophy;
 use Modules\Core\Events\CreatedServicesEvent;
 use Modules\Core\Events\UpdatedServiceEvent;
 use Modules\Core\Models\Attributes;
@@ -129,6 +130,7 @@ class AnimalController extends AdminController
             'attributes'   => $this->attributes::where('service', 'animal')->get(),
             'car_location' => $this->location::where('status', 'publish')->get()->toTree(),
             'translation'  => new $this->animal_translation(),
+            'trophies'     => collect([]),
             'breadcrumbs'  => [
                 [
                     'name' => __('Animals'),
@@ -164,6 +166,7 @@ class AnimalController extends AdminController
             'attributes'        => $this->attributes::where('service', 'animal')->get(),
             'animal_location'      => $this->location::where('status', 'publish')->get()->toTree(),
             'enable_multi_lang' => true,
+            'trophies'          => $row->trophies,
             'breadcrumbs'       => [
                 [
                     'name' => __('Animal'),
@@ -237,6 +240,7 @@ class AnimalController extends AdminController
         if ($res) {
             if (!$request->input('lang') or is_default_lang($request->input('lang'))) {
 //                $this->saveTerms($row, $request);
+                $this->saveTrophies($row, $request);
             }
             do_action(Hook::AFTER_SAVING,$row,$request);
 
@@ -266,6 +270,26 @@ class AnimalController extends AdminController
 //            $this->car_term::where('target_id', $row->id)->whereNotIn('term_id', $term_ids)->delete();
 //        }
 //    }
+
+    public function saveTrophies($row, $request)
+    {
+        $trophy_types = $request->input('trophy_types', []);
+        
+        // Удаляем все существующие трофеи
+        AnimalTrophy::where('animal_id', $row->id)->delete();
+        
+        // Сохраняем новые трофеи
+        if (!empty($trophy_types) && is_array($trophy_types)) {
+            foreach ($trophy_types as $type) {
+                if (!empty(trim($type))) {
+                    AnimalTrophy::create([
+                        'animal_id' => $row->id,
+                        'type' => trim($type),
+                    ]);
+                }
+            }
+        }
+    }
 
     public function bulkEdit(Request $request)
     {

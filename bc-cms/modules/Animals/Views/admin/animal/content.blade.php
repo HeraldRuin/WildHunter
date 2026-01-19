@@ -37,3 +37,45 @@
         @endif
     </div>
 </div>
+
+<div class="panel">
+    <div class="panel-title"><strong>{{__("Trophy Type")}}</strong></div>
+    <div class="panel-body">
+        @if(is_default_lang())
+            <div class="form-group-item">
+                <label class="control-label">{{__("Trophy Types")}}</label>
+                <div class="g-items">
+                    @if(!empty($trophies) && $trophies->count() > 0)
+                        @foreach($trophies as $key=>$trophy)
+                            <div class="item" data-number="{{$key}}">
+                                <div class="row">
+                                    <div class="col-md-11">
+                                        <input type="text" name="trophy_types[{{$key}}]" class="form-control" value="{{$trophy->type}}" placeholder="{{__('Enter trophy type')}}">
+                                    </div>
+                                    <div class="col-md-1">
+                                        <span class="btn btn-danger btn-sm btn-remove-item"><i class="fa fa-trash"></i></span>
+                                    </div>
+                                </div>
+                            </div>
+                        @endforeach
+                    @endif
+                </div>
+                <div class="text-right">
+                    <span class="btn btn-info btn-sm btn-add-item"><i class="icon ion-ios-add-circle-outline"></i> {{__('Add item')}}</span>
+                </div>
+                <div class="g-more hide">
+                    <div class="item" data-number="__number__">
+                        <div class="row">
+                            <div class="col-md-11">
+                                <input type="text" __name__="trophy_types[__number__]" class="form-control" placeholder="{{__('Enter trophy type')}}">
+                            </div>
+                            <div class="col-md-1">
+                                <span class="btn btn-danger btn-sm btn-remove-item"><i class="fa fa-trash"></i></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        @endif
+    </div>
+</div>
