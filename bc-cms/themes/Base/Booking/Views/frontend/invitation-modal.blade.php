@@ -10,7 +10,7 @@
                     <h5 class="modal-title">{{ __('Open collection for hunting') }}</h5>
                 </div>
                 <div class="modal-body">
-                    @if($invitation->status === 'invited')
+                    @if($invitation->status !== 'accepted' && $invitation->status !== 'declined')
                         <div class="mt-4 p-3 border rounded">
                             <div class="d-flex justify-content-center gap-2 flex-wrap">
                                 <button
@@ -58,7 +58,7 @@
                                                 @endif
                                                 {{ $inv->hunter->first_name }} {{ $inv->hunter->last_name }}
                                             </span>
-                                            <span class="badge
+                                            <span class="badge ml-2
                                                 @if($inv->status === 'accepted') bg-success
                                                 @elseif($inv->status === 'declined') bg-danger
                                                 @else bg-info
