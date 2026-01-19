@@ -50,7 +50,8 @@ class ThemeProvider extends AbstractThemeProvider
         'popup'     => \Modules\Popup\ModuleProvider::class,
         'animal'      => \Modules\Animals\ModuleProvider::class,
         'weapon' => \Modules\Weapon\ModuleProvider::class,
-        'attendance' => \Modules\Attendance\ModuleProvider::class
+        'attendance' => \Modules\Attendance\ModuleProvider::class,
+        'settings' => \Modules\Settings\ModuleProvider::class
     ];
 
     public function boot(Kernel $kernel)

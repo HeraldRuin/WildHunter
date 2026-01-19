@@ -42,7 +42,8 @@ class ThemeProvider extends \Themes\Base\ThemeProvider
         'visa'      => \Modules\Visa\ModuleProvider::class,
         'animal'      => \Modules\Animals\ModuleProvider::class,
         'weapon' => \Modules\Weapon\ModuleProvider::class,
-        'attendance' => \Modules\Attendance\ModuleProvider::class
+        'attendance' => \Modules\Attendance\ModuleProvider::class,
+        'settings' => \Modules\Settings\ModuleProvider::class
     ];
 
     public function register()
