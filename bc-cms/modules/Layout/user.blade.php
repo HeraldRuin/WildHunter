@@ -142,7 +142,7 @@
     <script src="https://cdn.jsdelivr.net/npm/laravel-echo@1.11.0/dist/echo.iife.js"></script>
     <script>
         window.EchoConfig = {
-            host: '{{ env("ECHO_HOST") }}',
+            host: '{{ env("PUSHER_HOST") }}',
             key: '{{ env("PUSHER_APP_KEY") }}',
         };
     </script>
