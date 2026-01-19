@@ -16,6 +16,7 @@ Route::group(['prefix'=>'user','middleware' => ['auth','verified']],function(){
     Route::get('/booking-history','UserController@bookingHistory')->name("user.booking_history");
 
     Route::get('search','UserController@searchUser')->name('search');
+    Route::get('search-hunters','UserController@searchHunters')->name('user.search_hunters');
 
     Route::post('/wishlist','UserWishListController@handleWishList')->name("user.wishList.handle");
     Route::get('/wishlist','UserWishListController@index')->name("user.wishList.index");
