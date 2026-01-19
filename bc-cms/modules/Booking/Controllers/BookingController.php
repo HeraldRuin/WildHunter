@@ -6,6 +6,7 @@ use App\User;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
@@ -995,28 +996,60 @@ class BookingController extends \App\Http\Controllers\Controller
 
         $acceptedCount = $acceptedInvitations->count();
 
-        // Определяем минимальное количество охотников (по умолчанию 1)
-        $minHunters = 1;
-        $animalName = '';
+        // Загружаем модель заново из базы данных, чтобы получить актуальные данные
+        $booking = Booking::find($booking->id);
 
-        // Если есть животное, получаем его название и минимальное количество
-        if ($booking->animal_id) {
+        $animalName = '';
+        $requiredHunters = 1; // Значение по умолчанию
+
+        // Если есть животное и отель, получаем минимальное количество охотников из pivot таблицы
+        if ($booking->animal_id && $booking->hotel_id) {
             $animal = Animal::find($booking->animal_id);
             if ($animal) {
                 $animalName = $animal->title ?? '';
-                // Минимальное количество можно хранить в мета-данных животного
-                // Если метод getMeta доступен, используем его, иначе используем значение по умолчанию
-                if (method_exists($animal, 'getMeta')) {
-                    $minHunters = (int) $animal->getMeta('min_hunters', 1);
+
+                // Получаем связь животного с отелем через pivot таблицу
+                $hotelAnimal = DB::table('bc_hotel_animals')
+                    ->where('animal_id', $booking->animal_id)
+                    ->where('hotel_id', $booking->hotel_id)
+                    ->first();
+
+                if ($hotelAnimal && isset($hotelAnimal->hunters_count)) {
+                    $requiredHunters = (int) $hotelAnimal->hunters_count;
+                }
+
+                // Если значение не найдено или равно 0, используем минимальное значение 1
+                if ($requiredHunters <= 0) {
+                    $requiredHunters = 1;
+                }
+            }
+        } else {
+            // Если нет животного или отеля, используем старую логику
+            if ($booking->type === 'hotel') {
+                $requiredHunters = (int) ($booking->total_guests ?? 0);
+            } elseif ($booking->type === 'animal' || $booking->type === 'hotel_animal') {
+                $requiredHunters = (int) ($booking->total_hunting ?? 0);
+            }
+
+            // Если количество не указано или равно 0, используем минимальное значение 1
+            if ($requiredHunters <= 0) {
+                $requiredHunters = 1;
+            }
+
+            // Получаем название животного, если есть
+            if ($booking->animal_id) {
+                $animal = Animal::find($booking->animal_id);
+                if ($animal) {
+                    $animalName = $animal->title ?? '';
                 }
             }
         }
 
-        // Проверяем минимальное количество
-        if ($acceptedCount < $minHunters) {
+        // Проверяем, что собрано достаточное количество охотников
+        if ($acceptedCount < $requiredHunters) {
             $message = __('Минимальное кол-во охотников для :animal :count', [
                 'animal' => $animalName ?: __('животного'),
-                'count' => $minHunters
+                'count' => $requiredHunters
             ]);
             return $this->sendError($message)->setStatusCode(422);
         }
