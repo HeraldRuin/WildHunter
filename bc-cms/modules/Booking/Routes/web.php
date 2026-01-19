@@ -13,6 +13,7 @@ Route::group(['prefix'=>config('booking.booking_route_prefix')],function(){
     Route::post('/{booking}/change-user','BookingController@changeUserBooking');
     Route::post('/{booking}/confirm','BookingController@confirmBooking');
     Route::post('/{booking}/start-collection','BookingController@startCollection');
+    Route::post('/{booking}/cancel-collection','BookingController@cancelCollection');
     Route::post('/{booking}/invite-hunter','BookingController@inviteHunter');
     Route::get('/{booking}/invited-hunters','BookingController@getInvitedHunters');
     Route::post('/{booking}/email-hunter','BookingController@emailHunter');

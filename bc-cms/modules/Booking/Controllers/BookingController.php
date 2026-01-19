@@ -856,6 +856,113 @@ class BookingController extends \App\Http\Controllers\Controller
     }
 
     /**
+     * Отменяет сбор охотников и переводит бронь в статус "подтверждено"
+     * Также уведомляет всех приглашенных охотников и скрывает их приглашения
+     */
+    public function cancelCollection(Booking $booking): JsonResponse
+    {
+        if (!Auth::check()) {
+            return $this->sendError('Необходима авторизация')->setStatusCode(401);
+        }
+
+        $user = Auth::user();
+        $isBaseAdmin = $user->hasRole('baseadmin') || $user->hasPermission('baseAdmin_dashboard_access');
+
+        // Только владелец брони, вендор или base-admin могут отменить сбор
+        if (
+            !$isBaseAdmin
+            && $booking->vendor_id !== $user->id
+            && $booking->create_user !== $user->id
+        ) {
+            return $this->sendError(__("You don't have access."))->setStatusCode(403);
+        }
+
+        // Заблокируем отмену сбора только для уже окончательно отменённых/завершённых броней
+        if (in_array($booking->status, [Booking::CANCELLED, Booking::COMPLETED], true)) {
+            return $this->sendError(__('This booking cannot be modified'))->setStatusCode(422);
+        }
+
+        // Если бронь сейчас в режиме сбора, по‑прежнему переводим её в "подтверждено"
+        if ($booking->status === Booking::START_COLLECTION) {
+            $booking->status = Booking::CONFIRMED;
+            $booking->save();
+            event(new BookingUpdatedEvent($booking));
+        }
+
+        // Получаем всех приглашенных охотников
+        $invitations = $booking->getAllInvitations();
+
+        foreach ($invitations as $invitation) {
+            $hunter = $invitation->hunter;
+
+            // Уведомляем охотника о том, что сбор отменён и бронь подтверждена
+            if ($hunter && !empty($hunter->email)) {
+                try {
+                    $message = __('The hunter collection for this booking has been cancelled. The booking is now confirmed.');
+                    Mail::to($hunter->email)->send(new HunterMessageEmail($booking, $hunter, $message));
+                } catch (\Exception $e) {
+                    Log::warning('cancelCollection: failed to send email to hunter', [
+                        'booking_id' => $booking->id,
+                        'hunter_id'  => $hunter->id ?? null,
+                        'error'      => $e->getMessage(),
+                    ]);
+                }
+            }
+        }
+
+        // Полностью удаляем (force delete) все приглашения охотников из таблицы bc_booking_hunter_invitations для этой брони
+        try {
+            // Получаем все booking_hunter_id для этой брони
+            $bookingHunterIds = BookingHunter::where('booking_id', $booking->id)->pluck('id');
+
+            if ($bookingHunterIds->isNotEmpty()) {
+                // Жёстко удаляем все приглашения, связанные с этими booking_hunter_id
+                $deletedCount = BookingHunterInvitation::whereIn('booking_hunter_id', $bookingHunterIds)->forceDelete();
+
+                Log::info('cancelCollection: force delete приглашений охотников', [
+                    'booking_id' => $booking->id,
+                    'booking_hunter_ids' => $bookingHunterIds->toArray(),
+                    'deleted' => $deletedCount,
+                ]);
+            } else {
+                Log::info('cancelCollection: нет связанных BookingHunter для удаления приглашений', [
+                    'booking_id' => $booking->id,
+                ]);
+            }
+        } catch (\Exception $e) {
+            Log::warning('cancelCollection: failed to force delete invitations', [
+                'booking_id' => $booking->id,
+                'error' => $e->getMessage(),
+            ]);
+        }
+
+        // Уведомляем создателя брони о смене статуса
+        try {
+            $old = app()->getLocale();
+            $bookingLocale = $booking->getMeta('locale');
+            if ($bookingLocale) {
+                app()->setLocale($bookingLocale);
+            }
+
+            if ($booking->create_user) {
+                $creator = User::find($booking->create_user);
+                if ($creator && !empty($creator->email)) {
+                    $customMessage = __('Hunter collection has been cancelled. The booking is now confirmed.');
+                    Mail::to($creator->email)->send(new StatusUpdatedEmail($booking, 'customer', $customMessage));
+                }
+            }
+
+            app()->setLocale($old);
+        } catch (\Exception | \Swift_TransportException $e) {
+            Log::warning('cancelCollection: failed to send status email to creator: ' . $e->getMessage());
+        }
+
+        return $this->sendSuccess([
+            'message' => __('Hunter collection has been cancelled. The booking is now confirmed.')
+        ]);
+    }
+
+    /**
      * Сохраняет приглашение охотника для брони
      *
      * @param \Illuminate\Http\Request $request
@@ -969,19 +1076,19 @@ class BookingController extends \App\Http\Controllers\Controller
         $allInvitations = $booking->getAllInvitations();
         // Фильтруем отклоненные и удаленные на коллекции
         $invitations = $allInvitations->whereNotIn('status', ['declined', 'removed']);
-        
+
         Log::info('getInvitedHunters: найдено приглашений', [
             'booking_id' => $booking->id,
             'total' => $allInvitations->count(),
             'filtered' => $invitations->count()
         ]);
-        
+
         $hunters = $invitations->map(function($invitation) {
             $hunter = $invitation->hunter;
             if (!$hunter) {
                 return null;
             }
-            
+
             return [
                 'id' => $hunter->id,
                 'user_name' => $hunter->user_name,
