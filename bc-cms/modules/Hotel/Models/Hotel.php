@@ -39,6 +39,7 @@ class Hotel extends Bookable
         'content',
         'status',
         'max_hunts_per_day',
+        'collection_timer_hours',
     ];
     protected $slugField     = 'slug';
     protected $slugFromField = 'title';
