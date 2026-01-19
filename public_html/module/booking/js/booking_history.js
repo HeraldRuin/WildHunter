@@ -49,8 +49,12 @@ document.addEventListener('DOMContentLoaded', function () {
             },
             openCollectionModal(bookingId) {
                 this.currentCollectionBookingId = bookingId;
-                // Инициализируем слоты для охотников при открытии модального окна
-                this.initializeHunterSlots(bookingId);
+                // Инициализируем слоты сразу, не ждем события модального окна
+                // Используем setTimeout чтобы дать Bootstrap время открыть модальное окно
+                setTimeout(() => {
+                    console.log('Вызов initializeHunterSlots для брони:', bookingId);
+                    this.initializeHunterSlots(bookingId);
+                }, 200);
             },
             initializeHunterSlots(bookingId) {
                 // Получаем количество охотников из DOM элемента модального окна
@@ -68,14 +72,94 @@ document.addEventListener('DOMContentLoaded', function () {
                         results: [],
                         showResults: false,
                         isSearching: false,
+                        noResults: false,
                         debounceTimeout: null,
                         showEmailInput: false,
                         emailMessage: '',
                         emailAddress: '' // Для хранения email, если охотник не выбран
                     }));
+                    
+                    console.log('Инициализировано слотов:', this.hunterSlots.length);
+                    
+                    // Загружаем уже приглашенных охотников
+                    this.loadInvitedHunters(bookingId);
                 } else {
+                    console.log('Количество охотников = 0, слоты не созданы');
                     this.hunterSlots = [];
                 }
+            },
+            loadInvitedHunters(bookingId) {
+                console.log('Загрузка приглашенных охотников для брони:', bookingId);
+                fetch(`/booking/${bookingId}/invited-hunters`)
+                    .then(res => res.json())
+                    .then(data => {
+                        console.log('Ответ от сервера:', data);
+                        // sendSuccess возвращает данные напрямую, не в data.data
+                        const hunters = data.hunters || [];
+                        console.log('Найдено приглашенных охотников:', hunters.length, hunters);
+                        
+                        if (data.status && hunters.length > 0) {
+                            console.log('Обработка', hunters.length, 'приглашенных охотников');
+                            
+                            // Создаем новый массив слотов с обновленными данными для лучшей реактивности
+                            const updatedSlots = this.hunterSlots.map((slot, index) => {
+                                if (index < hunters.length) {
+                                    const hunter = hunters[index];
+                                    
+                                    // Инициализируем флаги для охотника
+                                    if (typeof hunter.showEmailInput === 'undefined') {
+                                        hunter.showEmailInput = false;
+                                    }
+                                    if (typeof hunter.emailMessage === 'undefined') {
+                                        hunter.emailMessage = '';
+                                    }
+                                    
+                                    // Формируем текст для поля ввода
+                                    const queryText = hunter.user_name || (hunter.first_name + ' ' + hunter.last_name).trim() || '';
+                                    
+                                    console.log(`Слот ${index} заполнен охотником:`, {
+                                        id: hunter.id,
+                                        name: hunter.first_name + ' ' + hunter.last_name,
+                                        user_name: hunter.user_name,
+                                        query: queryText,
+                                        invited: hunter.invited,
+                                        status: hunter.invitation_status
+                                    });
+                                    
+                                    // Возвращаем обновленный слот
+                                    return {
+                                        ...slot,
+                                        hunter: hunter,
+                                        query: queryText
+                                    };
+                                }
+                                return slot;
+                            });
+                            
+                            // Заменяем весь массив для реактивности Vue
+                            this.$set(this, 'hunterSlots', updatedSlots);
+                            
+                            console.log('Массив hunterSlots обновлен:', this.hunterSlots.length, 'слотов');
+                            console.log('Проверка данных в слотах:', this.hunterSlots.map((s, i) => ({
+                                index: i,
+                                query: s.query,
+                                hasHunter: !!s.hunter,
+                                hunterName: s.hunter ? (s.hunter.first_name + ' ' + s.hunter.last_name) : null,
+                                hunterId: s.hunter ? s.hunter.id : null
+                            })));
+                            
+                            // Принудительно обновляем Vue для отображения
+                            this.$nextTick(() => {
+                                this.$forceUpdate();
+                                console.log('Vue принудительно обновлен');
+                            });
+                        } else {
+                            console.log('Нет данных о приглашенных охотниках. Статус:', data.status, 'Hunters count:', hunters.length, 'Data:', data);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Ошибка при загрузке приглашенных охотников:', error);
+                    });
             },
             searchHunterDebounced() {
                 if (this.hunterSearchQuery.length < 4) {
@@ -693,6 +777,23 @@ document.addEventListener('DOMContentLoaded', function () {
                 new bootstrap.Popover(el);
             });
 
+            // Добавляем обработчики событий для модальных окон сбора охотников
+            const me = this;
+            // Используем делегирование событий для всех модальных окон
+            document.addEventListener('shown.bs.modal', function(event) {
+                const modalEl = event.target;
+                if (modalEl && modalEl.id && modalEl.id.startsWith('collectionModal')) {
+                    const bookingId = modalEl.dataset.bookingId;
+                    console.log('Модальное окно collectionModal открыто, bookingId:', bookingId);
+                    if (bookingId) {
+                        // Загружаем данные после открытия модального окна
+                        setTimeout(() => {
+                            me.initializeHunterSlots(parseInt(bookingId, 10));
+                        }, 50);
+                    }
+                }
+            });
+
             window.LaravelEcho.channel('booking')
                 .listen('.booking.created', (e) => {
                     location.reload();
@@ -735,9 +836,12 @@ document.addEventListener('DOMContentLoaded', function () {
             }
 
             // Очистка полей поиска охотников при закрытии модалок сбора
-            const me = this;
-            document.querySelectorAll('.modal[id^="collectionModal"]').forEach(function (modalEl) {
-                modalEl.addEventListener('hidden.bs.modal', function () {
+            document.querySelectorAll('.modal[id^="collectionModal"]').forEach((modalEl) => {
+                // Проверяем, не добавлен ли уже обработчик
+                if (modalEl.dataset.handlerCleared) return;
+                modalEl.dataset.handlerCleared = 'true';
+                
+                modalEl.addEventListener('hidden.bs.modal', () => {
                     me.hunterSearchQuery = '';
                     me.hunterSearchResults = [];
                     me.hunterNoResults = false;
