@@ -79,6 +79,11 @@ class ModuleProvider extends ModuleServiceProvider
                         'title'      => __("Hunting organization"),
                         'permission' => 'animal_create_hunting',
                     ],
+                    'trophy_cost'=>[
+                        'url'        => route('animal.vendor.trophy_cost'),
+                        'title'      => __("Trophy Cost"),
+                        'permission' => 'animal_create_hunting',
+                    ],
                 ]
             ];
         }
