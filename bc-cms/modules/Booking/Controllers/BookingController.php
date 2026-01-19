@@ -14,11 +14,13 @@ use Illuminate\Validation\Rule;
 use Mockery\Exception;
 use Modules\Animals\Models\Animal;
 use Modules\Booking\Emails\StatusUpdatedEmail;
+use Modules\Booking\Emails\HunterMessageEmail;
 use Modules\Booking\Events\BookingCreatedEvent;
 use Modules\Booking\Events\BookingUpdatedEvent;
 use Modules\Booking\Events\EnquirySendEvent;
 use Modules\Booking\Events\SetPaidAmountEvent;
 use Modules\Booking\Models\BookingHunter;
+use Modules\Booking\Models\BookingHunterInvitation;
 use Modules\Booking\Models\BookingPassenger;
 use Modules\User\Events\SendMailUserRegistered;
 use Illuminate\Http\Request;
@@ -850,6 +852,157 @@ class BookingController extends \App\Http\Controllers\Controller
 
         return $this->sendSuccess([
             'message' => __('The gathering of hunters has begun')
+        ]);
+    }
+
+    /**
+     * Сохраняет приглашение охотника для брони
+     *
+     * @param \Illuminate\Http\Request $request
+     * @param \Modules\Booking\Models\Booking $booking
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function inviteHunter(Request $request, Booking $booking): JsonResponse
+    {
+        if (!Auth::check()) {
+            return $this->sendError('Необходима авторизация')->setStatusCode(401);
+        }
+
+        $hunterId = (int) $request->input('hunter_id');
+        if (!$hunterId) {
+            return $this->sendError('Не передан hunter_id')->setStatusCode(422);
+        }
+
+        $hunter = User::find($hunterId);
+        if (!$hunter) {
+            return $this->sendError('Пользователь не найден')->setStatusCode(404);
+        }
+
+        $bookingHunter = BookingHunter::where('booking_id', $booking->id)->first();
+        if (!$bookingHunter) {
+            return $this->sendError('Запись BookingHunter для этой брони не найдена')->setStatusCode(404);
+        }
+
+        $invitation = BookingHunterInvitation::updateOrCreate(
+            [
+                'booking_hunter_id' => $bookingHunter->id,
+                'hunter_id'         => $hunterId,
+            ],
+            [
+                'invited'         => true,
+                'status'          => 'pending',
+                'invited_at'      => now(),
+                'invitation_token'=> $booking->code . '-' . $hunterId,
+            ]
+        );
+
+        // Отправляем событие приглашенному охотнику для обновления страницы истории
+        try {
+            event(new \Modules\Booking\Events\HunterInvitedEvent($booking, $hunterId));
+            Log::info('HunterInvitedEvent отправлено', [
+                'booking_id' => $booking->id,
+                'hunter_id' => $hunterId,
+                'channel' => 'user-channel-' . $hunterId
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Ошибка отправки HunterInvitedEvent', [
+                'error' => $e->getMessage(),
+                'booking_id' => $booking->id,
+                'hunter_id' => $hunterId
+            ]);
+        }
+
+        return $this->sendSuccess([
+            'data'    => [
+                'invitation_id' => $invitation->id,
+            ],
+        ]);
+    }
+
+    /**
+     * Отправка письма выбранному охотнику с произвольным сообщением
+     */
+    public function emailHunter(Request $request, Booking $booking): JsonResponse
+    {
+        if (!Auth::check()) {
+            return $this->sendError('Необходима авторизация')->setStatusCode(401);
+        }
+
+        $hunterId = (int) $request->input('hunter_id');
+        $message  = trim((string)$request->input('message', ''));
+
+        if (!$hunterId) {
+            return $this->sendError('Не передан hunter_id')->setStatusCode(422);
+        }
+        if ($message === '') {
+            return $this->sendError('Введите текст сообщения')->setStatusCode(422);
+        }
+
+        $hunter = User::find($hunterId);
+
+        if (!$hunter || empty($hunter->email)) {
+            return $this->sendError('У выбранного пользователя не указан email')->setStatusCode(404);
+        }
+
+        try {
+            Mail::to($hunter->email)->send(new HunterMessageEmail($booking, $hunter, $message));
+        } catch (\Exception $e) {
+            Log::warning('emailHunter: ' . $e->getMessage());
+            return $this->sendError('Не удалось отправить письмо')->setStatusCode(500);
+        }
+
+        return $this->sendSuccess([
+            'message' => __('Message has been sent'),
+        ]);
+    }
+
+    /**
+     * Принять приглашение на бронь
+     */
+    public function acceptInvitation(Request $request, Booking $booking): JsonResponse
+    {
+        if (!Auth::check()) {
+            return $this->sendError('Необходима авторизация')->setStatusCode(401);
+        }
+
+        $userId = Auth::id();
+        $invitation = $booking->getCurrentUserInvitation();
+
+        if (!$invitation) {
+            return $this->sendError('Приглашение не найдено')->setStatusCode(404);
+        }
+
+        $invitation->status = 'accepted';
+        $invitation->accepted_at = now();
+        $invitation->save();
+
+        return $this->sendSuccess([
+            'message' => __('Invitation accepted'),
+        ]);
+    }
+
+    /**
+     * Отказаться от приглашения на бронь
+     */
+    public function declineInvitation(Request $request, Booking $booking): JsonResponse
+    {
+        if (!Auth::check()) {
+            return $this->sendError('Необходима авторизация')->setStatusCode(401);
+        }
+
+        $userId = Auth::id();
+        $invitation = $booking->getCurrentUserInvitation();
+
+        if (!$invitation) {
+            return $this->sendError('Приглашение не найдено')->setStatusCode(404);
+        }
+
+        $invitation->status = 'declined';
+        $invitation->declined_at = now();
+        $invitation->save();
+
+        return $this->sendSuccess([
+            'message' => __('Invitation declined'),
         ]);
     }
 
