@@ -3,7 +3,7 @@
     <div class="container-fluid">
         <h2 class="title-bar">{{ $page_title }}</h2>
         <div class="row">
-            <div class="col-md-12">
+            <div class="col-md-12 timer-width">
                 <div class="panel">
                     <div class="panel-title">
                         <strong>{{ __('Настройки таймера сбора') }}</strong>
