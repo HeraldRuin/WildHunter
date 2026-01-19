@@ -154,5 +154,13 @@ return [
     'attendance_manage_others',
     'attendance_manage_attributes',
 
+    //Settings
+    'settings_view',
+    'settings_create',
+    'settings_update',
+    'settings_delete',
+    'settings_manage_others',
+    'settings_manage_attributes',
+
     'media_manage_others'
 ];
