@@ -165,6 +165,11 @@
                             @click="finishCollection($event, {{ $booking->id }})">
                             {{ __('Finish collection') }}
                         </button>
+                        <button
+                            type="button"
+                            class="btn btn-info mx-2">
+                            {{ __('Opens collection') }}
+                        </button>
                     </div>
                 </div>
             </div>
