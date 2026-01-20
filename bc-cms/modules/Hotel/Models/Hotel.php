@@ -9,6 +9,7 @@ use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Http\Request;
 use Modules\Animals\Models\Animal;
 use Modules\Booking\Models\Bookable;
@@ -481,6 +482,11 @@ class Hotel extends Bookable
                     $end_date
                 ],
                 [
+                    'target_id',
+                    '=',
+                    $this->id
+                ],
+                [
                     'active',
                     '0'
                 ]
@@ -498,6 +504,11 @@ class Hotel extends Bookable
                     'end_date',
                     '<=',
                     $end_date
+                ],
+                [
+                    'target_id',
+                    '=',
+                    $this->id
                 ],
                 [
                     'active',
@@ -1037,6 +1048,14 @@ class Hotel extends Bookable
             $model_hotel->WhereIn('star_rate', $star_rate);
         }
 
+        if (!empty($request['room'])) {
+            $requestedRooms = (int)$request['room'];
+            if ($requestedRooms > 0) {
+                $model_hotel
+                    ->withCount('rooms')
+                    ->having('rooms_count', '>=', $requestedRooms);
+            }
+        }
 
         if ($term_id = $request['term_id'] ?? "") {
             $model_hotel->join('bc_hotel_term as tt1', function ($join) use ($term_id) {
@@ -1076,6 +1095,120 @@ class Hotel extends Bookable
             $model_hotel->whereIn("bc_hotels.id", $ids);
             $model_hotel->orderByRaw('FIELD (' . $model_hotel->qualifyColumn("id") . ', ' . implode(', ', $ids) . ') ASC');
         }
+
+        if (empty($request['start_date']) && !empty($request['start'])) {
+            try {
+                $request['start_date'] = Carbon::createFromFormat('d.m.Y', $request['start'])->format('Y-m-d');
+            } catch (\Throwable $e) {
+            }
+        }
+        if (empty($request['end_date']) && !empty($request['end'])) {
+            try {
+                $request['end_date'] = Carbon::createFromFormat('d.m.Y', $request['end'])->format('Y-m-d');
+            } catch (\Throwable $e) {
+            }
+        }
+
+        if (!empty($request['start_date']) && !empty($request['end_date'])) {
+            $filters = [
+                'start_date' => $request['start_date'],
+                'end_date'   => $request['end_date'],
+            ];
+
+            $rangeStart = $filters['start_date'];
+            $rangeEndForDays = date('Y-m-d', strtotime($filters['end_date'] . ' -1 day'));
+
+            if (!empty($request['adults'])) {
+                $filters['adults'] = (int)$request['adults'];
+            }
+            if (!empty($request['children'])) {
+                $filters['children'] = (int)$request['children'];
+            }
+
+            $blockedQuery = \DB::table('bc_hotel_room_dates as d')
+                ->join('bc_hotel_rooms as r', 'r.id', '=', 'd.target_id')
+                ->where('d.active', '=', 0)
+                ->whereBetween(\DB::raw('DATE(d.start_date)'), [
+                    $rangeStart,
+                    $rangeEndForDays
+                ])
+                ->select('r.parent_id as hotel_id', 'r.id as room_id', 'd.id as date_id', 'd.start_date', 'd.active');
+            
+            $blockedRows = $blockedQuery->get();
+            
+            $blockedHotelIds = $blockedRows->pluck('hotel_id')
+                ->unique()
+                ->values()
+                ->all();
+
+            if (!empty($blockedHotelIds)) {
+                $model_hotel->whereNotIn('bc_hotels.id', $blockedHotelIds);
+            }
+
+            $candidateQuery = clone $model_hotel;
+            $candidateIds = $candidateQuery->pluck('bc_hotels.id');
+
+            if ($candidateIds->count()) {
+                $availableHotelIds = $this->whereIn('id', $candidateIds)
+                    ->get()
+                    ->filter(function ($hotel) use ($filters) {
+                        /** @var self $hotel */
+                        try {
+                            $rooms = $hotel->getRoomsAvailability($filters);
+                        } catch (\Throwable $e) {
+                            return false;
+                        }
+                        if (empty($rooms)) {
+                            return false;
+                        }
+
+                        $requestedAdults = $filters['adults'] ?? null;
+                        if ($requestedAdults) {
+                            $totalAdultCapacity = 0;
+
+                            foreach ($hotel->tmp_rooms as $room) {
+                                $roomAdults = (int)($room->adults ?? 0);
+                                if ($roomAdults > 0) {
+                                    $totalAdultCapacity += $roomAdults;
+                                }
+                            }
+
+                            if ($totalAdultCapacity < $requestedAdults) {
+                                return false;
+                            }
+                        }
+
+                        $requestedChildren = $filters['children'] ?? null;
+                        if ($requestedChildren) {
+                            $totalChildrenCapacity = 0;
+
+                            foreach ($hotel->tmp_rooms as $room) {
+                                $roomChildren = (int)($room->children ?? 0);
+                                if ($roomChildren > 0) {
+                                    $totalChildrenCapacity += $roomChildren;
+                                }
+                            }
+
+                            if ($totalChildrenCapacity < $requestedChildren) {
+                                return false;
+                            }
+                        }
+
+                        return true;
+                    })
+                    ->pluck('id')
+                    ->all();
+
+                if (!empty($availableHotelIds)) {
+                    $model_hotel->whereIn('bc_hotels.id', $availableHotelIds);
+                } else {
+                    $model_hotel->whereRaw('1 = 0');
+                }
+            } else {
+                $model_hotel->whereRaw('1 = 0');
+            }
+        }
+
         $orderby = $request["orderby"] ?? "";
         switch ($orderby) {
             case "price_low_high":

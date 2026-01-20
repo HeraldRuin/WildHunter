@@ -2,6 +2,7 @@
 
 namespace Modules\Hotel\Models;
 
+use Carbon\Carbon;
 use ICal\ICal;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
@@ -69,6 +70,7 @@ class HotelRoom extends Bookable
         $filters['end_date'] = date("Y-m-d", strtotime($filters['end_date']." -1day"));
 
         $roomDates =  $this->getDatesInRange($filters['start_date'],$filters['end_date']);
+
         $allDates = [];
         $tmp_price = 0;
         $tmp_night = 0;
@@ -84,21 +86,37 @@ class HotelRoom extends Bookable
         {
             foreach ($roomDates as $row)
             {
-                if(!$row->active or !$row->number or !$row->price) return false;
+                if(!$row->active){
+                    return false;
+                }
 
-                if(!array_key_exists(date('Y-m-d',strtotime($row->start_date)),$allDates)) continue;
+                if(!$row->number or !$row->price){
+                    return false;
+                }
 
-                $allDates[date('Y-m-d',strtotime($row->start_date))] = [
-                    'number'=>$row->number,
-                    'price'=>$row->price
-                ];
+                $rowStartDate = date('Y-m-d', strtotime($row->start_date));
+                $rowEndDate = date('Y-m-d', strtotime($row->end_date));
+                $rowPeriod = periodDate($rowStartDate, $rowEndDate, false);
+
+                foreach ($rowPeriod as $dt) {
+                    $dateKey = $dt->format('Y-m-d');
+                    if(array_key_exists($dateKey, $allDates)) {
+                        $allDates[$dateKey] = [
+                            'number'=>$row->number,
+                            'price'=>$row->price
+                        ];
+                    }
+                }
             }
         }
 
         $roomBookings = $this->getBookingsInRange($filters['start_date'],$filters['end_date']);
+
         if(!empty($roomBookings)){
             foreach ($roomBookings as $roomBooking){
+
                 $period = periodDate($roomBooking->start_date,$roomBooking->end_date,false);
+
                 foreach ($period as $dt){
                     $date = $dt->format('Y-m-d');
                     if(!array_key_exists($date,$allDates)) continue;
@@ -110,7 +128,7 @@ class HotelRoom extends Bookable
             }
         }
 
-	    if(!empty($this->ical_import_url)){
+        if(!empty($this->ical_import_url)){
 		    $startDate = $filters['start_date'];
 		    $endDate = $filters['end_date'];
 		    $timezone = setting_item('site_timezone',config('app.timezone'));
@@ -136,16 +154,9 @@ class HotelRoom extends Bookable
 	    }
 
         $this->tmp_number = !empty($allDates) ?  (int) min(array_column($allDates,'number')) : 0;
-        if(empty($this->tmp_number)) return false;
-
-        //Adult - Children
-        if( !empty($filters['adults']) and $this->adults * $this->tmp_number < $filters['adults'] ){
+        if(empty($this->tmp_number)){
             return false;
         }
-        if( !empty($filters['children']) and $this->children * $this->tmp_number < $filters['children'] ){
-            return false;
-        }
-
         $this->tmp_price = array_sum(array_column($allDates,'price'));
         $this->tmp_dates = $allDates;
         $this->tmp_nights = $tmp_night;
@@ -157,12 +168,16 @@ class HotelRoom extends Bookable
     {
         $query = $this->roomDateClass::query();
         $query->where('target_id',$this->id);
-        $query->where('start_date','>=',date('Y-m-d H:i:s',strtotime($start_date)));
-        $query->where('end_date','<=',date('Y-m-d H:i:s',strtotime($end_date)));
+        $startTimestamp = date('Y-m-d 00:00:00', strtotime($start_date));
+        $endTimestamp = date('Y-m-d 23:59:59', strtotime($end_date));
 
-        return $query->take(100)->get();
+        $query->where('start_date', '<=', $endTimestamp)
+              ->where('end_date', '>=', $startTimestamp);
+
+        $results = $query->take(100)->get();
+
+        return $results;
     }
-
     public function getBookingsInRange($from, $to)
     {
        return $this->roomBookingClass::query()
@@ -180,14 +195,12 @@ class HotelRoom extends Bookable
         $new = $old->replicate();
         $new->parent_id = $newHotelId;
         $new->save();
-        //Terms
         foreach ($selected_terms as $term_id) {
             $this->hotelRoomTermClass::firstOrCreate([
                 'term_id'   => $term_id,
                 'target_id' => $new->id
             ]);
         }
-        //Language
         $langs = $this->translation_class::where("origin_id", $old->id)->get();
         if (!empty($langs)) {
             foreach ($langs as $lang) {
@@ -202,7 +215,6 @@ class HotelRoom extends Bookable
                 }
             }
         }
-        //SEO
         $metaSeo = SEO::where('object_id', $old->id)->where('object_model', $this->seo_type)->first();
         if (!empty($metaSeo)) {
             $metaSeoNew = $metaSeo->replicate();
