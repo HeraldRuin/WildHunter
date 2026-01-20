@@ -127,13 +127,19 @@ class Booking extends BaseModel
     /**
      * Получает статус брони с учетом приглашения для текущего пользователя
      * Если пользователь приглашен, возвращает 'collection' (сбор охотников)
+     * Если сбор завершен, приглашенные также видят статус "завершенный сбор"
      */
     public function getStatusForUserAttribute()
     {
         $userId = \Illuminate\Support\Facades\Auth::id();
         
-        // Если пользователь приглашен на эту бронь, показываем статус "сбор охотников"
+        // Если пользователь приглашен на эту бронь
         if ($userId && $this->isInvited($userId)) {
+            // Если сбор завершен, показываем статус "завершенный сбор"
+            if ($this->status === self::FINISHED_COLLECTION) {
+                return self::FINISHED_COLLECTION;
+            }
+            // Иначе показываем статус "сбор охотников"
             return self::START_COLLECTION;
         }
         
@@ -281,6 +287,14 @@ class Booking extends BaseModel
                 $this->addMeta($key, $val, true);
             }
         }
+    }
+
+    public function deleteMeta($key)
+    {
+        return DB::table('bc_booking_meta')->where([
+            'booking_id' => $this->id,
+            'name'       => $key
+        ])->delete();
     }
 
     public function generateCode()
@@ -575,15 +589,17 @@ class Booking extends BaseModel
 //        }
         if (!empty($customer_id_or_name)) {
             // Получаем ID броней, на которые пользователь приглашен через join
-            // Показываем приглашенные брони ТОЛЬКО когда статус = 'collection' (сбор охотников)
+            // Показываем приглашенные брони в фильтрах "сбор охотников" и "завершенный сбор"
             $bookingIdsFromInvitations = [];
-            if ($booking_status === 'collection') {
+            if (in_array($booking_status, ['collection', 'finished_collection'])) {
                 $bookingIdsFromInvitations = DB::table('bc_booking_hunter_invitations as invitations')
                     ->join('bc_booking_hunters as hunters', 'invitations.booking_hunter_id', '=', 'hunters.id')
+                    ->join('bc_bookings as bookings', 'hunters.booking_id', '=', 'bookings.id')
                     ->where('invitations.hunter_id', $customer_id_or_name)
                     ->whereNotIn('invitations.status', ['declined', 'removed'])
                     ->whereNull('invitations.deleted_at')
                     ->whereNull('hunters.deleted_at')
+                    ->where('bookings.status', $booking_status)
                     ->pluck('hunters.booking_id')
                     ->toArray();
             }
@@ -606,10 +622,10 @@ class Booking extends BaseModel
                     $q->where("create_user", $customer_id_or_name)
                       ->orWhere("vendor_id", $customer_id_or_name);
                 }
-                
+
                 // Брони, на которые пользователь приглашен через систему приглашений
-                // Показываем ТОЛЬКО в фильтре "сбор охотников" (status = 'collection')
-                // Приглашенные брони показываются независимо от их статуса
+                // Показываем в фильтрах "сбор охотников" и "завершенный сбор"
+                // Приглашенные брони при этом отфильтрованы по текущему статусу на этапе получения ID
                 if (!empty($bookingIdsFromInvitations)) {
                     $q->orWhereIn("id", $bookingIdsFromInvitations);
                 }
