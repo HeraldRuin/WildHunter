@@ -114,7 +114,7 @@
                     class="btn btn-primary btn-sm mt-2"
                     data-bs-toggle="modal"
                     data-bs-target="#collectionModal{{ $booking->id }}"
-                    @click="openCollectionModal({{ $booking->id }})">
+                    @click="openCollectionModal({{ $booking->id }}, $event)">
                     {{__("Open collection")}}
                 </button>
             @endif
@@ -127,7 +127,7 @@
                     class="btn btn-primary btn-sm mt-2"
                     data-bs-toggle="modal"
                     data-bs-target="#collectionModal{{ $booking->id }}"
-                    @click="openCollectionModal({{ $booking->id }})">
+                    @click="openCollectionModal({{ $booking->id }}, $event)">
                     {{__("Open collection")}}
                 </button>
             @endif

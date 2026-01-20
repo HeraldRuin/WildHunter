@@ -47,10 +47,13 @@ document.addEventListener('DOMContentLoaded', function () {
                 const modal = new bootstrap.Modal(modalEl);
                 modal.show();
             },
-            openCollectionModal(bookingId) {
+            // Открытие модального окна сбора охотников.
+            // Никакой дополнительной логики по блокировке кнопки здесь не делаем —
+            // она просто открывает модалку и инициализирует слоты.
+            openCollectionModal(bookingId, event) {
                 this.currentCollectionBookingId = bookingId;
-                // Инициализируем слоты сразу, не ждем события модального окна
-                // Используем setTimeout чтобы дать Bootstrap время открыть модальное окно
+
+                // Инициализируем слоты чуть позже, чтобы модалка успела открыться
                 setTimeout(() => {
                     console.log('Вызов initializeHunterSlots для брони:', bookingId);
                     this.initializeHunterSlots(bookingId);
@@ -367,8 +370,15 @@ document.addEventListener('DOMContentLoaded', function () {
             inviteHunterForSlot(slotIndex, bookingId, event) {
                 const slot = this.hunterSlots[slotIndex];
                 if (!slot || !slot.hunter || !slot.hunter.id) return;
-                
-                this.inviteHunter(slot.hunter, bookingId, event);
+
+                // Мгновенно помечаем охотника как приглашённого в этом слоте,
+                // чтобы сразу заблокировать строку поиска, не дожидаясь перезагрузки
+                this.$set(slot.hunter, 'invited', true);
+                this.$set(slot.hunter, 'invitation_status', 'pending');
+                this.$forceUpdate();
+
+                // Для слота не передаём event, чтобы не ломать разметку кнопки через прямую манипуляцию innerHTML
+                this.inviteHunter(slot.hunter, bookingId, null);
             },
             toggleEmailInputForSlot(slotIndex) {
                 const slot = this.hunterSlots[slotIndex];

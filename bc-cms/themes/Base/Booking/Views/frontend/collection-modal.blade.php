@@ -220,9 +220,11 @@
                             <button
                                 type="button"
                                 class="btn btn-info"
+                                @if($booking->status === \Modules\Booking\Models\Booking::START_COLLECTION) disabled @endif
                                 @click="startCollection($event, {{ $booking->id }})">
                                 {{ __('Open collection') }}
                             </button>
+
                             <button
                                 type="button"
                                 class="btn btn-info mx-2 btn-extend-collection"
