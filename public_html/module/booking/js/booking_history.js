@@ -991,33 +991,52 @@ document.addEventListener('DOMContentLoaded', function () {
             });
 
             const updateCollectionTimers = () => {
-                const nodes = document.querySelectorAll('.collection-timer[data-start]');
+                // Поддерживаем оба варианта: data-end (новый) и data-start (старый для обратной совместимости)
+                const nodesWithEnd = document.querySelectorAll('.collection-timer[data-end]');
+                const nodesWithStart = document.querySelectorAll('.collection-timer[data-start]');
                 const now = Date.now();
 
-                nodes.forEach(el => {
+                // Показываем реальный оставшийся таймер в формате "ММ мин SS сек"
+                nodesWithEnd.forEach(el => {
+                    const end = parseInt(el.dataset.end, 10);
+                    if (!end) return;
+
+                    let diffMs = end - now;
+
+                    if (diffMs <= 0) {
+                        el.textContent = '[0 мин 00 сек]';
+                        return;
+                    }
+
+                    const totalSeconds = Math.floor(diffMs / 1000);
+                    const minutes = Math.floor(totalSeconds / 60);
+                    const seconds = totalSeconds % 60;
+
+                    el.textContent = '[' + minutes + ' мин ' + String(seconds).padStart(2, '0') + ' сек]';
+                });
+
+                // Старые таймеры с data-start (если ещё используются) просто считаем как прошедшее время
+                nodesWithStart.forEach(el => {
                     const start = parseInt(el.dataset.start, 10);
                     if (!start || start > now) return;
 
                     let diffMs = now - start;
-                    let totalMinutes = Math.floor(diffMs / 60000);
+                    if (diffMs <= 0) {
+                        el.textContent = '[0 мин 00 сек]';
+                        return;
+                    }
 
-                    const days = Math.floor(totalMinutes / (60 * 24));
-                    totalMinutes -= days * 60 * 24;
+                    const totalSeconds = Math.floor(diffMs / 1000);
+                    const minutes = Math.floor(totalSeconds / 60);
+                    const seconds = totalSeconds % 60;
 
-                    const hours = Math.floor(totalMinutes / 60);
-                    const minutes = totalMinutes - hours * 60;
-
-                    const parts = [];
-                    if (days > 0) parts.push(days + 'д');
-                    if (hours > 0 || days > 0) parts.push(hours + ' ч');
-                    parts.push(minutes + ' мин');
-
-                    el.textContent = '[' + parts.join(', ') + ']';
+                    el.textContent = '[' + minutes + ' мин ' + String(seconds).padStart(2, '0') + ' сек]';
                 });
             };
 
             updateCollectionTimers();
-            setInterval(updateCollectionTimers, 60000);
+            // Обновляем таймер каждую секунду, чтобы он работал "в реальном времени"
+            setInterval(updateCollectionTimers, 1000);
         }
 
     });

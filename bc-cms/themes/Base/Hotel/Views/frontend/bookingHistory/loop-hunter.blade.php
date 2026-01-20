@@ -93,9 +93,28 @@
         @endif
     </td>
     <td class="{{$booking->status_for_user}} a-hidden">
-        <div>{{$booking->statusNameForUser}}</div>
-        @if($booking->status === \Modules\Booking\Models\Booking::START_COLLECTION && $booking->updated_at)
-            <div class="text-muted collection-timer" data-start="{{ $booking->updated_at->timestamp * 1000 }}">[0 мин]</div>
+        <div>
+            {{$booking->statusNameForUser}}
+            @if($booking->status === \Modules\Booking\Models\Booking::START_COLLECTION && $booking->hotel && $booking->hotel->collection_timer_hours)
+                ({{$booking->hotel->collection_timer_hours}} {{ __('ч') }})
+            @endif
+        </div>
+        @if($booking->status === \Modules\Booking\Models\Booking::START_COLLECTION)
+            @php
+                $endTimestamp = null;
+                try {
+                    $collectionEndAt = $booking->getMeta('collection_end_at');
+                    if ($collectionEndAt) {
+                        $endCarbon = \Carbon\Carbon::parse($collectionEndAt);
+                        $endTimestamp = $endCarbon->timestamp * 1000;
+                    }
+                } catch (\Exception $e) {
+                    $endTimestamp = null;
+                }
+            @endphp
+            @if($endTimestamp)
+                <div class="text-muted collection-timer" data-end="{{ $endTimestamp }}">[0 мин]</div>
+            @endif
         @endif
     </td>
 
@@ -127,18 +146,33 @@
         @php
             $isInvited = $booking->isInvited();
             $isCollectionStatus = $booking->status_for_user === \Modules\Booking\Models\Booking::START_COLLECTION;
+            $invitation = $booking->getCurrentUserInvitation();
+            $isInvitationAccepted = $invitation && $invitation->status === 'accepted';
         @endphp
 
         @if($isInvited && $isCollectionStatus)
-            {{-- Для приглашенного охотника в статусе "сбор охотников" показываем только кнопку "Открыть приглашение" --}}
-            <button
-                type="button"
-                class="btn btn-primary btn-sm mt-2"
-                data-bs-toggle="modal"
-                data-bs-target="#invitationModal{{ $booking->id }}"
-                onclick="openInvitationModal({{ $booking->id }})">
-                {{__("Open invitation")}}
-            </button>
+            {{-- Для приглашенного охотника в статусе "сбор охотников" показываем кнопку в зависимости от статуса приглашения --}}
+            @if(!$isInvitationAccepted)
+                {{-- Если приглашение не подтверждено - показываем "Открыть приглашение" --}}
+                <button
+                    type="button"
+                    class="btn btn-primary btn-sm mt-2"
+                    data-bs-toggle="modal"
+                    data-bs-target="#invitationModal{{ $booking->id }}"
+                    onclick="openInvitationModal({{ $booking->id }})">
+                    {{__("Open invitation")}}
+                </button>
+            @else
+                {{-- Если приглашение подтверждено - показываем "Открыть сбор" --}}
+                <button
+                    type="button"
+                    class="btn btn-primary btn-sm mt-2"
+                    data-bs-toggle="modal"
+                    data-bs-target="#collectionModal{{ $booking->id }}"
+                    @click="openCollectionModal({{ $booking->id }})">
+                    {{__("Open collection")}}
+                </button>
+            @endif
         @else
             {{-- Обычные кнопки для создателя брони или вендора --}}
             {{-- Кнопка "Открыть сбор" доступна когда бронь подтверждена или уже идет сбор охотников --}}

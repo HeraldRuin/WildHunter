@@ -98,9 +98,28 @@
         @endif
     </td>
     <td class="{{$booking->status}} a-hidden">
-        <div>{{$booking->statusName}}</div>
-        @if($booking->status === \Modules\Booking\Models\Booking::START_COLLECTION && $booking->updated_at)
-            <div class="text-muted collection-timer" data-start="{{ $booking->updated_at->timestamp * 1000 }}">[0 мин]</div>
+        <div>
+            {{$booking->statusName}}
+            @if($booking->status === \Modules\Booking\Models\Booking::START_COLLECTION && $booking->hotel && $booking->hotel->collection_timer_hours)
+                ({{$booking->hotel->collection_timer_hours}} {{ __('ч') }})
+            @endif
+        </div>
+        @if($booking->status === \Modules\Booking\Models\Booking::START_COLLECTION)
+            @php
+                $endTimestamp = null;
+                try {
+                    $collectionEndAt = $booking->getMeta('collection_end_at');
+                    if ($collectionEndAt) {
+                        $endCarbon = \Carbon\Carbon::parse($collectionEndAt);
+                        $endTimestamp = $endCarbon->timestamp * 1000;
+                    }
+                } catch (\Exception $e) {
+                    $endTimestamp = null;
+                }
+            @endphp
+            @if($endTimestamp)
+                <div class="text-muted collection-timer" data-end="{{ $endTimestamp }}">[0 мин]</div>
+            @endif
         @endif
     </td>
 

@@ -37,9 +37,55 @@
         @endif
     </td>
     <td class="{{$booking->status}} a-hidden">
-        <div>{{$booking->statusName}}</div>
-        @if($booking->status === \Modules\Booking\Models\Booking::START_COLLECTION && $booking->updated_at)
-            <div class="text-muted collection-timer" data-start="{{ $booking->updated_at->timestamp * 1000 }}">[0 мин]</div>
+        <div>
+            {{$booking->statusName}}
+            @if($booking->status === \Modules\Booking\Models\Booking::START_COLLECTION && $booking->hotel && $booking->hotel->collection_timer_hours)
+                ({{$booking->hotel->collection_timer_hours}} {{ __('ч') }})
+            @endif
+        </div>
+        @if($booking->status === \Modules\Booking\Models\Booking::START_COLLECTION)
+            @php
+                // Получаем данные таймера: время начала и количество часов
+                $startRecord = \Illuminate\Support\Facades\DB::table('bc_booking_meta')
+                    ->where('booking_id', $booking->id)
+                    ->where('name', 'collection_start_at')
+                    ->first();
+                
+                $timerHoursRecord = \Illuminate\Support\Facades\DB::table('bc_booking_meta')
+                    ->where('booking_id', $booking->id)
+                    ->where('name', 'collection_timer_hours')
+                    ->first();
+                
+                $endTimestamp = null;
+                $initialTimerHours = null;
+                
+                // Вычисляем оставшееся время: таймер в часах - прошедшее время
+                if ($startRecord && $timerHoursRecord) {
+                    try {
+                        $startCarbon = \Carbon\Carbon::parse($startRecord->val);
+                        $timerHours = (int)$timerHoursRecord->val;
+                        $initialTimerHours = $timerHours; // Начальное значение таймера
+                        $now = \Carbon\Carbon::now();
+                        
+                        // Прошедшее время в секундах, затем переводим в часы с точностью
+                        $elapsedSeconds = $now->diffInSeconds($startCarbon, false);
+                        $elapsedHours = $elapsedSeconds / 3600; // Точное значение в часах
+                        
+                        // Оставшееся время в часах
+                        $remainingHours = max(0, $timerHours - $elapsedHours);
+                        
+                        // Вычисляем время окончания для JavaScript (текущее время + оставшееся время)
+                        $remainingSeconds = $remainingHours * 3600;
+                        $endCarbon = $now->copy()->addSeconds((int)$remainingSeconds);
+                        $endTimestamp = $endCarbon->timestamp * 1000;
+                    } catch (\Exception $e) {
+                        $endTimestamp = null;
+                    }
+                }
+            @endphp
+            @if($endTimestamp && $initialTimerHours)
+                <div class="text-muted collection-timer" data-end="{{ $endTimestamp }}" data-initial-hours="{{ $initialTimerHours }}">({{ $initialTimerHours }}) [0 мин]</div>
+            @endif
         @endif
     </td>
     <td class="price-cell">
