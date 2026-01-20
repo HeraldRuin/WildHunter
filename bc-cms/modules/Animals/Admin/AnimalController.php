@@ -15,6 +15,7 @@ use Modules\Animals\Models\Animal;
 use Modules\Animals\Models\AnimalTranslation;
 use Modules\Animals\Models\AnimalTrophy;
 use Modules\Core\Events\CreatedServicesEvent;
+use Illuminate\Support\Facades\Log;
 use Modules\Core\Events\UpdatedServiceEvent;
 use Modules\Core\Models\Attributes;
 use Modules\Location\Models\Location;
@@ -203,6 +204,10 @@ class AnimalController extends AdminController
             $this->checkPermission('animal_create');
             $row = new $this->animal();
             $row->status = "publish";
+            // Устанавливаем автора по умолчанию, если нет разрешения на управление другими
+            if (!$this->hasPermission('animal_manage_others')) {
+                $row->author_id = Auth::id();
+            }
         }
         $dataKeys = [
             'title',
@@ -236,11 +241,20 @@ class AnimalController extends AdminController
 
         $res = $row->saveOriginOrTranslation($request->input('lang'), true);
 
-
         if ($res) {
+            // Обновляем объект после сохранения, чтобы получить актуальный ID
+            $row->refresh();
+
             if (!$request->input('lang') or is_default_lang($request->input('lang'))) {
 //                $this->saveTerms($row, $request);
-                $this->saveTrophies($row, $request);
+                // Сохраняем трофеи только если у животного есть ID
+                if ($row->id) {
+                    try {
+                        $this->saveTrophies($row, $request);
+                    } catch (\Exception $e) {
+                        \Log::error('Error saving trophies: ' . $e->getMessage());
+                    }
+                }
             }
             do_action(Hook::AFTER_SAVING,$row,$request);
 
@@ -249,9 +263,11 @@ class AnimalController extends AdminController
                 return back()->with('success', __('Animal updated'));
             } else {
                 event(new CreatedServicesEvent($row));
-                return redirect(route('animal.admin.edit', 2))->with('success', __('Animal created'));
+                return redirect(route('animal.admin.edit', ['id' => $row->id]))->with('success', __('Animal created'));
             }
         }
+
+        return back()->with('error', __('Error saving animal. Please check the data and try again.'));
     }
 
 //    public function saveTerms($row, $request)
@@ -273,30 +289,46 @@ class AnimalController extends AdminController
 
     public function saveTrophies($row, $request)
     {
+        if (!$row || !$row->id) {
+            return;
+        }
+
         $trophy_types = $request->input('trophy_types', []);
 
-        $existingTrophies = AnimalTrophy::where('animal_id', $row->id)->get()->keyBy('id');
+        // Если трофеи не переданы, значит их все удалили
+        if (empty($trophy_types) || !is_array($trophy_types)) {
+            try {
+                AnimalTrophy::where('animal_id', $row->id)->delete();
+            } catch (\Exception $e) {
+                \Log::error('Error deleting trophies: ' . $e->getMessage());
+            }
+            return;
+        }
 
-        $keepIds = [];
+        try {
+            $existingTrophies = AnimalTrophy::where('animal_id', $row->id)->get()->keyBy('id');
+            $keepIds = [];
 
-        if (!empty($trophy_types) && is_array($trophy_types)) {
             foreach ($trophy_types as $trophy_data) {
                 if (!is_array($trophy_data)) continue;
 
                 $type = trim($trophy_data['type'] ?? '');
-                $trophy_id = !empty($trophy_data['id']) ? $trophy_data['id'] : null;
+                // Для новых элементов может не быть id, или id может быть пустым
+                $trophy_id = !empty($trophy_data['id']) ? (int)$trophy_data['id'] : null;
 
                 if (!empty($type)) {
                     if ($trophy_id && $existingTrophies->has($trophy_id)) {
+                        // Обновляем существующий трофей
                         $existingTrophy = $existingTrophies->get($trophy_id);
                         AnimalTrophy::where('id', $trophy_id)
-                            ->where('animal_id', $row->id)
+                            ->where('animal_id', $row->id) // Дополнительная проверка безопасности
                             ->update([
                                 'type' => $type,
-                                'price' => $existingTrophy->price,
+                                'price' => $existingTrophy->price, // Сохраняем существующую цену
                             ]);
                         $keepIds[] = $trophy_id;
                     } else {
+                        // Создаем новый трофей (без id или с несуществующим id)
                         $newTrophy = AnimalTrophy::create([
                             'animal_id' => $row->id,
                             'type' => $type,
@@ -306,10 +338,20 @@ class AnimalController extends AdminController
                     }
                 }
             }
+
+            // Удаляем трофеи, которые были удалены из формы
+            if (!empty($keepIds)) {
+                AnimalTrophy::where('animal_id', $row->id)
+                    ->whereNotIn('id', $keepIds)
+                    ->delete();
+            } else {
+                // Если нет трофеев для сохранения, удаляем все существующие
+                AnimalTrophy::where('animal_id', $row->id)->delete();
+            }
+        } catch (\Exception $e) {
+            \Log::error('Error saving trophies for animal ' . $row->id . ': ' . $e->getMessage());
+            // Не прерываем выполнение, просто логируем ошибку
         }
-        AnimalTrophy::where('animal_id', $row->id)
-            ->whereNotIn('id', $keepIds)
-            ->delete();
     }
 
     public function bulkEdit(Request $request)

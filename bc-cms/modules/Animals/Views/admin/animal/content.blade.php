@@ -45,6 +45,12 @@
             <div class="form-group-item">
                 <label class="control-label">{{__("Trophy Types")}}</label>
                 <div class="g-items">
+                    @php
+                        $trophyIndex = 0;
+                        if(!empty($trophies) && $trophies->count() > 0) {
+                            $trophyIndex = $trophies->count();
+                        }
+                    @endphp
                     @if(!empty($trophies) && $trophies->count() > 0)
                         @foreach($trophies as $key=>$trophy)
                             <div class="item" data-number="{{$key}}">
@@ -52,11 +58,6 @@
                                     <div class="col-md-11">
                                         <input type="hidden" name="trophy_types[{{$key}}][id]" value="{{$trophy->id}}">
                                         <input type="text" name="trophy_types[{{$key}}][type]" class="form-control" value="{{$trophy->type}}" placeholder="{{__('Enter trophy type')}}" required>
-                                        @if($trophy->price)
-                                            <small class="text-muted">{{__('Price set by base admin')}}: {{number_format($trophy->price, 2)}}</small>
-                                        @else
-                                            <small class="text-muted">{{__('Price will be set by base admin')}}</small>
-                                        @endif
                                     </div>
                                     <div class="col-md-1">
                                         <span class="btn btn-danger btn-sm btn-remove-item"><i class="fa fa-trash"></i></span>
@@ -73,8 +74,7 @@
                     <div class="item" data-number="__number__">
                         <div class="row">
                             <div class="col-md-11">
-                                <input type="text" __name__="trophy_types[__number__][type]" class="form-control" placeholder="{{__('Enter trophy type')}}" required>
-                                <small class="text-muted">{{__('Price will be set by base admin')}}</small>
+                                <input type="text" __name__="trophy_types[__number__][type]" class="form-control" placeholder="{{__('Enter trophy type')}}">
                             </div>
                             <div class="col-md-1">
                                 <span class="btn btn-danger btn-sm btn-remove-item"><i class="fa fa-trash"></i></span>
