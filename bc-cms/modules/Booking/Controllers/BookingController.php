@@ -24,6 +24,7 @@ use Modules\Booking\Models\BookingHunter;
 use Modules\Booking\Models\BookingHunterInvitation;
 use Modules\Booking\Models\BookingPassenger;
 use Modules\User\Events\SendMailUserRegistered;
+use Modules\Booking\Emails\CollectionTimerFinishedEmail;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Modules\Booking\Models\Booking;
@@ -847,52 +848,107 @@ class BookingController extends \App\Http\Controllers\Controller
             return $this->sendError('Необходима авторизация')->setStatusCode(401);
         }
 
-        // Получаем отель из брони
-        $hotel = $booking->hotel;
-
-        // Получаем таймер сбора из отеля (в часах)
+        // Получаем отель из БД напрямую без кеша
+        $hotel = null;
         $timerHours = 24; // Значение по умолчанию
-        if ($hotel) {
-            $timerHours = (int) ($hotel->collection_timer_hours ?? 24);
+
+        if ($booking->hotel_id) {
+            // Загружаем отель напрямую из БД, минуя кеш
+            $hotelData = \Illuminate\Support\Facades\DB::table('bc_hotels')
+                ->where('id', $booking->hotel_id)
+                ->first();
+
+            if ($hotelData) {
+                // Получаем таймер сбора напрямую из БД
+                $timerHoursFromDb = $hotelData->collection_timer_hours ?? null;
+
+                if ($timerHoursFromDb !== null && $timerHoursFromDb > 0) {
+                    $timerHours = (int) $timerHoursFromDb;
+                }
+            }
         }
 
-        // Вычисляем время окончания сбора (текущее время + часы таймера)
-        // Используем now() чтобы гарантировать актуальное время
-        // ВАЖНО: Используем текущее время, а не updated_at брони
-        $now = \Carbon\Carbon::now();
-        $collectionEndAt = $now->copy()->addHours($timerHours);
+        // ВАЖНО: ВСЕГДА удаляем ВСЕ старые записи таймера перед установкой нового
+        // Используем прямой SQL для гарантированного удаления всех записей
+        \Illuminate\Support\Facades\DB::table('bc_booking_meta')
+            ->where('booking_id', $booking->id)
+            ->whereIn('name', ['collection_end_at', 'collection_start_at', 'collection_timer_hours'])
+            ->delete();
 
         // Сохраняем статус
         $booking->status = Booking::START_COLLECTION;
 
-        // ВАЖНО: Сохраняем время окончания сбора ДО сохранения брони,
-        // чтобы избежать проблем с обновлением updated_at
-        // Используем формат ISO 8601 для лучшей совместимости
-        // addMeta автоматически обновит существующее значение, если оно есть
+        // Сохраняем время начала сбора и количество часов таймера
+        // Это позволит делать обратный отсчет от установленного значения
+        $now = \Carbon\Carbon::now();
+        $collectionStartAtString = $now->toIso8601String();
+
+        // Сохраняем время начала сбора
+        \Illuminate\Support\Facades\DB::table('bc_booking_meta')->insert([
+            'booking_id' => $booking->id,
+            'name' => 'collection_start_at',
+            'val' => $collectionStartAtString,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        // Сохраняем количество часов таймера
+        \Illuminate\Support\Facades\DB::table('bc_booking_meta')->insert([
+            'booking_id' => $booking->id,
+            'name' => 'collection_timer_hours',
+            'val' => (string)$timerHours,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        // Также сохраняем время окончания для обратной совместимости
+        $collectionEndAt = $now->copy()->addHours($timerHours);
         $collectionEndAtString = $collectionEndAt->toIso8601String();
 
-        // Проверяем, было ли старое значение
-        $oldCollectionEndAt = $booking->getMeta('collection_end_at');
-
-        $booking->addMeta('collection_end_at', $collectionEndAtString);
-
-        // Логируем для отладки
-        \Log::info('startCollection: установка времени окончания сбора', [
+        \Illuminate\Support\Facades\DB::table('bc_booking_meta')->insert([
             'booking_id' => $booking->id,
-            'hotel_id' => $hotel ? $hotel->id : null,
-            'timer_hours' => $timerHours,
-            'now' => $now->toDateTimeString(),
-            'old_collection_end_at' => $oldCollectionEndAt,
-            'new_collection_end_at' => $collectionEndAtString,
+            'name' => 'collection_end_at',
+            'val' => $collectionEndAtString,
+            'created_at' => now(),
+            'updated_at' => now(),
         ]);
 
         // Сохраняем бронь
         $booking->save();
 
+        // Финальная проверка: убеждаемся, что запись создана с правильным значением
+        $finalCheck = \Illuminate\Support\Facades\DB::table('bc_booking_meta')
+            ->where('booking_id', $booking->id)
+            ->where('name', 'collection_end_at')
+            ->first();
+
+        if (!$finalCheck || $finalCheck->val !== $collectionEndAtString) {
+            \Log::error('startCollection: ОШИБКА - запись не создана или значение неправильное', [
+                'booking_id' => $booking->id,
+                'expected_value' => $collectionEndAtString,
+                'actual_value' => $finalCheck ? $finalCheck->val : null,
+            ]);
+
+            // Пытаемся создать запись еще раз
+            \Illuminate\Support\Facades\DB::table('bc_booking_meta')
+                ->where('booking_id', $booking->id)
+                ->where('name', 'collection_end_at')
+                ->delete();
+
+            \Illuminate\Support\Facades\DB::table('bc_booking_meta')->insert([
+                'booking_id' => $booking->id,
+                'name' => 'collection_end_at',
+                'val' => $collectionEndAtString,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+        }
+
         event(new BookingUpdatedEvent($booking));
 
         return $this->sendSuccess([
-            'message' => __('The gathering of hunters has begun')
+            'message' => __('The gathering of hunters has begun'),
+            'collection_end_at' => $collectionEndAtString, // Возвращаем новое значение для отладки
         ]);
     }
 
@@ -927,11 +983,17 @@ class BookingController extends \App\Http\Controllers\Controller
         if ($booking->status === Booking::START_COLLECTION) {
             $booking->status = Booking::CANCELLED;
 
-            // Очищаем мета-данные времени окончания сбора
-            $booking->addMeta('collection_end_at', '');
+            // Полностью удаляем ВСЕ мета-данные таймера (сброс таймера)
+            // Используем прямой SQL для гарантированного удаления
+            $deletedCount = \Illuminate\Support\Facades\DB::table('bc_booking_meta')
+                ->where('booking_id', $booking->id)
+                ->whereIn('name', ['collection_end_at', 'collection_start_at', 'collection_timer_hours', 'collection_timer_started_at'])
+                ->delete();
 
-            \Log::info('cancelCollection: очистка таймера сбора', [
+            \Log::info('cancelCollection: сброс таймера сбора', [
                 'booking_id' => $booking->id,
+                'hotel_id' => $booking->hotel_id,
+                'deleted_records_count' => $deletedCount,
             ]);
 
             $booking->save();
@@ -1145,15 +1207,37 @@ class BookingController extends \App\Http\Controllers\Controller
         // Завершаем сбор - переводим в статус "завершенный сбор"
         $booking->status = Booking::FINISHED_COLLECTION;
 
-        // Очищаем мета-данные времени окончания сбора
-        $booking->addMeta('collection_end_at', '');
+        // Полностью удаляем ВСЕ мета-данные таймера (сброс таймера)
+        // Используем прямой SQL для гарантированного удаления
+        $deletedCount = \Illuminate\Support\Facades\DB::table('bc_booking_meta')
+            ->where('booking_id', $booking->id)
+            ->whereIn('name', ['collection_end_at', 'collection_start_at', 'collection_timer_hours', 'collection_timer_started_at'])
+            ->delete();
 
-        \Log::info('finishCollection: очистка таймера сбора', [
+        \Log::info('finishCollection: сброс таймера сбора', [
             'booking_id' => $booking->id,
+            'hotel_id' => $booking->hotel_id,
+            'deleted_records_count' => $deletedCount,
         ]);
 
         $booking->save();
         event(new BookingUpdatedEvent($booking));
+
+        // Находим "собирающего" охотника и отправляем ему письмо о завершении таймера
+        try {
+            $master = BookingHunter::where('booking_id', $booking->id)
+                ->where('is_master', true)
+                ->first();
+
+            if ($master) {
+                $hunterUser = User::find($master->invited_by);
+                if ($hunterUser && !empty($hunterUser->email)) {
+                    Mail::to($hunterUser->email)->send(new CollectionTimerFinishedEmail($booking, $hunterUser));
+                }
+            }
+        } catch (\Exception | \Swift_TransportException $e) {
+            Log::warning('finishCollection: failed to send collection timer finished email: ' . $e->getMessage());
+        }
 
         // Уведомляем создателя брони о смене статуса
         try {
@@ -1290,16 +1374,8 @@ class BookingController extends \App\Http\Controllers\Controller
             return $this->sendError('Необходима авторизация')->setStatusCode(401);
         }
 
-        // Получаем все приглашения (метод возвращает коллекцию, не query builder)
         $allInvitations = $booking->getAllInvitations();
-        // Фильтруем отклоненные и удаленные на коллекции
         $invitations = $allInvitations->whereNotIn('status', ['declined', 'removed']);
-
-        Log::info('getInvitedHunters: найдено приглашений', [
-            'booking_id' => $booking->id,
-            'total' => $allInvitations->count(),
-            'filtered' => $invitations->count()
-        ]);
 
         $hunters = $invitations->map(function($invitation) {
             $hunter = $invitation->hunter;
