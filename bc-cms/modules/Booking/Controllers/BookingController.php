@@ -979,9 +979,9 @@ class BookingController extends \App\Http\Controllers\Controller
             return $this->sendError(__('This booking cannot be modified'))->setStatusCode(422);
         }
 
-        // Если бронь сейчас в режиме сбора, переводим её в статус "отменено"
+        // Если бронь сейчас в режиме сбора, переводим её в статус "подтверждено"
         if ($booking->status === Booking::START_COLLECTION) {
-            $booking->status = Booking::CANCELLED;
+            $booking->status = Booking::CONFIRMED;
 
             // Полностью удаляем ВСЕ мета-данные таймера (сброс таймера)
             // Используем прямой SQL для гарантированного удаления
@@ -1006,10 +1006,10 @@ class BookingController extends \App\Http\Controllers\Controller
         foreach ($invitations as $invitation) {
             $hunter = $invitation->hunter;
 
-            // Уведомляем охотника о том, что сбор отменён и бронь отменена
+            // Уведомляем охотника о том, что сбор отменён и бронь подтверждена
             if ($hunter && !empty($hunter->email)) {
                 try {
-                    $message = __('Сбор охотников для этой брони отменён. Бронь теперь отменена.');
+                    $message = __('Сбор охотников для этой брони отменён. Бронь теперь подтверждена.');
                     Mail::to($hunter->email)->send(new HunterMessageEmail($booking, $hunter, $message));
                 } catch (\Exception $e) {
                     Log::warning('cancelCollection: failed to send email to hunter', [
@@ -1058,7 +1058,7 @@ class BookingController extends \App\Http\Controllers\Controller
             if ($booking->create_user) {
                 $creator = User::find($booking->create_user);
                 if ($creator && !empty($creator->email)) {
-                    $customMessage = __('Сбор охотников отменён. Бронь теперь отменена.');
+                    $customMessage = __('Сбор охотников отменён. Бронь теперь подтверждена.');
                     Mail::to($creator->email)->send(new StatusUpdatedEmail($booking, 'customer', $customMessage));
                 }
             }
@@ -1069,7 +1069,7 @@ class BookingController extends \App\Http\Controllers\Controller
         }
 
         return $this->sendSuccess([
-            'message' => __('Сбор охотников отменён. Бронь теперь отменена.')
+            'message' => __('Сбор охотников отменён. Бронь теперь подтверждена.')
         ]);
     }
 
