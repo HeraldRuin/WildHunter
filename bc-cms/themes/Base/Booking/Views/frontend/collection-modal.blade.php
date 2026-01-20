@@ -102,6 +102,7 @@
                                         class="form-control me-2"
                                         :placeholder="'{{ __('Hunter nickname / last_name') }}'"
                                         v-model="hunterSlot.query"
+                                        :disabled="hunterSlot.hunter && hunterSlot.hunter.invited && hunterSlot.hunter.invitation_status !== 'declined'"
                                         @input="searchHunterForSlot(index, {{ $booking->id }})"
                                         @focus="hunterSlot.showResults = true"
                                         @blur="setTimeout(() => { hunterSlot.showResults = false; }, 200)">
