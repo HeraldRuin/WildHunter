@@ -409,11 +409,29 @@
                                 ' <i class="fa fa-long-arrow-right" style="font-size: inherit"></i> ' +
                                 endMoment.format(bookingCore.date_format);
 
-                            // Устанавливаем даты в datepicker
+                            // Устанавливаем даты в datepicker проживания
                             var datePicker = $(this.$refs.hotelStartDate).data('daterangepicker');
                             if (datePicker) {
                                 datePicker.setStartDate(startMoment);
                                 datePicker.setEndDate(endMoment);
+                            }
+
+                            // Ограничиваем календарь охоты теми же датами, что и в обработчике apply.daterangepicker
+                            var animalPicker = $(this.$refs.animalStartDate).data('daterangepicker');
+                            if (animalPicker) {
+                                animalPicker.minDate = startMoment.clone();
+                                animalPicker.maxDate = endMoment.clone().subtract(1, 'day');
+
+                                // Если текущая выбранная дата охоты выходит за диапазон — сбрасываем её
+                                if (this.start_date_animal) {
+                                    var hunt = moment(this.start_date_animal, 'YYYY-MM-DD');
+                                    if (hunt.isBefore(animalPicker.minDate) || hunt.isAfter(animalPicker.maxDate)) {
+                                        this.start_date_animal = '';
+                                        this.start_date_animal_html = bookingCoreApp && bookingCoreApp.i18n && bookingCoreApp.i18n.select_date
+                                            ? bookingCoreApp.i18n.select_date
+                                            : 'Выберите пожалуйста';
+                                    }
+                                }
                             }
                         }
                     } catch (e) {
