@@ -1005,6 +1005,15 @@ document.addEventListener('DOMContentLoaded', function () {
 
                     if (diffMs <= 0) {
                         el.textContent = '[0 мин 00 сек]';
+                        // Таймер закончился — разрешаем кнопку продления сбора (если есть)
+                        const bookingId = el.dataset.bookingId;
+                        if (bookingId) {
+                            const extendBtn = document.querySelector('.btn-extend-collection[data-booking-id="' + bookingId + '"]');
+                            if (extendBtn) {
+                                extendBtn.disabled = false;
+                                extendBtn.classList.remove('disabled');
+                            }
+                        }
                         return;
                     }
 
@@ -1013,6 +1022,16 @@ document.addEventListener('DOMContentLoaded', function () {
                     const seconds = totalSeconds % 60;
 
                     el.textContent = '[' + minutes + ' мин ' + String(seconds).padStart(2, '0') + ' сек]';
+
+                    // Пока таймер тикает — кнопка продления должна быть неактивна
+                    const bookingId = el.dataset.bookingId;
+                    if (bookingId) {
+                        const extendBtn = document.querySelector('.btn-extend-collection[data-booking-id="' + bookingId + '"]');
+                        if (extendBtn) {
+                            extendBtn.disabled = true;
+                            extendBtn.classList.add('disabled');
+                        }
+                    }
                 });
 
                 // Старые таймеры с data-start (если ещё используются) просто считаем как прошедшее время

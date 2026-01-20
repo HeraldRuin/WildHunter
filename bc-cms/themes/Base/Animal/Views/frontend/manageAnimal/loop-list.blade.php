@@ -1,19 +1,19 @@
 <div class="item-list">
-    @if($animal->discount_percent)
-        <div class="sale_info">{{$animal->discount_percent}}</div>
+    @if($row->discount_percent)
+        <div class="sale_info">{{$row->discount_percent}}</div>
     @endif
     <div class="row">
         <div class="col-md-3">
-            @if($animal->is_featured == "1")
+            @if($row->is_featured == "1")
                 <div class="featured">
                     {{__("Featured")}}
                 </div>
             @endif
 
             <div class="thumb-image" style="{{ empty($animal->image_url) ? 'padding-bottom:0;' : '' }}">
-                <a href="{{$animal->getDetailUrl()}}" target="_blank">
-                    @if(!empty($animal->image_url))
-                        <img src="{{$animal->image_url}}" class="img-responsive" alt="">
+                <a href="{{$row->getDetailUrl()}}" target="_blank">
+                    @if(!empty($row->image_url))
+                        <img src="{{$row->image_url}}" class="img-responsive" alt="">
                     @else
                         <div style="display:flex;align-items:center;justify-content:center;min-height:120px;width:100%;border:1px solid #ccc;">
                             {{ __("No Image") }}
@@ -24,42 +24,42 @@
         </div>
         <div class="col-md-9">
             <div class="item-title">
-                <a href="{{$animal->getDetailUrl()}}" target="_blank">
-                    {{$animal->title}}
+                <a href="{{$row->getDetailUrl()}}" target="_blank">
+                    {{$row->title}}
                 </a>
             </div>
             <div class="location">
-                @if(!empty($animal->location->name))
+                @if(!empty($row->location->name))
                     <i class="icofont-paper-plane"></i>
-                    {{__("Location")}}: {{$animal->location->name ?? ''}}
+                    {{__("Location")}}: {{$row->location->name ?? ''}}
                 @endif
             </div>
             <div class="location">
                 <i class="icofont-money"></i>
-                {{__("Price")}}: <span class="sale-price">{{ $animal->display_sale_price_admin }}</span> <span class="price">{{ $animal->display_price_admin }}</span>
+                {{__("Price")}}: <span class="sale-price">{{ $row->display_sale_price_admin }}</span> <span class="price">{{ $row->display_price_admin }}</span>
             </div>
             <div class="location">
                 <i class="icofont-ui-settings"></i>
-                {{__("Status")}}: <span class="badge badge-{{ $animal->status }}">{{ $animal->status_text }}</span>
+                {{__("Status")}}: <span class="badge badge-{{ $row->status }}">{{ $row->status_text }}</span>
             </div>
             <div class="location">
                 <i class="icofont-wall-clock"></i>
-                {{__("Last Updated")}}: {{ display_datetime($animal->updated_at ?? $animal->created_at) }}
+                {{__("Last Updated")}}: {{ display_datetime($row->updated_at ?? $row->created_at) }}
             </div>
             <div class="control-action">
-                <a href="{{$animal->getDetailUrl()}}" target="_blank" class="btn btn-info">{{__("View")}}</a>
+                <a href="{{$row->getDetailUrl()}}" target="_blank" class="btn btn-info">{{__("View")}}</a>
                 @if(!empty($recovery))
-                    <a href="{{ route("animal.vendor.restore",[$animal->id]) }}" class="btn btn-recovery btn-primary" data-confirm="{{__('"Do you want to recovery?"')}}">{{__("Recovery")}}</a>
+                    <a href="{{ route("animal.vendor.restore",[$row->id]) }}" class="btn btn-recovery btn-primary" data-confirm="{{__('"Do you want to recovery?"')}}">{{__("Recovery")}}</a>
                     @if(Auth::user()->hasPermission('animal_delete'))
-                        <a href="{{ route("animal.vendor.delete",['id'=>$animal->id,'permanently_delete'=>1]) }}" class="btn btn-danger" data-confirm="{{__('"Do you want to permanently delete?"')}}">{{__("Del")}}</a>
+                        <a href="{{ route("animal.vendor.delete",['id'=>$row->id,'permanently_delete'=>1]) }}" class="btn btn-danger" data-confirm="{{__('"Do you want to permanently delete?"')}}">{{__("Del")}}</a>
                     @endif
                 @else
 
-                    @if(is_null($animal->animal_status))
-                        <a href="{{ route("animal.vendor.bulk_edit",[$animal->id,'action' => "add"]) }}" class="btn btn-warning">{{__("Attach to base")}}</a>
+                    @if(is_null($row->animal_status))
+                        <a href="{{ route("animal.vendor.bulk_edit",[$row->id,'action' => "add"]) }}" class="btn btn-warning">{{__("Attach to base")}}</a>
                     @endif
-                    @if($animal->animal_status == 'available')
-                        <a href="{{ route("animal.vendor.bulk_edit",[$animal->id,'action' => "delete"]) }}" class="btn btn-success">{{__("Detach to base")}}</a>
+                    @if($row->animal_status == 'available')
+                        <a href="{{ route("animal.vendor.bulk_edit",[$row->id,'action' => "delete"]) }}" class="btn btn-success">{{__("Detach to base")}}</a>
                     @endif
 
                     {{--                    @if(Auth::user()->hasPermission('animal_update'))--}}

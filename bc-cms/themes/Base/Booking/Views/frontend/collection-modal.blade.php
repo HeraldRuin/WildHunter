@@ -222,7 +222,12 @@
                                 @click="startCollection($event, {{ $booking->id }})">
                                 {{ __('Open collection') }}
                             </button>
-                            <button type="button" class="btn btn-info mx-2">
+                            <button
+                                type="button"
+                                class="btn btn-info mx-2 btn-extend-collection"
+                                data-booking-id="{{ $booking->id }}"
+                                disabled
+                                @click="startCollection($event, {{ $booking->id }})">
                                 {{ __('Extend collection') }}
                             </button>
                             <button

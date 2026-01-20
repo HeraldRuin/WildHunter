@@ -59,7 +59,11 @@
                 }
             @endphp
             @if($endTimestamp)
-                <div class="text-muted collection-timer" data-end="{{ $endTimestamp }}">[0 мин]</div>
+                <div
+                    class="text-muted collection-timer"
+                    data-end="{{ $endTimestamp }}"
+                    data-booking-id="{{ $booking->id }}"
+                >[0 мин]</div>
             @endif
         @endif
     </td>
