@@ -397,6 +397,10 @@ document.addEventListener('DOMContentLoaded', function () {
                     slot.results = [];
                     slot.showResults = false;
                     slot.noResults = false;
+                    // Если поле очищено или запрос слишком короткий, очищаем выбранного охотника
+                    if (slot.query.length === 0 || slot.query.trim() === '') {
+                        slot.hunter = null;
+                    }
                     return;
                 }
                 
@@ -425,6 +429,24 @@ document.addEventListener('DOMContentLoaded', function () {
                             slot.isSearching = false;
                         });
                 }, 300);
+            },
+            handleHunterInputChange(slotIndex) {
+                const slot = this.hunterSlots[slotIndex];
+                if (!slot) return;
+
+                // Если поле полностью очищено кнопкой "стереть" или вручную
+                if (!slot.query || slot.query.trim() === '') {
+                    this.clearHunterSlot(slotIndex);
+                    return;
+                }
+
+                // Если есть выбранный охотник, но текст в поле уже не совпадает с его именем — сбрасываем выбор
+                if (slot.hunter) {
+                    const hunterName = slot.hunter.user_name || (slot.hunter.first_name + ' ' + slot.hunter.last_name).trim();
+                    if (slot.query.trim() !== hunterName.trim()) {
+                        slot.hunter = null;
+                    }
+                }
             },
             selectHunterForSlot(slotIndex, hunter, bookingId) {
                 const slot = this.hunterSlots[slotIndex];

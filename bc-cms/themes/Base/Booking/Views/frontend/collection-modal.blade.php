@@ -104,6 +104,7 @@
                                         v-model="hunterSlot.query"
                                         :disabled="hunterSlot.hunter && hunterSlot.hunter.invited && hunterSlot.hunter.invitation_status !== 'declined'"
                                         @input="searchHunterForSlot(index, {{ $booking->id }})"
+                                        @change="handleHunterInputChange(index)"
                                         @focus="hunterSlot.showResults = true"
                                         @blur="setTimeout(() => { hunterSlot.showResults = false; }, 200)">
                                     <!-- Результаты поиска для этого слота -->
@@ -159,8 +160,10 @@
                                             </button>
                                         </div>
                                     </div>
-                                    <!-- Информация о выбранном охотнике -->
-                                    <div v-if="hunterSlot.hunter" class="mt-2">
+                                    <!-- Информация о выбранном охотнике (показываем только если текст в поле соответствует выбранному охотнику) -->
+                                    <div
+                                        v-if="hunterSlot.hunter && hunterSlot.query && hunterSlot.query.trim() === ((hunterSlot.hunter.user_name || (hunterSlot.hunter.first_name + ' ' + hunterSlot.hunter.last_name)).trim())"
+                                        class="mt-2">
                                         <div class="d-flex align-items-center mb-1">
                                             <span class="text-muted small">@{{ hunterSlot.hunter.email }}</span>
                                         </div>
@@ -195,6 +198,7 @@
                                 </div>
                                 <div class="d-flex align-items-start">
                                     <button
+                                        v-if="hunterSlot.hunter && hunterSlot.query && hunterSlot.query.trim() === ((hunterSlot.hunter.user_name || (hunterSlot.hunter.first_name + ' ' + hunterSlot.hunter.last_name)).trim())"
                                         type="button"
                                         class="btn btn-sm me-2 ml-2"
                                         :class="(hunterSlot.hunter && hunterSlot.hunter.invited && hunterSlot.hunter.invitation_status !== 'declined') ? 'btn-success' : 'btn-outline-primary'"
