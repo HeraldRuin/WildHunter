@@ -153,6 +153,16 @@
                                             <div class="text-muted small mb-2">
                                                 {{ __('Hunters not found') }}
                                             </div>
+                                            <div class="text-muted small mb-2">
+                                                {{ __('You can send a message by email') }}
+                                            </div>
+                                            <button
+                                                type="button"
+                                                class="btn btn-outline-primary btn-sm"
+                                                @click="toggleEmailInputForSlot(index)">
+                                                <i class="fa fa-envelope me-1"></i>
+                                                {{ __('Send email') }}
+                                            </button>
                                         </div>
                                     </div>
                                     <!-- Информация о выбранном охотнике (показываем только если текст в поле соответствует выбранному охотнику) -->
@@ -163,8 +173,8 @@
                                             <span class="text-muted small">@{{ hunterSlot.hunter.email }}</span>
                                         </div>
                                     </div>
-                                    <!-- Поле ввода сообщения (показывается при клике на кнопку почты, только для приглашённых охотников) -->
-                                    <div v-if="hunterSlot.showEmailInput && hunterSlot.hunter && hunterSlot.hunter.invited" class="mt-2">
+                                    <!-- Поле ввода сообщения (показывается при клике на кнопку почты или кнопки в блоке \"Охотники не найдены\") -->
+                                    <div v-if="hunterSlot.showEmailInput" class="mt-2">
                                         <div v-if="!hunterSlot.hunter" class="mb-2">
                                             <input
                                                 type="email"
