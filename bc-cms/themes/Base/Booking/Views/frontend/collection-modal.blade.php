@@ -163,8 +163,8 @@
                                             <span class="text-muted small">@{{ hunterSlot.hunter.email }}</span>
                                         </div>
                                     </div>
-                                    <!-- Поле ввода сообщения (показывается при клике на кнопку почты) -->
-                                    <div v-if="hunterSlot.showEmailInput" class="mt-2">
+                                    <!-- Поле ввода сообщения (показывается при клике на кнопку почты, только для приглашённых охотников) -->
+                                    <div v-if="hunterSlot.showEmailInput && hunterSlot.hunter && hunterSlot.hunter.invited" class="mt-2">
                                         <div v-if="!hunterSlot.hunter" class="mb-2">
                                             <input
                                                 type="email"
@@ -202,7 +202,7 @@
                                         <span v-text="(hunterSlot.hunter && hunterSlot.hunter.invited && hunterSlot.hunter.invitation_status !== 'declined') ? invitedText : inviteText"></span>
                                     </button>
                                     <button
-                                        v-if="hunterSlot.hunter && hunterSlot.query && hunterSlot.query.trim() === ((hunterSlot.hunter.user_name || (hunterSlot.hunter.first_name + ' ' + hunterSlot.hunter.last_name)).trim())"
+                                        v-if="hunterSlot.hunter && hunterSlot.hunter.invited && hunterSlot.query && hunterSlot.query.trim() === ((hunterSlot.hunter.user_name || (hunterSlot.hunter.first_name + ' ' + hunterSlot.hunter.last_name)).trim())"
                                         type="button"
                                         class="btn btn-outline-secondary btn-sm ml-2"
                                         style="min-width: 40px;"
