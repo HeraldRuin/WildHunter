@@ -1305,6 +1305,20 @@ class BookingController extends \App\Http\Controllers\Controller
             ]
         );
 
+        // Пытаемся сразу отправить письмо-приглашение охотнику
+        if (!empty($hunter->email)) {
+            try {
+                $message = __('Вас пригласили в сбор для брони №:id', ['id' => $booking->id]);
+                Mail::to($hunter->email)->send(new HunterMessageEmail($booking, $hunter, $message));
+            } catch (\Exception $e) {
+                Log::warning('inviteHunter: failed to send invitation email', [
+                    'booking_id' => $booking->id,
+                    'hunter_id'  => $hunterId,
+                    'error'      => $e->getMessage(),
+                ]);
+            }
+        }
+
         // Отправляем событие приглашенному охотнику для обновления страницы истории
         try {
             event(new \Modules\Booking\Events\HunterInvitedEvent($booking, $hunterId));
