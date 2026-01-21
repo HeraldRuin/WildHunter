@@ -107,8 +107,9 @@
                     onclick="openInvitationModal({{ $booking->id }})">
                     {{__("Open invitation")}}
                 </button>
-            @else
-                {{-- Если приглашение подтверждено - показываем "Открыть сбор" --}}
+            @endif
+            @if($isInvitationAccepted && in_array($booking->type, ['animal', 'hotel_animal']))
+                {{-- Если приглашение подтверждено и тип брони подходит - показываем "Открыть сбор" --}}
                 <button
                     type="button"
                     class="btn btn-primary btn-sm mt-2"
@@ -121,7 +122,10 @@
         @else
             {{-- Обычные кнопки для создателя брони или вендора --}}
             {{-- Кнопка "Открыть сбор" доступна когда бронь подтверждена или уже идет сбор охотников --}}
-            @if(in_array($booking->status, ['confirmed', \Modules\Booking\Models\Booking::START_COLLECTION]))
+            @if(
+                in_array($booking->status, ['confirmed', \Modules\Booking\Models\Booking::START_COLLECTION]) &&
+                in_array($booking->type, ['animal', 'hotel_animal'])
+            )
                 <button
                     type="button"
                     class="btn btn-primary btn-sm mt-2"
