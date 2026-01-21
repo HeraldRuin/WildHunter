@@ -119,8 +119,8 @@
                                         <div v-else-if="hunterSlot.results.length">
                                             <div v-for="hunter in hunterSlot.results"
                                                  :key="hunter.id"
-                                                 class="p-2 border-bottom cursor-pointer hover-bg-light"
-                                                 @click="selectHunterForSlot(index, hunter, {{ $booking->id }})"
+                                                 :class="['p-2 border-bottom', (hunter.invited && hunter.invitation_status !== 'declined') ? 'bg-light text-muted' : 'cursor-pointer hover-bg-light']"
+                                                 @click="!(hunter.invited && hunter.invitation_status !== 'declined') && selectHunterForSlot(index, hunter, {{ $booking->id }})"
                                                  @mousedown.prevent>
                                                 <div class="d-flex align-items-center">
                                                     <div class="flex-grow-1">
@@ -136,8 +136,13 @@
                                                             <span class="text-muted ms-2">@{{ hunter.first_name }} @{{ hunter.last_name }}</span>
                                                         </div>
                                                         <div class="text-muted small">@{{ hunter.email }}</div>
-                                                        <div v-if="hunter.invitation_status === 'declined'" class="mt-1">
-                                                            <span class="badge bg-danger">{{ __('Invitation declined') }}</span>
+                                                        <div class="mt-1">
+                                                            <span v-if="hunter.invited && hunter.invitation_status !== 'declined'" class="badge bg-success">
+                                                                {{ __('Already invited') }}
+                                                            </span>
+                                                            <span v-else-if="hunter.invitation_status === 'declined'" class="badge bg-danger">
+                                                                {{ __('Invitation declined') }}
+                                                            </span>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -148,16 +153,6 @@
                                             <div class="text-muted small mb-2">
                                                 {{ __('Hunters not found') }}
                                             </div>
-                                            <div class="text-muted small mb-2">
-                                                {{ __('You can send a message by email') }}
-                                            </div>
-                                            <button
-                                                type="button"
-                                                class="btn btn-outline-primary btn-sm"
-                                                @click="toggleEmailInputForSlot(index)">
-                                                <i class="fa fa-envelope me-1"></i>
-                                                {{ __('Send email') }}
-                                            </button>
                                         </div>
                                     </div>
                                     <!-- Информация о выбранном охотнике (показываем только если текст в поле соответствует выбранному охотнику) -->
@@ -207,6 +202,7 @@
                                         <span v-text="(hunterSlot.hunter && hunterSlot.hunter.invited && hunterSlot.hunter.invitation_status !== 'declined') ? invitedText : inviteText"></span>
                                     </button>
                                     <button
+                                        v-if="hunterSlot.hunter && hunterSlot.query && hunterSlot.query.trim() === ((hunterSlot.hunter.user_name || (hunterSlot.hunter.first_name + ' ' + hunterSlot.hunter.last_name)).trim())"
                                         type="button"
                                         class="btn btn-outline-secondary btn-sm ml-2"
                                         style="min-width: 40px;"

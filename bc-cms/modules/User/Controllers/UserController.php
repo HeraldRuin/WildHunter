@@ -10,6 +10,7 @@ use Illuminate\Validation\Rule;
 use Matrix\Exception;
 use Modules\Boat\Models\Boat;
 use Modules\Booking\Models\Booking;
+use Modules\Booking\Models\BookingHunterInvitation;
 use Modules\Booking\Models\Enquiry;
 use Modules\Booking\Models\Service;
 use Modules\Car\Models\Car;
@@ -372,8 +373,6 @@ class UserController extends FrontendController
         if (mb_strlen($query) < 3) {
             return response()->json([]);
         }
-
-        // Базовый поиск охотников по нику / имени / email
         $users = User::query()
             ->where(function($q) use ($query) {
                 $q->where('user_name', 'LIKE', $query.'%')
