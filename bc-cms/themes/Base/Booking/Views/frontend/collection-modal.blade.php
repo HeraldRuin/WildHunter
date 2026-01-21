@@ -180,6 +180,7 @@
                                                 type="email"
                                                 class="form-control form-control-sm"
                                                 v-model="hunterSlot.emailAddress"
+                                                @input="handleEmailAddressInput(index)"
                                                 placeholder="Введите email адрес">
                                         </div>
                                         <div class="d-flex align-items-start">

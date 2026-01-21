@@ -400,6 +400,12 @@ document.addEventListener('DOMContentLoaded', function () {
                     // Если поле очищено или запрос слишком короткий, очищаем выбранного охотника
                     if (slot.query.length === 0 || slot.query.trim() === '') {
                         slot.hunter = null;
+                        // И если при этом была открыта форма отправки письма — закрываем её
+                        if (slot.showEmailInput) {
+                            slot.showEmailInput = false;
+                            slot.emailAddress = '';
+                            slot.emailMessage = '';
+                        }
                     }
                     return;
                 }
@@ -493,9 +499,27 @@ document.addEventListener('DOMContentLoaded', function () {
                     if (slot.hunter && !slot.emailAddress) {
                         // Если охотник выбран, используем его email по умолчанию
                         slot.emailAddress = slot.hunter.email || '';
+                    } else if (!slot.hunter && !slot.emailAddress && slot.query) {
+                        // Если охотник не выбран, но в поиске введен email — подставляем его в поле,
+                        // только если это похоже на корректный email
+                        const queryTrim = slot.query.trim();
+                        const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                        if (emailPattern.test(queryTrim)) {
+                            slot.emailAddress = queryTrim;
+                        }
                     }
                 } else {
                     // При закрытии очищаем сообщение
+                    slot.emailMessage = '';
+                }
+            },
+            handleEmailAddressInput(slotIndex) {
+                const slot = this.hunterSlots[slotIndex];
+                if (!slot) return;
+
+                // Если email стёрт и охотник не выбран — закрываем форму отправки письма
+                if (!slot.hunter && (!slot.emailAddress || slot.emailAddress.trim() === '')) {
+                    slot.showEmailInput = false;
                     slot.emailMessage = '';
                 }
             },
