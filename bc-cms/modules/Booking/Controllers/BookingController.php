@@ -1343,6 +1343,85 @@ class BookingController extends \App\Http\Controllers\Controller
     }
 
     /**
+     * Отправка приглашения охотнику по email (даже если пользователя нет в системе)
+     */
+    public function inviteHunterByEmail(Request $request, Booking $booking): JsonResponse
+    {
+        if (!Auth::check()) {
+            return $this->sendError('Необходима авторизация')->setStatusCode(401);
+        }
+
+        $email = trim((string)$request->input('email', ''));
+        if (!$email) {
+            return $this->sendError('Не передан email')->setStatusCode(422);
+        }
+
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            return $this->sendError('Некорректный email адрес')->setStatusCode(422);
+        }
+        $hunter = User::where('email', $email)->first();
+
+        if ($hunter && $hunter->id) {
+            $request->merge(['hunter_id' => $hunter->id]);
+            return $this->inviteHunter($request, $booking);
+        }
+        $bookingHunter = BookingHunter::where('booking_id', $booking->id)->first();
+        if (!$bookingHunter) {
+            return $this->sendError('Запись BookingHunter для этой брони не найдена')->setStatusCode(404);
+        }
+        $invitation = BookingHunterInvitation::where('booking_hunter_id', $bookingHunter->id)
+            ->where('email', $email)
+            ->whereNull('hunter_id')
+            ->first();
+
+        if ($invitation) {
+            $invitation->update([
+                'invited'         => true,
+                'status'          => 'pending',
+                'invited_at'      => now(),
+                'invitation_token'=> $booking->code . '-' . md5($email),
+            ]);
+        } else {
+            $invitation = BookingHunterInvitation::create([
+                'booking_hunter_id' => $bookingHunter->id,
+                'email'             => $email,
+                'hunter_id'         => null,
+                'invited'           => true,
+                'status'            => 'pending',
+                'invited_at'        => now(),
+                'invitation_token'  => $booking->code . '-' . md5($email),
+            ]);
+        }
+
+        try {
+            $message = __('Вас пригласили в сбор для брони №:id', ['id' => $booking->id]);
+            $tempHunter = new User();
+            $tempHunter->setAttribute('id', 0);
+            $tempHunter->setAttribute('email', $email);
+            $tempHunter->setAttribute('first_name', '');
+            $tempHunter->setAttribute('last_name', '');
+            $tempHunter->setAttribute('name', $email);
+            $tempHunter->syncOriginal();
+
+            Mail::to($email)->send(new HunterMessageEmail($booking, $tempHunter, $message));
+        } catch (\Exception $e) {
+            Log::error('inviteHunterByEmail: failed to send invitation email', [
+                'booking_id' => $booking->id,
+                'email'      => $email,
+                'error'      => $e->getMessage(),
+            ]);
+            return $this->sendError('Не удалось отправить приглашение: ' . $e->getMessage())->setStatusCode(500);
+        }
+
+        return $this->sendSuccess([
+            'message' => __('Приглашение отправлено на email :email', ['email' => $email]),
+            'data'    => [
+                'invitation_id' => $invitation->id,
+            ],
+        ]);
+    }
+
+    /**
      * Отправка письма выбранному охотнику с произвольным сообщением
      */
     public function emailHunter(Request $request, Booking $booking): JsonResponse
@@ -1393,20 +1472,35 @@ class BookingController extends \App\Http\Controllers\Controller
 
         $hunters = $invitations->map(function($invitation) {
             $hunter = $invitation->hunter;
-            if (!$hunter) {
-                return null;
+
+            if ($hunter) {
+                return [
+                    'id' => $hunter->id,
+                    'user_name' => $hunter->user_name,
+                    'first_name' => $hunter->first_name,
+                    'last_name' => $hunter->last_name,
+                    'email' => $hunter->email,
+                    'phone' => $hunter->phone,
+                    'invited' => true,
+                    'invitation_status' => $invitation->status,
+                ];
             }
 
-            return [
-                'id' => $hunter->id,
-                'user_name' => $hunter->user_name,
-                'first_name' => $hunter->first_name,
-                'last_name' => $hunter->last_name,
-                'email' => $hunter->email,
-                'phone' => $hunter->phone,
-                'invited' => true,
-                'invitation_status' => $invitation->status,
-            ];
+            if (!$hunter && $invitation->email) {
+                return [
+                    'id' => null,
+                    'user_name' => null,
+                    'first_name' => '',
+                    'last_name' => '',
+                    'email' => $invitation->email,
+                    'phone' => null,
+                    'invited' => true,
+                    'invitation_status' => $invitation->status,
+                    'is_external' => true,
+                ];
+            }
+
+            return null;
         })->filter()->values();
 
         return $this->sendSuccess([

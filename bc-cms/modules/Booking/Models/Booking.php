@@ -72,11 +72,11 @@ class Booking extends BaseModel
         if (!$userId) {
             $userId = \Illuminate\Support\Facades\Auth::id();
         }
-        
+
         if (!$userId) {
             return false;
         }
-        
+
         return BookingHunterInvitation::whereHas('bookingHunter', function($q) {
                 $q->where('booking_id', $this->id)
                   ->whereNull('deleted_at');
@@ -93,11 +93,11 @@ class Booking extends BaseModel
     public function getCurrentUserInvitation()
     {
         $userId = \Illuminate\Support\Facades\Auth::id();
-        
+
         if (!$userId) {
             return null;
         }
-        
+
         return BookingHunterInvitation::whereHas('bookingHunter', function($q) {
                 $q->where('booking_id', $this->id)
                   ->whereNull('deleted_at');
@@ -124,25 +124,20 @@ class Booking extends BaseModel
             ->get();
     }
 
-    /**
-     * Получает статус брони с учетом приглашения для текущего пользователя
-     * Если пользователь приглашен, возвращает 'collection' (сбор охотников)
-     * Если сбор завершен, приглашенные также видят статус "завершенный сбор"
-     */
     public function getStatusForUserAttribute()
     {
         $userId = \Illuminate\Support\Facades\Auth::id();
-        
-        // Если пользователь приглашен на эту бронь
+        $creatorId = $this->create_user ?? $this->customer_id;
+        if ($userId && $userId == $creatorId) {
+            return $this->status;
+        }
         if ($userId && $this->isInvited($userId)) {
-            // Если сбор завершен, показываем статус "завершенный сбор"
             if ($this->status === self::FINISHED_COLLECTION) {
                 return self::FINISHED_COLLECTION;
             }
-            // Иначе показываем статус "сбор охотников"
             return self::START_COLLECTION;
         }
-        
+
         return $this->status;
     }
 
@@ -338,11 +333,21 @@ class Booking extends BaseModel
             return;
         }
 
-        BookingHunter::create([
+        $bookingHunter = BookingHunter::create([
             'booking_id' => $this->id,
             'invited_by' => $creatorId,
             'is_master' => $creator->hasRole('hunter'),
             'creator_role' => $creator->role->code ?? null,
+        ]);
+        BookingHunterInvitation::create([
+            'booking_hunter_id' => $bookingHunter->id,
+            'hunter_id' => $creatorId,
+            'email' => $creator->email,
+            'invited' => true,
+            'status' => 'accepted',
+            'invited_at' => now(),
+            'accepted_at' => now(),
+            'invitation_token' => $this->code . '-' . $creatorId,
         ]);
     }
 
@@ -603,7 +608,7 @@ class Booking extends BaseModel
                     ->pluck('hunters.booking_id')
                     ->toArray();
             }
-            
+
             $list_booking->where(function($q) use ($customer_id_or_name, $bookingIdsFromInvitations, $booking_status) {
                 // Брони, созданные пользователем или где он вендор
                 // Фильтр по статусу применяется к каждому условию отдельно

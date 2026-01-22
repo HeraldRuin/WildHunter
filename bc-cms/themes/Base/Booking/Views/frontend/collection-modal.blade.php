@@ -10,14 +10,17 @@
         $huntersCount = $booking->total_hunting ?? 0;
     }
 
-    // Проверяем, является ли текущий пользователь приглашенным охотником
     $currentUserId = auth()->id();
     $isInvited = false;
     if ($currentUserId) {
-        $isInvited = $booking->isInvited($currentUserId);
+        $creatorId = $booking->create_user ?? $booking->customer_id;
+        $isCreator = ($currentUserId == $creatorId);
+
+        if (!$isCreator) {
+            $isInvited = $booking->isInvited($currentUserId);
+        }
     }
 
-    // Если пользователь приглашен, получаем список всех приглашенных охотников для просмотра
     $invitedHunters = [];
     if ($isInvited) {
         $invitations = $booking->getAllInvitations();
@@ -32,6 +35,17 @@
                     'status' => $invitation->status,
                     'invited_at' => $invitation->invited_at,
                     'is_self' => $isCurrentUser,
+                ];
+            } elseif ($invitation->email) {
+                $invitedHunters[] = [
+                    'id' => null,
+                    'name' => $invitation->email,
+                    'email' => $invitation->email,
+                    'user_name' => null,
+                    'status' => $invitation->status,
+                    'invited_at' => $invitation->invited_at,
+                    'is_self' => false,
+                    'is_external' => true,
                 ];
             }
         }
@@ -100,7 +114,7 @@
                                     <input
                                         type="text"
                                         class="form-control me-2"
-                                        :placeholder="'{{ __('Hunter nickname / last_name') }}'"
+                                        :placeholder="'{{ __('Hunter nickname / last_name / email') }}'"
                                         v-model="hunterSlot.query"
                                         :disabled="hunterSlot.hunter && hunterSlot.hunter.invited && hunterSlot.hunter.invitation_status !== 'declined'"
                                         @input="searchHunterForSlot(index, {{ $booking->id }})"
@@ -148,78 +162,37 @@
                                                 </div>
                                             </div>
                                         </div>
-                                        <!-- Сообщение, если результатов нет -->
                                         <div v-else-if="hunterSlot.noResults && !hunterSlot.isSearching" class="p-2 border-bottom">
                                             <div class="text-muted small mb-2">
                                                 {{ __('Hunters not found') }}
                                             </div>
-                                            <div class="text-muted small mb-2">
-                                                {{ __('You can send a message by email') }}
-                                            </div>
                                             <button
                                                 type="button"
                                                 class="btn btn-outline-primary btn-sm"
-                                                @click="toggleEmailInputForSlot(index)">
+                                                @click="inviteByEmailForSlot(index, {{ $booking->id }}, $event)">
                                                 <i class="fa fa-envelope me-1"></i>
-                                                {{ __('Send email') }}
+                                                {{ __('Send invitation by email') }}
                                             </button>
                                         </div>
                                     </div>
                                     <!-- Информация о выбранном охотнике (показываем только если текст в поле соответствует выбранному охотнику) -->
                                     <div
-                                        v-if="hunterSlot.hunter && hunterSlot.query && hunterSlot.query.trim() === ((hunterSlot.hunter.user_name || (hunterSlot.hunter.first_name + ' ' + hunterSlot.hunter.last_name)).trim())"
+                                        v-if="hunterSlot.hunter && hunterSlot.query && ((hunterSlot.hunter.is_external && hunterSlot.query.trim() === hunterSlot.hunter.email) || (!hunterSlot.hunter.is_external && hunterSlot.query.trim() === ((hunterSlot.hunter.user_name || (hunterSlot.hunter.first_name + ' ' + hunterSlot.hunter.last_name)).trim())))"
                                         class="mt-2">
                                         <div class="d-flex align-items-center mb-1">
                                             <span class="text-muted small">@{{ hunterSlot.hunter.email }}</span>
                                         </div>
                                     </div>
-                                    <!-- Поле ввода сообщения (показывается при клике на кнопку почты или кнопки в блоке \"Охотники не найдены\") -->
-                                    <div v-if="hunterSlot.showEmailInput" class="mt-2">
-                                        <div v-if="!hunterSlot.hunter" class="mb-2">
-                                            <input
-                                                type="email"
-                                                class="form-control form-control-sm"
-                                                v-model="hunterSlot.emailAddress"
-                                                @input="handleEmailAddressInput(index)"
-                                                placeholder="Введите email адрес">
-                                        </div>
-                                        <div class="d-flex align-items-start">
-                                            <textarea
-                                                class="form-control form-control-sm"
-                                                rows="2"
-                                                v-model="hunterSlot.emailMessage"
-                                                placeholder="Введите сообщение"></textarea>
-                                            <button
-                                                type="button"
-                                                class="btn btn-info btn-sm ms-3 ml-2"
-                                                @click="sendEmailForSlot(index, {{ $booking->id }}, $event)">
-                                                Отправить
-                                            </button>
-                                            <button type="button" class="btn btn-outline-danger btn-sm ms-2 ml-2" style="min-width: 40px;"
-                                                    @click="hunterSlot.showEmailInput = false">
-                                                <i class="fa fa-times"></i>
-                                            </button>
-                                        </div>
-                                    </div>
                                 </div>
                                 <div class="d-flex align-items-start">
                                     <button
-                                        v-if="hunterSlot.hunter && hunterSlot.query && hunterSlot.query.trim() === ((hunterSlot.hunter.user_name || (hunterSlot.hunter.first_name + ' ' + hunterSlot.hunter.last_name)).trim())"
+                                        v-if="hunterSlot.hunter && hunterSlot.query && ((hunterSlot.hunter.is_external && hunterSlot.query.trim() === hunterSlot.hunter.email) || (!hunterSlot.hunter.is_external && hunterSlot.query.trim() === ((hunterSlot.hunter.user_name || (hunterSlot.hunter.first_name + ' ' + hunterSlot.hunter.last_name)).trim())))"
                                         type="button"
                                         class="btn btn-sm me-2 ml-2"
                                         :class="(hunterSlot.hunter && hunterSlot.hunter.invited && hunterSlot.hunter.invitation_status !== 'declined') ? 'btn-success' : 'btn-outline-primary'"
-                                        :disabled="!hunterSlot.hunter || (hunterSlot.hunter.invited && hunterSlot.hunter.invitation_status !== 'declined')"
+                                        :disabled="!hunterSlot.hunter || (hunterSlot.hunter.invited && hunterSlot.hunter.invitation_status !== 'declined') || hunterSlot.hunter.is_external"
                                         @click="inviteHunterForSlot(index, {{ $booking->id }}, $event)">
                                         <span v-text="(hunterSlot.hunter && hunterSlot.hunter.invited && hunterSlot.hunter.invitation_status !== 'declined') ? invitedText : inviteText"></span>
-                                    </button>
-                                    <button
-                                        v-if="hunterSlot.hunter && hunterSlot.hunter.invited && hunterSlot.query && hunterSlot.query.trim() === ((hunterSlot.hunter.user_name || (hunterSlot.hunter.first_name + ' ' + hunterSlot.hunter.last_name)).trim())"
-                                        type="button"
-                                        class="btn btn-outline-secondary btn-sm ml-2"
-                                        style="min-width: 40px;"
-                                        @click="toggleEmailInputForSlot(index)"
-                                        title="{{ __('Send email') }}">
-                                        <i class="fa fa-envelope"></i>
                                     </button>
                                 </div>
                             </div>
@@ -228,14 +201,6 @@
 
                     <div class="mt-4 p-3 border rounded">
                         <div class="d-flex justify-content-center gap-2 flex-wrap">
-                            <button
-                                type="button"
-                                class="btn btn-info"
-                                @if($booking->status === \Modules\Booking\Models\Booking::START_COLLECTION) disabled @endif
-                                @click="startCollection($event, {{ $booking->id }})">
-                                {{ __('Open collection') }}
-                            </button>
-
                             <button
                                 type="button"
                                 class="btn btn-info mx-2 btn-extend-collection"
