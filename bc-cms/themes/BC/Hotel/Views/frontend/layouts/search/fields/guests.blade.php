@@ -41,7 +41,7 @@
                     <span class="btn-add" data-input="adults"><i class="icon ion-ios-add"></i></span>
                 </div>
             </div>
-            <div class="dropdown-item-row">
+            <div class="dropdown-item-row d-none">
                 <div class="label">{{__('Children')}}</div>
                 <div class="val">
                     <span class="btn-minus" data-input="children"><i class="icon ion-md-remove"></i></span>
