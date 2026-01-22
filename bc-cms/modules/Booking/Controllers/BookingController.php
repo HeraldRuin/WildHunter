@@ -1021,22 +1021,24 @@ class BookingController extends \App\Http\Controllers\Controller
             }
         }
 
-        // Полностью удаляем (force delete) все приглашения охотников из таблицы bc_booking_hunter_invitations для этой брони
+        // Удаляем все приглашения охотников, кроме мастера охотника (того, кто приглашал)
         try {
-            // Получаем все booking_hunter_id для этой брони
-            $bookingHunterIds = BookingHunter::where('booking_id', $booking->id)->pluck('id');
+            // Получаем все booking_hunter_id для этой брони, где is_master = false (не мастера)
+            $nonMasterBookingHunterIds = BookingHunter::where('booking_id', $booking->id)
+                ->where('is_master', false)
+                ->pluck('id');
 
-            if ($bookingHunterIds->isNotEmpty()) {
-                // Жёстко удаляем все приглашения, связанные с этими booking_hunter_id
-                $deletedCount = BookingHunterInvitation::whereIn('booking_hunter_id', $bookingHunterIds)->forceDelete();
+            if ($nonMasterBookingHunterIds->isNotEmpty()) {
+                // Жёстко удаляем все приглашения, связанные с не-мастерами
+                $deletedCount = BookingHunterInvitation::whereIn('booking_hunter_id', $nonMasterBookingHunterIds)->forceDelete();
 
-                Log::info('cancelCollection: force delete приглашений охотников', [
+                Log::info('cancelCollection: force delete приглашений охотников (кроме мастера)', [
                     'booking_id' => $booking->id,
-                    'booking_hunter_ids' => $bookingHunterIds->toArray(),
+                    'non_master_booking_hunter_ids' => $nonMasterBookingHunterIds->toArray(),
                     'deleted' => $deletedCount,
                 ]);
             } else {
-                Log::info('cancelCollection: нет связанных BookingHunter для удаления приглашений', [
+                Log::info('cancelCollection: нет не-мастеров для удаления приглашений', [
                     'booking_id' => $booking->id,
                 ]);
             }
@@ -1575,6 +1577,34 @@ class BookingController extends \App\Http\Controllers\Controller
 
         $booking->skip_status_email = true;
         event(new BookingUpdatedEvent($booking));
+
+        // Удаляем все приглашения охотников, кроме мастера охотника (того, кто приглашал)
+        try {
+            // Получаем все booking_hunter_id для этой брони, где is_master = false (не мастера)
+            $nonMasterBookingHunterIds = BookingHunter::where('booking_id', $booking->id)
+                ->where('is_master', false)
+                ->pluck('id');
+
+            if ($nonMasterBookingHunterIds->isNotEmpty()) {
+                // Жёстко удаляем все приглашения, связанные с не-мастерами
+                $deletedCount = BookingHunterInvitation::whereIn('booking_hunter_id', $nonMasterBookingHunterIds)->forceDelete();
+
+                Log::info('cancelBooking: force delete приглашений охотников (кроме мастера)', [
+                    'booking_id' => $booking->id,
+                    'non_master_booking_hunter_ids' => $nonMasterBookingHunterIds->toArray(),
+                    'deleted' => $deletedCount,
+                ]);
+            } else {
+                Log::info('cancelBooking: нет не-мастеров для удаления приглашений', [
+                    'booking_id' => $booking->id,
+                ]);
+            }
+        } catch (\Exception $e) {
+            Log::warning('cancelBooking: failed to force delete invitations', [
+                'booking_id' => $booking->id,
+                'error' => $e->getMessage(),
+            ]);
+        }
 
         try {
             $old = app()->getLocale();

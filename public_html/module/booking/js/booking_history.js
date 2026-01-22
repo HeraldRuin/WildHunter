@@ -726,9 +726,37 @@ document.addEventListener('DOMContentLoaded', function () {
                     success: (res) => {
                         restoreButton();
                         if (res.status) {
-                            // Очищаем поле после успешной отправки
-                            slot.query = '';
-                            slot.noResults = false;
+                            const email = query.trim();
+                            const hunterData = {
+                                id: null,
+                                email: email,
+                                first_name: '',
+                                last_name: '',
+                                user_name: null,
+                                phone: null,
+                                invited: true,
+                                invitation_status: 'pending',
+                                is_external: true
+                            };
+                            const updatedSlot = {
+                                ...slot,
+                                hunter: hunterData,
+                                query: email,
+                                results: [],
+                                showResults: false,
+                                noResults: false
+                            };
+
+                            const updatedSlots = [...this.hunterSlots];
+                            updatedSlots[slotIndex] = updatedSlot;
+                            this.$set(this, 'hunterSlots', updatedSlots);
+                            this.$nextTick(() => {
+                                this.$forceUpdate();
+                                this.checkFinishCollectionButton(bookingIdNum);
+                                setTimeout(() => {
+                                    this.loadInvitedHunters(bookingIdNum);
+                                }, 500);
+                            });
                         } else if (res.message) {
                             if (typeof bookingCoreApp !== 'undefined' && bookingCoreApp.showAjaxMessage) {
                                 bookingCoreApp.showAjaxMessage(res);
