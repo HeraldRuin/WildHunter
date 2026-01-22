@@ -408,14 +408,35 @@ class Booking extends BaseModel
         }
         try{
             // To Admin
-            Mail::to(setting_item('admin_email'))->send(new StatusUpdatedEmail($this,'admin'));
+            if(setting_item('admin_email')) {
+                Mail::to(setting_item('admin_email'))->send(new StatusUpdatedEmail($this,'admin'));
+            }
 
             // to Vendor
-            Mail::to(User::find($this->vendor_id))->send(new StatusUpdatedEmail($this,'vendor'));
+            if($this->vendor_id) {
+                $vendor = User::find($this->vendor_id);
+                if($vendor && !empty($vendor->email)) {
+                    Mail::to($vendor->email)->send(new StatusUpdatedEmail($this,'vendor'));
+                }
+            }
 
-            // To Customer
-            Mail::to($this->email)->send(new StatusUpdatedEmail($this,'customer'));
-
+            // To Customer - используем email создателя, если он есть, иначе email из брони
+            $customerEmail = null;
+            if($this->create_user) {
+                $customer = User::find($this->create_user);
+                if($customer && !empty($customer->email)) {
+                    $customerEmail = $customer->email;
+                }
+            }
+            
+            // Если email создателя не найден, используем email из брони
+            if(!$customerEmail && !empty($this->email)) {
+                $customerEmail = $this->email;
+            }
+            
+            if($customerEmail) {
+                Mail::to($customerEmail)->send(new StatusUpdatedEmail($this,'customer'));
+            }
 
             app()->setLocale($old);
 

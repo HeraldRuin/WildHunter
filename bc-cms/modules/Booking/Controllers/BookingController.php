@@ -810,7 +810,7 @@ class BookingController extends \App\Http\Controllers\Controller
         ]);
     }
 
-    public function confirmBooking( Booking $booking)
+    public function confirmBooking( Booking $booking): JsonResponse
     {
         if ($booking->status !== 'processing') {
             return response()->json([
@@ -821,6 +821,9 @@ class BookingController extends \App\Http\Controllers\Controller
         $booking->status = Booking::CONFIRMED;
         $booking->save();
 
+        // Вызываем событие для отправки email через слушатель
+        event(new BookingUpdatedEvent($booking));
+
         try {
             $old = app()->getLocale();
             $bookingLocale = $booking->getMeta('locale');
@@ -829,7 +832,10 @@ class BookingController extends \App\Http\Controllers\Controller
             }
 
             if($booking->create_user) {
-                Mail::to(User::find($booking->create_user))->send(new StatusUpdatedEmail($booking, 'customer'));
+                $creator = User::find($booking->create_user);
+                if($creator && !empty($creator->email)) {
+                    Mail::to($creator->email)->send(new StatusUpdatedEmail($booking, 'customer'));
+                }
             }
 
             app()->setLocale($old);
