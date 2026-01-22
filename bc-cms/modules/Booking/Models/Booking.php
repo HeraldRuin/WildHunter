@@ -384,17 +384,89 @@ class Booking extends BaseModel
     {
         try {
             // To Admin
-            Mail::to(setting_item('admin_email'))->send(new NewBookingEmail($this, 'admin'));
+            $adminEmail = setting_item('admin_email');
+            if($adminEmail) {
+                Mail::to($adminEmail)->send(new NewBookingEmail($this, 'admin'));
+            }
 
             // to Vendor
-            Mail::to(User::find($this->vendor_id))->send(new NewBookingEmail($this, 'vendor'));
+            $vendorEmail = null;
+            if($this->vendor_id) {
+                $vendor = User::find($this->vendor_id);
+                if($vendor && !empty($vendor->email)) {
+                    $vendorEmail = $vendor->email;
+                    Mail::to($vendorEmail)->send(new NewBookingEmail($this, 'vendor'));
+                }
+            }
 
-            // To Customer
-            Mail::to($this->email)->send(new NewBookingEmail($this, 'customer'));
+            // To Base Admin (админ базы из отеля)
+            $hotel = null;
+            if($this->hotel_id) {
+                if(!$this->relationLoaded('hotel')) {
+                    $this->load('hotel');
+                }
+                $hotel = $this->hotel;
+            }
+            if(!$hotel && $this->object_model === 'hotel' && $this->object_id) {
+                $service = $this->service;
+                if($service && $service instanceof \Modules\Hotel\Models\Hotel) {
+                    $hotel = $service;
+                }
+            }
+
+            if($hotel && $hotel->admin_base) {
+                $baseAdmin = User::find($hotel->admin_base);
+                if($baseAdmin && !empty($baseAdmin->email)) {
+                    // Проверяем, не совпадает ли email админа базы с email вендора или главного админа
+                    $baseAdminEmail = $baseAdmin->email;
+                    $shouldSend = true;
+
+                    if($vendorEmail && $vendorEmail === $baseAdminEmail) {
+                        // Уже отправили вендору, пропускаем
+                        $shouldSend = false;
+                    }
+                    if($adminEmail && $adminEmail === $baseAdminEmail) {
+                        // Уже отправили главному админу, пропускаем
+                        $shouldSend = false;
+                    }
+
+                    if($shouldSend) {
+                        Mail::to($baseAdminEmail)->send(new NewBookingEmail($this, 'admin'));
+                    }
+                }
+            }
+
+            // To Hunter (охотнику - создателю брони)
+            if($this->create_user) {
+                $hunter = User::find($this->create_user);
+                if($hunter && !empty($hunter->email)) {
+                    Mail::to($hunter->email)->send(new NewBookingEmail($this, 'customer'));
+                }
+            }
+
+            // To Customer (если email указан в брони и отличается от создателя)
+            if(!empty($this->email)) {
+                $customerEmail = $this->email;
+                // Проверяем, не совпадает ли email с email создателя или админа базы
+                if($this->create_user) {
+                    $hunter = User::find($this->create_user);
+                    if($hunter && $hunter->email === $customerEmail) {
+                        $customerEmail = null;
+                    }
+                }
+                if($hotel && $hotel->admin_base) {
+                    $baseAdmin = User::find($hotel->admin_base);
+                    if($baseAdmin && $baseAdmin->email === $customerEmail) {
+                        $customerEmail = null;
+                    }
+                }
+                if($customerEmail) {
+                    Mail::to($customerEmail)->send(new NewBookingEmail($this, 'customer'));
+                }
+            }
 
         }catch (\Exception | \Swift_TransportException $exception){
 
-            Log::warning('sendNewBookingEmails: '.$exception->getMessage());
         }
     }
 
@@ -428,12 +500,12 @@ class Booking extends BaseModel
                     $customerEmail = $customer->email;
                 }
             }
-            
+
             // Если email создателя не найден, используем email из брони
             if(!$customerEmail && !empty($this->email)) {
                 $customerEmail = $this->email;
             }
-            
+
             if($customerEmail) {
                 Mail::to($customerEmail)->send(new StatusUpdatedEmail($this,'customer'));
             }

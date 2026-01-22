@@ -181,7 +181,10 @@ class BookingController extends \App\Http\Controllers\Controller
          * @var $user User
          */
         $res = $this->validateDoCheckout();
-        if ($res !== true) return $res;
+        if ($res !== true) {
+            return $res;
+        }
+        
         $user = auth()->user();
 
         $booking = $this->bookingInst;
@@ -393,8 +396,6 @@ class BookingController extends \App\Http\Controllers\Controller
         // Save Passenger
         $this->savePassengers($booking, $request);
 
-
-
         if ($res = $service->afterCheckout($request, $booking)) {
             return $res;
         }
@@ -424,7 +425,9 @@ class BookingController extends \App\Http\Controllers\Controller
 //        }
         $booking->status = $booking::PROCESSING;
         $booking->save();
+
         event(new BookingCreatedEvent($booking));
+
         return $this->sendSuccess([
             'url' => $booking->getDetailUrl()
         ], __("You payment has been processed successfully"));
@@ -823,25 +826,6 @@ class BookingController extends \App\Http\Controllers\Controller
 
         // Вызываем событие для отправки email через слушатель
         event(new BookingUpdatedEvent($booking));
-
-        try {
-            $old = app()->getLocale();
-            $bookingLocale = $booking->getMeta('locale');
-            if($bookingLocale){
-                app()->setLocale($bookingLocale);
-            }
-
-            if($booking->create_user) {
-                $creator = User::find($booking->create_user);
-                if($creator && !empty($creator->email)) {
-                    Mail::to($creator->email)->send(new StatusUpdatedEmail($booking, 'customer'));
-                }
-            }
-
-            app()->setLocale($old);
-        } catch(\Exception | \Swift_TransportException $e){
-            Log::warning('sendConfirmedStatusEmail: '.$e->getMessage());
-        }
 
         return $this->sendSuccess([
             'message' => __('Reservation successfully confirmed')

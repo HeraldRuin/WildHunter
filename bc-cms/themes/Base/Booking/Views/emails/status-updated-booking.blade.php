@@ -16,7 +16,24 @@
 
 
                 @case ('customer')
-                    <h3 class="email-headline"><strong>{{__('Hello :name',['name'=>$booking->first_name ?? ''])}}</strong></h3>
+                    @php
+                        // Для охотника (создателя брони) используем имя и фамилию из профиля пользователя
+                        $customerName = $booking->first_name ?? '';
+                        if($booking->create_user) {
+                            $hunter = \App\User::find($booking->create_user);
+                            if($hunter) {
+                                $customerName = trim(($hunter->first_name ?? '') . ' ' . ($hunter->last_name ?? ''));
+                                if(empty($customerName)) {
+                                    $customerName = $hunter->display_name ?? $hunter->email ?? '';
+                                }
+                            }
+                        }
+                        // Если имя не найдено, используем из брони
+                        if(empty($customerName)) {
+                            $customerName = trim(($booking->first_name ?? '') . ' ' . ($booking->last_name ?? ''));
+                        }
+                    @endphp
+                    <h3 class="email-headline"><strong>{{__('Hello :name',['name'=>$customerName])}}</strong></h3>
                     <p>{{__('Your booking status has been updated')}}</p>
                     @if(!empty($customMessage))
                         <hr>
