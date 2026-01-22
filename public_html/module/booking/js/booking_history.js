@@ -48,16 +48,113 @@ document.addEventListener('DOMContentLoaded', function () {
                 modal.show();
             },
             // Открытие модального окна сбора охотников.
-            // Никакой дополнительной логики по блокировке кнопки здесь не делаем —
-            // она просто открывает модалку и инициализирует слоты.
+            // При первом открытии запускает сбор (таймер), при повторном - просто открывает модалку.
             openCollectionModal(bookingId, event) {
-                this.currentCollectionBookingId = bookingId;
-
-                // Инициализируем слоты чуть позже, чтобы модалка успела открыться
-                setTimeout(() => {
-                    console.log('Вызов initializeHunterSlots для брони:', bookingId);
-                    this.initializeHunterSlots(bookingId);
-                }, 200);
+                const me = this;
+                const bookingIdNum = parseInt(bookingId, 10);
+                
+                // Проверяем, запущен ли уже сбор
+                // Ищем таймер в строке таблицы, где находится кнопка
+                const bookingRow = event && event.currentTarget ? event.currentTarget.closest('tr') : null;
+                const timerInRow = bookingRow ? bookingRow.querySelector('.collection-timer[data-end]') : null;
+                
+                // Также проверяем статус брони - если статус START_COLLECTION, то сбор уже запущен
+                const statusCell = bookingRow ? bookingRow.querySelector('td[class*="START_COLLECTION"]') : null;
+                const isCollectionStarted = timerInRow !== null || statusCell !== null;
+                
+                // Если сбор еще не запущен, запускаем его
+                if (!isCollectionStarted) {
+                    console.log('Сбор еще не запущен, запускаем таймер для брони:', bookingIdNum);
+                    
+                    // Вызываем startCollection, но не открываем модалку сразу
+                    // После успешного запуска сбора откроем модалку
+                    const btn = event && event.currentTarget ? event.currentTarget : null;
+                    let originalHtml = null;
+                    if (btn) {
+                        originalHtml = btn.innerHTML;
+                        btn.disabled = true;
+                        btn.classList.add('disabled');
+                        btn.innerHTML =
+                            '<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>' +
+                            '<span> ' + (btn.textContent.trim() || '...') + '</span>';
+                    }
+                    
+                    const restoreButton = function() {
+                        if (btn) {
+                            btn.disabled = false;
+                            btn.classList.remove('disabled');
+                            if (originalHtml) {
+                                btn.innerHTML = originalHtml;
+                            }
+                        }
+                    };
+                    
+                    $.ajax({
+                        url: `/booking/${bookingIdNum}/start-collection`,
+                        type: 'POST',
+                        dataType: 'json',
+                        data: {},
+                        success: function (res) {
+                            restoreButton();
+                            
+                            if (res.status) {
+                                // После успешного запуска сбора открываем модалку сразу
+                                me.currentCollectionBookingId = bookingIdNum;
+                                const modalEl = document.getElementById('collectionModal' + bookingIdNum);
+                                if (modalEl) {
+                                    const bsModal = new bootstrap.Modal(modalEl);
+                                    bsModal.show();
+                                    
+                                    // Инициализируем слоты после открытия модалки
+                                    setTimeout(() => {
+                                        console.log('Вызов initializeHunterSlots для брони:', bookingIdNum);
+                                        me.initializeHunterSlots(bookingIdNum);
+                                    }, 200);
+                                }
+                                
+                                // Обновляем статус в таблице и добавляем таймер, если его еще нет
+                                if (bookingRow && res.collection_end_at) {
+                                    // Если таймера еще нет, добавляем его
+                                    if (!timerInRow) {
+                                        const endTimestamp = new Date(res.collection_end_at).getTime();
+                                        const timerDiv = document.createElement('div');
+                                        timerDiv.className = 'text-muted collection-timer';
+                                        timerDiv.setAttribute('data-end', endTimestamp);
+                                        timerDiv.textContent = '[0 мин]';
+                                        
+                                        const statusCell = bookingRow.querySelector('td[class*="status"]');
+                                        if (statusCell) {
+                                            statusCell.appendChild(timerDiv);
+                                        }
+                                    }
+                                }
+                            } else if (res.message) {
+                                bookingCoreApp.showAjaxMessage(res);
+                            }
+                        },
+                        error: function (e) {
+                            restoreButton();
+                            
+                            if (e.status === 419) {
+                                alert('Сессия истекла, обновите страницу');
+                            } else if (e.responseJSON && e.responseJSON.message) {
+                                alert('Ошибка: ' + e.responseJSON.message);
+                            } else {
+                                alert('Произошла ошибка при начале сбора охотников');
+                            }
+                        }
+                    });
+                } else {
+                    // Сбор уже запущен, просто открываем модалку
+                    console.log('Сбор уже запущен, просто открываем модалку для брони:', bookingIdNum);
+                    this.currentCollectionBookingId = bookingIdNum;
+                    
+                    // Инициализируем слоты чуть позже, чтобы модалка успела открыться
+                    setTimeout(() => {
+                        console.log('Вызов initializeHunterSlots для брони:', bookingIdNum);
+                        this.initializeHunterSlots(bookingIdNum);
+                    }, 200);
+                }
             },
             initializeHunterSlots(bookingId) {
                 // Получаем количество охотников из DOM элемента модального окна
@@ -123,12 +220,20 @@ document.addEventListener('DOMContentLoaded', function () {
                                     }
                                     
                                     // Формируем текст для поля ввода
-                                    const queryText = hunter.user_name || (hunter.first_name + ' ' + hunter.last_name).trim() || '';
+                                    // Для внешних охотников (без системы) используем email
+                                    let queryText = '';
+                                    if (hunter.is_external) {
+                                        queryText = hunter.email || '';
+                                    } else {
+                                        queryText = hunter.user_name || (hunter.first_name + ' ' + hunter.last_name).trim() || '';
+                                    }
                                     
                                     console.log(`Слот ${index} заполнен охотником:`, {
                                         id: hunter.id,
                                         name: hunter.first_name + ' ' + hunter.last_name,
                                         user_name: hunter.user_name,
+                                        email: hunter.email,
+                                        is_external: hunter.is_external,
                                         query: queryText,
                                         invited: hunter.invited,
                                         status: hunter.invitation_status
@@ -209,6 +314,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     const requiredHunters = parseInt(modal.dataset.huntersCount || '0', 10);
                     
                     // Считаем приглашенных охотников (со статусом не declined)
+                    // Учитываем как охотников из системы, так и внешних (по email)
                     let invitedCount = 0;
                     if (this.hunterSlots && this.hunterSlots.length > 0) {
                         invitedCount = this.hunterSlots.filter(slot => 
@@ -566,6 +672,85 @@ document.addEventListener('DOMContentLoaded', function () {
                     slot.emailMessage = '';
                     slot.emailAddress = '';
                 }
+            },
+            inviteByEmailForSlot(slotIndex, bookingId, event) {
+                const slot = this.hunterSlots[slotIndex];
+                if (!slot) return;
+                
+                const query = slot.query ? slot.query.trim() : '';
+                if (!query) {
+                    alert('Введите email адрес охотника');
+                    return;
+                }
+                
+                // Проверяем, является ли введенный текст email-адресом
+                const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                if (!emailPattern.test(query)) {
+                    alert('Введите корректный email адрес');
+                    return;
+                }
+                
+                const bookingIdNum = parseInt(bookingId, 10);
+                if (!bookingIdNum) return;
+                
+                const btn = event && event.currentTarget ? event.currentTarget : null;
+                let originalHtml = null;
+                if (btn) {
+                    originalHtml = btn.innerHTML;
+                    btn.disabled = true;
+                    btn.classList.add('disabled');
+                    btn.innerHTML =
+                        '<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>' +
+                        '<span> ' + (btn.textContent.trim() || '...') + '</span>';
+                }
+                
+                const restoreButton = () => {
+                    if (btn) {
+                        btn.disabled = false;
+                        btn.classList.remove('disabled');
+                        if (originalHtml) {
+                            btn.innerHTML = originalHtml;
+                        }
+                    }
+                };
+                
+                // Отправляем приглашение по email (даже если пользователя нет в системе)
+                $.ajax({
+                    url: `/booking/${bookingIdNum}/invite-hunter-by-email`,
+                    type: 'POST',
+                    dataType: 'json',
+                    data: {
+                        email: query,
+                        _token: $('meta[name="csrf-token"]').attr('content') || ''
+                    },
+                    success: (res) => {
+                        restoreButton();
+                        if (res.status) {
+                            // Очищаем поле после успешной отправки
+                            slot.query = '';
+                            slot.noResults = false;
+                        } else if (res.message) {
+                            if (typeof bookingCoreApp !== 'undefined' && bookingCoreApp.showAjaxMessage) {
+                                bookingCoreApp.showAjaxMessage(res);
+                            } else {
+                                alert(res.message);
+                            }
+                        }
+                    },
+                    error: (e) => {
+                        restoreButton();
+                        console.error('Ошибка при отправке приглашения по email:', e);
+                        if (e.status === 419) {
+                            alert('Сессия истекла, обновите страницу');
+                        } else if (e.responseJSON && e.responseJSON.message) {
+                            alert('Ошибка: ' + e.responseJSON.message);
+                        } else if (e.responseJSON && e.responseJSON.error) {
+                            alert('Ошибка: ' + e.responseJSON.error);
+                        } else {
+                            alert('Произошла ошибка при отправке приглашения. Проверьте консоль для деталей.');
+                        }
+                    }
+                });
             },
             clearHunterSlot(slotIndex) {
                 const slot = this.hunterSlots[slotIndex];

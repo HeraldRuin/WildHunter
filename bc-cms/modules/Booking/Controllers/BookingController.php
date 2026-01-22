@@ -1319,14 +1319,8 @@ class BookingController extends \App\Http\Controllers\Controller
             }
         }
 
-        // Отправляем событие приглашенному охотнику для обновления страницы истории
         try {
             event(new \Modules\Booking\Events\HunterInvitedEvent($booking, $hunterId));
-            Log::info('HunterInvitedEvent отправлено', [
-                'booking_id' => $booking->id,
-                'hunter_id' => $hunterId,
-                'channel' => 'user-channel-' . $hunterId
-            ]);
         } catch (\Exception $e) {
             Log::error('Ошибка отправки HunterInvitedEvent', [
                 'error' => $e->getMessage(),

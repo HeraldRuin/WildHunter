@@ -867,6 +867,39 @@ class Hotel extends Bookable
         $this->tmp_rooms = [];
         foreach ($rooms as $room) {
             if ($room->isAvailableAt($filters)) {
+                // Validate adults and children capacity
+                // Similar to addToCartValidate logic: check if available rooms can accommodate requested guests
+                $requested_adults = isset($filters['adults']) && $filters['adults'] !== '' && $filters['adults'] !== null ? (int)$filters['adults'] : 0;
+                $requested_children = isset($filters['children']) && $filters['children'] !== '' && $filters['children'] !== null ? (int)$filters['children'] : 0;
+                
+                // Get available number of rooms for this room type
+                $available_rooms = (int)($room->tmp_number ?? 0);
+                
+                // Skip if no rooms available
+                if ($available_rooms <= 0) {
+                    continue;
+                }
+                
+                // Get room capacity (ensure it's an integer)
+                // Use getAttribute to ensure we get the value even if it's null
+                // Если number не указан или равен 0, считаем что номер состоит из 1 комнаты
+                $room_number = (int)($room->getAttribute('number') ?? 1); 
+                if ($room_number <= 0) {
+                    $room_number = 1; // по умолчанию 1 комната
+                }
+                
+                $room_adults = (int)($room->getAttribute('adults') ?? 0); // количество взрослых в одной комнате
+                $room_children = (int)($room->getAttribute('children') ?? 0); // количество детей в одной комнате
+                
+                // Базовая проверка: если нет вместимости вообще (ни взрослых, ни детей), пропускаем номер
+                if ($room_adults <= 0 && $room_children <= 0) {
+                    continue;
+                }
+                
+                // ВАЖНО: Полная проверка вместимости с учетом запрошенного количества номеров
+                // выполняется в методе search(), здесь не фильтруем по adults/children
+                // чтобы не исключать номера раньше времени
+                
                 $translation = $room->translate();
                 $terms = Terms::getTermsByIdForAPI($room->terms->pluck('term_id'));
                 $term_features = [];
@@ -1124,6 +1157,9 @@ class Hotel extends Bookable
             if (!empty($request['children'])) {
                 $filters['children'] = (int)$request['children'];
             }
+            if (!empty($request['room'])) {
+                $filters['room'] = (int)$request['room'];
+            }
 
             $blockedQuery = \DB::table('bc_hotel_room_dates as d')
                 ->join('bc_hotel_rooms as r', 'r.id', '=', 'd.target_id')
@@ -1162,33 +1198,102 @@ class Hotel extends Bookable
                             return false;
                         }
 
+                        $requestedRooms = (int)($filters['room'] ?? 0);
                         $requestedAdults = $filters['adults'] ?? null;
-                        if ($requestedAdults) {
-                            $totalAdultCapacity = 0;
-
+                        
+                        // Если количество номеров не указано, но указано количество взрослых, 
+                        // считаем что запрашивается минимум 1 номер
+                        if ($requestedAdults && $requestedRooms <= 0) {
+                            $requestedRooms = 1;
+                        }
+                        
+                        if ($requestedAdults && $requestedRooms > 0) {
+                            // ЛОГИКА: adults - это количество человек в ОДНОЙ комнате номера
+                            // Если запрашивается 1 номер, проверяем что взрослые <= adults (вместимость одной комнаты)
+                            // Если запрашивается 2 номера, проверяем что взрослые <= adults * 2 (вместимость двух номеров)
+                            
+                            // Собираем все доступные типы номеров с их вместимостью одной комнаты
+                            $availableRoomTypes = [];
+                            
                             foreach ($hotel->tmp_rooms as $room) {
-                                $roomAdults = (int)($room->adults ?? 0);
-                                if ($roomAdults > 0) {
-                                    $totalAdultCapacity += $roomAdults;
+                                $roomAdults = (int)($room->adults ?? 0); // количество взрослых в ОДНОЙ комнате номера
+                                $availableRooms = (int)($room->tmp_number ?? 0); // доступное количество номеров этого типа
+                                
+                                if ($roomAdults > 0 && $availableRooms > 0) {
+                                    // Вместимость одного номера = adults (количество человек в одной комнате)
+                                    // НЕ умножаем на number (количество комнат), так как нельзя разместить больше adults в одной комнате
+                                    $capacityPerRoom = $roomAdults;
+                                    
+                                    // Добавляем каждый доступный номер этого типа
+                                    for ($i = 0; $i < $availableRooms; $i++) {
+                                        $availableRoomTypes[] = $capacityPerRoom;
+                                    }
                                 }
                             }
-
+                            
+                            // Если нет доступных номеров вообще, отель не подходит
+                            if (empty($availableRoomTypes)) {
+                                return false;
+                            }
+                            
+                            // Проверяем, что доступно минимум столько номеров, сколько запрашивается
+                            if (count($availableRoomTypes) < $requestedRooms) {
+                                return false;
+                            }
+                            
+                            // Сортируем по вместимости (от большей к меньшей) для оптимального распределения
+                            rsort($availableRoomTypes);
+                            
+                            // Берем первые N номеров (где N = запрошенное количество номеров)
+                            $selectedRooms = array_slice($availableRoomTypes, 0, $requestedRooms);
+                            
+                            // Суммируем вместимость выбранных номеров
+                            // Если выбрано 1 номер с adults=4, то total = 4
+                            // Если выбрано 2 номера с adults=4 каждый, то total = 4 + 4 = 8
+                            $totalAdultCapacity = array_sum($selectedRooms);
+                            
+                            // Проверяем, что суммарная вместимость >= запрошенному количеству взрослых
                             if ($totalAdultCapacity < $requestedAdults) {
                                 return false;
                             }
                         }
 
                         $requestedChildren = $filters['children'] ?? null;
-                        if ($requestedChildren) {
-                            $totalChildrenCapacity = 0;
-
+                        
+                        // Если количество номеров не указано, но указано количество детей,
+                        // считаем что запрашивается минимум 1 номер
+                        $requestedRoomsForChildren = (int)($filters['room'] ?? 0);
+                        if ($requestedChildren && $requestedRoomsForChildren <= 0) {
+                            $requestedRoomsForChildren = 1;
+                        }
+                        
+                        if ($requestedChildren && $requestedRoomsForChildren > 0) {
+                            // Аналогичная логика для детей
+                            // children - это количество детей в ОДНОЙ комнате номера
+                            $availableRoomTypes = [];
+                            
                             foreach ($hotel->tmp_rooms as $room) {
-                                $roomChildren = (int)($room->children ?? 0);
-                                if ($roomChildren > 0) {
-                                    $totalChildrenCapacity += $roomChildren;
+                                $roomChildren = (int)($room->children ?? 0); // количество детей в ОДНОЙ комнате номера
+                                $availableRooms = (int)($room->tmp_number ?? 0);
+                                
+                                if ($roomChildren > 0 && $availableRooms > 0) {
+                                    // Вместимость одного номера = children (количество детей в одной комнате)
+                                    $capacityPerRoom = $roomChildren;
+                                    
+                                    for ($i = 0; $i < $availableRooms; $i++) {
+                                        $availableRoomTypes[] = $capacityPerRoom;
+                                    }
                                 }
                             }
-
+                            
+                            if (count($availableRoomTypes) < $requestedRoomsForChildren) {
+                                return false;
+                            }
+                            
+                            rsort($availableRoomTypes);
+                            $selectedRooms = array_slice($availableRoomTypes, 0, $requestedRoomsForChildren);
+                            $totalChildrenCapacity = array_sum($selectedRooms);
+                            
                             if ($totalChildrenCapacity < $requestedChildren) {
                                 return false;
                             }

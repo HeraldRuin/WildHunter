@@ -14,6 +14,7 @@ class BookingHunterInvitation extends Model
     protected $fillable = [
         'booking_hunter_id',
         'hunter_id',
+        'email',
         'invited',
         'status',
         'invited_at',
