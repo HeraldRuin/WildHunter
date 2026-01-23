@@ -3824,7 +3824,7 @@
     "Your Rating & Review": "\u0412\u0430\u0448\u0430 \u043e\u0446\u0435\u043d\u043a\u0430 \u0438 \u043e\u0442\u0437\u044b\u0432",
     "Your selected dates are not valid": "\u0412\u044b\u0431\u0440\u0430\u043d\u043d\u044b\u0435 \u0432\u0430\u043c\u0438 \u0434\u0430\u0442\u044b \u043d\u0435\u0434\u0435\u0439\u0441\u0442\u0432\u0438\u0442\u0435\u043b\u044c\u043d\u044b",
     "Your selected room is not available. Please search again": "\u0412\u044b\u0431\u0440\u0430\u043d\u043d\u044b\u0439 \u0432\u0430\u043c\u0438 \u043d\u043e\u043c\u0435\u0440 \u043d\u0435\u0434\u043e\u0441\u0442\u0443\u043f\u0435\u043d. \u041f\u043e\u0436\u0430\u043b\u0443\u0439\u0441\u0442\u0430, \u043f\u043e\u0432\u0442\u043e\u0440\u0438\u0442\u0435 \u043f\u043e\u0438\u0441\u043a",
-    "Your service has new booking": "\u0423 \u0432\u0430\u0448\u0435\u0433\u043e \u0441\u0435\u0440\u0432\u0438\u0441\u0430 \u043d\u043e\u0432\u043e\u0435 \u0431\u0440\u043e\u043d\u0438\u0440\u043e\u0432\u0430\u043d\u0438\u0435",
+    "Your service has new booking": " \u0423 \u0432\u0430\u0448\u0435\u0433\u043e \u0441\u0435\u0440\u0432\u0438\u0441\u0430 \u043d\u043e\u0432\u043e\u0435 \u0431\u0440\u043e\u043d\u0438\u0440\u043e\u0432\u0430\u043d\u0438\u0435",
     "Your template has been saved": "\u0412\u0430\u0448 \u0448\u0430\u0431\u043b\u043e\u043d \u0441\u043e\u0445\u0440\u0430\u043d\u0435\u043d",
     "Your Travel Journey Starts Here": "\u0412\u0430\u0448\u0435 \u043f\u0443\u0442\u0435\u0448\u0435\u0441\u0442\u0432\u0438\u0435 \u043d\u0430\u0447\u0438\u043d\u0430\u0435\u0442\u0441\u044f \u0437\u0434\u0435\u0441\u044c",
     "Your upgrade request has approved already": "\u0412\u0430\u0448 \u0437\u0430\u043f\u0440\u043e\u0441 \u043d\u0430 \u043e\u0431\u043d\u043e\u0432\u043b\u0435\u043d\u0438\u0435 \u0443\u0436\u0435 \u043e\u0434\u043e\u0431\u0440\u0435\u043d",
@@ -3873,7 +3873,10 @@
     "You are not logged in": "Вы не авторизованы",
     "Available Animals": "Доступные животные",
     "Hunting Date": "Дата охоты",
+    "Hunting date": "Дата охоты",
     "Cost of hunting": "Стоимость охоты",
+    "Hunters count": "Количество охотников",
+    "Hunting amount": "Сумма по охоте",
     "Availability Dates": "Сезон охоты",
     "Hunting organization": "Организация охоты",
     "Availability Animals": "Даты доступности животных",
@@ -4022,5 +4025,10 @@
     "Invited Hunters": "Приглашенные охотники",
     "Message has been sent": "Сообщение отправлено",
     "Time collection": "Таймер сбора",
-    "Opens collection": "Открытый сбор"
+    "Opens collection": "Открытый сбор",
+    "Booking status has been updated": "Статус бронирования обновлен ",
+    "invites you to hunt": " приглашает вас на охоту",
+    "Hotel details": "Детали Жилья",
+    "Animal details": "Детали Охоты",
+    "Go to collection": "Перейти к сбору"
 }
