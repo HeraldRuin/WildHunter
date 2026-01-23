@@ -2,17 +2,9 @@
 $translation = $service->translate();
 $lang_local = app()->getLocale();
 ?>
-<div class="b-panel-title">{{__('Booking details')}}</div>
+<div class="b-panel-title">{{__('Hotel details')}}</div>
 <div class="b-table-wrap">
     <table class="b-table" cellspacing="0" cellpadding="0">
-        <tr>
-            <td class="label">{{__('Booking Number')}}</td>
-            <td class="val">#{{$booking->id}}</td>
-        </tr>
-        <tr>
-            <td class="label">{{__('Booking Status')}}</td>
-            <td class="val">{{$booking->statusName}}</td>
-        </tr>
         @if($booking->gatewayObj)
             <tr>
                 <td class="label">{{__('Payment method')}}</td>
@@ -56,6 +48,37 @@ $lang_local = app()->getLocale();
                     {{$booking->duration_nights}}
                 </td>
             </tr>
+        @endif
+
+        {{-- Блок информации об охоте, если в брони есть животное (скрываем при раздельном отображении) --}}
+        @if($booking->animal_id && $booking->animal && empty($showSeparateServices))
+            <tr>
+                <td class="label">{{__('Animals')}}</td>
+                <td class="val">
+                    <a href="{{$booking->animal->getDetailUrl()}}">{!! clean($booking->animal->translate()->title ?? $booking->animal->title ?? '') !!}</a>
+                </td>
+            </tr>
+
+            @if($booking->start_date_animal)
+                <tr>
+                    <td class="label">{{__('Hunting date')}}</td>
+                    <td class="val">{{display_date($booking->start_date_animal)}}</td>
+                </tr>
+            @endif
+
+            @if(!empty($booking->total_hunting))
+                <tr>
+                    <td class="label">{{__('Hunters count')}}</td>
+                    <td class="val"><strong>{{$booking->total_hunting}}</strong></td>
+                </tr>
+            @endif
+
+            @if(!empty($booking->amount_hunting))
+                <tr>
+                    <td class="label">{{__('Hunting amount')}}</td>
+                    <td class="val"><strong>{{format_money($booking->amount_hunting)}}</strong></td>
+                </tr>
+            @endif
         @endif
 
         @if($meta = $booking->getMeta('adults'))
@@ -181,6 +204,15 @@ $lang_local = app()->getLocale();
         @endif
     </table>
 </div>
-<div class="text-center mt20">
-    <a href="{{ route("user.booking_history") }}" target="_blank" class="btn btn-primary manage-booking-btn">{{__('Manage Bookings')}}</a>
-</div>
+
+@if(empty($showSeparateServices) && isset($isInvitation) && !$isInvitation)
+        <div class="text-center mt20">
+            <a href="{{ route("user.booking_history") }}" target="_blank" class="btn btn-primary manage-booking-btn">{{__('Manage Bookings')}}</a>
+        </div>
+    @else
+        @if(empty($hideHotelButton))
+        <div class="text-center mt20">
+            <a href="{{ route("user.booking_history") }}" target="_blank" class="btn btn-primary manage-booking-btn">{{__('Go to collection')}}</a>
+        </div>
+    @endif
+@endif
