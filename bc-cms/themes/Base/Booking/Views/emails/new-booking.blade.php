@@ -56,6 +56,7 @@
             @if($detailView)
                 @include($detailView)
             @else
+                {{-- Заголовок блока с деталями бронирования --}}
                 <div class="b-panel-title">{{__('Booking details')}}</div>
                 <div class="b-table-wrap">
                     <table class="b-table" cellspacing="0" cellpadding="0">

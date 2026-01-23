@@ -383,12 +383,6 @@ class Booking extends BaseModel
     public function sendNewBookingEmails()
     {
         try {
-            // To Admin
-            $adminEmail = setting_item('admin_email');
-            if($adminEmail) {
-                Mail::to($adminEmail)->send(new NewBookingEmail($this, 'admin'));
-            }
-
             // to Vendor
             $vendorEmail = null;
             if($this->vendor_id) {
@@ -417,16 +411,12 @@ class Booking extends BaseModel
             if($hotel && $hotel->admin_base) {
                 $baseAdmin = User::find($hotel->admin_base);
                 if($baseAdmin && !empty($baseAdmin->email)) {
-                    // Проверяем, не совпадает ли email админа базы с email вендора или главного админа
+                    // Проверяем, не совпадает ли email админа базы с email вендора
                     $baseAdminEmail = $baseAdmin->email;
                     $shouldSend = true;
 
                     if($vendorEmail && $vendorEmail === $baseAdminEmail) {
                         // Уже отправили вендору, пропускаем
-                        $shouldSend = false;
-                    }
-                    if($adminEmail && $adminEmail === $baseAdminEmail) {
-                        // Уже отправили главному админу, пропускаем
                         $shouldSend = false;
                     }
 
