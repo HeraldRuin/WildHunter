@@ -28,6 +28,7 @@ document.addEventListener('DOMContentLoaded', function () {
             // Переводы для кнопок
             inviteText: el.dataset.inviteText || 'Пригласить',
             invitedText: el.dataset.invitedText || 'Приглашен',
+            acceptedText: el.dataset.acceptedText || 'Подтвержден',
         },
         methods: {
             userPopoverContent(booking) {
@@ -1136,6 +1137,27 @@ document.addEventListener('DOMContentLoaded', function () {
                 var me = this;
                 var bookingIdNum = parseInt(bookingId, 10);
 
+                // Перед отправкой запроса дополнительно проверяем, что все участники подтвердили приглашение
+                // На клиенте считаем неподтверждёнными всех с invitation_status, отличным от 'accepted'
+                // (сервер всё равно повторно проверит это условие для надёжности)
+                try {
+                    if (me.hunterSlots && me.hunterSlots.length > 0) {
+                        var hasNotAccepted = me.hunterSlots.some(function (slot) {
+                            return slot.hunter &&
+                                slot.hunter.invited &&
+                                slot.hunter.invitation_status &&
+                                slot.hunter.invitation_status !== 'accepted';
+                        });
+
+                        if (hasNotAccepted) {
+                            alert('Нельзя завершить сбор: не все участники подтвердили приглашение.');
+                            return;
+                        }
+                    }
+                } catch (e) {
+                    console.warn('finishCollection: не удалось выполнить предварительную проверку статусов приглашений', e);
+                }
+
                 var btn = event && event.currentTarget ? event.currentTarget : null;
                 if (!btn) {
                     return;
@@ -1321,6 +1343,75 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
             } else {
                 console.warn('[HunterInvitation] ⚠️ Не удалось подписаться. userId:', userId, 'LaravelEcho:', !!window.LaravelEcho, 'Element:', !!el);
+            }
+
+            // Подписка на каналы бронирований для обновления счетчика в реальном времени
+            if (window.LaravelEcho) {
+                const subscribedBookings = new Set();
+                
+                // Функция для подписки на канал бронирования
+                const subscribeToBooking = (bookingId) => {
+                    if (!bookingId || subscribedBookings.has(bookingId)) {
+                        return;
+                    }
+                    
+                    subscribedBookings.add(bookingId);
+                    
+                    try {
+                        const channel = window.LaravelEcho.private(`booking-${bookingId}`);
+                        
+                        channel.listen('.hunter.invitation.accepted', (e) => {
+                            console.log('[HunterInvitationAccepted] Получено событие принятия приглашения:', e);
+                            
+                            // Находим строку таблицы с этим booking_id
+                            const targetRow = document.querySelector(`tr[data-booking-id="${bookingId}"]`);
+                            if (targetRow) {
+                                // Находим ячейку со статусом (ищем по наличию collection-timer или классу START_COLLECTION)
+                                const statusCell = Array.from(targetRow.querySelectorAll('td')).find(td => {
+                                    return td.querySelector('.collection-timer') || 
+                                           td.classList.toString().includes('START_COLLECTION');
+                                });
+                                
+                                if (statusCell) {
+                                    // Находим элемент со счетчиком
+                                    const counterElement = statusCell.querySelector('.text-muted.mt-1');
+                                    if (counterElement && e.accepted_count !== undefined && e.total_hunters_needed !== undefined) {
+                                        counterElement.textContent = `Собранно ${e.accepted_count}/${e.total_hunters_needed}`;
+                                        console.log('[HunterInvitationAccepted] Счетчик обновлен:', counterElement.textContent);
+                                    }
+                                }
+                            }
+                        });
+                        
+                        channel.subscribed(() => {
+                            console.log(`[HunterInvitationAccepted] ✅ Успешно подписан на канал booking-${bookingId}`);
+                        });
+                        
+                        channel.error((error) => {
+                            console.error(`[HunterInvitationAccepted] ❌ Ошибка подписки на канал booking-${bookingId}:`, error);
+                        });
+                    } catch (e) {
+                        console.error(`[HunterInvitationAccepted] ❌ Исключение при подписке на booking-${bookingId}:`, e);
+                    }
+                };
+                
+                // Находим все строки таблицы с data-booking-id
+                const bookingRows = document.querySelectorAll('tr[data-booking-id]');
+                bookingRows.forEach((row) => {
+                    const bookingId = row.dataset.bookingId;
+                    if (bookingId) {
+                        subscribeToBooking(bookingId);
+                    }
+                });
+                
+                // Также подписываемся на каналы для всех бронирований с collection-timer
+                const timers = document.querySelectorAll('.collection-timer[data-booking-id]');
+                timers.forEach((timer) => {
+                    const bookingId = timer.dataset.bookingId;
+                    if (bookingId) {
+                        subscribeToBooking(bookingId);
+                    }
+                });
             }
 
             // Очистка полей поиска охотников при закрытии модалок сбора

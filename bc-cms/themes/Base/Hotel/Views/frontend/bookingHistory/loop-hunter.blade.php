@@ -1,4 +1,4 @@
-<tr>
+<tr data-booking-id="{{ $booking->id }}">
     <td class="booking-history-type">
         {{ $booking->service ? $booking->id : $booking->id }}
     </td>
@@ -111,9 +111,47 @@
                 } catch (\Exception $e) {
                     $endTimestamp = null;
                 }
+                
+                // Получаем информацию об охотниках
+                $totalHuntersNeeded = $booking->total_hunting ?? 0;
+                $allInvitations = $booking->getAllInvitations();
+                $acceptedInvitations = $allInvitations->where('status', 'accepted');
+                $acceptedCount = $acceptedInvitations->count();
+                
+                // Получаем мастера охотника
+                $bookingHunter = $booking->bookingHunter;
+                $masterHunter = null;
+                if ($bookingHunter && $bookingHunter->invitedBy) {
+                    $masterHunter = $bookingHunter->invitedBy;
+                }
+                
+                // Получаем список принявших приглашение
+                $acceptedHunters = $acceptedInvitations->map(function($invitation) {
+                    if ($invitation->hunter) {
+                        return [
+                            'name' => trim(($invitation->hunter->first_name ?? '') . ' ' . ($invitation->hunter->last_name ?? '')),
+                            'user_name' => $invitation->hunter->user_name ?? '',
+                            'email' => $invitation->hunter->email ?? '',
+                            'is_external' => false
+                        ];
+                    } elseif ($invitation->email) {
+                        return [
+                            'name' => '',
+                            'user_name' => '',
+                            'email' => $invitation->email,
+                            'is_external' => true
+                        ];
+                    }
+                    return null;
+                })->filter()->values();
             @endphp
             @if($endTimestamp)
-                <div class="text-muted collection-timer" data-end="{{ $endTimestamp }}">[0 мин]</div>
+                <div class="text-muted collection-timer" data-end="{{ $endTimestamp }}" data-booking-id="{{ $booking->id }}">[0 мин]</div>
+            @endif
+            @if($totalHuntersNeeded > 0)
+                <div class="text-muted mt-1" style="font-size: 0.9em;">
+                    Собранно {{ $acceptedCount }}/{{ $totalHuntersNeeded }}
+                </div>
             @endif
         @endif
     </td>

@@ -577,6 +577,47 @@ class BookingController extends \App\Http\Controllers\Controller
         return $service->addToCart($request);
     }
 
+    public function validateRooms(Request $request)
+    {
+        // NOTE: Only validation, no cart addition
+        
+        $validator = Validator::make($request->all(), [
+            'service_id'   => 'required|integer',
+            'service_type' => 'required'
+        ]);
+        if ($validator->fails()) {
+            return $this->sendError('', ['errors' => $validator->errors()]);
+        }
+        
+        $service_type = $request->input('service_type');
+        $service_id = $request->input('service_id');
+        $allServices = get_bookable_services();
+        
+        if (empty($allServices[$service_type])) {
+            return $this->sendError(__('Service type not found'));
+        }
+        
+        $module = $allServices[$service_type];
+        $service = $module::find($service_id);
+        
+        if (empty($service) or !is_subclass_of($service, '\\Modules\\Booking\\Models\\Bookable')) {
+            return $this->sendError(__('Service not found'));
+        }
+        
+        if (!$service->isBookable()) {
+            return $this->sendError(__('Service is not bookable'));
+        }
+        
+        // Вызываем только валидацию, без добавления в корзину
+        $validationResult = $service->addToCartValidate($request);
+        
+        if ($validationResult === true) {
+            return $this->sendSuccess(['message' => __('Validation passed')]);
+        }
+        
+        return $validationResult;
+    }
+
     public function detail(Request $request, $code)
     {
         $ifAdminBase = $request->boolean('adminBase');
@@ -1108,7 +1149,19 @@ class BookingController extends \App\Http\Controllers\Controller
             'invitations' => $invitationStatuses,
         ]);
 
-        // Фильтруем приглашения: учитываем все статусы, кроме 'declined' и 'removed'
+        // Сначала проверяем, что НЕТ приглашений, которые ещё не подтверждены
+        // (например, со статусом pending или любым другим, кроме accepted / declined / removed)
+        $notConfirmedInvitations = $allInvitations->filter(function ($invitation) {
+            return !in_array($invitation->status, ['accepted', 'declined', 'removed']);
+        });
+
+        if ($notConfirmedInvitations->count() > 0) {
+            return $this->sendError(
+                __('Не все приглашённые участники подтвердили приглашение. Дождитесь ответа всех участников или удалите неподтвердившихся.')
+            )->setStatusCode(422);
+        }
+
+        // Фильтруем приглашения: учитываем все статусы, кроме 'declined' и 'removed'.
         // Это соответствует логике метода isInvited() - приглашенные охотники считаются участниками
         // до тех пор, пока они не отклонят приглашение
         $acceptedInvitations = $allInvitations->filter(function ($invitation) {
@@ -1513,6 +1566,17 @@ class BookingController extends \App\Http\Controllers\Controller
         $invitation->status = 'accepted';
         $invitation->accepted_at = now();
         $invitation->save();
+
+        // Отправляем событие для обновления счетчика в реальном времени
+        try {
+            event(new \Modules\Booking\Events\HunterInvitationAcceptedEvent($booking, $userId));
+        } catch (\Exception $e) {
+            \Log::error('Ошибка отправки HunterInvitationAcceptedEvent', [
+                'booking_id' => $booking->id,
+                'hunter_id' => $userId,
+                'error' => $e->getMessage()
+            ]);
+        }
 
         return $this->sendSuccess([
             'message' => __('Invitation accepted'),
