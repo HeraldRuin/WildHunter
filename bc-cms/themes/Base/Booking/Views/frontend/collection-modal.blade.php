@@ -116,7 +116,7 @@
                                         class="form-control me-2"
                                         :placeholder="'{{ __('Hunter nickname / last_name / email') }}'"
                                         v-model="hunterSlot.query"
-                                        :disabled="hunterSlot.hunter && hunterSlot.hunter.invited && hunterSlot.hunter.invitation_status !== 'declined'"
+                                        :disabled="hunterSlot.hunter && hunterSlot.hunter.invited"
                                         @input="searchHunterForSlot(index, {{ $booking->id }})"
                                         @change="handleHunterInputChange(index)"
                                         @focus="hunterSlot.showResults = true"
@@ -192,8 +192,29 @@
                                         :class="(hunterSlot.hunter && hunterSlot.hunter.invited && hunterSlot.hunter.invitation_status !== 'declined') ? 'btn-success' : 'btn-outline-primary'"
                                         :disabled="!hunterSlot.hunter || (hunterSlot.hunter.invited && hunterSlot.hunter.invitation_status !== 'declined') || hunterSlot.hunter.is_external"
                                         @click="inviteHunterForSlot(index, {{ $booking->id }}, $event)">
-                                        <span v-text="(hunterSlot.hunter && hunterSlot.hunter.invited && hunterSlot.hunter.invitation_status !== 'declined') ? invitedText : inviteText"></span>
+                                        <span v-text="(hunterSlot.hunter && hunterSlot.hunter.invited && hunterSlot.hunter.invitation_status === 'accepted') ? acceptedText : ((hunterSlot.hunter && hunterSlot.hunter.invited && hunterSlot.hunter.invitation_status !== 'declined') ? invitedText : inviteText)"></span>
                                     </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {{-- История отказавшихся охотников --}}
+                    <div v-if="declinedHunters && declinedHunters.length > 0" class="mt-4 mb-4">
+                        <h6 class="mb-3 text-muted">История приглашений (отказались)</h6>
+                        <div class="list-group">
+                            <div v-for="(hunter, index) in declinedHunters" :key="index" class="list-group-item">
+                                <div class="d-flex align-items-center">
+                                    <div class="flex-grow-1">
+                                        <div class="d-flex align-items-center mb-1">
+                                            <strong>@{{ hunter.first_name }} @{{ hunter.last_name }}</strong>
+                                        </div>
+                                        <div class="text-muted small mb-1" v-if="hunter.user_name">
+                                            (ник <strong>@{{ hunter.user_name }}</strong>)
+                                        </div>
+                                        <div class="text-muted small">@{{ hunter.email }}</div>
+                                    </div>
+                                    <span class="badge bg-danger ms-2">{{ __('Declined') }}</span>
                                 </div>
                             </div>
                         </div>

@@ -184,7 +184,7 @@ class BookingController extends \App\Http\Controllers\Controller
         if ($res !== true) {
             return $res;
         }
-        
+
         $user = auth()->user();
 
         $booking = $this->bookingInst;
@@ -580,7 +580,7 @@ class BookingController extends \App\Http\Controllers\Controller
     public function validateRooms(Request $request)
     {
         // NOTE: Only validation, no cart addition
-        
+
         $validator = Validator::make($request->all(), [
             'service_id'   => 'required|integer',
             'service_type' => 'required'
@@ -588,33 +588,33 @@ class BookingController extends \App\Http\Controllers\Controller
         if ($validator->fails()) {
             return $this->sendError('', ['errors' => $validator->errors()]);
         }
-        
+
         $service_type = $request->input('service_type');
         $service_id = $request->input('service_id');
         $allServices = get_bookable_services();
-        
+
         if (empty($allServices[$service_type])) {
             return $this->sendError(__('Service type not found'));
         }
-        
+
         $module = $allServices[$service_type];
         $service = $module::find($service_id);
-        
+
         if (empty($service) or !is_subclass_of($service, '\\Modules\\Booking\\Models\\Bookable')) {
             return $this->sendError(__('Service not found'));
         }
-        
+
         if (!$service->isBookable()) {
             return $this->sendError(__('Service is not bookable'));
         }
-        
+
         // Вызываем только валидацию, без добавления в корзину
         $validationResult = $service->addToCartValidate($request);
-        
+
         if ($validationResult === true) {
             return $this->sendSuccess(['message' => __('Validation passed')]);
         }
-        
+
         return $validationResult;
     }
 
@@ -1499,6 +1499,7 @@ class BookingController extends \App\Http\Controllers\Controller
 
     /**
      * Получить список приглашенных охотников для брони
+     * Включая отказавшихся для истории
      */
     public function getInvitedHunters(Request $request, Booking $booking): JsonResponse
     {
@@ -1507,7 +1508,7 @@ class BookingController extends \App\Http\Controllers\Controller
         }
 
         $allInvitations = $booking->getAllInvitations();
-        $invitations = $allInvitations->whereNotIn('status', ['declined', 'removed']);
+        $invitations = $allInvitations->whereNotIn('status', ['removed']);
 
         $hunters = $invitations->map(function($invitation) {
             $hunter = $invitation->hunter;

@@ -25,10 +25,14 @@ document.addEventListener('DOMContentLoaded', function () {
             // Слоты для охотников (каждый слот имеет свой поиск)
             hunterSlots: [],
             
+            // История отказавшихся охотников
+            declinedHunters: [],
+            
             // Переводы для кнопок
             inviteText: el.dataset.inviteText || 'Пригласить',
             invitedText: el.dataset.invitedText || 'Приглашен',
             acceptedText: el.dataset.acceptedText || 'Подтвержден',
+            declinedText: el.dataset.declinedText || 'Отказался',
         },
         methods: {
             userPopoverContent(booking) {
@@ -162,6 +166,9 @@ document.addEventListener('DOMContentLoaded', function () {
                 const modal = document.getElementById('collectionModal' + bookingId);
                 if (!modal) return;
                 
+                // Очищаем историю отказавшихся при инициализации
+                this.declinedHunters = [];
+                
                 // Получаем количество из data-атрибута
                 const huntersCount = parseInt(modal.dataset.huntersCount || '0', 10);
                 
@@ -201,16 +208,23 @@ document.addEventListener('DOMContentLoaded', function () {
                     .then(data => {
                         console.log('Ответ от сервера:', data);
                         // sendSuccess возвращает данные напрямую, не в data.data
-                        const hunters = data.hunters || [];
-                        console.log('Найдено приглашенных охотников:', hunters.length, hunters);
+                        const allHunters = data.hunters || [];
+                        console.log('Найдено приглашенных охотников:', allHunters.length, allHunters);
                         
-                        if (data.status && hunters.length > 0) {
-                            console.log('Обработка', hunters.length, 'приглашенных охотников');
+                        // Разделяем охотников на активных (не declined) и declined
+                        const activeHunters = allHunters.filter(h => h.invitation_status !== 'declined');
+                        const declinedHunters = allHunters.filter(h => h.invitation_status === 'declined');
+                        
+                        // Сохраняем declined охотников в отдельный массив для истории
+                        this.$set(this, 'declinedHunters', declinedHunters);
+                        
+                        if (data.status && activeHunters.length > 0) {
+                            console.log('Обработка', activeHunters.length, 'активных охотников');
                             
-                            // Создаем новый массив слотов с обновленными данными для лучшей реактивности
+                            // Создаем новый массив слотов только для активных охотников (не declined)
                             const updatedSlots = this.hunterSlots.map((slot, index) => {
-                                if (index < hunters.length) {
-                                    const hunter = hunters[index];
+                                if (index < activeHunters.length) {
+                                    const hunter = activeHunters[index];
                                     
                                     // Инициализируем флаги для охотника
                                     if (typeof hunter.showEmailInput === 'undefined') {
@@ -247,20 +261,19 @@ document.addEventListener('DOMContentLoaded', function () {
                                         query: queryText
                                     };
                                 }
-                                return slot;
+                                // Если слот не заполнен активным охотником, очищаем его
+                                return {
+                                    ...slot,
+                                    hunter: null,
+                                    query: ''
+                                };
                             });
                             
                             // Заменяем весь массив для реактивности Vue
                             this.$set(this, 'hunterSlots', updatedSlots);
                             
                             console.log('Массив hunterSlots обновлен:', this.hunterSlots.length, 'слотов');
-                            console.log('Проверка данных в слотах:', this.hunterSlots.map((s, i) => ({
-                                index: i,
-                                query: s.query,
-                                hasHunter: !!s.hunter,
-                                hunterName: s.hunter ? (s.hunter.first_name + ' ' + s.hunter.last_name) : null,
-                                hunterId: s.hunter ? s.hunter.id : null
-                            })));
+                            console.log('Отказавшиеся охотники:', declinedHunters.length);
                             
                             // Принудительно обновляем Vue для отображения
                             this.$nextTick(() => {
@@ -270,7 +283,15 @@ document.addEventListener('DOMContentLoaded', function () {
                                 this.checkFinishCollectionButton(bookingId);
                             });
                         } else {
-                            console.log('Нет данных о приглашенных охотниках. Статус:', data.status, 'Hunters count:', hunters.length, 'Data:', data);
+                            console.log('Нет активных охотников. Статус:', data.status, 'Active hunters:', activeHunters.length, 'Declined:', declinedHunters.length);
+                            // Очищаем все слоты, если нет активных охотников
+                            const clearedSlots = this.hunterSlots.map(slot => ({
+                                ...slot,
+                                hunter: null,
+                                query: ''
+                            }));
+                            this.$set(this, 'hunterSlots', clearedSlots);
+                            
                             // Даже если нет охотников, проверяем состояние кнопки
                             this.$nextTick(() => {
                                 this.checkFinishCollectionButton(bookingId);
