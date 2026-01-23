@@ -879,14 +879,12 @@ class BookingController extends \App\Http\Controllers\Controller
             return $this->sendError('Необходима авторизация')->setStatusCode(401);
         }
 
+        $oldStatus = $booking->status;
         $wasAlreadyCollection = ($booking->status === Booking::START_COLLECTION);
 
-        // Получаем отель из БД напрямую без кеша
-        $hotel = null;
         $timerHours = 24; // Значение по умолчанию
 
         if ($booking->hotel_id) {
-            // Загружаем отель напрямую из БД, минуя кеш
             $hotelData = \Illuminate\Support\Facades\DB::table('bc_hotels')
                 ->where('id', $booking->hotel_id)
                 ->first();
@@ -908,7 +906,6 @@ class BookingController extends \App\Http\Controllers\Controller
             ->whereIn('name', ['collection_end_at', 'collection_start_at', 'collection_timer_hours'])
             ->delete();
 
-        // Сохраняем статус
         $booking->status = Booking::START_COLLECTION;
 
         // Сохраняем время начала сбора и количество часов таймера
@@ -946,7 +943,6 @@ class BookingController extends \App\Http\Controllers\Controller
             'updated_at' => now(),
         ]);
 
-        // Сохраняем бронь
         $booking->save();
 
         // Финальная проверка: убеждаемся, что запись создана с правильным значением
@@ -977,10 +973,10 @@ class BookingController extends \App\Http\Controllers\Controller
             ]);
         }
 
-        // Если статус уже был START_COLLECTION, не отправляем письмо повторно
-        if ($wasAlreadyCollection) {
-            $booking->skip_status_email = true;
-        }
+        // ВСЕГДА не отправляем письмо инициатору при запуске сбора
+        // Инициатор (create_user) уже автоматически является участником сбора
+        // и не должен получать письмо о смене статуса
+        $booking->skip_status_email = true;
 
         event(new BookingUpdatedEvent($booking));
 
@@ -1048,7 +1044,7 @@ class BookingController extends \App\Http\Controllers\Controller
             if ($hunter && !empty($hunter->email)) {
                 try {
                     $message = __('Сбор охотников для этой брони отменён. Бронь теперь подтверждена.');
-                    Mail::to($hunter->email)->send(new HunterMessageEmail($booking, $hunter, $message));
+                    Mail::to($hunter->email)->send(new HunterMessageEmail($booking, $hunter, $message, false));
                 } catch (\Exception $e) {
                     Log::warning('cancelCollection: failed to send email to hunter', [
                         'booking_id' => $booking->id,
@@ -1362,7 +1358,7 @@ class BookingController extends \App\Http\Controllers\Controller
         if (!empty($hunter->email) && $hunterId != $booking->create_user) {
             try {
                 $message = __('Вас пригласили в сбор для брони №:id', ['id' => $booking->id]);
-                Mail::to($hunter->email)->send(new HunterMessageEmail($booking, $hunter, $message));
+                Mail::to($hunter->email)->send(new HunterMessageEmail($booking, $hunter, $message, true));
             } catch (\Exception $e) {
                 Log::warning('inviteHunter: failed to send invitation email', [
                     'booking_id' => $booking->id,
@@ -1448,7 +1444,7 @@ class BookingController extends \App\Http\Controllers\Controller
                 $creatorEmail = $creator->email;
             }
         }
-        
+
         // Отправляем письмо только если email не принадлежит создателю брони
         if($email !== $creatorEmail) {
             try {
@@ -1461,7 +1457,7 @@ class BookingController extends \App\Http\Controllers\Controller
                 $tempHunter->setAttribute('name', $email);
                 $tempHunter->syncOriginal();
 
-                Mail::to($email)->send(new HunterMessageEmail($booking, $tempHunter, $message));
+                Mail::to($email)->send(new HunterMessageEmail($booking, $tempHunter, $message, true));
             } catch (\Exception $e) {
                 Log::error('inviteHunterByEmail: failed to send invitation email', [
                     'booking_id' => $booking->id,
@@ -1506,7 +1502,7 @@ class BookingController extends \App\Http\Controllers\Controller
         }
 
         try {
-            Mail::to($hunter->email)->send(new HunterMessageEmail($booking, $hunter, $message));
+            Mail::to($hunter->email)->send(new HunterMessageEmail($booking, $hunter, $message, false));
         } catch (\Exception $e) {
             Log::warning('emailHunter: ' . $e->getMessage());
             return $this->sendError('Не удалось отправить письмо')->setStatusCode(500);

@@ -15,29 +15,36 @@ class HunterMessageEmail extends Mailable
     public Booking $booking;
     public User $hunter;
     public string $bodyText;
+    public bool $isInvitation;
 
     /**
      * @param \Modules\Booking\Models\Booking $booking
      * @param \App\User $hunter
      * @param string $bodyText
+     * @param bool $isInvitation
      */
-    public function __construct(Booking $booking, User $hunter, string $bodyText)
+    public function __construct(Booking $booking, User $hunter, string $bodyText, bool $isInvitation = false)
     {
         $this->booking  = $booking;
         $this->hunter   = $hunter;
         $this->bodyText = $bodyText;
+        $this->isInvitation = $isInvitation;
     }
 
     public function build()
     {
         $subject = 'Сообщение по бронированию №' . $this->booking->id;
 
+        $service = $this->booking->service;
+        
         return $this->subject($subject)
             ->view('Booking::emails.hunter-message')
             ->with([
                 'booking'   => $this->booking,
                 'hunter'    => $this->hunter,
                 'bodyText'  => $this->bodyText,
+                'service'   => $service,
+                'isInvitation' => $this->isInvitation,
             ]);
     }
 }
