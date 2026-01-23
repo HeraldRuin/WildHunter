@@ -879,6 +879,8 @@ class BookingController extends \App\Http\Controllers\Controller
             return $this->sendError('Необходима авторизация')->setStatusCode(401);
         }
 
+        $wasAlreadyCollection = ($booking->status === Booking::START_COLLECTION);
+
         // Получаем отель из БД напрямую без кеша
         $hotel = null;
         $timerHours = 24; // Значение по умолчанию
@@ -975,11 +977,16 @@ class BookingController extends \App\Http\Controllers\Controller
             ]);
         }
 
+        // Если статус уже был START_COLLECTION, не отправляем письмо повторно
+        if ($wasAlreadyCollection) {
+            $booking->skip_status_email = true;
+        }
+
         event(new BookingUpdatedEvent($booking));
 
         return $this->sendSuccess([
             'message' => __('The gathering of hunters has begun'),
-            'collection_end_at' => $collectionEndAtString, // Возвращаем новое значение для отладки
+            'collection_end_at' => $collectionEndAtString,
         ]);
     }
 
@@ -1351,7 +1358,8 @@ class BookingController extends \App\Http\Controllers\Controller
         );
 
         // Пытаемся сразу отправить письмо-приглашение охотнику
-        if (!empty($hunter->email)) {
+        // НЕ отправляем письмо создателю брони - он уже приглашен автоматически
+        if (!empty($hunter->email) && $hunterId != $booking->create_user) {
             try {
                 $message = __('Вас пригласили в сбор для брони №:id', ['id' => $booking->id]);
                 Mail::to($hunter->email)->send(new HunterMessageEmail($booking, $hunter, $message));
@@ -1432,24 +1440,36 @@ class BookingController extends \App\Http\Controllers\Controller
             ]);
         }
 
-        try {
-            $message = __('Вас пригласили в сбор для брони №:id', ['id' => $booking->id]);
-            $tempHunter = new User();
-            $tempHunter->setAttribute('id', 0);
-            $tempHunter->setAttribute('email', $email);
-            $tempHunter->setAttribute('first_name', '');
-            $tempHunter->setAttribute('last_name', '');
-            $tempHunter->setAttribute('name', $email);
-            $tempHunter->syncOriginal();
+        // НЕ отправляем письмо создателю брони - он уже приглашен автоматически
+        $creatorEmail = null;
+        if($booking->create_user) {
+            $creator = User::find($booking->create_user);
+            if($creator) {
+                $creatorEmail = $creator->email;
+            }
+        }
+        
+        // Отправляем письмо только если email не принадлежит создателю брони
+        if($email !== $creatorEmail) {
+            try {
+                $message = __('Вас пригласили в сбор для брони №:id', ['id' => $booking->id]);
+                $tempHunter = new User();
+                $tempHunter->setAttribute('id', 0);
+                $tempHunter->setAttribute('email', $email);
+                $tempHunter->setAttribute('first_name', '');
+                $tempHunter->setAttribute('last_name', '');
+                $tempHunter->setAttribute('name', $email);
+                $tempHunter->syncOriginal();
 
-            Mail::to($email)->send(new HunterMessageEmail($booking, $tempHunter, $message));
-        } catch (\Exception $e) {
-            Log::error('inviteHunterByEmail: failed to send invitation email', [
-                'booking_id' => $booking->id,
-                'email'      => $email,
-                'error'      => $e->getMessage(),
-            ]);
-            return $this->sendError('Не удалось отправить приглашение: ' . $e->getMessage())->setStatusCode(500);
+                Mail::to($email)->send(new HunterMessageEmail($booking, $tempHunter, $message));
+            } catch (\Exception $e) {
+                Log::error('inviteHunterByEmail: failed to send invitation email', [
+                    'booking_id' => $booking->id,
+                    'email'      => $email,
+                    'error'      => $e->getMessage(),
+                ]);
+                return $this->sendError('Не удалось отправить приглашение: ' . $e->getMessage())->setStatusCode(500);
+            }
         }
 
         return $this->sendSuccess([
