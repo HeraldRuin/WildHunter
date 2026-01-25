@@ -40,7 +40,7 @@
                 <div class="input-group mb-3">
                     <input type="text" class="form-control" name="size" value="{{$row->size ?? 0}}" placeholder="{{__("Room size")}}" >
                     <div class="input-group-append">
-                        <span class="input-group-text" >{!! size_unit_format() !!}</span>
+                        <span class="input-group-text" >м²</span>
                     </div>
                 </div>
             </div>
@@ -51,7 +51,7 @@
                 <input type="number" min="1"  value="{{$row->adults ?? 1}}"  name="adults" class="form-control">
             </div>
         </div>
-        <div class="col-md-6">
+        <div class="col-md-6" style="display: none;">
             <div class="form-group">
                 <label>{{__("Max Children")}} </label>
                 <input type="number" min="0"  value="{{$row->children ?? 0}}"  name="children" class="form-control">
