@@ -4,6 +4,32 @@
     <div class="b-container">
         <div class="b-panel">
             @switch($to)
+                @case ('admin')
+                    @php
+                        $adminName = __('Administrator');
+                        if(!empty($baseAdmin)) {
+                            $adminName = trim(($baseAdmin->first_name ?? '') . ' ' . ($baseAdmin->last_name ?? ''));
+                            if(empty($adminName)) {
+                                $adminName = $baseAdmin->display_name ?? $baseAdmin->email ?? __('Administrator');
+                            }
+                        }
+                    @endphp
+                    <h3 class="email-headline"><strong>{{__('Hello :name',['name'=>$adminName])}}</strong></h3>
+                    <p>{{__('New booking has been made')}}</p>
+                    <div class="b-table-wrap mb-4">
+                        <table class="b-table" cellspacing="0" cellpadding="0">
+                            <tr>
+                                <td class="label">{{__('Booking Number')}}</td>
+                                <td class="val">#{{$booking->id}}</td>
+                            </tr>
+                            <tr>
+                                <td class="label">{{__('Booking Status')}}</td>
+                                <td class="val">{{$booking->statusName}}</td>
+                            </tr>
+                        </table>
+                    </div>
+                    @break
+
                 @case ('customer')
                     @php
                         $customerName = $booking->first_name ?? '';
