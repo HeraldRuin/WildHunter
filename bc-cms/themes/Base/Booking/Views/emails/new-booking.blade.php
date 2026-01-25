@@ -4,38 +4,6 @@
     <div class="b-container">
         <div class="b-panel">
             @switch($to)
-{{--                @case ('admin')--}}
-{{--                    @php--}}
-{{--                        // Для админа базы используем имя и фамилию из профиля--}}
-{{--                        $adminName = __('Administrator');--}}
-{{--                        if(isset($baseAdmin) && $baseAdmin) {--}}
-{{--                            $adminName = trim(($baseAdmin->first_name ?? '') . ' ' . ($baseAdmin->last_name ?? ''));--}}
-{{--                            if(empty($adminName)) {--}}
-{{--                                $adminName = $baseAdmin->display_name ?? $baseAdmin->email ?? __('Administrator');--}}
-{{--                            }--}}
-{{--                        }--}}
-{{--                    @endphp--}}
-{{--                    <h3 class="email-headline"><strong>{{__('Hello :name',['name'=>$adminName])}}</strong></h3>--}}
-{{--                    <p>{{__('New booking has been made')}}</p>--}}
-{{--                @break--}}
-                @case ('vendor')
-                    <h3 class="email-headline">
-                        <strong>{{ __('Hello :name', ['name' => $booking->vendor->nameOrEmail ?? '']) }}</strong>
-                    </h3>
-                <div class="b-table-wrap mb-4">
-                    <table class="b-table" cellspacing="0" cellpadding="0">
-                        <tr>
-                            <td class="label">{{__('Booking Number')}}</td>
-                            <td class="val">#{{$booking->id}}</td>
-                        </tr>
-                        <tr>
-                            <td class="label">{{__('Booking Status')}}</td>
-                            <td class="val">{{$booking->statusName}}</td>
-                        </tr>
-                    </table>
-                </div>
-                @break
-
                 @case ('customer')
                     @php
                         $customerName = $booking->first_name ?? '';
@@ -48,13 +16,24 @@
                                 }
                             }
                         }
-                        // Если имя не найдено, используем из брони
                         if(empty($customerName)) {
                             $customerName = trim(($booking->first_name ?? '') . ' ' . ($booking->last_name ?? ''));
                         }
                     @endphp
                     <h3 class="email-headline"><strong>{{__('Hello :name',['name'=>$customerName])}}</strong></h3>
                     <p>{{__('Thank you for booking with us. Here are your booking information:')}}</p>
+                    <div class="b-table-wrap mb-4">
+                        <table class="b-table" cellspacing="0" cellpadding="0">
+                            <tr>
+                                <td class="label">{{__('Booking Number')}}</td>
+                                <td class="val">#{{$booking->id}}</td>
+                            </tr>
+                            <tr>
+                                <td class="label">{{__('Booking Status')}}</td>
+                                <td class="val">{{$booking->statusName}}</td>
+                            </tr>
+                        </table>
+                    </div>
                 @break
 
             @endswitch
@@ -65,8 +44,6 @@
                 $hasAnimal = false;
                 $hotelService = null;
                 $animalService = null;
-
-                // Определяем основной сервис
                 $mainService = $service;
 
                 // Проверяем наличие отеля
@@ -122,7 +99,7 @@
                 @if($hotelDetailView && view()->exists($hotelDetailView))
                     @php
                         $service = $hotelService;
-                        $showSeparateServices = true; // Флаг для скрытия перекрестной информации
+                        $showSeparateServices = false;
                     @endphp
                     @include($hotelDetailView)
                 @endif
@@ -146,15 +123,11 @@
                 @if($animalDetailView && view()->exists($animalDetailView))
                     @php
                         $service = $animalService;
-                        $showSeparateServices = true; // Флаг для скрытия перекрестной информации
+                        $showSeparateServices = true;
+                        $hideCollectionAnimalButton = false;
                     @endphp
                     @include($animalDetailView)
                 @endif
-
-                {{-- Одна кнопка в конце после обоих блоков --}}
-                <div class="text-center mt20">
-                    <a href="{{ route('user.booking_history', ['booking_id' => $booking->id]) }}" target="_blank" class="btn btn-primary manage-booking-btn">{{__('Manage Bookings')}}</a>
-                </div>
             @else
                 @php
                     $detailView = null;
@@ -175,7 +148,6 @@
                 @if($detailView)
                     @include($detailView)
                 @else
-                    {{-- Заголовок блока с деталями бронирования --}}
                     <div class="b-panel-title">{{__('Booking details')}}</div>
                     <div class="b-table-wrap">
                         <table class="b-table" cellspacing="0" cellpadding="0">

@@ -51,12 +51,12 @@ $lang_local = app()->getLocale();
     </table>
 </div>
 
-    @if($showSeparateServices)
+@if(isset($showSeparateServices) && $showSeparateServices)
     <div class="text-center mt20">
         <a href="{{ route("user.booking_history") }}" target="_blank" class="btn btn-primary manage-booking-btn">{{__('Manage Bookings')}}</a>
     </div>
     @else
-        @if(empty($hideCollectionAnimalButton))
+    @if(isset($hideCollectionAnimalButton) && $hideCollectionAnimalButton)
             <div class="text-center mt20">
                 <a href="{{ route("user.booking_history") }}" target="_blank" class="btn btn-primary manage-booking-btn">{{__('Go to collection')}}</a>
             </div>
