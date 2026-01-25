@@ -421,7 +421,7 @@ class Booking extends BaseModel
                     }
 
                     if($shouldSend) {
-                        Mail::to($baseAdminEmail)->send(new NewBookingEmail($this, 'admin'));
+                        Mail::to($baseAdminEmail)->send(new NewBookingEmail($this, 'admin', $baseAdmin));
                     }
                 }
             }
@@ -456,7 +456,11 @@ class Booking extends BaseModel
             }
 
         }catch (\Exception | \Swift_TransportException $exception){
-
+            Log::error('sendNewBookingEmails: Ошибка при отправке писем о новом бронировании', [
+                'booking_id' => $this->id,
+                'error' => $exception->getMessage(),
+                'trace' => $exception->getTraceAsString(),
+            ]);
         }
     }
 
@@ -469,9 +473,59 @@ class Booking extends BaseModel
             app()->setLocale($bookingLocale);
         }
         try{
-            // To Admin
-            if(setting_item('admin_email')) {
-                Mail::to(setting_item('admin_email'))->send(new StatusUpdatedEmail($this,'admin'));
+            $hotel = null;
+            if($this->hotel_id) {
+                if(!$this->relationLoaded('hotel')) {
+                    $this->load('hotel');
+                }
+                $hotel = $this->hotel;
+            }
+            if(!$hotel && $this->object_model === 'hotel' && $this->object_id) {
+                $service = $this->service;
+                if($service && $service instanceof \Modules\Hotel\Models\Hotel) {
+                    $hotel = $service;
+                }
+            }
+
+            $baseAdminEmail = null;
+            $baseAdmin = null;
+            if($hotel && $hotel->admin_base) {
+                $baseAdmin = User::find($hotel->admin_base);
+                if($baseAdmin && !empty($baseAdmin->email)) {
+                    $baseAdminEmail = $baseAdmin->email;
+                }
+            }
+
+            // To Admin (общий админ, если он не совпадает с админом базы)
+            $adminEmail = setting_item('admin_email');
+            if($adminEmail) {
+                $shouldSendToAdmin = true;
+                if($baseAdminEmail && $baseAdminEmail === $adminEmail) {
+                    $shouldSendToAdmin = false;
+                }
+
+                if($shouldSendToAdmin) {
+                    Mail::to($adminEmail)->send(new StatusUpdatedEmail($this,'admin'));
+                }
+            }
+
+            if($baseAdminEmail) {
+                $vendorEmail = null;
+                if($this->vendor_id) {
+                    $vendor = User::find($this->vendor_id);
+                    if($vendor && !empty($vendor->email)) {
+                        $vendorEmail = $vendor->email;
+                    }
+                }
+
+                $shouldSendToBaseAdmin = true;
+                if($vendorEmail && $vendorEmail === $baseAdminEmail) {
+                    $shouldSendToBaseAdmin = false;
+                }
+
+                if($shouldSendToBaseAdmin) {
+                    Mail::to($baseAdminEmail)->send(new StatusUpdatedEmail($this,'admin', null, $baseAdmin));
+                }
             }
 
             // to Vendor

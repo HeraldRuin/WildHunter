@@ -50,37 +50,6 @@ $lang_local = app()->getLocale();
             </tr>
         @endif
 
-        {{-- Блок информации об охоте, если в брони есть животное (скрываем при раздельном отображении) --}}
-        @if($booking->animal_id && $booking->animal && empty($showSeparateServices))
-            <tr>
-                <td class="label">{{__('Animals')}}</td>
-                <td class="val">
-                    <a href="{{$booking->animal->getDetailUrl()}}">{!! clean($booking->animal->translate()->title ?? $booking->animal->title ?? '') !!}</a>
-                </td>
-            </tr>
-
-            @if($booking->start_date_animal)
-                <tr>
-                    <td class="label">{{__('Hunting date')}}</td>
-                    <td class="val">{{display_date($booking->start_date_animal)}}</td>
-                </tr>
-            @endif
-
-            @if(!empty($booking->total_hunting))
-                <tr>
-                    <td class="label">{{__('Hunters count')}}</td>
-                    <td class="val"><strong>{{$booking->total_hunting}}</strong></td>
-                </tr>
-            @endif
-
-            @if(!empty($booking->amount_hunting))
-                <tr>
-                    <td class="label">{{__('Hunting amount')}}</td>
-                    <td class="val"><strong>{{format_money($booking->amount_hunting)}}</strong></td>
-                </tr>
-            @endif
-        @endif
-
         @if($meta = $booking->getMeta('adults'))
             <tr>
                 <td class="label">{{__('Adults')}}:</td>
@@ -205,12 +174,12 @@ $lang_local = app()->getLocale();
     </table>
 </div>
 
-@if(empty($showSeparateServices) && isset($isInvitation) && !$isInvitation)
+@if(isset($showSeparateServices) && $showSeparateServices)
         <div class="text-center mt20">
             <a href="{{ route("user.booking_history") }}" target="_blank" class="btn btn-primary manage-booking-btn">{{__('Manage Bookings')}}</a>
         </div>
     @else
-        @if(empty($hideHotelButton))
+        @if(isset($hideCollectHotelButton) && $hideCollectHotelButton)
         <div class="text-center mt20">
             <a href="{{ route("user.booking_history") }}" target="_blank" class="btn btn-primary manage-booking-btn">{{__('Go to collection')}}</a>
         </div>

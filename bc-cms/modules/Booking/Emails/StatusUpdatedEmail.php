@@ -13,12 +13,14 @@ class StatusUpdatedEmail extends Mailable
     public $oldStatus;
     protected $email_type;
     public $customMessage;
+    protected $baseAdmin;
 
-    public function __construct(Booking $booking,$to = 'admin', $customMessage = null)
+    public function __construct(Booking $booking,$to = 'admin', $customMessage = null, $baseAdmin = null)
     {
         $this->booking = $booking;
         $this->email_type = $to;
         $this->customMessage = $customMessage;
+        $this->baseAdmin = $baseAdmin;
     }
 
     public function build()
@@ -43,6 +45,7 @@ class StatusUpdatedEmail extends Mailable
             'service'       => $service,
             'to'            => $this->email_type,
             'customMessage' => $this->customMessage,
+            'baseAdmin'     => $this->baseAdmin,
         ]);
     }
 }

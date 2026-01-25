@@ -121,7 +121,7 @@
                     @php
                         $service = $hotelService;
                         $showSeparateServices = true;
-                        $hideHotelButton = true;
+                        $hideCollectHotelButton = true;
                         $hideAnimalButton = false;
                     @endphp
                     @include($hotelDetailView)

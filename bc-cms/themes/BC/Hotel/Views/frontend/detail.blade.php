@@ -66,5 +66,4 @@
     <script type="text/javascript" src="{{ asset('libs/fotorama/fotorama.js') }}"></script>
     <script type="text/javascript" src="{{ asset('libs/sticky/jquery.sticky.js') }}"></script>
     <script type="text/javascript" src="{{ asset('module/hotel/js/single-hotel.js?_ver=' . config('app.asset_version')) }}"></script>
-    <script type="text/javascript" src="{{ asset('module/animal/js/single-animal.js?_ver=' . config('app.asset_version')) }}"></script>
 @endpush

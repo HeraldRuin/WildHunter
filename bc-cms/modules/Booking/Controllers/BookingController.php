@@ -1696,7 +1696,7 @@ class BookingController extends \App\Http\Controllers\Controller
                 if($booking->hotel && $booking->hotel->admin_base) {
                     $baseAdmin = User::find($booking->hotel->admin_base);
                     if($baseAdmin && $baseAdmin->email) {
-                        Mail::to($baseAdmin->email)->send(new StatusUpdatedEmail($booking, 'admin'));
+                        Mail::to($baseAdmin->email)->send(new StatusUpdatedEmail($booking, 'admin', null, $baseAdmin));
                     }
                 }
 

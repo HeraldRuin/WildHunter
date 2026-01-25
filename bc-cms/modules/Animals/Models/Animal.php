@@ -23,7 +23,7 @@ class Animal extends Bookable
     public    $checkout_booking_detail_file       = 'Animal::frontend/booking/detail';
     public    $checkout_booking_detail_modal_file = 'Animal::frontend/booking/detail-modal';
 
-    public    $email_new_booking_file             = 'Animal::emails.new_booking_detail';
+    public    $email_new_booking_file             = 'Animals::emails.new_booking_detail';
 
     public function __construct(array $attributes = [])
     {
