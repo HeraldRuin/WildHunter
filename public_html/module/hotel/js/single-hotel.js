@@ -50,7 +50,9 @@
             animalCheckPassed: false,
             animalPrice: 0,
             hunterCount: 0,
-            urlParams: {}
+            urlParams: {},
+            room_validation_error: '',
+            onValidateRooms: false
         },
         watch:{
             extra_price:{
@@ -62,6 +64,10 @@
             },
             start_date(){
                 this.step = 1;
+                // Вызываем валидацию при изменении даты, если есть выбранные номера
+                if (this.total_rooms > 0 && this.end_date) {
+                    this.validateRoomsSelection();
+                }
             },
             guests(){
                 this.step = 1;
@@ -72,6 +78,69 @@
                 },
                 deep:true
             },
+            rooms: {
+                handler: function(newRooms, oldRooms) {
+                    if (!newRooms || newRooms.length === 0) return;
+                    
+                    // Сохраняем предыдущие значения при первой инициализации
+                    if (!this._prevRoomsState) {
+                        this._prevRoomsState = JSON.parse(JSON.stringify(newRooms));
+                        return;
+                    }
+                    
+                    var shouldValidate = false;
+                    for (var i = 0; i < newRooms.length; i++) {
+                        var newRoom = newRooms[i];
+                        var prevRoom = this._prevRoomsState[i];
+                        
+                        if (!prevRoom) {
+                            // Если это новый номер, сохраняем его состояние
+                            this._prevRoomsState[i] = JSON.parse(JSON.stringify(newRoom));
+                            continue;
+                        }
+                        
+                        var newValue = parseInt(newRoom.number_selected) || 0;
+                        var prevValue = parseInt(prevRoom.number_selected) || 0;
+                        
+                        // Срабатываем только если значение изменилось на > 0
+                        if (newValue > 0 && newValue !== prevValue) {
+                            shouldValidate = true;
+                            // Обновляем сохраненное состояние
+                            this._prevRoomsState[i] = JSON.parse(JSON.stringify(newRoom));
+                        } else if (newValue === 0 && prevValue > 0) {
+                            // Если значение сброшено на 0, очищаем ошибку валидации
+                            this._prevRoomsState[i] = JSON.parse(JSON.stringify(newRoom));
+                            // Проверяем, есть ли еще выбранные номера
+                            var hasOtherSelectedRooms = false;
+                            for (var j = 0; j < newRooms.length; j++) {
+                                if (j !== i && newRooms[j].number_selected && parseInt(newRooms[j].number_selected) > 0) {
+                                    hasOtherSelectedRooms = true;
+                                    break;
+                                }
+                            }
+                            // Если нет других выбранных номеров, очищаем ошибку
+                            if (!hasOtherSelectedRooms) {
+                                this.room_validation_error = '';
+                            }
+                        }
+                    }
+                    
+                    // Запускаем валидацию только если был выбран номер (> 0)
+                    if (shouldValidate) {
+                        // Валидация теперь вызывается через onRoomSelectionChange
+                        this.$forceUpdate();
+                    }
+                },
+                deep: true,
+                immediate: false
+            },
+            adults: function() {
+                // Вызываем валидацию при изменении количества взрослых
+                if (this.total_rooms > 0) {
+                    this.validateRoomsSelection();
+                }
+                this.$forceUpdate();
+            }
         },
         computed:{
             total_price:function(){
@@ -207,6 +276,31 @@
             },
             guests(){
                 return this.children + this.adults;
+            },
+            total_adult_capacity: function(){
+                var me = this;
+                var total = 0;
+                if (this.rooms && this.rooms.length > 0) {
+                    this.rooms.forEach(function(room) {
+                        if (room.number_selected && room.number_selected > 0 && room.adults) {
+                            total += parseInt(room.adults) * parseInt(room.number_selected);
+                        }
+                    });
+                }
+                return total;
+            },
+            adult_validation_error: function(){
+                // Используем ошибку валидации с сервера, если она есть
+                if (this.room_validation_error) {
+                    return this.room_validation_error;
+                }
+                // Fallback на клиентскую валидацию
+                if (this.adults && this.total_rooms > 0 && this.adults > this.total_adult_capacity) {
+                    return this.i18n && this.i18n.sorry_rooms_not_enough_adults 
+                        ? this.i18n.sorry_rooms_not_enough_adults 
+                        : 'Извините, недостаточно текущих номеров для взрослых';
+                }
+                return '';
             }
         },
         created:function(){
@@ -278,6 +372,7 @@
                     "days": 30
                 },
                 showCalendar: false,
+                showDropdowns: true,
                 sameDate: true,
                 autoApply           : true,
                 disabledPast        : true,
@@ -349,16 +444,37 @@
                                     : 'Выберите пожалуйста';
                             }
                         }
+                        // Переключаем календарь животных на месяц даты заезда
+                        // Устанавливаем дату начала календаря на дату заезда, чтобы при следующем открытии календарь показывал нужный месяц
+                        animalPicker.setStartDate(picker.startDate.clone());
+                        animalPicker.setEndDate(picker.startDate.clone());
                     }
                 });
             });
 
             this.$nextTick(() => {
-                $(this.$refs.animalStartDate).daterangepicker(animalOptions).on('apply.daterangepicker',(ev, picker) => {
+                var animalPickerElement = $(this.$refs.animalStartDate);
+                var me = this;
+                
+                animalPickerElement.daterangepicker(animalOptions)
+                    .on('apply.daterangepicker',(ev, picker) => {
                         this.start_date_animal = picker.startDate.format('YYYY-MM-DD');
                         this.end_date_animal = this.start_date_animal;
                         this.start_date_animal_html = picker.startDate.format(bookingCore.date_format);
                     })
+                    .on('show.daterangepicker', function(ev, picker) {
+                        // При открытии календаря животных переключаем на месяц даты заезда, если она выбрана
+                        if (me.start_date) {
+                            var checkInDate = moment(me.start_date, 'YYYY-MM-DD');
+                            // Устанавливаем месяц календаря на месяц даты заезда
+                            picker.setStartDate(checkInDate.clone());
+                            picker.setEndDate(checkInDate.clone());
+                            // Обновляем календарь
+                            if (typeof picker.updateCalendars === 'function') {
+                                picker.updateCalendars();
+                            }
+                        }
+                    });
             })
 
             // Применяем параметры из URL после инициализации всех компонентов
@@ -368,6 +484,33 @@
             setTimeout(() => {
                 me.applyUrlParams();
             }, 800);
+            
+            // Добавляем обработчик для select номеров через делегирование событий
+            $(document).on('change', '#hotel-rooms select.custom-select', function() {
+                console.log('jQuery change handler called', $(this).val());
+                var selectedValue = parseInt($(this).val()) || 0;
+                if (selectedValue > 0) {
+                    setTimeout(function() {
+                        console.log('Calling validateRoomsSelection from jQuery');
+                        hotelRoomForm.validateRoomsSelection();
+                    }, 100);
+                } else {
+                    setTimeout(function() {
+                        var hasOtherSelectedRooms = false;
+                        for (var i = 0; i < hotelRoomForm.rooms.length; i++) {
+                            if (hotelRoomForm.rooms[i].number_selected && parseInt(hotelRoomForm.rooms[i].number_selected) > 0) {
+                                hasOtherSelectedRooms = true;
+                                break;
+                            }
+                        }
+                        if (!hasOtherSelectedRooms) {
+                            hotelRoomForm.room_validation_error = '';
+                        } else {
+                            hotelRoomForm.validateRoomsSelection();
+                        }
+                    }, 100);
+                }
+            });
 
         },
         methods:{
@@ -702,7 +845,7 @@
                         me.firstLoad = false;
                         bookingCoreApp.showAjaxError(e);
                     }
-                })
+                });
 			},
             checkAvailabilityForAnimal:function () {
                 var me  = this;
@@ -785,6 +928,117 @@
             getSelectAnimalId(){
                 var animalInput = document.querySelector('.child_id');
                 return animalInput ? animalInput.value : ''
+            },
+            onRoomSelectionChange: function(event) {
+                console.log('onRoomSelectionChange called', event.target.value);
+                var me = this;
+                var selectedValue = parseInt(event.target.value) || 0;
+                
+                // Если выбрано значение > 0, запускаем валидацию
+                if (selectedValue > 0) {
+                    // Небольшая задержка, чтобы Vue успел обновить модель
+                    setTimeout(function() {
+                        console.log('Calling validateRoomsSelection');
+                        me.validateRoomsSelection();
+                    }, 100);
+                } else {
+                    // Если сброшено на 0, проверяем, есть ли еще выбранные номера
+                    setTimeout(function() {
+                        var hasOtherSelectedRooms = false;
+                        for (var i = 0; i < me.rooms.length; i++) {
+                            if (me.rooms[i].number_selected && parseInt(me.rooms[i].number_selected) > 0) {
+                                hasOtherSelectedRooms = true;
+                                break;
+                            }
+                        }
+                        // Если нет других выбранных номеров, очищаем ошибку
+                        if (!hasOtherSelectedRooms) {
+                            me.room_validation_error = '';
+                        } else {
+                            // Если есть другие номера, перепроверяем валидацию
+                            me.validateRoomsSelection();
+                        }
+                    }, 100);
+                }
+            },
+            validateRoomsSelection: function() {
+                var me = this;
+                
+                // Проверяем, что есть выбранные номера и даты
+                if (!this.start_date || !this.end_date) {
+                    console.log('No dates selected');
+                    this.room_validation_error = '';
+                    return;
+                }
+                
+                var hasSelectedRooms = false;
+                for (var i = 0; i < this.rooms.length; i++) {
+                    if (this.rooms[i].number_selected && parseInt(this.rooms[i].number_selected) > 0) {
+                        hasSelectedRooms = true;
+                        break;
+                    }
+                }
+                
+                if (!hasSelectedRooms) {
+                    this.room_validation_error = '';
+                    return;
+                }
+                
+                // Предотвращаем множественные запросы
+                if (this.onValidateRooms) return;
+                
+                this.onValidateRooms = true;
+                this.room_validation_error = '';
+                
+                var requestData = {
+                    service_id: this.id,
+                    service_type: 'hotel',
+                    start_date: this.start_date,
+                    end_date: this.end_date,
+                    adults: this.adults,
+                    children: this.children,
+                    rooms: this.rooms.map(function(item) {
+                        return {
+                            id: item.id,
+                            number_selected: parseInt(item.number_selected) || 0
+                        };
+                    })
+                };
+                
+                console.log('Sending validation request', requestData);
+                
+                $.ajax({
+                    url: bookingCore.url + '/booking/validateRooms',
+                    data: requestData,
+                    dataType: 'json',
+                    type: 'post',
+                    success: function(res) {
+                        console.log('Validation response', res);
+                        me.onValidateRooms = false;
+                        if (!res.status) {
+                            // Если есть ошибка, сохраняем её
+                            if (res.message) {
+                                me.room_validation_error = res.message;
+                            } else if (res.errors && typeof res.errors == 'object') {
+                                var errorMessages = [];
+                                for (var key in res.errors) {
+                                    if (res.errors[key] && res.errors[key].length) {
+                                        errorMessages = errorMessages.concat(res.errors[key]);
+                                    }
+                                }
+                                me.room_validation_error = errorMessages.join('<br>');
+                            }
+                        } else {
+                            // Валидация прошла успешно
+                            me.room_validation_error = '';
+                        }
+                    },
+                    error: function(e) {
+                        me.onValidateRooms = false;
+                        // При ошибке запроса не показываем ошибку валидации
+                        // me.room_validation_error = 'Ошибка при проверке доступности';
+                    }
+                });
             },
             doSubmit:function (e, options = {}) {
                 const type = options.type || null;
