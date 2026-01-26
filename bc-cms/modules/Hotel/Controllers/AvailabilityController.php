@@ -274,7 +274,8 @@ class AvailabilityController extends FrontendController{
                 $day['occupiedRooms'] = ($day['occupiedRooms'] ?? 0) + $bookedRooms;
 
                 // Используем базовое количество из кастомной даты или базовое количество номера
-                $baseNumber = $day['number'] ?? $room->number;
+//                $baseNumber = $day['number'] ?? $room->number;
+                $baseNumber = $day['extendedProps']['max_number'];
 
                 // Вычисляем количество свободных номеров
                 $freeRooms = max($baseNumber - ($day['occupiedRooms'] ?? 0), 0);
