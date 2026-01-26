@@ -71,13 +71,13 @@
                                         <span v-else>{{__('Adults')}}</span>
                                     </span>
                                 </span>
-                                -
-                                <span class="children" >
-                                    <span class="one" >@{{children}}
-                                        <span v-if="children < 2">{{__('Child')}}</span>
-                                        <span v-else>{{__('Children')}}</span>
-                                    </span>
-                                </span>
+{{--                                ---}}
+{{--                                <span class="children" >--}}
+{{--                                    <span class="one" >@{{children}}--}}
+{{--                                        <span v-if="children < 2">{{__('Child')}}</span>--}}
+{{--                                        <span v-else>{{__('Children')}}</span>--}}
+{{--                                    </span>--}}
+{{--                                </span>--}}
                             </div>
                         </div>
                         <div class="dropdown-menu select-guests-dropdown" >
