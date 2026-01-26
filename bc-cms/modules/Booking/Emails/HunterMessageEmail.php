@@ -17,18 +17,22 @@ class HunterMessageEmail extends Mailable
     public string $bodyText;
     public bool $isInvitation;
 
-    /**
-     * @param \Modules\Booking\Models\Booking $booking
-     * @param \App\User $hunter
-     * @param string $bodyText
-     * @param bool $isInvitation
-     */
-    public function __construct(Booking $booking, User $hunter, string $bodyText, bool $isInvitation = false)
+    public bool $showSeparateServices = false;
+    public bool $hideCollectionAnimalButton = false;
+    public bool $hideCollectHotelButton = false;
+
+    public function __construct(Booking $booking, User $hunter, string $bodyText, bool $isInvitation = false, bool $showSeparateServices = false, bool $hideCollectionAnimalButton = false, bool $hideCollectHotelButton = false)
     {
         $this->booking  = $booking;
         $this->hunter   = $hunter;
         $this->bodyText = $bodyText;
         $this->isInvitation = $isInvitation;
+
+        if ($isInvitation){
+            $this->showSeparateServices = false;
+            $this->hideCollectionAnimalButton = true;
+            $this->hideCollectHotelButton = false;
+        }
     }
 
     public function build()
@@ -36,7 +40,7 @@ class HunterMessageEmail extends Mailable
         $subject = 'Сообщение по бронированию №' . $this->booking->id;
 
         $service = $this->booking->service;
-        
+
         return $this->subject($subject)
             ->view('Booking::emails.hunter-message')
             ->with([

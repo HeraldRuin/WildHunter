@@ -100,31 +100,24 @@
 
             {{-- Если есть оба сервиса, показываем их раздельно --}}
             @if($hasHotel && $hasAnimal)
-
                 @php
-                    $hotelDetailView = null;
-                    if ($hotelService && !empty($hotelService->email_new_booking_file)) {
-                        $viewPath = str_replace('.blade.php', '', $hotelService->email_new_booking_file);
-                        if (view()->exists($viewPath)) {
-                            $hotelDetailView = $viewPath;
-                        } else {
-                            $fallbackViewPath = 'Hotel::emails.new_booking_detail';
-                            if (view()->exists($fallbackViewPath)) {
-                                $hotelDetailView = $fallbackViewPath;
-                            }
-                        }
-                    } else {
-                        $hotelDetailView = 'Hotel::emails.new_booking_detail';
-                    }
+                      $hotelDetailView = null;
+                      if ($hotelService && !empty($hotelService->email_new_booking_file)) {
+                          $viewPath = str_replace('.blade.php', '', $hotelService->email_new_booking_file);
+                          if (view()->exists($viewPath)) {
+                              $hotelDetailView = $viewPath;
+                          } else {
+                              $fallbackViewPath = 'Hotel::emails.new_booking_detail';
+                              if (view()->exists($fallbackViewPath)) {
+                                  $hotelDetailView = $fallbackViewPath;
+                              }
+                          }
+                      } else {
+                          $hotelDetailView = 'Hotel::emails.new_booking_detail';
+                      }
                 @endphp
                 @if($hotelDetailView && view()->exists($hotelDetailView))
-                    @php
-                        $service = $hotelService;
-                        $showSeparateServices = true;
-                        $hideCollectHotelButton = true;
-                        $hideAnimalButton = false;
-                    @endphp
-                    @include($hotelDetailView)
+                    @include($hotelDetailView, ['showSeparateServices' => $showSeparateServices,'hideCollectionAnimalButton' => $hideCollectionAnimalButton, 'hideCollectHotelButton' => $hideCollectHotelButton, $service = $animalService])
                 @endif
 
                 @php
@@ -144,15 +137,12 @@
                     }
                 @endphp
                 @if($animalDetailView && view()->exists($animalDetailView))
-                    @php
-                        $service = $animalService;
-                        $showSeparateServices = true;
-                    @endphp
-                    @include($animalDetailView)
+                    @include($animalDetailView, ['showSeparateServices' => $showSeparateServices,'hideCollectionAnimalButton' => $hideCollectionAnimalButton, $service = $animalService])
                 @endif
 
             @elseif(!empty($service))
                 {{-- Если только один сервис, используем стандартную логику --}}
+
                 @if(!empty($service->email_new_booking_file) && view()->exists($service->email_new_booking_file))
                     @include($service->email_new_booking_file)
                 @else
@@ -166,7 +156,7 @@
                     @endphp
                     @if($viewName && view()->exists($viewName))
                         <div class="mt20">
-                            @include($viewName)
+                            @include($viewName, ['showSeparateServices' => $showSeparateServices,'hideCollectionAnimalButton' => $hideCollectionAnimalButton])
                         </div>
                     @else
                         <p>{{__('Booking details')}}: #{{ $booking->id }}</p>
@@ -174,8 +164,8 @@
                     @endif
                 @endif
             @else
-                <p>{{__('Booking details')}}: #{{ $booking->id }}</p>
-                <p>{{__('Status')}}: {{ $booking->status_name }}</p>
+{{--                <p>{{__('Booking details')}}: #{{ $booking->id }}</p>--}}
+{{--                <p>{{__('Status')}}: {{ $booking->status_name }}</p>--}}
             @endif
         </div>
     </div>
