@@ -35,11 +35,6 @@ class NewBookingEmail extends Mailable
                 }
             break;
 
-            case "vendor":
-                $subject = __('Your service got new booking');
-
-            break;
-
             case "customer":
                 $subject = __('Thank you for booking with us');
             break;

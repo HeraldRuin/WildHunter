@@ -384,16 +384,6 @@ class Booking extends BaseModel
     public function sendNewBookingEmails()
     {
         try {
-            // to Vendor
-            $vendorEmail = null;
-            if($this->vendor_id) {
-                $vendor = User::find($this->vendor_id);
-                if($vendor && !empty($vendor->email)) {
-                    $vendorEmail = $vendor->email;
-                    Mail::to($vendorEmail)->send(new NewBookingEmail($this, 'vendor'));
-                }
-            }
-
             // To Base Admin (админ базы из отеля)
             $hotel = null;
             if($this->hotel_id) {
@@ -402,113 +392,22 @@ class Booking extends BaseModel
                 }
                 $hotel = $this->hotel;
             }
-            if(!$hotel && $this->object_model === 'hotel' && $this->object_id) {
-                $hotel = \Modules\Hotel\Models\Hotel::find($this->object_id);
-                if($hotel) {
-                    Log::info('sendNewBookingEmails: Отель найден через object_model=hotel', [
-                        'booking_id' => $this->id,
-                        'hotel_id' => $hotel->id,
-                        'admin_base' => $hotel->admin_base ?? null
-                    ]);
-                }
-            }
-            // Если отель не найден, пробуем через type === 'hotel'
-            if(!$hotel && $this->type === 'hotel' && $this->object_id) {
-                $hotel = \Modules\Hotel\Models\Hotel::find($this->object_id);
-                if($hotel) {
-                    Log::info('sendNewBookingEmails: Отель найден через type=hotel', [
-                        'booking_id' => $this->id,
-                        'hotel_id' => $hotel->id,
-                        'admin_base' => $hotel->admin_base ?? null
-                    ]);
-                }
-            }
-            // Если отель все еще не найден, пробуем через service
-            if(!$hotel) {
-                if(!$this->relationLoaded('service')) {
-                    $this->load('service');
-                }
-                $service = $this->service;
-                if($service && $service instanceof \Modules\Hotel\Models\Hotel) {
-                    $hotel = $service;
-                    Log::info('sendNewBookingEmails: Отель найден через service', [
-                        'booking_id' => $this->id,
-                        'hotel_id' => $hotel->id,
-                        'admin_base' => $hotel->admin_base ?? null
-                    ]);
-                }
-            }
 
             if($hotel && $hotel->admin_base) {
                 $baseAdmin = User::find($hotel->admin_base);
+
                 if($baseAdmin && !empty($baseAdmin->email)) {
-                    // Проверяем, не совпадает ли email админа базы с email вендора
                     $baseAdminEmail = $baseAdmin->email;
-                    $shouldSend = true;
-
-                    if($vendorEmail && $vendorEmail === $baseAdminEmail) {
-                        // Уже отправили вендору, пропускаем
-                        $shouldSend = false;
-                    }
-
-                    if($shouldSend) {
-                        Log::info('sendNewBookingEmails: Отправка письма админу базы', [
-                            'booking_id' => $this->id,
-                            'base_admin_id' => $baseAdmin->id,
-                            'base_admin_email' => $baseAdminEmail,
-                            'base_admin_name' => trim(($baseAdmin->first_name ?? '') . ' ' . ($baseAdmin->last_name ?? '')),
-                            'hotel_id' => $hotel->id,
-                            'hotel_found_via' => $this->hotel_id ? 'hotel_id' : ($this->object_model === 'hotel' ? 'object_model' : 'service')
-                        ]);
-                        Mail::to($baseAdminEmail)->send(new NewBookingEmail($this, 'admin', $baseAdmin));
-                    }
-                } else {
-                    Log::warning('sendNewBookingEmails: Админ базы не найден или email пустой', [
-                        'booking_id' => $this->id,
-                        'hotel_id' => $hotel->id ?? null,
-                        'admin_base' => $hotel->admin_base ?? null
-                    ]);
+                    Mail::to($baseAdminEmail)->send(new NewBookingEmail($this, 'admin', $baseAdmin));
                 }
-            } else {
-                Log::warning('sendNewBookingEmails: Отель не найден или admin_base не установлен', [
-                    'booking_id' => $this->id,
-                    'hotel_id' => $this->hotel_id,
-                    'object_model' => $this->object_model,
-                    'object_id' => $this->object_id,
-                    'type' => $this->type,
-                    'hotel_found' => $hotel ? true : false,
-                    'hotel_admin_base' => $hotel->admin_base ?? null
-                ]);
-                // Если отель найден, но admin_base не установлен, все равно отправляем письмо вендору
-                // Но нужно проверить, может быть нужно отправлять письмо админу базы даже если admin_base не установлен
             }
 
             // To Hunter (охотнику - создателю брони)
             if($this->create_user) {
                 $hunter = User::find($this->create_user);
                 if($hunter && !empty($hunter->email)) {
+                    Log::info('Booking: 492');
                     Mail::to($hunter->email)->send(new NewBookingEmail($this, 'customer'));
-                }
-            }
-
-            // To Customer (если email указан в брони и отличается от создателя)
-            if(!empty($this->email)) {
-                $customerEmail = $this->email;
-                // Проверяем, не совпадает ли email с email создателя или админа базы
-                if($this->create_user) {
-                    $hunter = User::find($this->create_user);
-                    if($hunter && $hunter->email === $customerEmail) {
-                        $customerEmail = null;
-                    }
-                }
-                if($hotel && $hotel->admin_base) {
-                    $baseAdmin = User::find($hotel->admin_base);
-                    if($baseAdmin && $baseAdmin->email === $customerEmail) {
-                        $customerEmail = null;
-                    }
-                }
-                if($customerEmail) {
-                    Mail::to($customerEmail)->send(new NewBookingEmail($this, 'customer'));
                 }
             }
 
