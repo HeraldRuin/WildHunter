@@ -2,6 +2,7 @@
 namespace Modules\Booking\Models;
 
 use App\BaseModel;
+use Carbon\Carbon;
 use Eluceo\iCal\Component\Calendar;
 use Eluceo\iCal\Component\Event;
 use Illuminate\Database\Eloquent\Builder;
@@ -402,9 +403,39 @@ class Booking extends BaseModel
                 $hotel = $this->hotel;
             }
             if(!$hotel && $this->object_model === 'hotel' && $this->object_id) {
+                $hotel = \Modules\Hotel\Models\Hotel::find($this->object_id);
+                if($hotel) {
+                    Log::info('sendNewBookingEmails: Отель найден через object_model=hotel', [
+                        'booking_id' => $this->id,
+                        'hotel_id' => $hotel->id,
+                        'admin_base' => $hotel->admin_base ?? null
+                    ]);
+                }
+            }
+            // Если отель не найден, пробуем через type === 'hotel'
+            if(!$hotel && $this->type === 'hotel' && $this->object_id) {
+                $hotel = \Modules\Hotel\Models\Hotel::find($this->object_id);
+                if($hotel) {
+                    Log::info('sendNewBookingEmails: Отель найден через type=hotel', [
+                        'booking_id' => $this->id,
+                        'hotel_id' => $hotel->id,
+                        'admin_base' => $hotel->admin_base ?? null
+                    ]);
+                }
+            }
+            // Если отель все еще не найден, пробуем через service
+            if(!$hotel) {
+                if(!$this->relationLoaded('service')) {
+                    $this->load('service');
+                }
                 $service = $this->service;
                 if($service && $service instanceof \Modules\Hotel\Models\Hotel) {
                     $hotel = $service;
+                    Log::info('sendNewBookingEmails: Отель найден через service', [
+                        'booking_id' => $this->id,
+                        'hotel_id' => $hotel->id,
+                        'admin_base' => $hotel->admin_base ?? null
+                    ]);
                 }
             }
 
@@ -421,9 +452,35 @@ class Booking extends BaseModel
                     }
 
                     if($shouldSend) {
+                        Log::info('sendNewBookingEmails: Отправка письма админу базы', [
+                            'booking_id' => $this->id,
+                            'base_admin_id' => $baseAdmin->id,
+                            'base_admin_email' => $baseAdminEmail,
+                            'base_admin_name' => trim(($baseAdmin->first_name ?? '') . ' ' . ($baseAdmin->last_name ?? '')),
+                            'hotel_id' => $hotel->id,
+                            'hotel_found_via' => $this->hotel_id ? 'hotel_id' : ($this->object_model === 'hotel' ? 'object_model' : 'service')
+                        ]);
                         Mail::to($baseAdminEmail)->send(new NewBookingEmail($this, 'admin', $baseAdmin));
                     }
+                } else {
+                    Log::warning('sendNewBookingEmails: Админ базы не найден или email пустой', [
+                        'booking_id' => $this->id,
+                        'hotel_id' => $hotel->id ?? null,
+                        'admin_base' => $hotel->admin_base ?? null
+                    ]);
                 }
+            } else {
+                Log::warning('sendNewBookingEmails: Отель не найден или admin_base не установлен', [
+                    'booking_id' => $this->id,
+                    'hotel_id' => $this->hotel_id,
+                    'object_model' => $this->object_model,
+                    'object_id' => $this->object_id,
+                    'type' => $this->type,
+                    'hotel_found' => $hotel ? true : false,
+                    'hotel_admin_base' => $hotel->admin_base ?? null
+                ]);
+                // Если отель найден, но admin_base не установлен, все равно отправляем письмо вендору
+                // Но нужно проверить, может быть нужно отправлять письмо админу базы даже если admin_base не установлен
             }
 
             // To Hunter (охотнику - создателю брони)
@@ -1177,10 +1234,21 @@ class Booking extends BaseModel
 
         return $days;
     }
-    public function getDurationDaysAttribute(){
+//    public function getDurationDaysAttribute(){
+//
+//        $days = max(1,floor((strtotime($this->end_date) - strtotime($this->start_date)) / DAY_IN_SECONDS) + 1 );
+//        return $days;
+//    }
 
-        $days = max(1,floor((strtotime($this->end_date) - strtotime($this->start_date)) / DAY_IN_SECONDS) + 1 );
-        return $days;
+    public function getDurationDaysAttribute()
+    {
+        return max(
+            1,
+            Carbon::parse($this->start_date)->startOfDay()
+                ->diffInDays(
+                    Carbon::parse($this->end_date)->startOfDay()
+                )
+        );
     }
     public function getDurationHoursAttribute(){
 
