@@ -5,13 +5,7 @@
         <div class="b-panel">
             @if($to === 'admin')
                 @php
-                    $adminName = __('Administrator');
-                    if(!empty($baseAdmin)) {
-                        $adminName = trim(($baseAdmin->first_name ?? '') . ' ' . ($baseAdmin->last_name ?? ''));
-                        if(empty($adminName)) {
-                            $adminName = $baseAdmin->display_name ?? $baseAdmin->email ?? __('Administrator');
-                        }
-                    }
+                    $adminName = trim(($baseAdmin->first_name ?? '') . ' ' . ($baseAdmin->last_name ?? ''));
                 @endphp
                 <h3 class="email-headline"><strong>{{__('Hello :name',['name'=>$adminName])}}</strong></h3>
                 <p>{{__('New booking has been made')}}</p>
