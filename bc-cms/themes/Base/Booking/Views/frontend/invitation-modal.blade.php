@@ -28,16 +28,12 @@
                             </div>
                         </div>
                     @endif
-                    {{-- Список всех приглашенных охотников (исключая текущего пользователя, если он еще не принял приглашение) --}}
                     @php
                         $allInvitations = $booking->getAllInvitations();
                         $currentUserId = Auth::id();
                         // Фильтруем приглашения: исключаем текущего пользователя только если он еще не принял приглашение
                         $otherInvitations = $allInvitations->filter(function($inv) use ($currentUserId) {
-                            if (!$inv->hunter) {
-                                return false;
-                            }
-                            // Если это текущий пользователь, показываем его только если он принял приглашение
+//                            // Если это текущий пользователь, показываем его только если он принял приглашение
                             if ($inv->hunter_id == $currentUserId) {
                                 return $inv->status === 'accepted';
                             }
@@ -53,10 +49,14 @@
                                     <div class="flex-grow-1">
                                         <div class="d-flex align-items-center">
                                             <span class="me-2">
-                                                @if($inv->hunter->user_name)
-                                                    <strong>{{ $inv->hunter->user_name }}</strong>
+                                                @if($inv->hunter)
+                                                    @if($inv->hunter->user_name)
+                                                        <strong>{{ $inv->hunter->user_name }}</strong>
+                                                    @endif
+                                                    {{ $inv->hunter->first_name }} {{ $inv->hunter->last_name }}
+                                                @else
+                                                    <strong>{{ $inv->email }}</strong>
                                                 @endif
-                                                {{ $inv->hunter->first_name }} {{ $inv->hunter->last_name }}
                                             </span>
                                             <span class="badge ml-2
                                                 @if($inv->status === 'accepted') bg-success
@@ -73,7 +73,8 @@
                                             </span>
                                         </div>
                                         @if($inv->invited_at)
-                                            <small class="text-muted">{{ __('Invited At') }}: {{ display_datetime($inv->invited_at) }}</small>
+                                            <small class="text-muted">{{ __('Invited At') }}
+                                                : {{ display_datetime($inv->invited_at) }}</small>
                                         @endif
                                     </div>
                                 </div>
