@@ -189,7 +189,7 @@ class BookingController extends \App\Http\Controllers\Controller
 
         $booking = $this->bookingInst;
 
-        if (!in_array($booking->status, ['draft', 'unpaid'])) {
+        if (!in_array($booking->status, ['draft', 'unpaid', 'processing'])) {
             return $this->sendError('', [
                 'url' => $booking->getDetailUrl()
             ]);
@@ -865,7 +865,6 @@ class BookingController extends \App\Http\Controllers\Controller
         $booking->status = Booking::CONFIRMED;
         $booking->save();
 
-        // Вызываем событие для отправки email через слушатель
         event(new BookingUpdatedEvent($booking));
 
         return $this->sendSuccess([
@@ -1040,10 +1039,10 @@ class BookingController extends \App\Http\Controllers\Controller
         foreach ($invitations as $invitation) {
             $hunter = $invitation->hunter;
 
-            // Уведомляем охотника о том, что сбор отменён и бронь подтверждена
+            // Уведомляем охотника о том, что сбор отменён
             if ($hunter && !empty($hunter->email)) {
                 try {
-                    $message = __('Сбор охотников для этой брони отменён. Бронь теперь подтверждена.');
+                    $message = __('Сбор охотников для этой брони отменён.');
                     Mail::to($hunter->email)->send(new HunterMessageEmail($booking, $hunter, $message, false));
                 } catch (\Exception $e) {
                     Log::warning('cancelCollection: failed to send email to hunter', [
@@ -1057,24 +1056,18 @@ class BookingController extends \App\Http\Controllers\Controller
 
         // Удаляем все приглашения охотников, кроме мастера охотника (того, кто приглашал)
         try {
-            // Получаем все booking_hunter_id для этой брони, где is_master = false (не мастера)
-            $nonMasterBookingHunterIds = BookingHunter::where('booking_id', $booking->id)
-                ->where('is_master', false)
+//            $nonMasterBookingHunterIds = BookingHunter::where('booking_id', $booking->id)
+//                ->where('is_master', true)
+//                ->pluck('id');
+
+            $bookingHunterIds = BookingHunter::where('booking_id', $booking->id)
                 ->pluck('id');
 
-            if ($nonMasterBookingHunterIds->isNotEmpty()) {
+            if ($bookingHunterIds->isNotEmpty()) {
                 // Жёстко удаляем все приглашения, связанные с не-мастерами
-                $deletedCount = BookingHunterInvitation::whereIn('booking_hunter_id', $nonMasterBookingHunterIds)->forceDelete();
-
-                Log::info('cancelCollection: force delete приглашений охотников (кроме мастера)', [
-                    'booking_id' => $booking->id,
-                    'non_master_booking_hunter_ids' => $nonMasterBookingHunterIds->toArray(),
-                    'deleted' => $deletedCount,
-                ]);
-            } else {
-                Log::info('cancelCollection: нет не-мастеров для удаления приглашений', [
-                    'booking_id' => $booking->id,
-                ]);
+//                $deletedCount = BookingHunterInvitation::whereIn('booking_hunter_id', $nonMasterBookingHunterIds)->forceDelete();
+                BookingHunterInvitation::whereIn('booking_hunter_id', $bookingHunterIds)
+                    ->forceDelete();
             }
         } catch (\Exception $e) {
             Log::warning('cancelCollection: failed to force delete invitations', [
@@ -1094,7 +1087,7 @@ class BookingController extends \App\Http\Controllers\Controller
             if ($booking->create_user) {
                 $creator = User::find($booking->create_user);
                 if ($creator && !empty($creator->email)) {
-                    $customMessage = __('Сбор охотников отменён. Бронь теперь подтверждена.');
+                    $customMessage = __('Сбор охотников для этой брони отменён.');
                     Mail::to($creator->email)->send(new StatusUpdatedEmail($booking, 'customer', $customMessage));
                 }
             }
@@ -1105,7 +1098,7 @@ class BookingController extends \App\Http\Controllers\Controller
         }
 
         return $this->sendSuccess([
-            'message' => __('Сбор охотников отменён. Бронь теперь подтверждена.')
+            'message' => __('Сбор охотников для этой брони отменён.')
         ]);
     }
 
