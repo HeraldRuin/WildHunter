@@ -23,6 +23,7 @@ use Modules\Booking\Events\SetPaidAmountEvent;
 use Modules\Booking\Models\BookingHunter;
 use Modules\Booking\Models\BookingHunterInvitation;
 use Modules\Booking\Models\BookingPassenger;
+use Modules\Hotel\Models\HotelAnimal;
 use Modules\User\Events\SendMailUserRegistered;
 use Modules\Booking\Emails\CollectionTimerFinishedEmail;
 use Illuminate\Http\Request;
@@ -998,11 +999,8 @@ class BookingController extends \App\Http\Controllers\Controller
         $user = Auth::user();
         $isBaseAdmin = $user->hasRole('baseadmin') || $user->hasPermission('baseAdmin_dashboard_access');
 
-        // Только владелец брони, вендор или base-admin могут отменить сбор
-        if (
-            !$isBaseAdmin
-            && $booking->vendor_id !== $user->id
-            && $booking->create_user !== $user->id
+        // Только владелец брони, base-admin могут отменить сбор
+        if (!$isBaseAdmin && $booking->create_user !== $user->id
         ) {
             return $this->sendError(__("You don't have access."))->setStatusCode(403);
         }
@@ -1012,7 +1010,6 @@ class BookingController extends \App\Http\Controllers\Controller
             return $this->sendError(__('This booking cannot be modified'))->setStatusCode(422);
         }
 
-        // Если бронь сейчас в режиме сбора, переводим её в статус "подтверждено"
         if ($booking->status === Booking::START_COLLECTION) {
             $booking->status = Booking::CONFIRMED;
 
@@ -1032,8 +1029,22 @@ class BookingController extends \App\Http\Controllers\Controller
             $booking->save();
             event(new BookingUpdatedEvent($booking));
         }
+        $minHuntersRequired = HotelAnimal::where('hotel_id', $booking->hotel_id)
+            ->where('animal_id', $booking->animal_id)
+            ->value('hunters_count');
 
-        // Получаем всех приглашенных охотников
+        $acceptedHuntersCount = BookingHunterInvitation::whereHas('bookingHunter', function ($q) use ($booking) {
+            $q->where('booking_id', $booking->id);
+        })
+            ->where('status', BookingHunterInvitation::STATUS_ACCEPTED)
+            ->count();
+
+        if ($acceptedHuntersCount < $minHuntersRequired) {
+            return $this->sendError(
+                __('Нельзя отменить сбор: не собрано минимальное количество охотников.')
+            )->setStatusCode(422);
+        }
+
         $invitations = $booking->getAllInvitations();
 
         foreach ($invitations as $invitation) {
@@ -1056,17 +1067,13 @@ class BookingController extends \App\Http\Controllers\Controller
 
         // Удаляем все приглашения охотников, кроме мастера охотника (того, кто приглашал)
         try {
-//            $nonMasterBookingHunterIds = BookingHunter::where('booking_id', $booking->id)
-//                ->where('is_master', true)
-//                ->pluck('id');
+            $masterBookingHunterId = BookingHunter::where('booking_id', $booking->id)
+                ->where('is_master', true)
+                ->first();
 
-            $bookingHunterIds = BookingHunter::where('booking_id', $booking->id)
-                ->pluck('id');
-
-            if ($bookingHunterIds->isNotEmpty()) {
-                // Жёстко удаляем все приглашения, связанные с не-мастерами
-//                $deletedCount = BookingHunterInvitation::whereIn('booking_hunter_id', $nonMasterBookingHunterIds)->forceDelete();
-                BookingHunterInvitation::whereIn('booking_hunter_id', $bookingHunterIds)
+            if ($masterBookingHunterId) {
+                BookingHunterInvitation::where('booking_hunter_id', $masterBookingHunterId->id)
+                    ->where('hunter_id', '!=', $masterBookingHunterId->invited_by)
                     ->forceDelete();
             }
         } catch (\Exception $e) {
@@ -1129,21 +1136,9 @@ class BookingController extends \App\Http\Controllers\Controller
             return $this->sendError(__('Сбор охотников не начат или уже завершён'))->setStatusCode(422);
         }
 
+
         // Получаем все приглашения
         $allInvitations = $booking->getAllInvitations();
-
-        // Логируем статусы всех приглашений для отладки
-        $invitationStatuses = $allInvitations->map(function ($invitation) {
-            return [
-                'id' => $invitation->id,
-                'hunter_id' => $invitation->hunter_id,
-                'status' => $invitation->status,
-            ];
-        })->toArray();
-        Log::info('finishCollection: статусы всех приглашений', [
-            'booking_id' => $booking->id,
-            'invitations' => $invitationStatuses,
-        ]);
 
         // Сначала проверяем, что НЕТ приглашений, которые ещё не подтверждены
         // (например, со статусом pending или любым другим, кроме accepted / declined / removed)
