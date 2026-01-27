@@ -4,6 +4,7 @@
     $customerLastName = $booking->last_name;
     $customerEmail = $booking->email;
     $customerPhone = $booking->phone;
+    $customerNotes = $booking->customer_notes;
 
     // Если данных нет в брони, берем из профиля пользователя (охотника)
     if(empty($customerFirstName) || empty($customerLastName) || empty($customerEmail) || empty($customerPhone)) {
@@ -76,6 +77,12 @@
 {{--                <div class="val">{{$booking->customer_notes}}</div>--}}
 {{--            </div>--}}
 {{--            @endif--}}
+
+
+            @if(!empty($booking->customer_notes))
+                @include('Booking::emails.parts.notes-customer', ['booking' => $booking])
+            @endif
+
         </div>
     </div>
 </div>
