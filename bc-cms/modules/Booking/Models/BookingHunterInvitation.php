@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class BookingHunterInvitation extends Model
 {
+    const STATUS_ACCEPTED = 'accepted';
     use SoftDeletes;
 
     protected $table = 'bc_booking_hunter_invitations';
