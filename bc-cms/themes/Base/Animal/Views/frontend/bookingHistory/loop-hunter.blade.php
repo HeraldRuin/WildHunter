@@ -57,20 +57,20 @@
                 } catch (\Exception $e) {
                     $endTimestamp = null;
                 }
-                
+
                 // Получаем информацию об охотниках
                 $totalHuntersNeeded = $booking->total_hunting ?? 0;
                 $allInvitations = $booking->getAllInvitations();
                 $acceptedInvitations = $allInvitations->where('status', 'accepted');
                 $acceptedCount = $acceptedInvitations->count();
-                
+
                 // Получаем мастера охотника
                 $bookingHunter = $booking->bookingHunter;
                 $masterHunter = null;
                 if ($bookingHunter && $bookingHunter->invitedBy) {
                     $masterHunter = $bookingHunter->invitedBy;
                 }
-                
+
                 // Получаем список принявших приглашение
                 $acceptedHunters = $acceptedInvitations->map(function($invitation) {
                     if ($invitation->hunter) {
@@ -158,12 +158,27 @@
                 </button>
             @endif
         @else
-            {{-- Обычные кнопки для создателя брони или вендора --}}
-            {{-- Кнопка "Открыть сбор" доступна когда бронь подтверждена или уже идет сбор охотников --}}
-            @if(
-                in_array($booking->status, ['confirmed', \Modules\Booking\Models\Booking::START_COLLECTION]) &&
-                in_array($booking->type, ['animal', 'hotel_animal'])
-            )
+
+            @if($booking->is_master_hunter && in_array($booking->status, [\Modules\Booking\Models\Booking::PROCESSING, \Modules\Booking\Models\Booking::CONFIRMED, \Modules\Booking\Models\Booking::FINISHED_COLLECTION]))
+                <button
+                    type="button"
+                    class="btn btn-danger btn-sm mt-2"
+                    data-bs-toggle="modal"
+                    data-bs-target="#cancelBookingModal{{ $booking->id }}">
+                    {{__("Cancel")}}
+                </button>
+            @endif
+
+                @if($booking->is_master_hunter && $booking->status ===  \Modules\Booking\Models\Booking::FINISHED_COLLECTION)
+                    <button
+                        type="button"
+                        class="btn btn-primary btn-sm mt-2"
+                        data-bs-toggle="modal">
+                        {{__("Select bed place")}}
+                    </button>
+                @endif
+
+            @if($booking->is_master_hunter && $booking->status ===  \Modules\Booking\Models\Booking::CONFIRMED)
                 <button
                     type="button"
                     class="btn btn-primary btn-sm mt-2"
@@ -173,27 +188,34 @@
                     {{__("Open collection")}}
                 </button>
             @endif
-            @if($userRole === 'hunter' && $booking->status !== 'cancelled')
+
+                @if($booking->is_master_hunter && in_array($booking->status, [\Modules\Booking\Models\Booking::FINISHED_COLLECTION]))
+                    <button
+                        type="button"
+                        class="btn btn-primary btn-sm mt-2"
+                        data-bs-toggle="modal"
+                        data-bs-target="#bookingAddServiceModal{{ $booking->id }}">
+                        {{__("Add services")}}
+                    </button>
+                @endif
+
+                @if($booking->is_master_hunter && in_array($booking->status, [\Modules\Booking\Models\Booking::FINISHED_COLLECTION]))
+                    <button
+                        type="button"
+                        class="btn btn-primary btn-sm mt-2"
+                        data-bs-toggle="modal"
+                        data-bs-target="#cancelBookingModal{{ $booking->id }}">
+                        {{__("Calculating")}}
+                    </button>
+                @endif
+
+            @if(in_array($booking->status, [\Modules\Booking\Models\Booking::PAID, \Modules\Booking\Models\Booking::COMPLETED]))
                 <button
                     type="button"
                     class="btn btn-primary btn-sm mt-2"
                     data-bs-toggle="modal"
-                    data-bs-target="#bookingAddServiceModal{{ $booking->id }}">
-                    {{__("Add services")}}
-                </button>
-            @endif
-            @if($userRole === 'hunter' && $booking->status !== 'cancelled')
-                <a href="{{ $booking->getDetailUrl() }}?select_place=1" target="_blank" class="btn btn-primary btn-sm mt-2">
-                    {{__("Select bed place")}}
-                </a>
-            @endif
-            @if(!in_array($booking->status, [\Modules\Booking\Models\Booking::CANCELLED, \Modules\Booking\Models\Booking::COMPLETED]))
-                <button
-                    type="button"
-                    class="btn btn-danger btn-sm mt-2"
-                    data-bs-toggle="modal"
                     data-bs-target="#cancelBookingModal{{ $booking->id }}">
-                    {{__("Cancel")}}
+                    {{__("Calculating")}}
                 </button>
             @endif
         @endif

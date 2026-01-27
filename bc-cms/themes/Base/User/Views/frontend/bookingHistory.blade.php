@@ -17,7 +17,7 @@
             <ul class="nav nav-tabs ht-nav-tabs">
                 <?php $status_type = Request::query('status'); ?>
                 <li class="@if(empty($status_type)) active @endif">
-                    <a href="{{route("user.booking_history")}}">{{__("All Booking")}}</a>
+                    <a href="{{route("user.booking_history")}}">{{__("All Bookings History")}}</a>
                 </li>
                 @if(!empty($statues))
                     @foreach($statues as $status)
@@ -47,9 +47,9 @@
             @endif
 
             @if(!empty($bookings) and $bookings->total() > 0)
-                <div class="tab-content" id="booking-history" 
-                     data-user-id="{{ Auth::id() }}" 
-                     data-invite-text="{{ __('Invite') }}" 
+                <div class="tab-content" id="booking-history"
+                     data-user-id="{{ Auth::id() }}"
+                     data-invite-text="{{ __('Invite') }}"
                      data-invited-text="{{ __('Invited') }}"
                      data-accept-confirm="{{ __('Are you sure you want to accept this invitation?') }}"
                      data-decline-confirm="{{ __('Are you sure you want to decline this invitation?') }}"

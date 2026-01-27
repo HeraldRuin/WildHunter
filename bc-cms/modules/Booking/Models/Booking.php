@@ -6,6 +6,8 @@ use Carbon\Carbon;
 use Eluceo\iCal\Component\Calendar;
 use Eluceo\iCal\Component\Event;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
@@ -40,7 +42,7 @@ class Booking extends BaseModel
     const PROCESSING = 'processing'; // like offline - payment
     const START_COLLECTION = 'collection';
     const FINISHED_COLLECTION = 'finished_collection'; // Завершенный сбор охотников
-    const CONFIRMED  = 'confirmed'; // after processing -> confirmed (for offline payment)
+    const CONFIRMED  = 'confirmed';
     const COMPLETED  = 'completed'; //
     const CANCELLED  = 'cancelled';
     const PAID       = 'paid'; //
@@ -54,6 +56,8 @@ class Booking extends BaseModel
     public static $notAcceptedStatus = [
         'draft','cancelled','unpaid'
     ];
+
+    protected $appends = ['is_master_hunter', 'is_invited'];
 
     public function getGatewayObjAttribute()
     {
@@ -124,7 +128,21 @@ class Booking extends BaseModel
             ->orderBy('invited_at', 'desc')
             ->get();
     }
+    public function getIsMasterHunterAttribute(): bool
+    {
+        if (!auth()->check()) {
+            return false;
+        }
 
+        if (!$this->relationLoaded('bookingHunters')) {
+            $this->load('bookingHunters');
+        }
+
+        $hunter = $this->bookingHunters
+            ->firstWhere('invited_by', auth()->id());
+
+        return $hunter && (bool)$hunter->is_master;
+    }
     public function getStatusForUserAttribute()
     {
         $userId = \Illuminate\Support\Facades\Auth::id();
@@ -485,12 +503,12 @@ class Booking extends BaseModel
             }
 
             // to Vendor
-            if($this->vendor_id) {
-                $vendor = User::find($this->vendor_id);
-                if($vendor && !empty($vendor->email)) {
-                    Mail::to($vendor->email)->send(new StatusUpdatedEmail($this,'vendor'));
-                }
-            }
+//            if($this->vendor_id) {
+//                $vendor = User::find($this->vendor_id);
+//                if($vendor && !empty($vendor->email)) {
+//                    Mail::to($vendor->email)->send(new StatusUpdatedEmail($this,'vendor'));
+//                }
+//            }
 
             // To Customer - используем email создателя, если он есть, иначе email из брони
             $customerEmail = null;
@@ -513,9 +531,7 @@ class Booking extends BaseModel
             app()->setLocale($old);
 
         } catch(\Exception $e){
-
             Log::warning('sendStatusUpdatedEmails: '.$e->getMessage());
-
         }
 
         app()->setLocale($old);
@@ -679,15 +695,15 @@ class Booking extends BaseModel
     }
     public static function getBookingHistory($booking_status = false, $customer_id_or_name = false, $service = false , $from = false ,  $to = false, $booking_id = false )
     {
-        $list_booking = parent::query()->with(['animal', 'creator', 'hotel.translation', 'hotelRooms'])->orderBy('id', 'desc');
+        $list_booking = parent::query()->with(['animal', 'creator', 'hotel.translation', 'hotelRooms', 'bookingHunters:id,booking_id,invited_by,is_master'])->orderBy('id', 'desc');
 
-//        else{
-//            $list_booking->where('status','=','processing');
-////            $list_booking->where('status','=','draft');
-//        }
         if (!empty($customer_id_or_name)) {
             // Получаем ID броней, на которые пользователь приглашен через join
             // Показываем приглашенные брони в фильтрах "сбор охотников" и "завершенный сбор"
+
+            if (empty($booking_status)) {
+                $list_booking->whereNotIn('status', ['collection', 'finished_collection']);
+            }
             $bookingIdsFromInvitations = [];
             if (in_array($booking_status, ['collection', 'finished_collection'])) {
                 $bookingIdsFromInvitations = DB::table('bc_booking_hunter_invitations as invitations')
@@ -729,7 +745,7 @@ class Booking extends BaseModel
                 }
             });
         } else {
-            // Если не указан customer_id_or_name, применяем фильтр по статусу как обычно
+            $list_booking->whereNotIn('status', ['collection', 'finished_collection']);
             if (!empty($booking_status)) {
                 $list_booking->where("status", $booking_status);
             }
@@ -754,19 +770,21 @@ class Booking extends BaseModel
 
     public static function getBookingHistoryForAdminBase($hotel_id, $booking_status = false, $booking_id = false)
     {
-        $list_booking = parent::query()->with(['animal', 'creator', 'hotel.translation', 'hotelRooms'])->orderBy('id', 'desc');
+        $list_booking = parent::query()->with(['animal', 'creator', 'hotel.translation', 'hotelRooms', 'bookingHunters:id,booking_id,invited_by,is_master'])->orderBy('id', 'desc');
 
         $list_booking->where('hotel_id', $hotel_id);
+        $list_booking->whereNotIn('status', ['collection', 'finished_collection']);
 
+        if (!empty($booking_status)) {
+            $list_booking->where('status', $booking_status);
+        }
         if (!empty($booking_status)) {
             $list_booking->where("status", $booking_status);
         }
         if (!empty($booking_id)) {
             $list_booking->where("id", $booking_id);
         }
-//        else{
-//            $list_booking->where('status','=','processing');
-//        }
+
         $list_booking->whereIn('object_model', array_keys(get_bookable_services()));
         return $list_booking->paginate(10);
     }
@@ -1470,6 +1488,10 @@ class Booking extends BaseModel
         return $this->hasOne(BookingHunter::class, 'booking_id');
     }
 
+    public function bookingHunters(): HasMany
+    {
+        return $this->hasMany(BookingHunter::class,'booking_id','id');
+    }
     public function getTypeTextAttribute()
     {
         return match ($this->type) {

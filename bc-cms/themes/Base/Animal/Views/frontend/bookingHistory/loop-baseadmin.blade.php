@@ -50,15 +50,15 @@
                     ->where('booking_id', $booking->id)
                     ->where('name', 'collection_start_at')
                     ->first();
-                
+
                 $timerHoursRecord = \Illuminate\Support\Facades\DB::table('bc_booking_meta')
                     ->where('booking_id', $booking->id)
                     ->where('name', 'collection_timer_hours')
                     ->first();
-                
+
                 $endTimestamp = null;
                 $initialTimerHours = null;
-                
+
                 // Вычисляем оставшееся время: таймер в часах - прошедшее время
                 if ($startRecord && $timerHoursRecord) {
                     try {
@@ -66,14 +66,14 @@
                         $timerHours = (int)$timerHoursRecord->val;
                         $initialTimerHours = $timerHours; // Начальное значение таймера
                         $now = \Carbon\Carbon::now();
-                        
+
                         // Прошедшее время в секундах, затем переводим в часы с точностью
                         $elapsedSeconds = $now->diffInSeconds($startCarbon, false);
                         $elapsedHours = $elapsedSeconds / 3600; // Точное значение в часах
-                        
+
                         // Оставшееся время в часах
                         $remainingHours = max(0, $timerHours - $elapsedHours);
-                        
+
                         // Вычисляем время окончания для JavaScript (текущее время + оставшееся время)
                         $remainingSeconds = $remainingHours * 3600;
                         $endCarbon = $now->copy()->addSeconds((int)$remainingSeconds);
@@ -84,7 +84,9 @@
                 }
             @endphp
             @if($endTimestamp && $initialTimerHours)
-                <div class="text-muted collection-timer" data-end="{{ $endTimestamp }}" data-initial-hours="{{ $initialTimerHours }}">({{ $initialTimerHours }}) [0 мин]</div>
+                <div class="text-muted collection-timer" data-end="{{ $endTimestamp }}"
+                     data-initial-hours="{{ $initialTimerHours }}">({{ $initialTimerHours }}) [0 мин]
+                </div>
             @endif
         @endif
     </td>
@@ -109,13 +111,34 @@
     <td>{{format_money($booking->paid)}}</td>
     <td>{{format_money($booking->total - $booking->paid)}}</td>
     <td>
-        @if($userRole === 'baseadmin' && $booking->status === 'processing' && $booking->status != 'completed')
+        @if($userRole === 'baseadmin' && $booking->status === \Modules\Booking\Models\Booking::PROCESSING)
             <button type="button" class="btn btn-success" data-bs-toggle="modal"
                     data-bs-target="#confirmBookingModal{{ $booking->id }}">
                 {{ __("Booking apply") }}
             </button>
         @endif
-            @if($userRole === 'baseadmin' && !in_array($booking->status, [\Modules\Booking\Models\Booking::CANCELLED, \Modules\Booking\Models\Booking::COMPLETED]))
+
+        @if($booking->status === \Modules\Booking\Models\Booking::PAID)
+            <button
+                type="button"
+                class="btn btn-success btn-sm mt-2"
+                data-bs-toggle="modal"
+                data-bs-target="#cancelBookingModal{{ $booking->id }}">
+                {{__("Complete booking")}}
+            </button>
+        @endif
+
+        @if($userRole === 'baseadmin' && in_array($booking->status, [\Modules\Booking\Models\Booking::CONFIRMED, \Modules\Booking\Models\Booking::COMPLETED, \Modules\Booking\Models\Booking::FINISHED_COLLECTION, \Modules\Booking\Models\Booking::START_COLLECTION]))
+            <button
+                type="button"
+                class="btn btn-danger btn-sm mt-2"
+                data-bs-toggle="modal"
+                data-bs-target="#cancelBookingModal{{ $booking->id }}">
+                {{__("Cancel")}}
+            </button>
+        @endif
+
+        @if($userRole === 'baseadmin' && in_array($booking->status, [\Modules\Booking\Models\Booking::FINISHED_COLLECTION]))
             <button
                 type="button"
                 class="btn btn-primary btn-sm mt-2"
@@ -124,21 +147,14 @@
                 {{__("Add services")}}
             </button>
         @endif
-        @if($userRole === 'baseadmin'&& $booking->status !== 'processing' && !in_array($booking->status, [\Modules\Booking\Models\Booking::CANCELLED, \Modules\Booking\Models\Booking::COMPLETED]))
+
+        @if($userRole === 'baseadmin' && in_array($booking->status, [\Modules\Booking\Models\Booking::PAID, \Modules\Booking\Models\Booking::COMPLETED, \Modules\Booking\Models\Booking::FINISHED_COLLECTION]))
             <button
                 type="button"
-                class="btn btn-success btn-sm mt-2"
-                @click="completeBooking($event, {{ $booking->id }})">
-                {{__("Complete booking")}}
-            </button>
-        @endif
-        @if(!in_array($booking->status, [\Modules\Booking\Models\Booking::CANCELLED, \Modules\Booking\Models\Booking::COMPLETED]))
-            <button
-                type="button"
-                class="btn btn-danger btn-sm mt-2"
+                class="btn btn-primary btn-sm mt-2"
                 data-bs-toggle="modal"
                 data-bs-target="#cancelBookingModal{{ $booking->id }}">
-                {{__("Cancel")}}
+                {{__("Calculating")}}
             </button>
         @endif
     </td>
@@ -157,7 +173,8 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
-                <button type="button" class="btn btn-success" @click="confirmBooking({{$booking->id}})">Подтвердить</button>
+                <button type="button" class="btn btn-success" @click="confirmBooking({{$booking->id}})">Подтвердить
+                </button>
             </div>
         </div>
     </div>
@@ -173,8 +190,10 @@
                 <p>{{__('Are you sure you want to cancel this booking?')}}</p>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{__('No, keep booking')}}</button>
-                <button type="button" class="btn btn-danger btn-cancel-booking-confirm-vue" data-booking-id="{{ $booking->id }}">{{__('Yes, cancel')}}</button>
+                <button type="button" class="btn btn-secondary"
+                        data-bs-dismiss="modal">{{__('No, keep booking')}}</button>
+                <button type="button" class="btn btn-danger btn-cancel-booking-confirm-vue"
+                        data-booking-id="{{ $booking->id }}">{{__('Yes, cancel')}}</button>
             </div>
         </div>
     </div>
@@ -238,7 +257,8 @@
                             <strong class="text-dark">@{{ user.first_name }}</strong><span>(фамилия)</span>
                             <br>
                         </div>
-                        <button v-if="!selectedUser || selectedUser.id !== user.id" class="btn btn-sm btn-primary" @click="selectUser(user)">
+                        <button v-if="!selectedUser || selectedUser.id !== user.id" class="btn btn-sm btn-primary"
+                                @click="selectUser(user)">
                             Выбрать
                         </button>
                     </div>

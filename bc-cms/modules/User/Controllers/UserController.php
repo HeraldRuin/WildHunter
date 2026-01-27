@@ -243,7 +243,6 @@ class UserController extends FrontendController
             'hotelSlug' => $authUser->hotels?->first()?->slug,
             'statues'     => config('booking.statuses'),
             'bookingId' => $bookingId,
-            'isMasterHunter' => $isMasterHunter,
             'breadcrumbs' => [
                 [
                     'name'  => __('Booking History'),

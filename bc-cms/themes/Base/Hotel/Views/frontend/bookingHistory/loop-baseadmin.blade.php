@@ -118,7 +118,12 @@
                 }
             @endphp
             @if($endTimestamp)
-                <div class="text-muted collection-timer" data-end="{{ $endTimestamp }}">[0 мин]</div>
+                <div
+                    class="text-muted collection-timer"
+                    data-end="{{ $endTimestamp }}"
+                    data-booking-id="{{ $booking->id }}"
+                >[0 мин]
+                </div>
             @endif
         @endif
     </td>
@@ -148,37 +153,49 @@
     <td>{{format_money($booking->paid)}}</td>
     <td>{{format_money($booking->total - $booking->paid)}}</td>
     <td>
-        @if($userRole === 'baseadmin' && $booking->status === 'processing' && $booking->status != 'completed')
-            <button type="button" class="btn btn-success" data-bs-toggle="modal"
-                    data-bs-target="#confirmBookingModal{{ $booking->id }}">
+        @if($userRole === 'baseadmin' && $booking->status === \Modules\Booking\Models\Booking::PROCESSING)
+            <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#confirmBookingModal{{ $booking->id }}">
                 {{ __("Booking apply") }}
             </button>
         @endif
-            @if($userRole === 'baseadmin' && !in_array($booking->status, [\Modules\Booking\Models\Booking::CANCELLED, \Modules\Booking\Models\Booking::COMPLETED]))
-                <button
-                    type="button"
-                    class="btn btn-primary btn-sm mt-2"
-                    data-bs-toggle="modal"
-                    data-bs-target="#bookingAddServiceModal{{ $booking->id }}">
-                    {{__("Add services")}}
-                </button>
-        @endif
-        @if($userRole === 'baseadmin' && !in_array($booking->status, [\Modules\Booking\Models\Booking::CANCELLED, \Modules\Booking\Models\Booking::COMPLETED]))
+
+        @if($booking->status === \Modules\Booking\Models\Booking::PAID)
             <button
                 type="button"
                 class="btn btn-success btn-sm mt-2"
-                @click="completeBooking($event, {{ $booking->id }})">
+                data-bs-toggle="modal"
+                data-bs-target="#cancelBookingModal{{ $booking->id }}">
                 {{__("Complete booking")}}
             </button>
         @endif
 
-        @if(!in_array($booking->status, [\Modules\Booking\Models\Booking::CANCELLED, \Modules\Booking\Models\Booking::COMPLETED]))
+        @if($userRole === 'baseadmin' && in_array($booking->status, [\Modules\Booking\Models\Booking::CONFIRMED, \Modules\Booking\Models\Booking::COMPLETED, \Modules\Booking\Models\Booking::FINISHED_COLLECTION, \Modules\Booking\Models\Booking::START_COLLECTION]))
             <button
                 type="button"
                 class="btn btn-danger btn-sm mt-2"
                 data-bs-toggle="modal"
                 data-bs-target="#cancelBookingModal{{ $booking->id }}">
                 {{__("Cancel")}}
+            </button>
+        @endif
+
+        @if($userRole === 'baseadmin' && in_array($booking->status, [\Modules\Booking\Models\Booking::FINISHED_COLLECTION]))
+            <button
+                type="button"
+                class="btn btn-primary btn-sm mt-2"
+                data-bs-toggle="modal"
+                data-bs-target="#bookingAddServiceModal{{ $booking->id }}">
+                {{__("Add services")}}
+            </button>
+        @endif
+
+        @if($userRole === 'baseadmin' && in_array($booking->status, [\Modules\Booking\Models\Booking::PAID, \Modules\Booking\Models\Booking::COMPLETED, \Modules\Booking\Models\Booking::FINISHED_COLLECTION]))
+            <button
+                type="button"
+                class="btn btn-primary btn-sm mt-2"
+                data-bs-toggle="modal"
+                data-bs-target="#cancelBookingModal{{ $booking->id }}">
+                {{__("Calculating")}}
             </button>
         @endif
     </td>
@@ -196,7 +213,8 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
-                <button type="button" class="btn btn-success" @click="confirmBooking({{$booking->id}})">Подтвердить</button>
+                <button type="button" class="btn btn-success" @click="confirmBooking({{$booking->id}})">Подтвердить
+                </button>
             </div>
         </div>
     </div>
@@ -212,8 +230,10 @@
                 <p>{{__('Are you sure you want to cancel this booking?')}}</p>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{__('No, keep booking')}}</button>
-                <button type="button" class="btn btn-danger btn-cancel-booking-confirm-vue" data-booking-id="{{ $booking->id }}">{{__('Yes, cancel')}}</button>
+                <button type="button" class="btn btn-secondary"
+                        data-bs-dismiss="modal">{{__('No, keep booking')}}</button>
+                <button type="button" class="btn btn-danger btn-cancel-booking-confirm-vue"
+                        data-booking-id="{{ $booking->id }}">{{__('Yes, cancel')}}</button>
             </div>
         </div>
     </div>
@@ -242,10 +262,13 @@
                                                 id="hotel_service_{{ $booking->id }}_{{ $service->id }}"
                                                 style="width: 18px; height: 18px; flex-shrink: 0;"
                                                 @if(isset($selectedServices) && in_array($service->id, $selectedServices)) checked @endif>
-                                            <label class="mb-0" for="hotel_service_{{ $booking->id }}_{{ $service->id }}" style="cursor: pointer;">
+                                            <label class="mb-0"
+                                                   for="hotel_service_{{ $booking->id }}_{{ $service->id }}"
+                                                   style="cursor: pointer;">
                                                 {{ $service->title ?? $service->name }}
                                                 @if(isset($service->price))
-                                                    <span class="text-muted">({{ format_money($service->price) }})</span>
+                                                    <span
+                                                        class="text-muted">({{ format_money($service->price) }})</span>
                                                 @endif
                                             </label>
                                         </div>
@@ -253,20 +276,29 @@
                                 @else
                                     {{-- <p class="text-muted">Услуги отеля не найдены</p> --}}
                                     <div class="mb-2 d-flex align-items-center">
-                                        <input class="me-3" type="checkbox" name="hotel_services[]" value="1" id="hotel_service_{{ $booking->id }}_1" style="width: 18px; height: 18px; flex-shrink: 0;">
-                                        <label class="mb-0" for="hotel_service_{{ $booking->id }}_1" style="cursor: pointer;">
+                                        <input class="me-3" type="checkbox" name="hotel_services[]" value="1"
+                                               id="hotel_service_{{ $booking->id }}_1"
+                                               style="width: 18px; height: 18px; flex-shrink: 0;">
+                                        <label class="mb-0" for="hotel_service_{{ $booking->id }}_1"
+                                               style="cursor: pointer;">
                                             Завтрак
                                         </label>
                                     </div>
                                     <div class="mb-2 d-flex align-items-center">
-                                        <input class="me-3" type="checkbox" name="hotel_services[]" value="2" id="hotel_service_{{ $booking->id }}_2" style="width: 18px; height: 18px; flex-shrink: 0;">
-                                        <label class="mb-0" for="hotel_service_{{ $booking->id }}_2" style="cursor: pointer;">
+                                        <input class="me-3" type="checkbox" name="hotel_services[]" value="2"
+                                               id="hotel_service_{{ $booking->id }}_2"
+                                               style="width: 18px; height: 18px; flex-shrink: 0;">
+                                        <label class="mb-0" for="hotel_service_{{ $booking->id }}_2"
+                                               style="cursor: pointer;">
                                             Ужин
                                         </label>
                                     </div>
                                     <div class="mb-2 d-flex align-items-center">
-                                        <input class="me-3" type="checkbox" name="hotel_services[]" value="3" id="hotel_service_{{ $booking->id }}_3" style="width: 18px; height: 18px; flex-shrink: 0;">
-                                        <label class="mb-0" for="hotel_service_{{ $booking->id }}_3" style="cursor: pointer;">
+                                        <input class="me-3" type="checkbox" name="hotel_services[]" value="3"
+                                               id="hotel_service_{{ $booking->id }}_3"
+                                               style="width: 18px; height: 18px; flex-shrink: 0;">
+                                        <label class="mb-0" for="hotel_service_{{ $booking->id }}_3"
+                                               style="cursor: pointer;">
                                             Трансфер
                                         </label>
                                     </div>
@@ -288,10 +320,13 @@
                                                 id="hunting_service_{{ $booking->id }}_{{ $service->id }}"
                                                 style="width: 18px; height: 18px; flex-shrink: 0;"
                                                 @if(isset($selectedServices) && in_array($service->id, $selectedServices)) checked @endif>
-                                            <label class="mb-0" for="hunting_service_{{ $booking->id }}_{{ $service->id }}" style="cursor: pointer;">
+                                            <label class="mb-0"
+                                                   for="hunting_service_{{ $booking->id }}_{{ $service->id }}"
+                                                   style="cursor: pointer;">
                                                 {{ $service->title ?? $service->name }}
                                                 @if(isset($service->price))
-                                                    <span class="text-muted">({{ format_money($service->price) }})</span>
+                                                    <span
+                                                        class="text-muted">({{ format_money($service->price) }})</span>
                                                 @endif
                                             </label>
                                         </div>
@@ -299,20 +334,29 @@
                                 @else
                                     {{-- <p class="text-muted">Услуги охоты не найдены</p> --}}
                                     <div class="mb-2 d-flex align-items-center">
-                                        <input class="me-2" type="checkbox" name="hunting_services[]" value="1" id="hunting_service_{{ $booking->id }}_1" style="width: 18px; height: 18px; flex-shrink: 0;">
-                                        <label class="mb-0" for="hunting_service_{{ $booking->id }}_1" style="cursor: pointer;">
+                                        <input class="me-2" type="checkbox" name="hunting_services[]" value="1"
+                                               id="hunting_service_{{ $booking->id }}_1"
+                                               style="width: 18px; height: 18px; flex-shrink: 0;">
+                                        <label class="mb-0" for="hunting_service_{{ $booking->id }}_1"
+                                               style="cursor: pointer;">
                                             Гид
                                         </label>
                                     </div>
                                     <div class="mb-2 d-flex align-items-center">
-                                        <input class="me-2" type="checkbox" name="hunting_services[]" value="2" id="hunting_service_{{ $booking->id }}_2" style="width: 18px; height: 18px; flex-shrink: 0;">
-                                        <label class="mb-0" for="hunting_service_{{ $booking->id }}_2" style="cursor: pointer;">
+                                        <input class="me-2" type="checkbox" name="hunting_services[]" value="2"
+                                               id="hunting_service_{{ $booking->id }}_2"
+                                               style="width: 18px; height: 18px; flex-shrink: 0;">
+                                        <label class="mb-0" for="hunting_service_{{ $booking->id }}_2"
+                                               style="cursor: pointer;">
                                             Оружие
                                         </label>
                                     </div>
                                     <div class="mb-2 d-flex align-items-center">
-                                        <input class="me-2" type="checkbox" name="hunting_services[]" value="3" id="hunting_service_{{ $booking->id }}_3" style="width: 18px; height: 18px; flex-shrink: 0;">
-                                        <label class="mb-0" for="hunting_service_{{ $booking->id }}_3" style="cursor: pointer;">
+                                        <input class="me-2" type="checkbox" name="hunting_services[]" value="3"
+                                               id="hunting_service_{{ $booking->id }}_3"
+                                               style="width: 18px; height: 18px; flex-shrink: 0;">
+                                        <label class="mb-0" for="hunting_service_{{ $booking->id }}_3"
+                                               style="cursor: pointer;">
                                             Лицензия
                                         </label>
                                     </div>
@@ -324,7 +368,8 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
-                <button type="button" class="btn btn-primary" onclick="saveServices({{ $booking->id }})">Сохранить</button>
+                <button type="button" class="btn btn-primary" onclick="saveServices({{ $booking->id }})">Сохранить
+                </button>
             </div>
         </div>
     </div>
@@ -354,7 +399,8 @@
                             <strong class="text-dark">@{{ user.first_name }}</strong><span>(фамилия)</span>
                             <br>
                         </div>
-                        <button v-if="!selectedUser || selectedUser.id !== user.id" class="btn btn-sm btn-primary" @click="selectUser(user)">
+                        <button v-if="!selectedUser || selectedUser.id !== user.id" class="btn btn-sm btn-primary"
+                                @click="selectUser(user)">
                             Выбрать
                         </button>
                     </div>
