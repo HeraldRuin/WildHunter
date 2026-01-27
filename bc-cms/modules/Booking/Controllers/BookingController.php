@@ -1013,6 +1013,20 @@ class BookingController extends \App\Http\Controllers\Controller
         if ($booking->status === Booking::START_COLLECTION) {
             $booking->status = Booking::CONFIRMED;
 
+            $minHuntersRequired = HotelAnimal::where('hotel_id', $booking->hotel_id)
+                ->where('animal_id', $booking->animal_id)
+                ->value('hunters_count');
+
+            $acceptedHuntersCount = BookingHunterInvitation::whereHas('bookingHunter', function ($q) use ($booking) {
+                $q->where('booking_id', $booking->id);
+            })
+                ->where('status', BookingHunterInvitation::STATUS_ACCEPTED)
+                ->count();
+
+            if ($acceptedHuntersCount < $minHuntersRequired) {
+                return $this->sendError(__('Нельзя отменить сбор: не собрано минимальное количество охотников.'))->setStatusCode(422);
+            }
+
             // Полностью удаляем ВСЕ мета-данные таймера (сброс таймера)
             // Используем прямой SQL для гарантированного удаления
             $deletedCount = \Illuminate\Support\Facades\DB::table('bc_booking_meta')
@@ -1020,29 +1034,8 @@ class BookingController extends \App\Http\Controllers\Controller
                 ->whereIn('name', ['collection_end_at', 'collection_start_at', 'collection_timer_hours', 'collection_timer_started_at'])
                 ->delete();
 
-            \Log::info('cancelCollection: сброс таймера сбора', [
-                'booking_id' => $booking->id,
-                'hotel_id' => $booking->hotel_id,
-                'deleted_records_count' => $deletedCount,
-            ]);
-
             $booking->save();
             event(new BookingUpdatedEvent($booking));
-        }
-        $minHuntersRequired = HotelAnimal::where('hotel_id', $booking->hotel_id)
-            ->where('animal_id', $booking->animal_id)
-            ->value('hunters_count');
-
-        $acceptedHuntersCount = BookingHunterInvitation::whereHas('bookingHunter', function ($q) use ($booking) {
-            $q->where('booking_id', $booking->id);
-        })
-            ->where('status', BookingHunterInvitation::STATUS_ACCEPTED)
-            ->count();
-
-        if ($acceptedHuntersCount < $minHuntersRequired) {
-            return $this->sendError(
-                __('Нельзя отменить сбор: не собрано минимальное количество охотников.')
-            )->setStatusCode(422);
         }
 
         $invitations = $booking->getAllInvitations();
