@@ -83,7 +83,7 @@ class Booking extends BaseModel
         }
 
         $isBookingHunter = BookingHunter::where('booking_id', $this->id)
-            ->where('hunter_id', $userId)
+            ->where('invited_by', $userId)
             ->whereNull('deleted_at')
             ->exists();
 
