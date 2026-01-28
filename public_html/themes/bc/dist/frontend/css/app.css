@@ -7978,7 +7978,6 @@ body .daterangepicker .full-book-event:before {
 }
 
 .bc_wrap .bc_topbar .content .topbar-items li {
-    padding-left: 18px;
     padding-right: 18px;
     display: inline-block
 }
@@ -10294,13 +10293,14 @@ ul, ol {
     background: #f5f5f5;
 }
 
-.login-item .btn,
-.signup-item .btn {
+.topbar-items .login-item .btn,
+.topbar-items .signup-item .btn {
+    padding: 0.375rem 0.75rem;
+    line-height: 1.5;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    height: auto;
-    line-height: normal;
-    padding: 0.375rem 0.75rem;
+    border-radius: 3px 3px 6px 6px;
 }
+
 
