@@ -82,6 +82,15 @@ class Booking extends BaseModel
             return false;
         }
 
+        $isBookingHunter = BookingHunter::where('booking_id', $this->id)
+            ->where('hunter_id', $userId)
+            ->whereNull('deleted_at')
+            ->exists();
+
+        if ($isBookingHunter) {
+            return false;
+        }
+
         return BookingHunterInvitation::whereHas('bookingHunter', function($q) {
             $q->where('booking_id', $this->id)
                 ->whereNull('deleted_at');
