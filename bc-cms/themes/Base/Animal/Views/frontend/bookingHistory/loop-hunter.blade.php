@@ -136,7 +136,6 @@
         @if($isInvited && $isCollectionStatus)
             {{-- Для приглашенного охотника в статусе "сбор охотников" показываем кнопку в зависимости от статуса приглашения --}}
             @if(!$isInvitationAccepted)
-                {{-- Если приглашение не подтверждено - показываем "Открыть приглашение" --}}
                 <button
                     type="button"
                     class="btn btn-primary btn-sm mt-2"
@@ -147,7 +146,6 @@
                 </button>
             @endif
             @if($isInvitationAccepted && in_array($booking->type, ['animal', 'hotel_animal']))
-                {{-- Если приглашение подтверждено и тип брони подходит - показываем "Открыть сбор" --}}
                 <button
                     type="button"
                     class="btn btn-primary btn-sm mt-2"
