@@ -716,9 +716,6 @@ class Booking extends BaseModel
             // Получаем ID броней, на которые пользователь приглашен через join
             // Показываем приглашенные брони в фильтрах "сбор охотников" и "завершенный сбор"
 
-            if (empty($booking_status)) {
-                $list_booking->whereNotIn('status', ['collection', 'finished_collection']);
-            }
             $bookingIdsFromInvitations = [];
             if (in_array($booking_status, ['collection', 'finished_collection'])) {
                 $bookingIdsFromInvitations = DB::table('bc_booking_hunter_invitations as invitations')
@@ -788,7 +785,6 @@ class Booking extends BaseModel
         $list_booking = parent::query()->with(['animal', 'creator', 'hotel.translation', 'hotelRooms', 'bookingHunters:id,booking_id,invited_by,is_master'])->orderBy('id', 'desc');
 
         $list_booking->where('hotel_id', $hotel_id);
-//        $list_booking->whereNotIn('status', ['collection', 'finished_collection']);
 
         if (!empty($booking_status)) {
             $list_booking->where('status', $booking_status);
