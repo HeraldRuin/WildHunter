@@ -169,7 +169,7 @@
             </button>
         @endif
 
-        @if($userRole === 'baseadmin' && in_array($booking->status, [\Modules\Booking\Models\Booking::CONFIRMED, \Modules\Booking\Models\Booking::COMPLETED, \Modules\Booking\Models\Booking::FINISHED_COLLECTION, \Modules\Booking\Models\Booking::START_COLLECTION, \Modules\Booking\Models\Booking::PROCESSING]))
+        @if($userRole === 'baseadmin' && in_array($booking->status, [\Modules\Booking\Models\Booking::CONFIRMED, \Modules\Booking\Models\Booking::FINISHED_COLLECTION, \Modules\Booking\Models\Booking::START_COLLECTION, \Modules\Booking\Models\Booking::PROCESSING]))
             <button
                 type="button"
                 class="btn btn-danger btn-sm mt-2"
