@@ -216,8 +216,6 @@ class UserController extends FrontendController
         $authUser = Auth::user();
         $bookingId = $request->input('booking_id');
 
-        $isMasterHunter = false;
-
         if ($authUser->hasRole('baseadmin')){
             $userRole = 'baseadmin';
             $hotelId = $authUser->hotels->first()->id;

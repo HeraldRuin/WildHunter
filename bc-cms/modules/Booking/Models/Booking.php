@@ -773,14 +773,12 @@ class Booking extends BaseModel
         $list_booking = parent::query()->with(['animal', 'creator', 'hotel.translation', 'hotelRooms', 'bookingHunters:id,booking_id,invited_by,is_master'])->orderBy('id', 'desc');
 
         $list_booking->where('hotel_id', $hotel_id);
-        $list_booking->whereNotIn('status', ['collection', 'finished_collection']);
+//        $list_booking->whereNotIn('status', ['collection', 'finished_collection']);
 
         if (!empty($booking_status)) {
             $list_booking->where('status', $booking_status);
         }
-        if (!empty($booking_status)) {
-            $list_booking->where("status", $booking_status);
-        }
+
         if (!empty($booking_id)) {
             $list_booking->where("id", $booking_id);
         }
