@@ -10294,3 +10294,13 @@ ul, ol {
     background: #f5f5f5;
 }
 
+.login-item .btn,
+.signup-item .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: auto;
+    line-height: normal;
+    padding: 0.375rem 0.75rem;
+}
+
