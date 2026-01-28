@@ -83,9 +83,9 @@ class Booking extends BaseModel
         }
 
         return BookingHunterInvitation::whereHas('bookingHunter', function($q) {
-                $q->where('booking_id', $this->id)
-                  ->whereNull('deleted_at');
-            })
+            $q->where('booking_id', $this->id)
+                ->whereNull('deleted_at');
+        })
             ->where('hunter_id', $userId)
             ->whereNotIn('status', ['declined', 'removed'])
             ->whereNull('deleted_at')
@@ -104,9 +104,9 @@ class Booking extends BaseModel
         }
 
         return BookingHunterInvitation::whereHas('bookingHunter', function($q) {
-                $q->where('booking_id', $this->id)
-                  ->whereNull('deleted_at');
-            })
+            $q->where('booking_id', $this->id)
+                ->whereNull('deleted_at');
+        })
             ->where('hunter_id', $userId)
             ->whereNotIn('status', ['declined', 'removed'])
             ->whereNull('deleted_at')
@@ -120,9 +120,9 @@ class Booking extends BaseModel
     public function getAllInvitations()
     {
         return BookingHunterInvitation::whereHas('bookingHunter', function($q) {
-                $q->where('booking_id', $this->id)
-                  ->whereNull('deleted_at');
-            })
+            $q->where('booking_id', $this->id)
+                ->whereNull('deleted_at');
+        })
             ->whereNull('deleted_at')
             ->with(['bookingHunter', 'hunter'])
             ->orderBy('invited_at', 'desc')
@@ -143,6 +143,12 @@ class Booking extends BaseModel
 
         return $hunter && (bool)$hunter->is_master;
     }
+    public function getIsInvitedAttribute(): bool
+    {
+        $hunter = $this->bookingHunters->firstWhere('hunter_id', auth()->id());
+        return $hunter && !$hunter->is_master && !is_null($hunter->invited_by);
+    }
+
     public function getStatusForUserAttribute()
     {
         $userId = \Illuminate\Support\Facades\Auth::id();
@@ -725,16 +731,16 @@ class Booking extends BaseModel
                     $q->where(function($subQ) use ($customer_id_or_name, $booking_status) {
                         $subQ->where(function($createQ) use ($customer_id_or_name, $booking_status) {
                             $createQ->where("create_user", $customer_id_or_name)
-                                    ->where("status", $booking_status);
+                                ->where("status", $booking_status);
                         })
-                        ->orWhere(function($vendorQ) use ($customer_id_or_name, $booking_status) {
-                            $vendorQ->where("vendor_id", $customer_id_or_name)
-                                     ->where("status", $booking_status);
-                        });
+                            ->orWhere(function($vendorQ) use ($customer_id_or_name, $booking_status) {
+                                $vendorQ->where("vendor_id", $customer_id_or_name)
+                                    ->where("status", $booking_status);
+                            });
                     });
                 } else {
                     $q->where("create_user", $customer_id_or_name)
-                      ->orWhere("vendor_id", $customer_id_or_name);
+                        ->orWhere("vendor_id", $customer_id_or_name);
                 }
 
                 // Брони, на которые пользователь приглашен через систему приглашений
@@ -1246,11 +1252,11 @@ class Booking extends BaseModel
         $this->commission_type = $data['commission_type'];
     }
 
-	public static function getContentCalendarIcal($service_type,$id,$module){
-		$proid = config('app.name') . ' ' . $_SERVER['SERVER_NAME'];
-		$calendar = new Calendar($proid);
-		$data  = app()->make($module)::find($id);
-		if (!empty($data)) {
+    public static function getContentCalendarIcal($service_type,$id,$module){
+        $proid = config('app.name') . ' ' . $_SERVER['SERVER_NAME'];
+        $calendar = new Calendar($proid);
+        $data  = app()->make($module)::find($id);
+        if (!empty($data)) {
             $availabilityData = $data->availabilityClass::where(['target_id'=>$id,'active'=>0])->get();
             if(!empty($availabilityData)){
                 foreach ($availabilityData as $availabilityDatum){
@@ -1265,87 +1271,87 @@ class Booking extends BaseModel
                     $calendar->addComponent($eventCalendar);
                 }
             }
-			$bookingData = self::where('object_id', $id)->where('object_model', $service_type)
-				->whereNotIn('status', self::$notAcceptedStatus)
-				->where('start_date','>=',now())
-				->get();
-			if($service_type=='room'){
-				$bookingData = HotelRoomBooking::where('room_id',$id)->whereHas('booking',function (Builder $query){
-					$query->whereNotIn('status', self::$notAcceptedStatus)
-						->where('start_date','>=',now());
-				})->get();
-			}
-			if (!empty($bookingData)) {
-				foreach ($bookingData as $item => $value) {
-					if($service_type=='room'){
-						$customerName = $value->fist_name . ' ' . $value->last_name;
-						$description = '<p>Name:' . $customerName . '</p>
+            $bookingData = self::where('object_id', $id)->where('object_model', $service_type)
+                ->whereNotIn('status', self::$notAcceptedStatus)
+                ->where('start_date','>=',now())
+                ->get();
+            if($service_type=='room'){
+                $bookingData = HotelRoomBooking::where('room_id',$id)->whereHas('booking',function (Builder $query){
+                    $query->whereNotIn('status', self::$notAcceptedStatus)
+                        ->where('start_date','>=',now());
+                })->get();
+            }
+            if (!empty($bookingData)) {
+                foreach ($bookingData as $item => $value) {
+                    if($service_type=='room'){
+                        $customerName = $value->fist_name . ' ' . $value->last_name;
+                        $description = '<p>Name:' . $customerName . '</p>
                                 <p>Email:' . $value->email . '</p>
                                 <p>Phone:' . $value->phone . '</p>
                                 <p>Address:' . $value->address . '</p>
                                 <p>Customer notes:' . $value->customer_notes . '</p>
                                 <p>Total guest:' . $value->number . '</p>';
-						$eventCalendar = new Event();
-						$eventCalendar
-							->setUniqueId($value->id.time())
-							->setCategories(ucfirst($service_type))
-							->setDtStart(new \DateTime($value->start_date))
-							->setDtEnd(new \DateTime($value->end_date))
-							->setSummary($customerName . ' Booking ' . ucfirst($service_type) . ' ' . $data->title)
-							->setNoTime(false)
-							->setDescriptionHTML($description);
-						$calendar->addComponent($eventCalendar);
-					}else{
+                        $eventCalendar = new Event();
+                        $eventCalendar
+                            ->setUniqueId($value->id.time())
+                            ->setCategories(ucfirst($service_type))
+                            ->setDtStart(new \DateTime($value->start_date))
+                            ->setDtEnd(new \DateTime($value->end_date))
+                            ->setSummary($customerName . ' Booking ' . ucfirst($service_type) . ' ' . $data->title)
+                            ->setNoTime(false)
+                            ->setDescriptionHTML($description);
+                        $calendar->addComponent($eventCalendar);
+                    }else{
 
 
-					$customerName = $value->fist_name . ' ' . $value->last_name;
-					$description = '<p>Name:' . $customerName . '</p>
+                        $customerName = $value->fist_name . ' ' . $value->last_name;
+                        $description = '<p>Name:' . $customerName . '</p>
                                 <p>Email:' . $value->email . '</p>
                                 <p>Phone:' . $value->phone . '</p>
                                 <p>Address:' . $value->address . '</p>
                                 <p>Customer notes:' . $value->customer_notes . '</p>
                                 <p>Total guest:' . $value->total_guests . '</p>';
-					$eventCalendar = new Event();
-                    if($service_type=='space'){
-                        $byNight = $value->getMeta('booking_type');
-                        if($byNight=='by_night'){
-                            $value->end_date =  date("Y-m-d H:i:s",strtotime($value->end_date." -1day"));
+                        $eventCalendar = new Event();
+                        if($service_type=='space'){
+                            $byNight = $value->getMeta('booking_type');
+                            if($byNight=='by_night'){
+                                $value->end_date =  date("Y-m-d H:i:s",strtotime($value->end_date." -1day"));
+                            }
                         }
+
+                        $endDate = new \DateTime($value->end_date);
+
+                        $eventCalendar
+                            ->setUniqueId($value->code)
+                            ->setCategories(ucfirst($service_type))
+                            ->setDtStart(new \DateTime($value->start_date))
+                            ->setDtEnd($endDate)
+                            ->setSummary($customerName . ' Booking ' . ucfirst($service_type) . ' ' . $data->title)
+                            ->setNoTime(false)
+                            ->setDescriptionHTML($description);
+                        $calendar->addComponent($eventCalendar);
                     }
 
-                    $endDate = new \DateTime($value->end_date);
-
-					$eventCalendar
-						->setUniqueId($value->code)
-						->setCategories(ucfirst($service_type))
-						->setDtStart(new \DateTime($value->start_date))
-						->setDtEnd($endDate)
-						->setSummary($customerName . ' Booking ' . ucfirst($service_type) . ' ' . $data->title)
-						->setNoTime(false)
-						->setDescriptionHTML($description);
-					$calendar->addComponent($eventCalendar);
-					}
-
-				}
-			}
+                }
+            }
 
 
 
-		}
-		return $calendar->render();
-	}
+        }
+        return $calendar->render();
+    }
 
-	public function getTotalBeforeExtraPriceAttribute(){
-		$extra_price = $this->getJsonMeta('extra_price');
+    public function getTotalBeforeExtraPriceAttribute(){
+        $extra_price = $this->getJsonMeta('extra_price');
 
         if(empty($extra_price) or !is_array($extra_price)) return $this->total_before_discount;
 
         $extra_price_collection = collect($extra_price);
 
         return $this->total_before_discount - $extra_price_collection->sum('total');
-	}
+    }
 
-	public function wallet_transaction(){
+    public function wallet_transaction(){
         return $this->belongsTo(Transaction::class,'wallet_transaction_id')->withDefault();
     }
 
