@@ -178,7 +178,7 @@
                     </button>
                 @endif
 
-            @if($booking->is_master_hunter && $booking->status ===  \Modules\Booking\Models\Booking::CONFIRMED)
+                @if($booking->is_master_hunter && in_array($booking->status, [\Modules\Booking\Models\Booking::CONFIRMED, \Modules\Booking\Models\Booking::START_COLLECTION]))
                 <button
                     type="button"
                     class="btn btn-primary btn-sm mt-2"
