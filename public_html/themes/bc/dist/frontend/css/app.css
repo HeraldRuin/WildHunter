@@ -8562,7 +8562,7 @@ body .daterangepicker .full-book-event:before {
         position: absolute;
         top: 0;
         width: 100%;
-        z-index: 11;
+        z-index: 1;
         background-color: white;
     }
 
