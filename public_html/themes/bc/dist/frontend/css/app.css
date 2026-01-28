@@ -8035,7 +8035,8 @@ body .daterangepicker .full-book-event:before {
     left: auto !important;
     min-width: 200px;
     top: 15px !important;
-    border-radius: 0
+    border-radius: 0;
+    z-index: 9999;
 }
 
 .bc_wrap .bc_topbar .content .topbar-right .dropdown-menu.width-auto {
