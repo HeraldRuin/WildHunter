@@ -17,7 +17,11 @@
             <ul class="nav nav-tabs ht-nav-tabs">
                 <?php $status_type = Request::query('status'); ?>
                 <li class="@if(empty($status_type)) active @endif">
-                    <a href="{{route("user.booking_history")}}">{{__("All Bookings History")}}</a>
+                    @if($userRole === 'baseadmin')
+                        <a href="{{route("user.booking_history")}}">{{__("All Bookings History")}}</a>
+                    @else
+                        <a href="{{route("user.booking_history")}}">{{__("My Bookings History")}}</a>
+                    @endif
                 </li>
                 @if(!empty($statues))
                     @foreach($statues as $status)
