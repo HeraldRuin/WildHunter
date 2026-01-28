@@ -7934,7 +7934,7 @@ body .daterangepicker .full-book-event:before {
 
 .bc_wrap .bc_topbar {
     background: #1a2b48;
-    padding: 15px 0
+    padding: 19px 0
 }
 
 @media (max-width: 768px) {
@@ -10264,3 +10264,33 @@ ul, ol {
     -webkit-appearance: none;
     -moz-appearance: none;
 }
+#user-dropdown-menu {
+    position: absolute;
+    min-width: 220px;
+    padding: 8px 0;
+    background: #fff;
+    border-radius: 6px;
+    box-shadow: 0 6px 20px rgba(0,0,0,.15);
+    border: 1px solid rgba(0,0,0,.1);
+
+    display: none;
+}
+
+#user-dropdown-menu.is-open {
+    display: block;
+}
+
+#user-dropdown-menu li a {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    color: #333;
+    font-size: 14px;
+    text-decoration: none;
+}
+
+#user-dropdown-menu li a:hover {
+    background: #f5f5f5;
+}
+

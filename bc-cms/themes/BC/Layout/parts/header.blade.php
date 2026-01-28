@@ -165,3 +165,28 @@
         </div>
     </div>
 </div>
+
+<ul id="user-dropdown-menu" class="dropdown-menu dropdown-menu-user text-left" style="z-index: 9999; display:none;">
+    @if (is_vendor() || is_baseAdmin())
+        <li class="menu-hr"><a href="{{ route('vendor.dashboard') }}" class="menu-hr"><i
+                    class="icon ion-md-analytics"></i>  {{ __('PERSONAL ACCOUNT') }} </a></li>
+    @endif
+    <li class="@if (is_vendor()  || is_baseAdmin()) menu-hr @endif">
+        <a href="{{ route('user.profile.index') }}"><i class="icon ion-md-construct"></i>
+            {{ __('My profile') }}</a>
+    </li>
+    <li class="menu-hr"><a href="{{ route('user.booking_history') }}"><i
+                class="fa fa-clock-o"></i> {{ __('Booking History') }}</a></li>
+    <li class="menu-hr"><a href="{{ route('user.change_password') }}"><i
+                class="fa fa-lock"></i> {{ __('Change password') }}</a></li>
+    @if (is_admin())
+        <li class="menu-hr"><a href="{{ route('admin.index') }}"><i
+                    class="icon ion-ios-ribbon"></i> {{ __('PERSONAL ACCOUNT') }}</a></li>
+    @endif
+    <li class="menu-hr">
+        <a href="#"
+           onclick="event.preventDefault(); document.getElementById('logout-form-topbar').submit();"><i
+                class="fa fa-sign-out"></i> {{ __('Logout') }}</a>
+    </li>
+</ul>
+

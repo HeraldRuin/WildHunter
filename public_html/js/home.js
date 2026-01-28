@@ -1635,4 +1635,53 @@ jQuery(function($){
     });
 });
 
+document.addEventListener('DOMContentLoaded', function () {
+    console.log('[dropdown] DOMContentLoaded');
+
+    const toggle = document.getElementById('user-dropdown-toggle');
+    const menu   = document.getElementById('user-dropdown-menu');
+
+    console.log('[dropdown] toggle:', toggle);
+    console.log('[dropdown] menu:', menu);
+
+    if (!toggle || !menu) {
+        console.warn('[dropdown] toggle or menu not found');
+        return;
+    }
+
+    toggle.addEventListener('click', function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+
+        console.log('[dropdown] toggle clicked');
+
+        const rect = toggle.getBoundingClientRect();
+        const isOpen = menu.classList.contains('is-open');
+
+        console.log('[dropdown] isOpen:', isOpen);
+
+        if (isOpen) {
+            menu.classList.remove('is-open');
+            menu.style.display = 'none';
+            return;
+        }
+
+        menu.classList.add('is-open');
+        menu.style.display = 'block';
+
+        menu.style.top  = (rect.bottom + window.scrollY) + 'px';
+        menu.style.left = (rect.left + window.scrollX) + 'px';
+
+        console.log('[dropdown] opened at', menu.style.top, menu.style.left);
+    });
+
+    document.addEventListener('click', function (e) {
+        if (!toggle.contains(e.target) && !menu.contains(e.target)) {
+            menu.classList.remove('is-open');
+            menu.style.display = 'none';
+            console.log('[dropdown] closed by outside click');
+        }
+    });
+});
+
 

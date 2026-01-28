@@ -9,8 +9,7 @@
     <div class="container">
         <div class="content">
             <div class="topbar-left">
-                {!! clean(setting_item_with_lang('')) !!}
-
+{{--                {!! clean(setting_item_with_lang('topbar_left_text')) !!}--}}
             </div>
             <div class="topbar-right">
                 <ul class="topbar-items">
@@ -36,33 +35,10 @@
                     @else
                         @include('Layout::parts.notification')
                         <li class="login-item dropdown">
-                            <a href="#" data-toggle="dropdown"
-                                class="login">{{ __('Hi, :name', ['name' => Auth::user()->getDisplayName()]) }}
-                                <i class="fa fa-angle-down"></i>
+                            <a href="#" id="user-dropdown-toggle" class="login">
+                                {{ __('Hi, :name', ['name' => Auth::user()->getDisplayName()]) }} <i class="fa fa-angle-down"></i>
                             </a>
-                            <ul class="dropdown-menu dropdown-menu-user text-left">
-                                @if (is_vendor() || is_baseAdmin())
-                                    <li class="menu-hr"><a href="{{ route('vendor.dashboard') }}" class="menu-hr"><i
-                                                class="icon ion-md-analytics"></i>  {{ __('PERSONAL ACCOUNT') }} </a></li>
-                                @endif
-                                <li class="@if (is_vendor()  || is_baseAdmin()) menu-hr @endif">
-                                    <a href="{{ route('user.profile.index') }}"><i class="icon ion-md-construct"></i>
-                                        {{ __('My profile') }}</a>
-                                </li>
-                                <li class="menu-hr"><a href="{{ route('user.booking_history') }}"><i
-                                            class="fa fa-clock-o"></i> {{ __('Booking History') }}</a></li>
-                                <li class="menu-hr"><a href="{{ route('user.change_password') }}"><i
-                                            class="fa fa-lock"></i> {{ __('Change password') }}</a></li>
-                                @if (is_admin())
-                                    <li class="menu-hr"><a href="{{ route('admin.index') }}"><i
-                                                class="icon ion-ios-ribbon"></i> {{ __('PERSONAL ACCOUNT') }}</a></li>
-                                @endif
-                                <li class="menu-hr">
-                                    <a href="#"
-                                        onclick="event.preventDefault(); document.getElementById('logout-form-topbar').submit();"><i
-                                            class="fa fa-sign-out"></i> {{ __('Logout') }}</a>
-                                </li>
-                            </ul>
+
                             <form id="logout-form-topbar" action="{{ route('logout') }}" method="POST"
                                 style="display: none;">
                                 {{ csrf_field() }}
