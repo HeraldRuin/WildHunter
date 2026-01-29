@@ -721,6 +721,8 @@ function status_to_text($status)
         case "finished_collection":
             return __('Finished collection');
             break;
+        case "invitation":
+            return __('Invitation');
             break;
         case "fail":
         case "failed":
