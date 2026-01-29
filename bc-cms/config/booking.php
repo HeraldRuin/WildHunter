@@ -11,5 +11,6 @@ return [
         'partial_payment',
         'collection',
         'finished_collection',
+        'invitation',
     ]
 ];
