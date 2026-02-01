@@ -17,6 +17,7 @@ use Modules\Animals\Models\Animal;
 use Modules\Booking\Emails\StatusUpdatedEmail;
 use Modules\Booking\Emails\HunterMessageEmail;
 use Modules\Booking\Events\BookingCreatedEvent;
+use Modules\Booking\Events\BookingFinishEvent;
 use Modules\Booking\Events\BookingUpdatedEvent;
 use Modules\Booking\Events\EnquirySendEvent;
 use Modules\Booking\Events\SetPaidAmountEvent;
@@ -1035,6 +1036,7 @@ class BookingController extends \App\Http\Controllers\Controller
                 ->delete();
 
             $booking->save();
+
             event(new BookingUpdatedEvent($booking));
         }
 
@@ -1160,7 +1162,7 @@ class BookingController extends \App\Http\Controllers\Controller
         $booking = Booking::find($booking->id);
 
         $animalName = '';
-        $requiredHunters = 1; // Значение по умолчанию
+        $requiredHunters = 1;
 
         // Если есть животное и отель, получаем минимальное количество охотников из pivot таблицы
         if ($booking->animal_id && $booking->hotel_id) {
@@ -1168,37 +1170,17 @@ class BookingController extends \App\Http\Controllers\Controller
             if ($animal) {
                 $animalName = $animal->title ?? '';
 
-                // Получаем связь животного с отелем через pivot таблицу
-                $hotelAnimal = DB::table('bc_hotel_animals')
-                    ->where('animal_id', $booking->animal_id)
+                $hotelAnimal = Animal::where('animal_id', $booking->animal_id)
                     ->where('hotel_id', $booking->hotel_id)
                     ->first();
 
-                Log::info('finishCollection: получение hunters_count из базы', [
-                    'booking_id' => $booking->id,
-                    'animal_id' => $booking->animal_id,
-                    'hotel_id' => $booking->hotel_id,
-                    'hotel_animal_found' => $hotelAnimal ? true : false,
-                    'hunters_count_raw' => $hotelAnimal->hunters_count ?? null,
-                    'hunters_count_type' => $hotelAnimal ? gettype($hotelAnimal->hunters_count) : null,
-                ]);
-
                 if ($hotelAnimal && isset($hotelAnimal->hunters_count) && $hotelAnimal->hunters_count !== null) {
                     $requiredHunters = (int) $hotelAnimal->hunters_count;
-                    Log::info('finishCollection: установлено requiredHunters из базы', [
-                        'required_hunters' => $requiredHunters,
-                    ]);
-                } else {
-                    Log::warning('finishCollection: hunters_count не найден или равен NULL, используем значение по умолчанию', [
-                        'hotel_animal_exists' => $hotelAnimal ? true : false,
-                        'hunters_count_set' => $hotelAnimal && isset($hotelAnimal->hunters_count),
-                    ]);
                 }
 
                 // Если значение не найдено или равно 0, используем минимальное значение 1
                 if ($requiredHunters <= 0) {
                     $requiredHunters = 1;
-                    Log::info('finishCollection: requiredHunters <= 0, установлено в 1');
                 }
             }
         } else {
@@ -1209,7 +1191,6 @@ class BookingController extends \App\Http\Controllers\Controller
                 $requiredHunters = (int) ($booking->total_hunting ?? 0);
             }
 
-            // Если количество не указано или равно 0, используем минимальное значение 1
             if ($requiredHunters <= 0) {
                 $requiredHunters = 1;
             }
@@ -1233,7 +1214,6 @@ class BookingController extends \App\Http\Controllers\Controller
             return $this->sendError($message)->setStatusCode(422);
         }
 
-        // Завершаем сбор - переводим в статус "завершенный сбор"
         $booking->status = Booking::FINISHED_COLLECTION;
 
         // Полностью удаляем ВСЕ мета-данные таймера (сброс таймера)
@@ -1243,50 +1223,45 @@ class BookingController extends \App\Http\Controllers\Controller
             ->whereIn('name', ['collection_end_at', 'collection_start_at', 'collection_timer_hours', 'collection_timer_started_at'])
             ->delete();
 
-        \Log::info('finishCollection: сброс таймера сбора', [
-            'booking_id' => $booking->id,
-            'hotel_id' => $booking->hotel_id,
-            'deleted_records_count' => $deletedCount,
-        ]);
-
         $booking->save();
-        event(new BookingUpdatedEvent($booking));
+
+        event(new BookingFinishEvent($booking));
 
         // Находим "собирающего" охотника и отправляем ему письмо о завершении таймера
-        try {
-            $master = BookingHunter::where('booking_id', $booking->id)
-                ->where('is_master', true)
-                ->first();
-
-            if ($master) {
-                $hunterUser = User::find($master->invited_by);
-                if ($hunterUser && !empty($hunterUser->email)) {
-                    Mail::to($hunterUser->email)->send(new CollectionTimerFinishedEmail($booking, $hunterUser));
-                }
-            }
-        } catch (\Exception | \Swift_TransportException $e) {
-            Log::warning('finishCollection: failed to send collection timer finished email: ' . $e->getMessage());
-        }
+//        try {
+//            $master = BookingHunter::where('booking_id', $booking->id)
+//                ->where('is_master', true)
+//                ->first();
+//
+//            if ($master) {
+//                $hunterUser = User::find($master->invited_by);
+//                if ($hunterUser && !empty($hunterUser->email)) {
+//                    Mail::to($hunterUser->email)->send(new CollectionTimerFinishedEmail($booking, $hunterUser));
+//                }
+//            }
+//        } catch (\Exception | \Swift_TransportException $e) {
+//            Log::warning('finishCollection: failed to send collection timer finished email: ' . $e->getMessage());
+//        }
 
         // Уведомляем создателя брони о смене статуса
-        try {
-            $old = app()->getLocale();
-            $bookingLocale = $booking->getMeta('locale');
-            if ($bookingLocale) {
-                app()->setLocale($bookingLocale);
-            }
-
-            if ($booking->create_user) {
-                $creator = User::find($booking->create_user);
-                if ($creator && !empty($creator->email)) {
-                    Mail::to($creator->email)->send(new StatusUpdatedEmail($booking, 'customer'));
-                }
-            }
-
-            app()->setLocale($old);
-        } catch (\Exception | \Swift_TransportException $e) {
-            Log::warning('finishCollection: failed to send status email to creator: ' . $e->getMessage());
-        }
+//        try {
+//            $old = app()->getLocale();
+//            $bookingLocale = $booking->getMeta('locale');
+//            if ($bookingLocale) {
+//                app()->setLocale($bookingLocale);
+//            }
+//
+//            if ($booking->create_user) {
+//                $creator = User::find($booking->create_user);
+//                if ($creator && !empty($creator->email)) {
+//                    Mail::to($creator->email)->send(new StatusUpdatedEmail($booking, 'customer'));
+//                }
+//            }
+//
+//            app()->setLocale($old);
+//        } catch (\Exception | \Swift_TransportException $e) {
+//            Log::warning('finishCollection: failed to send status email to creator: ' . $e->getMessage());
+//        }
 
         return $this->sendSuccess([
             'message' => __('Сбор охотников завершён.')
