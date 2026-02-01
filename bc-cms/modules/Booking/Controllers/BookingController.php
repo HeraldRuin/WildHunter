@@ -1170,7 +1170,7 @@ class BookingController extends \App\Http\Controllers\Controller
             if ($animal) {
                 $animalName = $animal->title ?? '';
 
-                $hotelAnimal = Animal::where('animal_id', $booking->animal_id)
+                $hotelAnimal = Animal::where('id', $booking->animal_id)
                     ->where('hotel_id', $booking->hotel_id)
                     ->first();
 
