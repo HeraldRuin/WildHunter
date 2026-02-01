@@ -18,6 +18,7 @@ use Modules\Booking\Emails\StatusUpdatedEmail;
 use Modules\Booking\Emails\HunterMessageEmail;
 use Modules\Booking\Events\BookingCreatedEvent;
 use Modules\Booking\Events\BookingFinishEvent;
+use Modules\Booking\Events\BookingStartCollectionEvent;
 use Modules\Booking\Events\BookingUpdatedEvent;
 use Modules\Booking\Events\EnquirySendEvent;
 use Modules\Booking\Events\SetPaidAmountEvent;
@@ -883,7 +884,7 @@ class BookingController extends \App\Http\Controllers\Controller
         $oldStatus = $booking->status;
         $wasAlreadyCollection = ($booking->status === Booking::START_COLLECTION);
 
-        $timerHours = 24; // Значение по умолчанию
+        $timerHours = 24;
 
         if ($booking->hotel_id) {
             $hotelData = \Illuminate\Support\Facades\DB::table('bc_hotels')
@@ -979,7 +980,7 @@ class BookingController extends \App\Http\Controllers\Controller
         // и не должен получать письмо о смене статуса
         $booking->skip_status_email = true;
 
-        event(new BookingUpdatedEvent($booking));
+        event(new BookingStartCollectionEvent($booking));
 
         return $this->sendSuccess([
             'message' => __('The gathering of hunters has begun'),
