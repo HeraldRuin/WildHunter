@@ -19,7 +19,7 @@
 
             // Уведомляем участников (но не создателя брони)
             $booking_hunter = BookingHunter::where('booking_id', $booking->id)->where('is_master', true)->first();
-            $BaseAdmin = $booking->hotel->creator;
+            $BaseAdmin = $booking->hotel->adminBase;
             Mail::to($BaseAdmin->email)->send(new StatusFinishCollectionEmail($booking, 'BaseAdmin', $BaseAdmin));
 
             if (!$booking_hunter) {
