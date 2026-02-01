@@ -3,11 +3,16 @@
 namespace Modules\Hotel\Models;
 
 use App\Currency;
+use App\User;
 use Carbon\Carbon;
+use Carbon\CarbonPeriod;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Http\Request;
@@ -18,6 +23,7 @@ use Modules\Booking\Traits\CapturesService;
 use Modules\Core\Models\Attributes;
 use Modules\Core\Models\SEO;
 use Modules\Core\Models\Terms;
+use Modules\Hotel\Services\HotelAvailabilityService;
 use Modules\Location\Models\Location;
 use Modules\Review\Models\Review;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -211,7 +217,6 @@ class Hotel extends Bookable
         $res = $this->addToCartValidate($request);
         if ($res !== true) return $res;
 
-        // Add Booking
         $total_guests = $request->input('adults') + $request->input('children');
         $discount = 0;
         $start_date_animal = Carbon::parse($request->input('start_date_animal'))->startOfDay();
@@ -559,6 +564,7 @@ class Hotel extends Bookable
                 'date_required' => __("Please select check-in and check-out date"),
                 "rooms"         => __('rooms'),
                 "room"          => __('room'),
+                "sorry_rooms_not_enough_adults" => __("Sorry, the current rooms are not enough for adults"),
             ],
             'start_date'      => request()->input('start') ?? "",
             'start_date_html' => $date_html ?? __('Please select'),
@@ -871,35 +877,35 @@ class Hotel extends Bookable
                 // Similar to addToCartValidate logic: check if available rooms can accommodate requested guests
                 $requested_adults = isset($filters['adults']) && $filters['adults'] !== '' && $filters['adults'] !== null ? (int)$filters['adults'] : 0;
                 $requested_children = isset($filters['children']) && $filters['children'] !== '' && $filters['children'] !== null ? (int)$filters['children'] : 0;
-                
+
                 // Get available number of rooms for this room type
                 $available_rooms = (int)($room->tmp_number ?? 0);
-                
+
                 // Skip if no rooms available
                 if ($available_rooms <= 0) {
                     continue;
                 }
-                
+
                 // Get room capacity (ensure it's an integer)
                 // Use getAttribute to ensure we get the value even if it's null
                 // Если number не указан или равен 0, считаем что номер состоит из 1 комнаты
-                $room_number = (int)($room->getAttribute('number') ?? 1); 
+                $room_number = (int)($room->getAttribute('number') ?? 1);
                 if ($room_number <= 0) {
                     $room_number = 1; // по умолчанию 1 комната
                 }
-                
+
                 $room_adults = (int)($room->getAttribute('adults') ?? 0); // количество взрослых в одной комнате
                 $room_children = (int)($room->getAttribute('children') ?? 0); // количество детей в одной комнате
-                
+
                 // Базовая проверка: если нет вместимости вообще (ни взрослых, ни детей), пропускаем номер
                 if ($room_adults <= 0 && $room_children <= 0) {
                     continue;
                 }
-                
+
                 // ВАЖНО: Полная проверка вместимости с учетом запрошенного количества номеров
                 // выполняется в методе search(), здесь не фильтруем по adults/children
                 // чтобы не исключать номера раньше времени
-                
+
                 $translation = $room->translate();
                 $terms = Terms::getTermsByIdForAPI($room->terms->pluck('term_id'));
                 $term_features = [];
@@ -926,7 +932,9 @@ class Hotel extends Bookable
                     'size_html'       => $room->size ? size_unit_format($room->size) : '',
                     'beds_html'       => $room->beds ? 'x' . $room->beds : '',
                     'adults_html'     => $room->adults ? 'x' . $room->adults : '',
+                    'adults'          => $room_adults,
                     'children_html'   => $room->children ? 'x' . $room->children : '',
+                    'children'        => $room_children,
                     'number_selected' => 0,
                     'number'          => (int)$room->tmp_number ?? 0,
                     'min_day_stays'   => $room->min_day_stays ?? 0,
@@ -1161,187 +1169,127 @@ class Hotel extends Bookable
                 $filters['room'] = (int)$request['room'];
             }
 
-            $blockedQuery = \DB::table('bc_hotel_room_dates as d')
-                ->join('bc_hotel_rooms as r', 'r.id', '=', 'd.target_id')
-                ->where('d.active', '=', 0)
-                ->whereBetween(\DB::raw('DATE(d.start_date)'), [
-                    $rangeStart,
-                    $rangeEndForDays
-                ])
-                ->select('r.parent_id as hotel_id', 'r.id as room_id', 'd.id as date_id', 'd.start_date', 'd.active');
-            
-            $blockedRows = $blockedQuery->get();
-            
-            $blockedHotelIds = $blockedRows->pluck('hotel_id')
-                ->unique()
-                ->values()
-                ->all();
+            // 1Исключаем полностью заблокированные даты
+//            $model_hotel->excludeBlockedForDates($rangeStart, $rangeEndForDays);
+//            // Исключаем отели без свободных номеров в диапазоне
+//            $model_hotel->availableBetween($request['start_date'], $request['end_date']);
+            $startDate = $request['start_date'];
+            $endDate = $request['end_date'];
 
-            if (!empty($blockedHotelIds)) {
-                $model_hotel->whereNotIn('bc_hotels.id', $blockedHotelIds);
-            }
+//            $model_hotel->availableRoomsBetweenWithLogs($request['start_date'], $request['end_date']);
+//
+//            $model_hotel->with(['rooms' => function($q) use ($startDate, $endDate) {
+//                $q->whereNull('deleted_at')
+//                    ->whereDoesntHave('bookings', function($bq) use ($startDate, $endDate) {
+//                        $bq->where(function($b) use ($startDate, $endDate) {
+//                            $b->where('start_date', '<=', $endDate)
+//                                ->where('end_date', '>=', $startDate);
+//                        });
+//                    });
+//            }]);
 
-            $candidateQuery = clone $model_hotel;
-            $candidateIds = $candidateQuery->pluck('bc_hotels.id');
-
-            if ($candidateIds->count()) {
-                $availableHotelIds = $this->whereIn('id', $candidateIds)
-                    ->get()
-                    ->filter(function ($hotel) use ($filters) {
-                        /** @var self $hotel */
-                        try {
-                            $rooms = $hotel->getRoomsAvailability($filters);
-                        } catch (\Throwable $e) {
-                            return false;
-                        }
-                        if (empty($rooms)) {
-                            return false;
-                        }
-
-                        $requestedRooms = (int)($filters['room'] ?? 0);
-                        $requestedAdults = $filters['adults'] ?? null;
-                        
-                        // Если количество номеров не указано, но указано количество взрослых, 
-                        // считаем что запрашивается минимум 1 номер
-                        if ($requestedAdults && $requestedRooms <= 0) {
-                            $requestedRooms = 1;
-                        }
-                        
-                        if ($requestedAdults && $requestedRooms > 0) {
-                            // ЛОГИКА: adults - это количество человек в ОДНОЙ комнате номера
-                            // Если запрашивается 1 номер, проверяем что взрослые <= adults (вместимость одной комнаты)
-                            // Если запрашивается 2 номера, проверяем что взрослые <= adults * 2 (вместимость двух номеров)
-                            
-                            // Собираем все доступные типы номеров с их вместимостью одной комнаты
-                            $availableRoomTypes = [];
-                            
-                            foreach ($hotel->tmp_rooms as $room) {
-                                $roomAdults = (int)($room->adults ?? 0); // количество взрослых в ОДНОЙ комнате номера
-                                $availableRooms = (int)($room->tmp_number ?? 0); // доступное количество номеров этого типа
-                                
-                                if ($roomAdults > 0 && $availableRooms > 0) {
-                                    // Вместимость одного номера = adults (количество человек в одной комнате)
-                                    // НЕ умножаем на number (количество комнат), так как нельзя разместить больше adults в одной комнате
-                                    $capacityPerRoom = $roomAdults;
-                                    
-                                    // Добавляем каждый доступный номер этого типа
-                                    for ($i = 0; $i < $availableRooms; $i++) {
-                                        $availableRoomTypes[] = $capacityPerRoom;
-                                    }
-                                }
-                            }
-                            
-                            // Если нет доступных номеров вообще, отель не подходит
-                            if (empty($availableRoomTypes)) {
-                                return false;
-                            }
-                            
-                            // Проверяем, что доступно минимум столько номеров, сколько запрашивается
-                            if (count($availableRoomTypes) < $requestedRooms) {
-                                return false;
-                            }
-                            
-                            // Сортируем по вместимости (от большей к меньшей) для оптимального распределения
-                            rsort($availableRoomTypes);
-                            
-                            // Берем первые N номеров (где N = запрошенное количество номеров)
-                            $selectedRooms = array_slice($availableRoomTypes, 0, $requestedRooms);
-                            
-                            // Суммируем вместимость выбранных номеров
-                            // Если выбрано 1 номер с adults=4, то total = 4
-                            // Если выбрано 2 номера с adults=4 каждый, то total = 4 + 4 = 8
-                            $totalAdultCapacity = array_sum($selectedRooms);
-                            
-                            // Проверяем, что суммарная вместимость >= запрошенному количеству взрослых
-                            if ($totalAdultCapacity < $requestedAdults) {
-                                return false;
-                            }
-                        }
-
-                        $requestedChildren = $filters['children'] ?? null;
-                        
-                        // Если количество номеров не указано, но указано количество детей,
-                        // считаем что запрашивается минимум 1 номер
-                        $requestedRoomsForChildren = (int)($filters['room'] ?? 0);
-                        if ($requestedChildren && $requestedRoomsForChildren <= 0) {
-                            $requestedRoomsForChildren = 1;
-                        }
-                        
-                        if ($requestedChildren && $requestedRoomsForChildren > 0) {
-                            // Аналогичная логика для детей
-                            // children - это количество детей в ОДНОЙ комнате номера
-                            $availableRoomTypes = [];
-                            
-                            foreach ($hotel->tmp_rooms as $room) {
-                                $roomChildren = (int)($room->children ?? 0); // количество детей в ОДНОЙ комнате номера
-                                $availableRooms = (int)($room->tmp_number ?? 0);
-                                
-                                if ($roomChildren > 0 && $availableRooms > 0) {
-                                    // Вместимость одного номера = children (количество детей в одной комнате)
-                                    $capacityPerRoom = $roomChildren;
-                                    
-                                    for ($i = 0; $i < $availableRooms; $i++) {
-                                        $availableRoomTypes[] = $capacityPerRoom;
-                                    }
-                                }
-                            }
-                            
-                            if (count($availableRoomTypes) < $requestedRoomsForChildren) {
-                                return false;
-                            }
-                            
-                            rsort($availableRoomTypes);
-                            $selectedRooms = array_slice($availableRoomTypes, 0, $requestedRoomsForChildren);
-                            $totalChildrenCapacity = array_sum($selectedRooms);
-                            
-                            if ($totalChildrenCapacity < $requestedChildren) {
-                                return false;
-                            }
-                        }
-
-                        return true;
-                    })
-                    ->pluck('id')
-                    ->all();
-
-                if (!empty($availableHotelIds)) {
-                    $model_hotel->whereIn('bc_hotels.id', $availableHotelIds);
-                } else {
-                    $model_hotel->whereRaw('1 = 0');
-                }
-            } else {
-                $model_hotel->whereRaw('1 = 0');
-            }
         }
 
-        $orderby = $request["orderby"] ?? "";
-        switch ($orderby) {
-            case "price_low_high":
-                $raw_sql = "CASE WHEN IFNULL( bc_hotels.sale_price, 0 ) > 0 THEN bc_hotels.sale_price ELSE bc_hotels.price END AS tmp_min_price";
-                $model_hotel->selectRaw($raw_sql);
-                $model_hotel->orderBy("tmp_min_price", "asc");
-                break;
-            case "price_high_low":
-                $raw_sql = "CASE WHEN IFNULL( bc_hotels.sale_price, 0 ) > 0 THEN bc_hotels.sale_price ELSE bc_hotels.price END AS tmp_min_price";
-                $model_hotel->selectRaw($raw_sql);
-                $model_hotel->orderBy("tmp_min_price", "desc");
-                break;
-            case "rate_high_low":
-                $model_hotel->orderBy("review_score", "desc");
-                break;
-            default:
-                if (!empty($request['order']) and !empty($request['order_by'])) {
-                    $model_hotel->orderBy("bc_hotels." . $request['order'], $request['order_by']);
-                } else {
-                    $model_hotel->orderBy($model_hotel->qualifyColumn("is_featured"), "desc");
-                    $model_hotel->orderBy($model_hotel->qualifyColumn("id"), "desc");
-                }
-        }
+
 
         $model_hotel->groupBy("bc_hotels.id");
 
         return $model_hotel->with(['location', 'hasWishList', 'translation', 'termsByAttributeInListingPage']);
     }
+
+    /**
+     * Исключает отели с заблокированными комнатами в диапазоне дат
+     */
+//    public function scopeExcludeBlockedForDates(Builder $query, string $rangeStart, string $rangeEndForDays): Builder {
+//
+//        $blockedHotelIds = DB::table('bc_hotel_room_dates as d')
+//            ->join('bc_hotel_rooms as r', 'r.id', '=', 'd.target_id')
+//            ->where('d.active', 0)
+//            ->whereBetween(DB::raw('DATE(d.start_date)'), [
+//                $rangeStart,
+//                $rangeEndForDays
+//            ])
+//            ->pluck('r.parent_id')
+//            ->unique()
+//            ->values()
+//            ->all();
+//
+//        if (!empty($blockedHotelIds)) {
+//            $query->whereNotIn('bc_hotels.id', $blockedHotelIds);
+//        }
+//
+//        return $query;
+//    }
+
+
+
+
+//    public function scopeAvailableBetween($query, $startDate, $endDate)
+//    {
+//        $start = Carbon::parse($startDate)->startOfDay();
+//        $end = Carbon::parse($endDate)->endOfDay();
+//
+//        Log::info("=== scopeAvailableBetween: ищем с {$start->toDateString()} по {$end->toDateString()} ===");
+//
+//        // Пробегаем по отелям через связь rooms
+//        $query->whereHas('rooms', function($roomQuery) use ($start, $end) {
+//            $roomQuery->whereNull('deleted_at')
+//                ->where('status', 'publish')
+//                ->whereDoesntHave('bookings', function($bookingQuery) use ($start, $end) {
+//                    $bookingQuery->where('status', '!=', 'canceled')
+//                        ->where('start_date', '<', $end)
+//                        ->where('end_date', '>', $start);
+//
+//                    Log::info("=== bookings check query built ===", [
+//                        'sql' => $bookingQuery->toSql(),
+//                        'bindings' => $bookingQuery->getBindings()
+//                    ]);
+//                });
+//
+//            Log::info("=== rooms query built ===", [
+//                'sql' => $roomQuery->toSql(),
+//                'bindings' => $roomQuery->getBindings()
+//            ]);
+//        });
+//
+//        // Для полного логирования — покажем, какие комнаты проходят фильтр
+//        $query->with(['rooms' => function($roomQuery) use ($start, $end) {
+//            $roomQuery->whereNull('deleted_at')
+//                ->where('status', 'publish')
+//                ->whereDoesntHave('bookings', function($bookingQuery) use ($start, $end) {
+//                    $bookingQuery->where('status', '!=', 'canceled')
+//                        ->where('start_date', '<', $end)
+//                        ->where('end_date', '>', $start);
+//                });
+//        }])->get()->each(function($hotel) {
+//            foreach ($hotel->rooms as $room) {
+//                Log::info("=== Hotel {$hotel->id} room {$room->id} available ===");
+//            }
+//        });
+//
+//        return $query;
+//    }
+
+
+
+// Modules/Hotel/Models/Hotel.php
+    public function scopeAvailableRoomsBetweenWithLogs($query, $startDate, $endDate)
+    {
+        return $query->whereHas('rooms', function($q) use ($startDate, $endDate) {
+            $q->whereNull('deleted_at') // только не удалённые комнаты
+            ->where(function($roomQuery) use ($startDate, $endDate) {
+                // Проверяем, что комната свободна в диапазоне дат
+                $roomQuery->whereDoesntHave('bookings', function($bookingQuery) use ($startDate, $endDate) {
+                    $bookingQuery->where(function($bq) use ($startDate, $endDate) {
+                        $bq->where('start_date', '<=', $endDate)
+                            ->where('end_date', '>=', $startDate);
+                    });
+                });
+            });
+        });
+    }
+
+
 
     public function dataForApi($forSingle = false)
     {
@@ -1474,10 +1422,17 @@ class Hotel extends Bookable
     {
         return $this->belongsToMany(Animal::class, 'bc_hotel_animals', 'hotel_id', 'animal_id')->withPivot('status');
     }
+//    public function rooms()
+//    {
+//        return $this->hasMany($this->roomClass, 'parent_id')->where('status', "publish");
+//    }
     public function rooms()
     {
-        return $this->hasMany($this->roomClass, 'parent_id')->where('status', "publish");
+        return $this->hasMany(HotelRoom::class, 'parent_id', 'id');
     }
+
+
+
 //    public function hotelRooms()
 //    {
 //        return $this->hasMany(HotelRoom::class, 'parent_id', 'hotel_id');
@@ -1490,10 +1445,22 @@ class Hotel extends Bookable
 //    {
 //        return $this->hasMany(HotelRoom::class, 'parent_id', 'id');
 //    }
+//    public function bookings()
+//    {
+//        return $this->hasMany(\Modules\Booking\Models\Booking::class, 'hotel_id');
+//    }
+
     public function bookings()
     {
-        return $this->hasMany(\Modules\Booking\Models\Booking::class, 'hotel_id');
+        return $this->hasMany(HotelRoomBooking::class, 'room_id', 'id');
     }
 
-
+    public function creator(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'create_user');
+    }
+    public function adminBase(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'admin_base');
+    }
 }

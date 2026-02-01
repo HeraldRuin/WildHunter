@@ -1632,10 +1632,6 @@ class Booking extends BaseModel
     {
         return $this->belongsTo(User::class, 'create_user');
     }
-    public function adminBase(): BelongsTo
-    {
-        return $this->belongsTo(User::class, 'admin_base');
-    }
 
     /**
      * Связь с BookingHunter
