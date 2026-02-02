@@ -18,6 +18,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Http\Request;
 use Modules\Animals\Models\Animal;
 use Modules\Booking\Models\Bookable;
+use Modules\Booking\Models\BookedDay;
 use Modules\Booking\Models\Booking;
 use Modules\Booking\Traits\CapturesService;
 use Modules\Core\Models\Attributes;
@@ -373,6 +374,18 @@ class Hotel extends Bookable
                             'price'      => $this->tmp_rooms_by_id[$room['id']]->tmp_price
                         ]);
                         $hotelRoomBooking->save();
+
+                        $start = Carbon::parse($hotelRoomBooking->start_date)->startOfDay();
+                        $end   = Carbon::parse($hotelRoomBooking->end_date)->startOfDay();
+
+                        for ($date = $start->copy(); $date->lt($end); $date->addDay()) {
+                            BookedDay::create([
+                                'booking_id' => $hotelRoomBooking->id,
+                                'room_id'  => $hotelRoomBooking->room_id,
+                                'date' => $date->format('Y-m-d'),
+                                'number'     => $hotelRoomBooking->number,
+                            ]);
+                        }
                     }
                 }
             }
@@ -1089,15 +1102,6 @@ class Hotel extends Bookable
             $model_hotel->WhereIn('star_rate', $star_rate);
         }
 
-        if (!empty($request['room'])) {
-            $requestedRooms = (int)$request['room'];
-            if ($requestedRooms > 0) {
-                $model_hotel
-                    ->withCount('rooms')
-                    ->having('rooms_count', '>=', $requestedRooms);
-            }
-        }
-
         if ($term_id = $request['term_id'] ?? "") {
             $model_hotel->join('bc_hotel_term as tt1', function ($join) use ($term_id) {
                 $join->on('tt1.target_id', "bc_hotels.id");
@@ -1168,26 +1172,7 @@ class Hotel extends Bookable
             if (!empty($request['room'])) {
                 $filters['room'] = (int)$request['room'];
             }
-
-            // 1Исключаем полностью заблокированные даты
-//            $model_hotel->excludeBlockedForDates($rangeStart, $rangeEndForDays);
-//            // Исключаем отели без свободных номеров в диапазоне
-//            $model_hotel->availableBetween($request['start_date'], $request['end_date']);
-            $startDate = $request['start_date'];
-            $endDate = $request['end_date'];
-
-//            $model_hotel->availableRoomsBetweenWithLogs($request['start_date'], $request['end_date']);
-//
-//            $model_hotel->with(['rooms' => function($q) use ($startDate, $endDate) {
-//                $q->whereNull('deleted_at')
-//                    ->whereDoesntHave('bookings', function($bq) use ($startDate, $endDate) {
-//                        $bq->where(function($b) use ($startDate, $endDate) {
-//                            $b->where('start_date', '<=', $endDate)
-//                                ->where('end_date', '>=', $startDate);
-//                        });
-//                    });
-//            }]);
-
+            $model_hotel->excludeBlockedForDates($rangeStart, $rangeEndForDays);
         }
 
 
@@ -1197,99 +1182,46 @@ class Hotel extends Bookable
         return $model_hotel->with(['location', 'hasWishList', 'translation', 'termsByAttributeInListingPage']);
     }
 
+    protected function getPeriodArray($start, $end)
+    {
+        $period = \Carbon\CarbonPeriod::create($start, $end->subDay());
+        return collect($period)->map(fn($d) => $d->toDateString())->all();
+    }
+
+    private function getDaysArray($start, $end)
+    {
+        $days = [];
+        $period = CarbonPeriod::create(Carbon::parse($start),Carbon::parse($end)->subDay());
+
+        foreach ($period as $day) {
+            $days[] = $day->format('Y-m-d');
+        }
+        return $days;
+    }
+
     /**
      * Исключает отели с заблокированными комнатами в диапазоне дат
      */
-//    public function scopeExcludeBlockedForDates(Builder $query, string $rangeStart, string $rangeEndForDays): Builder {
-//
-//        $blockedHotelIds = DB::table('bc_hotel_room_dates as d')
-//            ->join('bc_hotel_rooms as r', 'r.id', '=', 'd.target_id')
-//            ->where('d.active', 0)
-//            ->whereBetween(DB::raw('DATE(d.start_date)'), [
-//                $rangeStart,
-//                $rangeEndForDays
-//            ])
-//            ->pluck('r.parent_id')
-//            ->unique()
-//            ->values()
-//            ->all();
-//
-//        if (!empty($blockedHotelIds)) {
-//            $query->whereNotIn('bc_hotels.id', $blockedHotelIds);
-//        }
-//
-//        return $query;
-//    }
+    public function scopeExcludeBlockedForDates(Builder $query, string $rangeStart, string $rangeEndForDays): Builder {
 
+        $blockedHotelIds = DB::table('bc_hotel_room_dates as d')
+            ->join('bc_hotel_rooms as r', 'r.id', '=', 'd.target_id')
+            ->where('d.active', 0)
+            ->whereBetween(DB::raw('DATE(d.start_date)'), [
+                $rangeStart,
+                $rangeEndForDays
+            ])
+            ->pluck('r.parent_id')
+            ->unique()
+            ->values()
+            ->all();
 
+        if (!empty($blockedHotelIds)) {
+            $query->whereNotIn('bc_hotels.id', $blockedHotelIds);
+        }
 
-
-//    public function scopeAvailableBetween($query, $startDate, $endDate)
-//    {
-//        $start = Carbon::parse($startDate)->startOfDay();
-//        $end = Carbon::parse($endDate)->endOfDay();
-//
-//        Log::info("=== scopeAvailableBetween: ищем с {$start->toDateString()} по {$end->toDateString()} ===");
-//
-//        // Пробегаем по отелям через связь rooms
-//        $query->whereHas('rooms', function($roomQuery) use ($start, $end) {
-//            $roomQuery->whereNull('deleted_at')
-//                ->where('status', 'publish')
-//                ->whereDoesntHave('bookings', function($bookingQuery) use ($start, $end) {
-//                    $bookingQuery->where('status', '!=', 'canceled')
-//                        ->where('start_date', '<', $end)
-//                        ->where('end_date', '>', $start);
-//
-//                    Log::info("=== bookings check query built ===", [
-//                        'sql' => $bookingQuery->toSql(),
-//                        'bindings' => $bookingQuery->getBindings()
-//                    ]);
-//                });
-//
-//            Log::info("=== rooms query built ===", [
-//                'sql' => $roomQuery->toSql(),
-//                'bindings' => $roomQuery->getBindings()
-//            ]);
-//        });
-//
-//        // Для полного логирования — покажем, какие комнаты проходят фильтр
-//        $query->with(['rooms' => function($roomQuery) use ($start, $end) {
-//            $roomQuery->whereNull('deleted_at')
-//                ->where('status', 'publish')
-//                ->whereDoesntHave('bookings', function($bookingQuery) use ($start, $end) {
-//                    $bookingQuery->where('status', '!=', 'canceled')
-//                        ->where('start_date', '<', $end)
-//                        ->where('end_date', '>', $start);
-//                });
-//        }])->get()->each(function($hotel) {
-//            foreach ($hotel->rooms as $room) {
-//                Log::info("=== Hotel {$hotel->id} room {$room->id} available ===");
-//            }
-//        });
-//
-//        return $query;
-//    }
-
-
-
-// Modules/Hotel/Models/Hotel.php
-    public function scopeAvailableRoomsBetweenWithLogs($query, $startDate, $endDate)
-    {
-        return $query->whereHas('rooms', function($q) use ($startDate, $endDate) {
-            $q->whereNull('deleted_at') // только не удалённые комнаты
-            ->where(function($roomQuery) use ($startDate, $endDate) {
-                // Проверяем, что комната свободна в диапазоне дат
-                $roomQuery->whereDoesntHave('bookings', function($bookingQuery) use ($startDate, $endDate) {
-                    $bookingQuery->where(function($bq) use ($startDate, $endDate) {
-                        $bq->where('start_date', '<=', $endDate)
-                            ->where('end_date', '>=', $startDate);
-                    });
-                });
-            });
-        });
+        return $query;
     }
-
-
 
     public function dataForApi($forSingle = false)
     {
@@ -1422,21 +1354,11 @@ class Hotel extends Bookable
     {
         return $this->belongsToMany(Animal::class, 'bc_hotel_animals', 'hotel_id', 'animal_id')->withPivot('status');
     }
-//    public function rooms()
-//    {
-//        return $this->hasMany($this->roomClass, 'parent_id')->where('status', "publish");
-//    }
     public function rooms()
     {
-        return $this->hasMany(HotelRoom::class, 'parent_id', 'id');
+        return $this->hasMany($this->roomClass, 'parent_id', 'id')->where('status', "publish");
     }
 
-
-
-//    public function hotelRooms()
-//    {
-//        return $this->hasMany(HotelRoom::class, 'parent_id', 'hotel_id');
-//    }
     public function hotelRooms()
     {
         return $this->hasMany(HotelRoom::class, 'parent_id', 'id');

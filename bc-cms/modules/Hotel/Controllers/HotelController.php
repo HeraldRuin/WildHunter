@@ -2,9 +2,14 @@
 namespace Modules\Hotel\Controllers;
 
 use App\Http\Controllers\Controller;
+use Carbon\Carbon;
+use Carbon\CarbonPeriod;
+use Illuminate\Support\Facades\Log;
 use Modules\Animals\Models\Animal;
+use Modules\Booking\Models\BookedDay;
 use Modules\Hotel\Models\Hotel;
 use Illuminate\Http\Request;
+use Modules\Hotel\Models\HotelRoomDate;
 use Modules\Location\Models\Location;
 use Modules\Location\Models\LocationCategory;
 use Modules\Review\Models\Review;
@@ -15,6 +20,7 @@ class HotelController extends Controller
 {
     protected $hotelClass;
     protected $locationClass;
+    protected $roomDateClass;
     /**
      * @var string
      */
@@ -25,6 +31,7 @@ class HotelController extends Controller
         $this->hotelClass = $hotel;
         $this->locationClass = Location::class;
         $this->locationCategoryClass = LocationCategory::class;
+        $this->roomDateClass = new HotelRoomDate();
     }
     public function callAction($method, $parameters)
     {
@@ -51,8 +58,35 @@ class HotelController extends Controller
             $limit = !empty(setting_item("hotel_page_limit_item"))? setting_item("hotel_page_limit_item") : 9;
         }
 
+        $start = Carbon::createFromFormat('d.m.Y', $request->input('start'))->startOfDay();
+        $end   = Carbon::createFromFormat('d.m.Y', $request->input('end'))->endOfDay();
+
         $query = $this->hotelClass->search($request->input());
-        $list = $query->paginate($limit);
+        $list  = $query->paginate($limit);
+//        $hotelsCollection = collect($list->items());
+        $hotelsCollection = collect($query->get());
+
+        $hotelsCollection = $this->filterHotelsByAvailability($hotelsCollection, $start, $end);
+
+        $roomCount = (int) $request->input('room');
+        if ($roomCount > 0) {
+            $hotelsCollection = $this->filterHotelsByRoomCount($hotelsCollection, $roomCount, $start, $end);
+        }
+        $guestCount = (int) $request->input('adults');
+        if ($guestCount > 0) {
+            $hotelsCollection = $this->filterHotelsByGuestCount($hotelsCollection, $roomCount, $guestCount, $start, $end);
+        }
+
+        $list = new \Illuminate\Pagination\LengthAwarePaginator(
+            $hotelsCollection,
+            $hotelsCollection->count(),
+            $list->perPage(),
+            $list->currentPage(),
+            [
+                'path' => request()->url(),
+                'query' => request()->query(),
+            ]
+        );
 
         $markers = [];
         if ($for_map and !empty($list)) {
@@ -102,6 +136,115 @@ class HotelController extends Controller
             return view('Hotel::frontend.search-map', $data);
         }
         return view('Hotel::frontend.search', $data);
+    }
+
+    public function filterHotelsByAvailability($hotels, Carbon $start, Carbon $end)
+    {
+        return $hotels->filter(function ($hotel) use ($start, $end) {
+
+            foreach ($hotel->rooms as $room) {
+
+                $period = CarbonPeriod::create($start, $end);
+                $isRoomAvailable = true;
+
+                // Загружаем кастомные даты через модель
+               $customDates = $this->roomDateClass::query()
+                   ->where('target_id', $room->id)
+                   ->whereBetween('start_date', [$start->format('Y-m-d'), $end->format('Y-m-d')])
+                   ->get()
+                   ->keyBy(fn($row) => (new \Carbon\Carbon($row->start_date))->toDateString());
+
+
+                // Загружаем бронирования
+                $bookings = $room->getBookingsInRange($start, $end);
+
+                foreach ($period as $date) {
+                    $dateKey = $date->format('Y-m-d');
+
+                    // Берём количество из кастомной даты (если есть), иначе базовое
+                    $baseNumber = $room->number;
+                    if (isset($customDates[$dateKey]) && $customDates[$dateKey]->number !== null) {
+                        $baseNumber = (int)$customDates[$dateKey]->number;
+                    }
+
+                    // Считаем занятость через брони
+                    $occupied = 0;
+                    foreach ($bookings as $booking) {
+                        $bookingPeriod = periodDate($booking->start_date, Carbon::parse($booking->end_date)->subDay(), false);
+                        foreach ($bookingPeriod as $bDate) {
+                            if ($bDate->format('Y-m-d') === $dateKey) {
+                                $occupied += $booking->number;
+                            }
+                        }
+                    }
+
+                    $freeRooms = max($baseNumber - $occupied, 0);
+                    if ($freeRooms <= 0) {
+                        $isRoomAvailable = false;
+                        break;
+                    }
+                }
+
+                if ($isRoomAvailable) {
+                    return true;
+                }
+            }
+
+            return false;
+        });
+    }
+
+    protected function filterHotelsByRoomCount($hotels, int $roomCount, $start, $end)
+    {
+        $start = Carbon::parse($start)->startOfDay();
+        $end   = Carbon::parse($end)->startOfDay(); // день выезда не считаем
+
+        return $hotels->filter(function ($hotel) use ($roomCount, $start, $end) {
+
+            // ✅ всего номеров в отеле
+            $totalRooms = $hotel->rooms->sum('number');
+
+            if ($totalRooms < $roomCount) {
+                return false;
+            }
+
+            // 🔁 проверяем каждую дату проживания
+            for ($date = $start->copy(); $date->lt($end); $date->addDay()) {
+
+                // ❗ считаем ТОЛЬКО реальные брони
+                $bookedRooms = \Modules\Hotel\Models\HotelRoomBooking::query()
+                    ->whereIn('room_id', $hotel->rooms->pluck('id'))
+                    ->whereDate('start_date', '<=', $date)
+                    ->whereDate('end_date', '>', $date) // ключевая строка
+                    ->sum('number');
+
+                $freeRooms = $totalRooms - $bookedRooms;
+
+                if ($freeRooms < $roomCount) {
+                    return false;
+                }
+            }
+
+            return true;
+        });
+    }
+    protected function filterHotelsByGuestCount($hotels, int $roomCount, int $guestCount)
+    {
+        return $hotels->filter(function($hotel) use ($roomCount, $guestCount) {
+            $selectedRoomsCapacity = [];
+
+            // Берём только первые $roomCount свободных комнат отеля
+            $freeRooms = $hotel->rooms->pluck('adults')->toArray(); // допустим, предыдущий фильтр уже оставил свободные комнаты
+            rsort($freeRooms); // сортируем по убыванию вместимости
+
+            $selectedRoomsCapacity = array_slice($freeRooms, 0, $roomCount);
+
+            $totalCapacity = array_sum($selectedRoomsCapacity);
+
+            \Log::info("Отель {$hotel->id}: выбранных номеров={$roomCount}, выбранные комнаты=".implode(',', $selectedRoomsCapacity).", общая вместимость={$totalCapacity}, гостей требуется={$guestCount}");
+
+            return $totalCapacity >= $guestCount;
+        });
     }
 
     public function detail(Request $request, $slug)
