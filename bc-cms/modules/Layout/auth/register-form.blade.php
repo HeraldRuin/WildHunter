@@ -26,7 +26,12 @@
         <span class="invalid-feedback error error-role"></span>
     </div>
     <div class="form-group">
-        <input type="text" class="form-control" name="phone" autocomplete="off" placeholder="{{__('Phone')}}">
+        <input type="text"
+               class="form-control phone-mask"
+               name="phone"
+               autocomplete="off"
+               inputmode="numeric"
+               placeholder="+7 (___) ___-__-__">
         <i class="input-icon field-icon icofont-ui-touch-phone"></i>
         <span class="invalid-feedback error error-phone"></span>
     </div>
@@ -37,7 +42,7 @@
     </div>
     <div class="form-group">
         <div class="input-wrapper" style="position: relative;">
-            <input type="password" class="form-control password-input-register" name="password" autocomplete="off" placeholder="Password">
+            <input type="password" class="form-control password-input-register" name="password" autocomplete="off" placeholder="{{__('Password')}}">
             <i class="toggle-password-icon icofont-eye-blocked" id="toggle-register-password"></i>
             <button type="button" id="generate-password" class="btn-generate-password">{{__('Generate')}}</button>
         </div>
