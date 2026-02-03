@@ -15,12 +15,10 @@ function initPhoneMask(selector = '.phone-mask') {
         showMaskOnFocus: true,
         clearIncomplete: true,
 
-        // 🔥 ВАЖНО
         inputmode: 'numeric',
         numericInput: false,
         rightAlign: false,
 
-        // Ловит любой ввод / вставку
         onBeforePaste: function (pastedValue) {
             return pastedValue.replace(/\D/g, '');
         }
