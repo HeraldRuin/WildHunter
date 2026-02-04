@@ -57,6 +57,11 @@
                     ->first();
 
                 $endTimestamp = null;
+                // Получаем информацию об охотниках
+                $totalHuntersNeeded = $booking->total_hunting ?? 0;
+                $allInvitations = $booking->getAllInvitations();
+                $acceptedInvitations = $allInvitations->where('status', 'accepted');
+                $acceptedCount = $acceptedInvitations->count();
                 $initialTimerHours = null;
 
                 // Вычисляем оставшееся время: таймер в часах - прошедшее время
@@ -86,6 +91,11 @@
             @if($endTimestamp && $initialTimerHours)
                 <div class="text-muted collection-timer" data-end="{{ $endTimestamp }}"
                      data-initial-hours="{{ $initialTimerHours }}">({{ $initialTimerHours }}) [0 мин]
+                </div>
+            @endif
+            @if($totalHuntersNeeded > 0)
+                <div class="text-muted mt-1" style="font-size: 0.9em;">
+                    Собранно {{ $acceptedCount }}/{{ $totalHuntersNeeded }}
                 </div>
             @endif
         @endif

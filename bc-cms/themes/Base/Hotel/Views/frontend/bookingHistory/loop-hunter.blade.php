@@ -262,7 +262,7 @@
                 </button>
             @endif
 
-            @if($booking->is_master_hunter && in_array($booking->status, [\Modules\Booking\Models\Booking::CONFIRMED, \Modules\Booking\Models\Booking::START_COLLECTION]))
+            @if($booking->is_master_hunter && in_array($booking->status, [\Modules\Booking\Models\Booking::CONFIRMED, \Modules\Booking\Models\Booking::START_COLLECTION]) && $booking->type != 'hotel')
                 <button
                     type="button"
                     class="btn btn-primary btn-sm mt-2"
@@ -294,7 +294,7 @@
             @endif
 
 
-            @if(!$booking->is_master_hunter && $booking->status ===  \Modules\Booking\Models\Booking::FINISHED_COLLECTION)
+            @if(!$booking->is_master_hunter && $booking->status ===  \Modules\Booking\Models\Booking::FINISHED_COLLECTION && $booking->type != 'hotel')
                 <button
                     type="button"
                     class="btn btn-primary btn-sm mt-2"

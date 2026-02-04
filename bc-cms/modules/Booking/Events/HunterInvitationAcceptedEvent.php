@@ -26,16 +26,16 @@ class HunterInvitationAcceptedEvent implements ShouldBroadcastNow
     {
         $this->bookingId = $booking->id;
         $this->hunterId = $hunterId;
-        
+
         // Получаем информацию о принятых приглашениях
         $allInvitations = $booking->getAllInvitations();
         $acceptedInvitations = $allInvitations->where('status', 'accepted');
         $acceptedCount = $acceptedInvitations->count();
         $totalHuntersNeeded = $booking->total_hunting ?? 0;
-        
+
         $this->acceptedCount = $acceptedCount;
         $this->totalHuntersNeeded = $totalHuntersNeeded;
-        
+
         // Отправляем только необходимые данные брони
         $this->booking = [
             'id' => $booking->id,

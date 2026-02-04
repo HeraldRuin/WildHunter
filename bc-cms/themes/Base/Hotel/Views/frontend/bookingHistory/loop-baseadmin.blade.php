@@ -107,6 +107,12 @@
         @if($booking->status === \Modules\Booking\Models\Booking::START_COLLECTION)
             @php
                 $endTimestamp = null;
+                // Получаем информацию об охотниках
+                $totalHuntersNeeded = $booking->total_hunting ?? 0;
+                $allInvitations = $booking->getAllInvitations();
+                $acceptedInvitations = $allInvitations->where('status', 'accepted');
+                $acceptedCount = $acceptedInvitations->count();
+
                 try {
                     $collectionEndAt = $booking->getMeta('collection_end_at');
                     if ($collectionEndAt) {
@@ -123,6 +129,11 @@
                     data-end="{{ $endTimestamp }}"
                     data-booking-id="{{ $booking->id }}"
                 >[0 мин]
+                </div>
+            @endif
+            @if($totalHuntersNeeded > 0)
+                <div class="text-muted mt-1" style="font-size: 0.9em;">
+                    Собранно {{ $acceptedCount }}/{{ $totalHuntersNeeded }}
                 </div>
             @endif
         @endif

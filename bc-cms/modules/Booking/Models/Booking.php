@@ -456,104 +456,104 @@ class Booking extends BaseModel
         }
     }
 
-//    public function sendStatusUpdatedEmails(){
-//        // Try to update locale
-//        $old = app()->getLocale();
-//
-//        $bookingLocale = $this->getMeta('locale');
-//        if($bookingLocale){
-//            app()->setLocale($bookingLocale);
-//        }
-//        try{
-//            $hotel = null;
-//            if($this->hotel_id) {
-//                if(!$this->relationLoaded('hotel')) {
-//                    $this->load('hotel');
-//                }
-//                $hotel = $this->hotel;
-//            }
-//            if(!$hotel && $this->object_model === 'hotel' && $this->object_id) {
-//                $service = $this->service;
-//                if($service && $service instanceof \Modules\Hotel\Models\Hotel) {
-//                    $hotel = $service;
-//                }
-//            }
-//
-//            $baseAdminEmail = null;
-//            $baseAdmin = null;
-//            if($hotel && $hotel->admin_base) {
-//                $baseAdmin = User::find($hotel->admin_base);
-//                if($baseAdmin && !empty($baseAdmin->email)) {
-//                    $baseAdminEmail = $baseAdmin->email;
-//                }
-//            }
-//
-//            // To Admin (общий админ, если он не совпадает с админом базы)
-//            $adminEmail = setting_item('admin_email');
-//            if($adminEmail) {
-//                $shouldSendToAdmin = true;
-//                if($baseAdminEmail && $baseAdminEmail === $adminEmail) {
-//                    $shouldSendToAdmin = false;
-//                }
-//
-//                if($shouldSendToAdmin) {
-//                    Mail::to($adminEmail)->send(new StatusUpdatedEmail($this,'admin'));
-//                }
-//            }
-//
-//            if($baseAdminEmail) {
-//                $vendorEmail = null;
-//                if($this->vendor_id) {
-//                    $vendor = User::find($this->vendor_id);
-//                    if($vendor && !empty($vendor->email)) {
-//                        $vendorEmail = $vendor->email;
-//                    }
-//                }
-//
-//                $shouldSendToBaseAdmin = true;
-//                if($vendorEmail && $vendorEmail === $baseAdminEmail) {
-//                    $shouldSendToBaseAdmin = false;
-//                }
-//
-//                if($shouldSendToBaseAdmin) {
-//                    Mail::to($baseAdminEmail)->send(new StatusUpdatedEmail($this,'admin', null, $baseAdmin));
-//                }
-//            }
-//
-//            // to Vendor
-////            if($this->vendor_id) {
-////                $vendor = User::find($this->vendor_id);
-////                if($vendor && !empty($vendor->email)) {
-////                    Mail::to($vendor->email)->send(new StatusUpdatedEmail($this,'vendor'));
-////                }
-////            }
-//
-//            // To Customer - используем email создателя, если он есть, иначе email из брони
-//            $customerEmail = null;
-//            if($this->create_user) {
-//                $customer = User::find($this->create_user);
-//                if($customer && !empty($customer->email)) {
-//                    $customerEmail = $customer->email;
+    public function sendStatusUpdatedEmails(){
+        // Try to update locale
+        $old = app()->getLocale();
+
+        $bookingLocale = $this->getMeta('locale');
+        if($bookingLocale){
+            app()->setLocale($bookingLocale);
+        }
+        try{
+            $hotel = null;
+            if($this->hotel_id) {
+                if(!$this->relationLoaded('hotel')) {
+                    $this->load('hotel');
+                }
+                $hotel = $this->hotel;
+            }
+            if(!$hotel && $this->object_model === 'hotel' && $this->object_id) {
+                $service = $this->service;
+                if($service && $service instanceof \Modules\Hotel\Models\Hotel) {
+                    $hotel = $service;
+                }
+            }
+
+            $baseAdminEmail = null;
+            $baseAdmin = null;
+            if($hotel && $hotel->admin_base) {
+                $baseAdmin = User::find($hotel->admin_base);
+                if($baseAdmin && !empty($baseAdmin->email)) {
+                    $baseAdminEmail = $baseAdmin->email;
+                }
+            }
+
+            // To Admin (общий админ, если он не совпадает с админом базы)
+            $adminEmail = setting_item('admin_email');
+            if($adminEmail) {
+                $shouldSendToAdmin = true;
+                if($baseAdminEmail && $baseAdminEmail === $adminEmail) {
+                    $shouldSendToAdmin = false;
+                }
+
+                if($shouldSendToAdmin) {
+                    Mail::to($adminEmail)->send(new StatusUpdatedEmail($this,'admin'));
+                }
+            }
+
+            if($baseAdminEmail) {
+                $vendorEmail = null;
+                if($this->vendor_id) {
+                    $vendor = User::find($this->vendor_id);
+                    if($vendor && !empty($vendor->email)) {
+                        $vendorEmail = $vendor->email;
+                    }
+                }
+
+                $shouldSendToBaseAdmin = true;
+                if($vendorEmail && $vendorEmail === $baseAdminEmail) {
+                    $shouldSendToBaseAdmin = false;
+                }
+
+                if($shouldSendToBaseAdmin) {
+                    Mail::to($baseAdminEmail)->send(new StatusUpdatedEmail($this,'admin', null, $baseAdmin));
+                }
+            }
+
+            // to Vendor
+//            if($this->vendor_id) {
+//                $vendor = User::find($this->vendor_id);
+//                if($vendor && !empty($vendor->email)) {
+//                    Mail::to($vendor->email)->send(new StatusUpdatedEmail($this,'vendor'));
 //                }
 //            }
-//
-//            // Если email создателя не найден, используем email из брони
-//            if(!$customerEmail && !empty($this->email)) {
-//                $customerEmail = $this->email;
-//            }
-//
-//            if($customerEmail) {
-//                Mail::to($customerEmail)->send(new StatusUpdatedEmail($this,'customer'));
-//            }
-//
-//            app()->setLocale($old);
-//
-//        } catch(\Exception $e){
-//            Log::warning('sendStatusUpdatedEmails: '.$e->getMessage());
-//        }
-//
-//        app()->setLocale($old);
-//    }
+
+            // To Customer - используем email создателя, если он есть, иначе email из брони
+            $customerEmail = null;
+            if($this->create_user) {
+                $customer = User::find($this->create_user);
+                if($customer && !empty($customer->email)) {
+                    $customerEmail = $customer->email;
+                }
+            }
+
+            // Если email создателя не найден, используем email из брони
+            if(!$customerEmail && !empty($this->email)) {
+                $customerEmail = $this->email;
+            }
+
+            if($customerEmail) {
+                Mail::to($customerEmail)->send(new StatusUpdatedEmail($this,'customer'));
+            }
+
+            app()->setLocale($old);
+
+        } catch(\Exception $e){
+            Log::warning('sendStatusUpdatedEmails: '.$e->getMessage());
+        }
+
+        app()->setLocale($old);
+    }
 
     /**
      * Get Location
@@ -712,7 +712,6 @@ class Booking extends BaseModel
         return $data;
     }
 
-
     public static function getBookingHistory(
         $booking_status = false,
         $customer_id_or_name = false,
@@ -734,14 +733,6 @@ class Booking extends BaseModel
                 ->whereNotIn('i.status', ['declined', 'removed'])
                 ->pluck('h.booking_id')
                 ->toArray();
-
-
-
-
-
-
-
-
         }
 
         // 2️⃣ Базовый запрос с eager loading и display_status
