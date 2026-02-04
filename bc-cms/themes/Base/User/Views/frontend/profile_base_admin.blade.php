@@ -46,7 +46,10 @@
                 </div>
                 <div class="form-group">
                     <label>{{__("Phone Number")}}</label>
-                    <input type="text" value="{{old('phone',$user->phone)}}" name="phone" placeholder="{{__("Phone Number")}}" class="form-control">
+                    <input type="text" class="form-control phone-mask" value="{{old('phone',$user->phone)}}" name="phone"
+                           autocomplete="off"
+                           inputmode="numeric"
+                           placeholder="+7 (___) ___-__-__">
                     <i class="fa fa-phone input-icon"></i>
                 </div>
                 <div class="form-group">

@@ -152,6 +152,8 @@
     <script type="text/javascript" src="{{ asset('module/booking/js/booking_history.js?_ver=' . config('app.asset_version')) }}"></script>
     <script type="text/javascript" src="{{ asset('module/booking/js/invitation.js?_ver=' . config('app.asset_version')) }}"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/inputmask@5.0.8/dist/inputmask.min.js"></script>
+    <script src="{{ asset('js/phone-mask.js?_ver=' . config('app.asset_version')) }}"></script>
 
 
     @if (!is_demo_mode())
