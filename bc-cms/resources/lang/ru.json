@@ -3975,7 +3975,7 @@
     "Number cannot exceed maximum": "Число не может превышать максимальное",
     "Number of rooms cannot exceed maximum": "Число комнат не должен превышать",
     "Base Name": "Охота.База",
-    "Open collection": "Открыть сбор",
+    "Open collection": "Cбор",
     "Select bed place": "Выбрать койко-место",
     "Reservation successfully confirmed": "Бронь успешно подтверждена",
     "The gathering of hunters has begun": "Сбор охотников начат",
@@ -4036,5 +4036,6 @@
     "Go to collection": "Перейти к сбору",
     "Customer notes": "Особые требования",
     "Calculating": "Калькуляция",
-    "Invitation": "Приглашения"
+    "Invitation": "Приглашения",
+    "Collection completed": "Сбор завершен"
 }
