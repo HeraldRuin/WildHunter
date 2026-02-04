@@ -52,114 +52,71 @@ document.addEventListener('DOMContentLoaded', function () {
                 const modal = new bootstrap.Modal(modalEl);
                 modal.show();
             },
-            // Открытие модального окна сбора охотников.
-            // При первом открытии запускает сбор (таймер), при повторном - просто открывает модалку.
-            openCollectionModal(bookingId, event) {
-                const me = this;
+
+
+            // ТОЛЬКО ДЛЯ МАСТЕРА
+            openCollectionAsMaster(bookingId, event) {
                 const bookingIdNum = parseInt(bookingId, 10);
-                
-                // Проверяем, запущен ли уже сбор
-                // Ищем таймер в строке таблицы, где находится кнопка
-                const bookingRow = event && event.currentTarget ? event.currentTarget.closest('tr') : null;
-                const timerInRow = bookingRow ? bookingRow.querySelector('.collection-timer[data-end]') : null;
-                
-                // Также проверяем статус брони - если статус START_COLLECTION, то сбор уже запущен
-                const statusCell = bookingRow ? bookingRow.querySelector('td[class*="START_COLLECTION"]') : null;
-                const isCollectionStarted = timerInRow !== null || statusCell !== null;
-                
-                // Если сбор еще не запущен, запускаем его
-                if (!isCollectionStarted) {
-                    console.log('Сбор еще не запущен, запускаем таймер для брони:', bookingIdNum);
-                    
-                    // Вызываем startCollection, но не открываем модалку сразу
-                    // После успешного запуска сбора откроем модалку
-                    const btn = event && event.currentTarget ? event.currentTarget : null;
-                    let originalHtml = null;
-                    if (btn) {
-                        originalHtml = btn.innerHTML;
-                        btn.disabled = true;
-                        btn.classList.add('disabled');
-                        btn.innerHTML =
-                            '<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>' +
-                            '<span> ' + (btn.textContent.trim() || '...') + '</span>';
-                    }
-                    
-                    const restoreButton = function() {
-                        if (btn) {
-                            btn.disabled = false;
-                            btn.classList.remove('disabled');
-                            if (originalHtml) {
-                                btn.innerHTML = originalHtml;
-                            }
-                        }
-                    };
-                    
-                    $.ajax({
-                        url: `/booking/${bookingIdNum}/start-collection`,
-                        type: 'POST',
-                        dataType: 'json',
-                        data: {},
-                        success: function (res) {
-                            restoreButton();
-                            
-                            if (res.status) {
-                                // После успешного запуска сбора открываем модалку сразу
-                                me.currentCollectionBookingId = bookingIdNum;
-                                const modalEl = document.getElementById('collectionModal' + bookingIdNum);
-                                if (modalEl) {
-                                    const bsModal = new bootstrap.Modal(modalEl);
-                                    bsModal.show();
-                                    
-                                    // Инициализируем слоты после открытия модалки
-                                    setTimeout(() => {
-                                        console.log('Вызов initializeHunterSlots для брони:', bookingIdNum);
-                                        me.initializeHunterSlots(bookingIdNum);
-                                    }, 200);
-                                }
-                                
-                                // Обновляем статус в таблице и добавляем таймер, если его еще нет
-                                if (bookingRow && res.collection_end_at) {
-                                    // Если таймера еще нет, добавляем его
-                                    if (!timerInRow) {
-                                        const endTimestamp = new Date(res.collection_end_at).getTime();
-                                        const timerDiv = document.createElement('div');
-                                        timerDiv.className = 'text-muted collection-timer';
-                                        timerDiv.setAttribute('data-end', endTimestamp);
-                                        timerDiv.textContent = '[0 мин]';
-                                        
-                                        const statusCell = bookingRow.querySelector('td[class*="status"]');
-                                        if (statusCell) {
-                                            statusCell.appendChild(timerDiv);
-                                        }
-                                    }
-                                }
-                            } else if (res.message) {
-                                bookingCoreApp.showAjaxMessage(res);
-                            }
-                        },
-                        error: function (e) {
-                            restoreButton();
-                            
-                            if (e.status === 419) {
-                                alert('Сессия истекла, обновите страницу');
-                            } else if (e.responseJSON && e.responseJSON.message) {
-                                alert('Ошибка: ' + e.responseJSON.message);
-                            } else {
-                                alert('Произошла ошибка при начале сбора охотников');
-                            }
-                        }
-                    });
-                } else {
-                    // Сбор уже запущен, просто открываем модалку
-                    console.log('Сбор уже запущен, просто открываем модалку для брони:', bookingIdNum);
-                    this.currentCollectionBookingId = bookingIdNum;
-                    
-                    // Инициализируем слоты чуть позже, чтобы модалка успела открыться
-                    setTimeout(() => {
-                        console.log('Вызов initializeHunterSlots для брони:', bookingIdNum);
-                        this.initializeHunterSlots(bookingIdNum);
-                    }, 200);
+                const me = this;
+
+                const btn = event?.currentTarget ?? null;
+                let originalHtml = null;
+
+                if (btn) {
+                    originalHtml = btn.innerHTML;
+                    btn.disabled = true;
+                    btn.innerHTML = `
+                <span class="spinner-border spinner-border-sm me-1"></span>
+                <span>${btn.textContent.trim()}</span>
+            `;
                 }
+
+                const restoreButton = () => {
+                    if (btn) {
+                        btn.disabled = false;
+                        btn.innerHTML = originalHtml;
+                    }
+                };
+
+                $.post(`/booking/${bookingIdNum}/start-collection`)
+                    .done(res => {
+                        restoreButton();
+
+                        if (!res.status) {
+                            bookingCoreApp.showAjaxMessage(res);
+                            return;
+                        }
+
+                        me.currentCollectionBookingId = bookingIdNum;
+
+                        const modalEl = document.getElementById('collectionModal' + bookingIdNum);
+                        if (modalEl) {
+                            new bootstrap.Modal(modalEl).show();
+                        }
+
+                        setTimeout(() => {
+                            me.initializeHunterSlots(bookingIdNum);
+                        }, 200);
+                    })
+                    .fail(() => {
+                        restoreButton();
+                        alert('Ошибка при запуске сбора');
+                    });
+            },
+            // ТОЛЬКО ДЛЯ ПРИГЛАШЕННОГО
+            openCollectionAsHunter(bookingId) {
+                const bookingIdNum = parseInt(bookingId, 10);
+
+                this.currentCollectionBookingId = bookingIdNum;
+
+                const modalEl = document.getElementById('collectionModal' + bookingIdNum);
+                if (modalEl) {
+                    new bootstrap.Modal(modalEl).show();
+                }
+
+                setTimeout(() => {
+                    this.initializeHunterSlots(bookingIdNum);
+                }, 200);
             },
             initializeHunterSlots(bookingId) {
                 // Получаем количество охотников из DOM элемента модального окна

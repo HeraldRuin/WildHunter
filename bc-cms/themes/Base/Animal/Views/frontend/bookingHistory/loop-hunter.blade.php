@@ -151,7 +151,7 @@
                     class="btn btn-primary btn-sm mt-2"
                     data-bs-toggle="modal"
                     data-bs-target="#collectionModal{{ $booking->id }}"
-                    @click="openCollectionModal({{ $booking->id }}, $event)">
+                    @click="openCollectionAsHunter({{ $booking->id }})">
                     {{__("Open collection")}}
                 </button>
             @endif
@@ -176,13 +176,13 @@
                     </button>
                 @endif
 
-                @if($booking->is_master_hunter && in_array($booking->status, [\Modules\Booking\Models\Booking::CONFIRMED, \Modules\Booking\Models\Booking::START_COLLECTION]))
+                @if($booking->is_master_hunter && in_array($booking->status, [\Modules\Booking\Models\Booking::CONFIRMED, \Modules\Booking\Models\Booking::START_COLLECTION, \Modules\Booking\Models\Booking::FINISHED_COLLECTION]) && $booking->type != 'hotel')
                 <button
                     type="button"
                     class="btn btn-primary btn-sm mt-2"
                     data-bs-toggle="modal"
                     data-bs-target="#collectionModal{{ $booking->id }}"
-                    @click="openCollectionModal({{ $booking->id }}, $event)">
+                    @click="openCollectionAsMaster({{ $booking->id }}, $event)">
                     {{__("Open collection")}}
                 </button>
             @endif
