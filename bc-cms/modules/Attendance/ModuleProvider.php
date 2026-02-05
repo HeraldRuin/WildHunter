@@ -81,7 +81,7 @@ class ModuleProvider extends ModuleServiceProvider
                     ],
                     'trophy_cost'=>[
                         'url'        => route('animal.vendor.trophy_cost'),
-                        'title'      => __("Trophy Cost"),
+                        'title'      => __("Trophy and Fines"),
                         'permission' => 'attendance_create',
                     ],
                     'additional_services'=>[
