@@ -38,7 +38,11 @@ Route::group(['prefix'=>'organisation'],function(){
 Route::group(['prefix'=>'trophy-cost','middleware' => ['auth','verified']],function(){
     Route::get('/',[TrophyCostController::class, 'index'])->name('animal.vendor.trophy_cost');
     Route::post('/store',[TrophyCostController::class, 'store'])->name('animal.vendor.trophy_cost.store');
-    Route::post('/update-single',[TrophyCostController::class, 'updateSingle'])->name('animal.vendor.trophy_cost.update_single');
+    Route::post('/store/fines',[TrophyCostController::class, 'storeFines'])->name('animal.vendor.fines.store');
+    Route::post('/store/preparations',[TrophyCostController::class, 'storePreparations'])->name('animal.vendor.preparations.store');
+    Route::post('/update-trophy',[TrophyCostController::class, 'updateTrophy'])->name('animal.vendor.trophy_cost.update_trophy');
+    Route::post('/update-fine',[TrophyCostController::class, 'updateFine'])->name('animal.vendor.trophy_cost.update_fine');
+    Route::post('/update-preparation',[TrophyCostController::class, 'updatePreparation'])->name('animal.vendor.trophy_cost.update_preparation');
 });
 
 Route::group(['prefix'=>config('animal.animal_route_prefix')],function(){

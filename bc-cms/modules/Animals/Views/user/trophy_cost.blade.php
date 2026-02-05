@@ -74,6 +74,103 @@
                                     {{__('No trophy types configured for this animal. Please contact super admin to add trophy classifications.')}}
                                 </div>
                             @endif
+
+
+                                @if(!empty($animal->fines) && $animal->fines->count() > 0)
+                                    <form method="POST" action="{{ route('animal.vendor.fines.store') }}" id="fines-form-{{ $animal->id }}">
+                                        @csrf
+                                        <input type="hidden" name="animal_id" value="{{ $animal->id }}">
+
+                                        <table class="table table-bordered">
+                                            <thead>
+                                            <tr>
+                                                <th>{{__("Type Fines")}}</th>
+                                                <th>{{__("Price")}}</th>
+                                                <th></th>
+                                            </tr>
+                                            </thead>
+
+                                            <tbody id="fines-{{ $animal->id }}">
+                                            @foreach($animal->fines as $index => $fine)
+                                                <tr data-id="{{ $fine->id }}">
+                                                    <td>
+                                                        <input type="hidden" name="fines_costs[{{ $index }}][id]" value="{{ $fine->id }}">
+                                                        <strong>{{ $fine->type }}</strong>
+                                                    </td>
+                                                    <td>
+                                                        <input type="number"
+                                                               name="fines_costs[{{ $index }}][price]"
+                                                               class="form-control fine-price-input"
+                                                               value="{{ $fine->price }}"
+                                                               placeholder="{{__('Enter price')}}"
+                                                               min="0"
+                                                               step="0.01"
+                                                               inputmode="numeric"
+                                                               data-trophy-id="{{ $fine->id }}">
+                                                    </td>
+                                                    <td class="text-nowrap text-center align-middle">
+                                                        <button type="button" class="btn btn-success btn-sm save-fine" data-animal-id="{{ $animal->id }}" data-fine-id="{{ $fine->id }}">
+                                                            {{__("Save")}}
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                            @endforeach
+                                            </tbody>
+                                        </table>
+                                    </form>
+                                @else
+                                    <div class="alert alert-info">
+                                        {{__('No trophy fines configured for this animal. Please contact super admin to add fines classifications.')}}
+                                    </div>
+                                @endif
+
+                                @if(!empty($animal->preparations) && $animal->preparations->count() > 0)
+                                    <form method="POST" action="{{ route('animal.vendor.preparations.store') }}" id="preparation-form-{{ $animal->id }}">
+                                        @csrf
+                                        <input type="hidden" name="animal_id" value="{{ $animal->id }}">
+
+                                        <table class="table table-bordered">
+                                            <thead>
+                                            <tr>
+                                                <th>{{__("Type Preparations")}}</th>
+                                                <th>{{__("Price")}}</th>
+                                                <th></th>
+                                            </tr>
+                                            </thead>
+
+                                            <tbody id="preparations-{{ $animal->id }}">
+                                            @foreach($animal->preparations as $index => $preparation)
+                                                <tr data-id="{{ $preparation->id }}">
+                                                    <td>
+                                                        <input type="hidden" name="preparation_costs[{{ $index }}][id]" value="{{ $preparation->id }}">
+                                                        <strong>{{ $preparation->type }}</strong>
+                                                    </td>
+                                                    <td>
+                                                        <input type="number"
+                                                               name="preparation_costs[{{ $index }}][price]"
+                                                               class="form-control preparation-price-input"
+                                                               value="{{ $preparation->price }}"
+                                                               placeholder="{{__('Enter price')}}"
+                                                               min="0"
+                                                               step="0.01"
+                                                               inputmode="numeric"
+                                                               data-trophy-id="{{ $preparation->id }}">
+                                                    </td>
+                                                    <td class="text-nowrap text-center align-middle">
+                                                        <button type="button" class="btn btn-success btn-sm save-preparation" data-animal-id="{{ $animal->id }}" data-preparation-id="{{ $preparation->id }}">
+                                                            {{__("Save")}}
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                            @endforeach
+                                            </tbody>
+                                        </table>
+                                    </form>
+                                @else
+                                    <div class="alert alert-info">
+                                        {{__('No trophy preparations configured for this animal. Please contact super admin to add preparations classifications.')}}
+                                    </div>
+                                @endif
                         </div>
                     @endforeach
 
@@ -92,13 +189,11 @@
             const trophyId = $btn.data('trophy-id');
             const $row = $btn.closest('tr');
             const price = $row.find('.trophy-price-input').val();
-            
-            // Визуальная обратная связь
             const originalText = $btn.html();
             $btn.prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i>');
-            
+
             $.ajax({
-                url: '{{ route('animal.vendor.trophy_cost.update_single') }}',
+                url: '{{ route('animal.vendor.trophy_cost.update_trophy') }}',
                 method: 'POST',
                 data: {
                     _token: '{{ csrf_token() }}',
@@ -108,8 +203,6 @@
                 success: function(response) {
                     $btn.prop('disabled', false).html(originalText);
                     if (response.status) {
-                        // Можно добавить уведомление об успехе
-                        alert(response.message || '{{__("Saved Success")}}');
                     }
                 },
                 error: function(xhr) {
@@ -118,7 +211,72 @@
                     if (xhr.responseJSON && xhr.responseJSON.message) {
                         message = xhr.responseJSON.message;
                     }
-                    alert(message);
+                }
+            });
+        });
+    });
+
+    $(document).ready(function() {
+        $('.save-fine').on('click', function() {
+            const $btn = $(this);
+            const fineId = $btn.data('fine-id');
+            const $row = $btn.closest('tr');
+            const price = $row.find('.fine-price-input').val();
+            const originalText = $btn.html();
+            $btn.prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i>');
+
+            $.ajax({
+                url: '{{ route('animal.vendor.trophy_cost.update_fine') }}',
+                method: 'POST',
+                data: {
+                    _token: '{{ csrf_token() }}',
+                    fine_id: fineId,
+                    price: price
+                },
+                success: function(response) {
+                    $btn.prop('disabled', false).html(originalText);
+                    if (response.status) {
+                    }
+                },
+                error: function(xhr) {
+                    $btn.prop('disabled', false).html(originalText);
+                    let message = '{{__("Error saving fine cost")}}';
+                    if (xhr.responseJSON && xhr.responseJSON.message) {
+                        message = xhr.responseJSON.message;
+                    }
+                }
+            });
+        });
+    });
+
+    $(document).ready(function() {
+        $('.save-preparation').on('click', function() {
+            const $btn = $(this);
+            const preparationId = $btn.data('preparation-id');
+            const $row = $btn.closest('tr');
+            const price = $row.find('.preparation-price-input').val();
+            const originalText = $btn.html();
+            $btn.prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i>');
+
+            $.ajax({
+                url: '{{ route('animal.vendor.trophy_cost.update_preparation') }}',
+                method: 'POST',
+                data: {
+                    _token: '{{ csrf_token() }}',
+                    preparation_id: preparationId,
+                    price: price
+                },
+                success: function(response) {
+                    $btn.prop('disabled', false).html(originalText);
+                    if (response.status) {
+                    }
+                },
+                error: function(xhr) {
+                    $btn.prop('disabled', false).html(originalText);
+                    let message = '{{__("Error saving preparation cost")}}';
+                    if (xhr.responseJSON && xhr.responseJSON.message) {
+                        message = xhr.responseJSON.message;
+                    }
                 }
             });
         });

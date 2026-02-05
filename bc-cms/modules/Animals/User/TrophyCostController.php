@@ -3,6 +3,8 @@ namespace Modules\Animals\User;
 
 use Illuminate\Http\Request;
 use Modules\Animals\Models\Animal;
+use Modules\Animals\Models\AnimalFine;
+use Modules\Animals\Models\AnimalPreparation;
 use Modules\Animals\Models\AnimalTrophy;
 use Modules\FrontendController;
 
@@ -69,7 +71,7 @@ class TrophyCostController extends FrontendController
     public function store(Request $request)
     {
         $this->checkPermission('animal_create_hunting');
-        
+
         $request->validate([
             'animal_id' => 'required|exists:bc_animals,id',
             'trophy_costs' => 'array',
@@ -94,10 +96,64 @@ class TrophyCostController extends FrontendController
         return redirect()->back()->with('success', __('Trophy costs saved successfully'));
     }
 
-    public function updateSingle(Request $request)
+    public function storeFines(Request $request)
+    {
+        $this->checkPermission('attendance_create');
+
+        $request->validate([
+            'animal_id' => 'required|exists:bc_animals,id',
+            'fines_costs' => 'array',
+            'fines_costs.*.id' => 'required|exists:bc_animal_trophies,id',
+            'fines_costs.*.price' => 'nullable|numeric|min:0',
+        ]);
+
+        $animalId = $request->input('animal_id');
+        $finesCosts = $request->input('fines_costs', []);
+
+        foreach ($finesCosts as $finesData) {
+            if (!empty($finesData['id'])) {
+                AnimalFine::where('id', $finesData['id'])
+                    ->where('animal_id', $animalId)
+                    ->update([
+                        'price' => !empty($finesData['price']) ? $finesData['price'] : null,
+                    ]);
+            }
+        }
+
+        return redirect()->back()->with('success', __('Fines costs saved successfully'));
+    }
+
+    public function storePreparations(Request $request)
+    {
+        $this->checkPermission('attendance_create');
+
+        $request->validate([
+            'animal_id' => 'required|exists:bc_animals,id',
+            'preparation_costs' => 'array',
+            'preparation_costs.*.id' => 'required|exists:bc_animal_trophies,id',
+            'preparation_costs.*.price' => 'nullable|numeric|min:0',
+        ]);
+
+        $animalId = $request->input('animal_id');
+        $preparationCosts = $request->input('preparation_costs', []);
+
+        foreach ($preparationCosts as $preparationData) {
+            if (!empty($preparationData['id'])) {
+                AnimalPreparation::where('id', $preparationData['id'])
+                    ->where('animal_id', $animalId)
+                    ->update([
+                        'price' => !empty($preparationData['price']) ? $preparationData['price'] : null,
+                    ]);
+            }
+        }
+
+        return redirect()->back()->with('success', __('Preparation costs saved successfully'));
+    }
+
+    public function updateTrophy(Request $request)
     {
         $this->checkPermission('animal_create_hunting');
-        
+
         $request->validate([
             'trophy_id' => 'required|exists:bc_animal_trophies,id',
             'price' => 'nullable|numeric|min:0',
@@ -124,6 +180,80 @@ class TrophyCostController extends FrontendController
         }
 
         $trophy->update([
+            'price' => !empty($price) ? $price : null,
+        ]);
+
+        return $this->sendSuccess([
+            'message' => __("Saved Success")
+        ]);
+    }
+
+    public function updateFine(Request $request)
+    {
+        $this->checkPermission('animal_create_hunting');
+
+        $request->validate([
+            'fine_id' => 'required|exists:bc_animal_trophies,id',
+            'price' => 'nullable|numeric|min:0',
+        ]);
+
+        $fineId = $request->input('fine_id');
+        $price = $request->input('price');
+        $userHotelId = get_user_hotel_id();
+
+        $fine = AnimalFine::where('id', $fineId)
+            ->whereHas('animal', function($query) use ($userHotelId) {
+                $query->whereHas('hotels', function($q) use ($userHotelId) {
+                    $q->where('hotel_id', $userHotelId);
+                });
+            })
+            ->first();
+
+        if (!$fine) {
+            return response()->json([
+                'status' => false,
+                'message' => __('Fine not found')
+            ], 404);
+        }
+
+        $fine->update([
+            'price' => !empty($price) ? $price : null,
+        ]);
+
+        return $this->sendSuccess([
+            'message' => __("Saved Success")
+        ]);
+    }
+
+    public function updatePreparation(Request $request)
+    {
+        $this->checkPermission('animal_create_hunting');
+
+        $request->validate([
+            'preparation_id' => 'required|exists:bc_animal_trophies,id',
+            'price' => 'nullable|numeric|min:0',
+        ]);
+
+        $preparationId = $request->input('preparation_id');
+        $price = $request->input('price');
+        $userHotelId = get_user_hotel_id();
+
+        $preparation = AnimalPreparation::where('id', $preparationId)
+            ->whereHas('animal', function($query) use ($userHotelId) {
+                $query->whereHas('hotels', function($q) use ($userHotelId) {
+                    $q->where('hotel_id', $userHotelId);
+                });
+            })
+            ->first();
+
+        if (!$preparation) {
+            return response()->json([
+                'status' => false,
+                'message' => __('Fine not found')
+            ], 404);
+        }
+
+        $preparation->update([
             'price' => !empty($price) ? $price : null,
         ]);
 
