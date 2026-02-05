@@ -12,6 +12,8 @@ use Illuminate\Support\Facades\Auth;
 use Modules\AdminController;
 use Modules\Animals\Hook;
 use Modules\Animals\Models\Animal;
+use Modules\Animals\Models\AnimalFine;
+use Modules\Animals\Models\AnimalPreparation;
 use Modules\Animals\Models\AnimalTranslation;
 use Modules\Animals\Models\AnimalTrophy;
 use Modules\Core\Events\CreatedServicesEvent;
@@ -168,6 +170,8 @@ class AnimalController extends AdminController
             'animal_location'      => $this->location::where('status', 'publish')->get()->toTree(),
             'enable_multi_lang' => true,
             'trophies'          => $row->trophies,
+            'fines'             => $row->fines,
+            'preparations'             => $row->preparations,
             'breadcrumbs'       => [
                 [
                     'name' => __('Animal'),
@@ -251,6 +255,8 @@ class AnimalController extends AdminController
                 if ($row->id) {
                     try {
                         $this->saveTrophies($row, $request);
+                        $this->saveFines($row, $request);
+                        $this->savePreparations($row, $request);
                     } catch (\Exception $e) {
                         \Log::error('Error saving trophies: ' . $e->getMessage());
                     }
@@ -295,7 +301,6 @@ class AnimalController extends AdminController
 
         $trophy_types = $request->input('trophy_types', []);
 
-        // Если трофеи не переданы, значит их все удалили
         if (empty($trophy_types) || !is_array($trophy_types)) {
             try {
                 AnimalTrophy::where('animal_id', $row->id)->delete();
@@ -313,22 +318,20 @@ class AnimalController extends AdminController
                 if (!is_array($trophy_data)) continue;
 
                 $type = trim($trophy_data['type'] ?? '');
-                // Для новых элементов может не быть id, или id может быть пустым
+
                 $trophy_id = !empty($trophy_data['id']) ? (int)$trophy_data['id'] : null;
 
                 if (!empty($type)) {
                     if ($trophy_id && $existingTrophies->has($trophy_id)) {
-                        // Обновляем существующий трофей
                         $existingTrophy = $existingTrophies->get($trophy_id);
                         AnimalTrophy::where('id', $trophy_id)
-                            ->where('animal_id', $row->id) // Дополнительная проверка безопасности
+                            ->where('animal_id', $row->id)
                             ->update([
                                 'type' => $type,
-                                'price' => $existingTrophy->price, // Сохраняем существующую цену
+                                'price' => $existingTrophy->price,
                             ]);
                         $keepIds[] = $trophy_id;
                     } else {
-                        // Создаем новый трофей (без id или с несуществующим id)
                         $newTrophy = AnimalTrophy::create([
                             'animal_id' => $row->id,
                             'type' => $type,
@@ -338,19 +341,135 @@ class AnimalController extends AdminController
                     }
                 }
             }
-
-            // Удаляем трофеи, которые были удалены из формы
             if (!empty($keepIds)) {
                 AnimalTrophy::where('animal_id', $row->id)
                     ->whereNotIn('id', $keepIds)
                     ->delete();
             } else {
-                // Если нет трофеев для сохранения, удаляем все существующие
                 AnimalTrophy::where('animal_id', $row->id)->delete();
             }
         } catch (\Exception $e) {
             \Log::error('Error saving trophies for animal ' . $row->id . ': ' . $e->getMessage());
-            // Не прерываем выполнение, просто логируем ошибку
+        }
+    }
+
+    public function saveFines($row, $request): void
+    {
+        if (!$row || !$row->id) {
+            return;
+        }
+
+        $fine_types = $request->input('fines_types', []);
+
+        if (empty($fine_types) || !is_array($fine_types)) {
+            try {
+                AnimalFine::where('animal_id', $row->id)->delete();
+            } catch (\Exception $e) {
+                \Log::error('Error deleting trophies: ' . $e->getMessage());
+            }
+            return;
+        }
+
+        try {
+            $existingTrophies = AnimalFine::where('animal_id', $row->id)->get()->keyBy('id');
+            $keepIds = [];
+
+            foreach ($fine_types as $fine_data) {
+                if (!is_array($fine_data)) continue;
+
+                $type = trim($fine_data['type'] ?? '');
+                $fine_id = !empty($fine_data['id']) ? (int)$fine_data['id'] : null;
+
+                if (!empty($type)) {
+                    if ($fine_id && $existingTrophies->has($fine_id)) {
+                        $existingTrophy = $existingTrophies->get($fine_id);
+                        AnimalFine::where('id', $fine_id)
+                            ->where('animal_id', $row->id)
+                            ->update([
+                                'type' => $type,
+                                'price' => $existingTrophy->price,
+                            ]);
+                        $keepIds[] = $fine_id;
+                    } else {
+                        $newTrophy = AnimalFine::create([
+                            'animal_id' => $row->id,
+                            'type' => $type,
+                            'price' => null,
+                        ]);
+                        $keepIds[] = $newTrophy->id;
+                    }
+                }
+            }
+
+            if (!empty($keepIds)) {
+                AnimalFine::where('animal_id', $row->id)
+                    ->whereNotIn('id', $keepIds)
+                    ->delete();
+            } else {
+                AnimalFine::where('animal_id', $row->id)->delete();
+            }
+        } catch (\Exception $e) {
+            \Log::error('Error saving trophies for animal ' . $row->id . ': ' . $e->getMessage());
+        }
+    }
+
+    public function savePreparations($row, $request): void
+    {
+        if (!$row || !$row->id) {
+            return;
+        }
+
+        $preparation_types = $request->input('preparation_types', []);
+
+        if (empty($preparation_types) || !is_array($preparation_types)) {
+            try {
+                AnimalPreparation::where('animal_id', $row->id)->delete();
+            } catch (\Exception $e) {
+                \Log::error('Error deleting trophies: ' . $e->getMessage());
+            }
+            return;
+        }
+
+        try {
+            $existingTrophies = AnimalPreparation::where('animal_id', $row->id)->get()->keyBy('id');
+            $keepIds = [];
+
+            foreach ($preparation_types as $fine_data) {
+                if (!is_array($fine_data)) continue;
+
+                $type = trim($fine_data['type'] ?? '');
+                $fine_id = !empty($fine_data['id']) ? (int)$fine_data['id'] : null;
+
+                if (!empty($type)) {
+                    if ($fine_id && $existingTrophies->has($fine_id)) {
+                        $existingTrophy = $existingTrophies->get($fine_id);
+                        AnimalPreparation::where('id', $fine_id)
+                            ->where('animal_id', $row->id)
+                            ->update([
+                                'type' => $type,
+                                'price' => $existingTrophy->price,
+                            ]);
+                        $keepIds[] = $fine_id;
+                    } else {
+                        $newTrophy = AnimalPreparation::create([
+                            'animal_id' => $row->id,
+                            'type' => $type,
+                            'price' => null,
+                        ]);
+                        $keepIds[] = $newTrophy->id;
+                    }
+                }
+            }
+
+            if (!empty($keepIds)) {
+                AnimalPreparation::where('animal_id', $row->id)
+                    ->whereNotIn('id', $keepIds)
+                    ->delete();
+            } else {
+                AnimalPreparation::where('animal_id', $row->id)->delete();
+            }
+        } catch (\Exception $e) {
+            \Log::error('Error saving trophies for animal ' . $row->id . ': ' . $e->getMessage());
         }
     }
 

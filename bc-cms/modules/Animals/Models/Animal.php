@@ -67,7 +67,6 @@ class Animal extends Bookable
         $check = $booking->save();
 
         if ($check) {
-            // Вызываем событие создания брони
             event(new BookingCreatedEvent($booking));
 
             return $this->sendSuccess([
@@ -112,6 +111,14 @@ class Animal extends Bookable
     public function trophies(): HasMany
     {
         return $this->hasMany(AnimalTrophy::class);
+    }
+    public function fines(): HasMany
+    {
+        return $this->hasMany(AnimalFine::class, 'animal_id', 'id');
+    }
+    public function preparations(): HasMany
+    {
+        return $this->hasMany(AnimalPreparation::class, 'animal_id', 'id');
     }
 }
 
