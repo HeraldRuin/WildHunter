@@ -34,6 +34,7 @@ Route::group(['prefix'=>config('attendance.attendance_route_prefix')],function()
 });
 
 Route::group(['prefix'=>config('additional.additionals_route_prefix')],function(){
+    Route::get('/',[AdditionalController::class, 'index'])->name('additionals.index');
     Route::post('/store', [AdditionalController::class, 'store'])->name('additionals.store');
     Route::post('/{additional}/update', [AdditionalController::class, 'update'])->name('additionals.update');
     Route::post('/{additional}/delete', [AdditionalController::class, 'destroy'])->name('additionals.delete');
