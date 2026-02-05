@@ -75,6 +75,6 @@
 {{--                </ul>--}}
 {{--            </div>--}}
 {{--        </div>--}}
-        @include('Layout::global.search.filters.attrs')
+{{--        @include('Layout::global.search.filters.attrs')--}}
     </form>
 </div>
