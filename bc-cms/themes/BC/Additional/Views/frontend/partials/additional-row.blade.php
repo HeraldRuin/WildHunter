@@ -5,11 +5,11 @@
     </td>
 
     <td>
-        <input type="number"
+        <input type="text"
                name="price"
-               step="0.01"
-               class="form-control"
-               value="{{ $additional->price }}">
+               class="form-control price-input"
+               value="{{ $additional->price }}"
+               inputmode="decimal">
     </td>
 
     <td class="text-center">
@@ -24,3 +24,22 @@
         </button>
     </td>
 </tr>
+
+@push('js')
+    <script>
+        $(document).on('input', '.price-input', function () {
+            console.log('INPUT WORKS', this.value);
+            let value = this.value;
+
+            value = value.replace(/[^0-9.]/g, '');
+
+            const parts = value.split('.');
+            if (parts.length > 2) {
+                value = parts[0] + '.' + parts.slice(1).join('');
+            }
+
+            this.value = value;
+        });
+
+    </script>
+@endpush

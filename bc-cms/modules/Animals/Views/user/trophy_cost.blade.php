@@ -49,14 +49,11 @@
                                                     <strong>{{ $trophy->type }}</strong>
                                                 </td>
                                                 <td>
-                                                    <input type="number"
+                                                    <input type="text"
                                                            name="trophy_costs[{{ $index }}][price]"
-                                                           class="form-control trophy-price-input"
+                                                           class="form-control trophy-price-input price-input"
                                                            value="{{ $trophy->price }}"
                                                            placeholder="{{__('Enter price')}}"
-                                                           min="0"
-                                                           step="0.01"
-                                                           inputmode="numeric"
                                                            data-trophy-id="{{ $trophy->id }}">
                                                 </td>
                                                 <td class="text-nowrap text-center align-middle">
@@ -98,14 +95,11 @@
                                                         <strong>{{ $fine->type }}</strong>
                                                     </td>
                                                     <td>
-                                                        <input type="number"
+                                                        <input type="text"
                                                                name="fines_costs[{{ $index }}][price]"
-                                                               class="form-control fine-price-input"
+                                                               class="form-control fine-price-input price-input"
                                                                value="{{ $fine->price }}"
                                                                placeholder="{{__('Enter price')}}"
-                                                               min="0"
-                                                               step="0.01"
-                                                               inputmode="numeric"
                                                                data-trophy-id="{{ $fine->id }}">
                                                     </td>
                                                     <td class="text-nowrap text-center align-middle">
@@ -146,14 +140,11 @@
                                                         <strong>{{ $preparation->type }}</strong>
                                                     </td>
                                                     <td>
-                                                        <input type="number"
+                                                        <input type="text"
                                                                name="preparation_costs[{{ $index }}][price]"
-                                                               class="form-control preparation-price-input"
+                                                               class="form-control preparation-price-input price-input"
                                                                value="{{ $preparation->price }}"
                                                                placeholder="{{__('Enter price')}}"
-                                                               min="0"
-                                                               step="0.01"
-                                                               inputmode="numeric"
                                                                data-trophy-id="{{ $preparation->id }}">
                                                     </td>
                                                     <td class="text-nowrap text-center align-middle">
@@ -281,6 +272,33 @@
             });
         });
     });
+
+    $(document).on('keydown', '.price-input', function (e) {
+        const allowedKeys = [
+            'Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab'
+        ];
+
+        if (allowedKeys.includes(e.key)) return;
+        if (e.key >= '0' && e.key <= '9') return;
+        if (e.key === '.' && !this.value.includes('.')) return;
+
+        e.preventDefault();
+    });
+
+    $(document).on('paste', '.price-input', function (e) {
+        e.preventDefault();
+        let text = (e.originalEvent || e).clipboardData.getData('text');
+        text = text.replace(/[^0-9.]/g, '');
+
+        const parts = text.split('.');
+        if (parts.length > 2) {
+            text = parts[0] + '.' + parts.slice(1).join('');
+        }
+
+        $(this).val(text);
+    });
+
 </script>
+
 @endpush
 
