@@ -85,7 +85,7 @@ class ModuleProvider extends ModuleServiceProvider
                         'permission' => 'attendance_create',
                     ],
                     'additional_services'=>[
-                        'url'        => route('animal.vendor.additional_services'),
+                        'url'        => route('additionals.index'),
                         'title'      => __("Additional services"),
                         'permission' => 'attendance_create',
                     ],
