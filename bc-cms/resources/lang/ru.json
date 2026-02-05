@@ -3854,6 +3854,8 @@
     "Trophy Cost": "Стоимость трофея",
     "Error saving trophy cost": "Ошибка при сохранении стоимости трофея",
     "Enter trophy type": "Введите тип трофея",
+    "Enter fines type": "Введите тип штрафа",
+    "Enter preparations type": "Введите тип разделки",
     "Enter price": "Введите цену",
     "Add Trophy": "Добавить трофей",
     "Trophy costs saved successfully": "Стоимость трофеев успешно сохранена",
@@ -4041,5 +4043,9 @@
     "Additional services": "Доп. услуги",
     "Additionals services": "Дополнительные услуги",
     "Additionals": "Услуги",
-    "Add addition": "Добавить услугу"
+    "Add addition": "Добавить услугу",
+    "Fines": "Штрафы",
+    "Type Fines": "Типы штрафов",
+    "Preparations": "Разделка",
+    "Type Preparations": "Тип разделки"
 }
