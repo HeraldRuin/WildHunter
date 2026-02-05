@@ -3,6 +3,7 @@
 namespace Modules\Hotel\Models;
 
 use App\Currency;
+use App\Observers\HotelObserver;
 use App\User;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
@@ -82,6 +83,11 @@ class Hotel extends Bookable
         $this->termClass = Terms::class;
         $this->attributeClass = Attributes::class;
         $this->roomClass = HotelRoom::class;
+    }
+
+    protected static function booted(): void
+    {
+        static::observe(HotelObserver::class);
     }
 
     public static function getModelName()
