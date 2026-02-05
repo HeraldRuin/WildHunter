@@ -77,12 +77,17 @@ class ModuleProvider extends ModuleServiceProvider
                     'organisation'=>[
                         'url'        => route('animal.vendor.organisation'),
                         'title'      => __("Hunting organization"),
-                        'permission' => 'animal_create_hunting',
+                        'permission' => 'attendance_create',
                     ],
                     'trophy_cost'=>[
                         'url'        => route('animal.vendor.trophy_cost'),
                         'title'      => __("Trophy Cost"),
-                        'permission' => 'animal_create_hunting',
+                        'permission' => 'attendance_create',
+                    ],
+                    'additional_services'=>[
+                        'url'        => route('animal.vendor.additional_services'),
+                        'title'      => __("Additional services"),
+                        'permission' => 'attendance_create',
                     ],
                 ]
             ];
