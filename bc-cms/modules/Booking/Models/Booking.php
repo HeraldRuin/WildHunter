@@ -723,11 +723,9 @@ class Booking extends BaseModel
         // 1️⃣ Получаем ID броней, куда пользователя пригласили
         $invitedBookingIds = [];
         if ($customer_id_or_name) {
-
             $invitedBookingIds = DB::table('bc_booking_hunter_invitations as i')
                 ->join('bc_booking_hunters as h', 'i.booking_hunter_id', '=', 'h.id')
-                ->where('i.hunter_id', $customer_id_or_name) // текущий пользователь
-                ->where('h.invited_by', '<>', $customer_id_or_name) // 🔹 используем оператор, не column
+                ->where('i.hunter_id', $customer_id_or_name)
                 ->whereNull('i.deleted_at')
                 ->whereNull('h.deleted_at')
                 ->whereNotIn('i.status', ['declined', 'removed'])
@@ -735,14 +733,14 @@ class Booking extends BaseModel
                 ->toArray();
         }
 
-        // 2️⃣ Базовый запрос с eager loading и display_status
+        // 2️⃣ Базовый запрос с eager loading
         $list_booking = parent::query()
             ->with([
                 'animal',
                 'creator',
                 'hotel.translation',
                 'hotelRooms',
-                'bookingHunters:id,booking_id,invited_by,is_master'
+                'bookingHunters:id,booking_id,invited_by,is_master,creator_role'
             ])
             ->select('*')
             ->selectRaw("
@@ -754,54 +752,51 @@ class Booking extends BaseModel
         ")
             ->orderBy('id', 'desc');
 
-
-        // 3️⃣ Фильтрация по пользователю
+        // 3️⃣ Фильтруем по пользователю
         if ($customer_id_or_name) {
-//            if ($customer_id_or_name === 81) {
-
 
             if ($booking_status === 'invitation') {
-                // Вкладка «Приглашения» — только приглашённый
-                $list_booking->whereIn('id', $invitedBookingIds);
+                // 🔹 Вкладка "Приглашения" — только приглашённый
+                if (!empty($invitedBookingIds)) {
+                    $list_booking->whereIn('id', $invitedBookingIds);
+                } else {
+                    return $list_booking->whereRaw('0 = 1')->paginate(10);
+                }
+
             } else {
-                // Обычные вкладки — мастер/создатель, vendor и приглашающий
-                $list_booking->where(function ($q) use ($customer_id_or_name, $booking_status) {
+                // 🔹 Обычные вкладки — создатель / мастер / vendor
+                $list_booking->where(function ($q) use ($customer_id_or_name) {
 
-                    // 3.1 Мастер / создатель
-                    $q->where(function ($q1) use ($customer_id_or_name, $booking_status) {
-                        $q1->where('create_user', $customer_id_or_name)
-                            ->orWhereHas('bookingHunters', function ($h) use ($customer_id_or_name) {
-                                $h->where('is_master', 1)
-                                    ->where('invited_by', $customer_id_or_name);
-                            });
-                        if ($booking_status) {
-                            $q1->where('status', $booking_status);
-                        }
-                    })
+                    // 3.1 Создатель
+                    $q->where('create_user', $customer_id_or_name)
 
-                        // 3.2 Vendor
-                        ->orWhere(function ($q2) use ($customer_id_or_name, $booking_status) {
-                            $q2->where('vendor_id', $customer_id_or_name);
-                            if ($booking_status) {
-                                $q2->where('status', $booking_status);
-                            }
-                        });
+                        // 3.2 Мастер
+                        ->orWhereHas('bookingHunters', function ($h) use ($customer_id_or_name) {
+                            $h->where('is_master', 1)
+                                ->where('invited_by', $customer_id_or_name);
+                        })
+
+                        // 3.3 Vendor
+                        ->orWhere('vendor_id', $customer_id_or_name);
                 });
             }
+
         } else {
-            // Без пользователя
+            // 🔹 Для админа — фильтруем только "не сбор охотников"
             $list_booking->whereNotIn('status', ['collection', 'finished_collection']);
-            if ($booking_status && $booking_status !== 'invitation') {
-                $list_booking->where('status', $booking_status);
-            }
         }
 
-        // 4️⃣ Фильтр по сервису
+        // 4️⃣ Фильтр по статусу (к основной таблице)
+        if ($booking_status && $booking_status !== 'invitation') {
+            $list_booking->where('status', $booking_status);
+        }
+
+        // 5️⃣ Фильтр по сервису
         if ($service) {
             $list_booking->where('object_model', $service);
         }
 
-        // 5️⃣ Фильтр по дате
+        // 6️⃣ Фильтр по дате
         if ($from && $to) {
             $list_booking->whereBetween('created_at', [
                 $from . ' 00:00:00',
@@ -809,111 +804,17 @@ class Booking extends BaseModel
             ]);
         }
 
-        // 6️⃣ Фильтр по конкретной брони
+        // 7️⃣ Фильтр по конкретной брони
         if ($booking_id) {
             $list_booking->where('id', $booking_id);
         }
 
-        // 7️⃣ Ограничение по доступным сервисам
+        // 8️⃣ Ограничение по доступным сервисам
         $list_booking->whereIn('object_model', array_keys(get_bookable_services()));
 
-        // 8️⃣ Пагинация
+        // 9️⃣ Пагинация
         return $list_booking->paginate(10);
     }
-
-
-
-//    public static function getBookingHistory($booking_status = false, $customer_id_or_name = false, $service = false , $from = false ,  $to = false, $booking_id = false )
-//    {
-////        $list_booking = parent::query()->with(['animal', 'creator', 'hotel.translation', 'hotelRooms', 'bookingHunters:id,booking_id,invited_by,is_master'])->orderBy('id', 'desc');
-//
-//        $bookingIdsFromInvitations = [];
-//
-//        if (!empty($customer_id_or_name)) {
-//            // Получаем ID броней, на которые пользователь приглашен через join
-//            // Показываем приглашенные брони в фильтрах "сбор охотников" и "завершенный сбор"
-//
-//
-//            if (in_array($booking_status, ['collection', 'finished_collection'])) {
-//                $bookingIdsFromInvitations = DB::table('bc_booking_hunter_invitations as invitations')
-//                    ->join('bc_booking_hunters as hunters', 'invitations.booking_hunter_id', '=', 'hunters.id')
-//                    ->join('bc_bookings as bookings', 'hunters.booking_id', '=', 'bookings.id')
-//                    ->where('invitations.hunter_id', $customer_id_or_name)
-//                    ->whereNotIn('invitations.status', ['declined', 'removed'])
-//                    ->whereNull('invitations.deleted_at')
-//                    ->whereNull('hunters.deleted_at')
-//                    ->where('bookings.status', $booking_status)
-//                    ->pluck('hunters.booking_id')
-//                    ->toArray();
-//            }
-//
-//            $list_booking = parent::query()
-//                ->with([
-//                    'animal',
-//                    'creator',
-//                    'hotel.translation',
-//                    'hotelRooms',
-//                    'bookingHunters:id,booking_id,invited_by,is_master'
-//                ])
-//                ->select('*')
-//                ->selectRaw("
-//            CASE
-//                WHEN id IN (" . (!empty($bookingIdsFromInvitations) ? implode(',', $bookingIdsFromInvitations) : '0') . ")
-//                THEN 'invitation'
-//                ELSE status
-//            END as display_status
-//        ")
-//                ->orderBy('id', 'desc');
-//
-//            $list_booking->where(function($q) use ($customer_id_or_name, $bookingIdsFromInvitations, $booking_status) {
-//                // Брони, созданные пользователем или где он вендор
-//                // Фильтр по статусу применяется к каждому условию отдельно
-//                if (!empty($booking_status)) {
-//                    $q->where(function($subQ) use ($customer_id_or_name, $booking_status) {
-//                        $subQ->where(function($createQ) use ($customer_id_or_name, $booking_status) {
-//                            $createQ->where("create_user", $customer_id_or_name)
-//                                ->where("status", $booking_status);
-//                        })
-//                            ->orWhere(function($vendorQ) use ($customer_id_or_name, $booking_status) {
-//                                $vendorQ->where("vendor_id", $customer_id_or_name)
-//                                    ->where("status", $booking_status);
-//                            });
-//                    });
-//                } else {
-//                    $q->where("create_user", $customer_id_or_name)
-//                        ->orWhere("vendor_id", $customer_id_or_name);
-//                }
-//
-//                // Брони, на которые пользователь приглашен через систему приглашений
-//                // Показываем в фильтрах "сбор охотников" и "завершенный сбор"
-//                // Приглашенные брони при этом отфильтрованы по текущему статусу на этапе получения ID
-//                if (!empty($bookingIdsFromInvitations)) {
-//                    $q->orWhereIn("id", $bookingIdsFromInvitations);
-//                }
-//            });
-//        } else {
-//            $list_booking->whereNotIn('status', ['collection', 'finished_collection']);
-//            if (!empty($booking_status)) {
-//                $list_booking->where("status", $booking_status);
-//            }
-//        }
-//        if (!empty($service)) {
-//            $list_booking->where("object_model", $service);
-//        }
-//        if(!empty($from) and !empty($to)){
-//            $list_booking->whereBetween('created_at', [
-//                $from." 00:00",
-//                $to." 23:59",
-//            ]);
-//        }
-//        if (!empty($booking_id)) {
-//            $list_booking->where("id", $booking_id);
-//        }
-//
-//        $list_booking->whereIn('object_model', array_keys(get_bookable_services()));
-//
-//        return $list_booking->paginate(10);
-//    }
 
     public static function getBookingHistoryForAdminBase($hotel_id, $booking_status = false, $booking_id = false)
     {

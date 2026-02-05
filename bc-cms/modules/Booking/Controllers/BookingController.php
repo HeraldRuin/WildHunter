@@ -1012,7 +1012,7 @@ class BookingController extends \App\Http\Controllers\Controller
             return $this->sendError(__('This booking cannot be modified'))->setStatusCode(422);
         }
 
-        if ($booking->status === Booking::START_COLLECTION) {
+        if ($booking->status === Booking::START_COLLECTION || $booking->status === Booking::FINISHED_COLLECTION) {
             $booking->status = Booking::CONFIRMED;
 
             $minHuntersRequired = HotelAnimal::where('hotel_id', $booking->hotel_id)

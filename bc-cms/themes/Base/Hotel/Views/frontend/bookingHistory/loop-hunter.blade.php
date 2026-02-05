@@ -213,36 +213,6 @@
                 </button>
             @endif
         @else
-            {{-- Обычные кнопки для создателя брони или вендора --}}
-            {{-- Кнопка "Открыть сбор" доступна когда бронь подтверждена или уже идет сбор охотников --}}
-            {{--            @if(--}}
-            {{--                in_array($booking->status, ['confirmed', \Modules\Booking\Models\Booking::START_COLLECTION]) &&--}}
-            {{--                in_array($booking->type, ['animal', 'hotel_animal'])--}}
-            {{--            )--}}
-            {{--                <button--}}
-            {{--                    type="button"--}}
-            {{--                    class="btn btn-primary btn-sm mt-2"--}}
-            {{--                    data-bs-toggle="modal"--}}
-            {{--                    data-bs-target="#collectionModal{{ $booking->id }}"--}}
-            {{--                    @click="openCollectionModal({{ $booking->id }}, $event)">--}}
-            {{--                    {{__("Open collection")}}--}}
-            {{--                </button>--}}
-            {{--            @endif--}}
-            {{--            @if($userRole === 'hunter' && $booking->status !== 'cancelled')--}}
-            {{--                <button--}}
-            {{--                    type="button"--}}
-            {{--                    class="btn btn-primary btn-sm mt-2"--}}
-            {{--                    data-bs-toggle="modal"--}}
-            {{--                    data-bs-target="#bookingAddServiceModal{{ $booking->id }}">--}}
-            {{--                    {{__("Add services")}}--}}
-            {{--                </button>--}}
-            {{--            @endif--}}
-            {{--            @if($userRole === 'hunter' && $booking->status !== 'cancelled')--}}
-            {{--                <a href="{{ $booking->getDetailUrl() }}?select_place=1" target="_blank" class="btn btn-primary btn-sm mt-2">--}}
-            {{--                    {{__("Select bed place")}}--}}
-            {{--                </a>--}}
-            {{--            @endif--}}
-
             @if($booking->is_master_hunter && in_array($booking->status, [\Modules\Booking\Models\Booking::PROCESSING, \Modules\Booking\Models\Booking::CONFIRMED, \Modules\Booking\Models\Booking::FINISHED_COLLECTION, \Modules\Booking\Models\Booking::START_COLLECTION]))
                 <button
                     type="button"
@@ -262,18 +232,28 @@
                 </button>
             @endif
 
-            @if($booking->is_master_hunter && in_array($booking->status, [\Modules\Booking\Models\Booking::CONFIRMED, \Modules\Booking\Models\Booking::START_COLLECTION, \Modules\Booking\Models\Booking::FINISHED_COLLECTION]) && $booking->type != 'hotel')
-                <button
-                    type="button"
-                    class="btn btn-primary btn-sm mt-2"
-                    data-bs-toggle="modal"
-                    data-bs-target="#collectionModal{{ $booking->id }}"
-                    @click="openCollectionAsMaster({{ $booking->id }}, $event)">
-                    {{__("Open collection")}}
-                </button>
+            @if($booking->is_master_hunter && $booking->type != 'hotel')
+                @if(in_array($booking->status, [\Modules\Booking\Models\Booking::FINISHED_COLLECTION, \Modules\Booking\Models\Booking::START_COLLECTION]))
+                    <button
+                        type="button"
+                        class="btn btn-primary btn-sm mt-2"
+                        data-bs-toggle="modal"
+                        data-bs-target="#collectionModal{{ $booking->id }}">
+                        {{__("Open collection")}}
+                    </button>
+                @elseif(in_array($booking->status, [\Modules\Booking\Models\Booking::CONFIRMED]))
+                    <button
+                        type="button"
+                        class="btn btn-primary btn-sm mt-2"
+                        data-bs-toggle="modal"
+                        data-bs-target="#collectionModal{{ $booking->id }}"
+                        @click="openCollectionAsMaster({{ $booking->id }}, $event)">
+                        {{__("Open collection")}}
+                    </button>
+                @endif
             @endif
 
-            @if($booking->is_master_hunter && in_array($booking->status, [\Modules\Booking\Models\Booking::FINISHED_COLLECTION]))
+        @if($booking->is_master_hunter && in_array($booking->status, [\Modules\Booking\Models\Booking::FINISHED_COLLECTION]))
                 <button
                     type="button"
                     class="btn btn-primary btn-sm mt-2"
