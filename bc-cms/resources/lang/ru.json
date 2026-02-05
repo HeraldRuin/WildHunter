@@ -3862,6 +3862,8 @@
     "Trophy costs saved successfully": "Стоимость трофеев успешно сохранена",
     "Set by super admin": "Установлено суперадмином",
     "No trophy types configured for this animal. Please contact super admin to add trophy classifications.": "Для этого животного не настроены типы трофеев. Обратитесь к суперадмину для добавления классификаций трофеев.",
+    "No trophy fines configured for this animal. Please contact super admin to add fines classifications.": "Для этого животного не настроены типы штрафов. Обратитесь к суперадмину для добавления классификаций штрафов.",
+    "No trophy preparations configured for this animal. Please contact super admin to add preparations classifications.": "Для этого животного не настроены типы разделки. Обратитесь к суперадмину для добавления классификаций разделки.",
     "Price set by base admin": "Цена установлена админом базы",
     "Price will be set by base admin": "Цена будет установлена админом базы",
     "Animal": "Животные",
@@ -4046,7 +4048,7 @@
     "Additionals": "Услуги",
     "Add addition": "Добавить услугу",
     "Fines": "Штрафы",
-    "Type Fines": "Типы штрафов",
+    "Type Fines": "Тип штрафов",
     "Preparations": "Разделка",
     "Type Preparations": "Тип разделки"
 }
