@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use Modules\Animals\User\OrganisationController;
+use Modules\Attendance\Controllers\AdditionalController;
 
 Route::group(['prefix'=>config('attendance.attendance_route_prefix')],function(){
     Route::get('/','AttendanceController@index')->name('attendance.search'); // Search
@@ -30,5 +31,10 @@ Route::group(['prefix'=>config('attendance.attendance_route_prefix')],function()
     Route::post('/{animal}/period/create', [OrganisationController::class, 'create'])->name('animal.vendor.period.create');
     Route::post('/period/{period}/update', [OrganisationController::class, 'update']);
     Route::post('/period/{period}', [OrganisationController::class, 'delete'])->name('animal.vendor.period.delete');
+});
 
+Route::group(['prefix'=>config('additional.additionals_route_prefix')],function(){
+    Route::post('/store', [AdditionalController::class, 'store'])->name('additionals.store');
+    Route::post('/{additional}/update', [AdditionalController::class, 'update'])->name('additionals.update');
+    Route::post('/{additional}/delete', [AdditionalController::class, 'destroy'])->name('additionals.delete');
 });
