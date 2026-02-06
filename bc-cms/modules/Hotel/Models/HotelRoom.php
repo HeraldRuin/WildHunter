@@ -65,113 +65,7 @@ class HotelRoom extends Bookable
         return $this->hasMany($this->hotelRoomTermClass, "target_id");
     }
 
-
-//    public function isAvailableAt($filters = []){
-//
-//        if(empty($filters['start_date']) or empty($filters['end_date'])) return true;
-//
-//        $filters['end_date'] = date("Y-m-d", strtotime($filters['end_date']." -1day"));
-//
-//        $roomDates =  $this->getDatesInRange($filters['start_date'],$filters['end_date']);
-//
-//        $allDates = [];
-//        $tmp_price = 0;
-//        $tmp_night = 0;
-//        $period = periodDate($filters['start_date'],$filters['end_date'],true);
-//        foreach ($period as $dt){
-//            $allDates[$dt->format('Y-m-d')] = [
-//                'number'=>$this->number,
-//                'price'=>$this->price
-//            ];
-//            $tmp_night++;
-//        }
-//        if(!empty($roomDates))
-//        {
-//            foreach ($roomDates as $row)
-//            {
-//                if(!$row->active){
-//                    return false;
-//                }
-//
-//                if(!$row->number or !$row->price){
-//                    return false;
-//                }
-//
-//                $rowStartDate = date('Y-m-d', strtotime($row->start_date));
-//                $rowEndDate = date('Y-m-d', strtotime($row->end_date));
-//                $rowPeriod = periodDate($rowStartDate, $rowEndDate, false);
-//
-//                foreach ($rowPeriod as $dt) {
-//                    $dateKey = $dt->format('Y-m-d');
-//                    if(array_key_exists($dateKey, $allDates)) {
-//                        $allDates[$dateKey] = [
-//                            'number'=>$row->number,
-//                            'price'=>$row->price
-//                        ];
-//                    }
-//                }
-//            }
-//        }
-//
-//        $roomBookings = $this->getBookingsInRange($filters['start_date'],$filters['end_date']);
-//
-//        if(!empty($roomBookings)){
-//            foreach ($roomBookings as $roomBooking){
-//
-//                $period = periodDate($roomBooking->start_date,$roomBooking->end_date,false);
-//
-//                foreach ($period as $dt){
-//                    $date = $dt->format('Y-m-d');
-//                    if(!array_key_exists($date,$allDates)) continue;
-//                    $allDates[$date]['number'] -= $roomBooking->number;
-//                    if($allDates[$date]['number'] <= 0){
-//                        if($allDates[$date]['number'] <= 0){
-//                            \Log::info("FULL: Room {$this->id} is fully booked on {$date}. Remaining: {$allDates[$date]['number']}");
-//                            return false;
-//                        }
-//                        return false;
-//                    }
-//                }
-//            }
-//        }
-//
-//        if(!empty($this->ical_import_url)){
-//		    $startDate = $filters['start_date'];
-//		    $endDate = $filters['end_date'];
-//		    $timezone = setting_item('site_timezone',config('app.timezone'));
-//		    try {
-//			    $icalevents   =  new Ical($this->ical_import_url,[
-//				    'defaultTimeZone'=>$timezone
-//			    ]);
-//			    $eventRange  = $icalevents->eventsFromRange($startDate,$endDate);
-//			    if(!empty($eventRange)){
-//				    foreach ($eventRange as $item=>$value){
-//					    if(!empty($date = $value->dtstart_array[2])){
-//						    $allDates[date('Y-m-d',$date)]['number'] -= 1;
-//						    if($allDates[date('Y-m-d',$date)]['number'] <= 0){
-//							    return false;
-//						    }
-//					    }
-//
-//				    }
-//			    }
-//		    }catch (\Exception $exception){
-//			    return $this->sendError($exception->getMessage());
-//		    }
-//	    }
-//
-//        $this->tmp_number = !empty($allDates) ?  (int) min(array_column($allDates,'number')) : 0;
-//        if(empty($this->tmp_number)){
-//            return false;
-//        }
-//        $this->tmp_price = array_sum(array_column($allDates,'price'));
-//        $this->tmp_dates = $allDates;
-//        $this->tmp_nights = $tmp_night;
-//
-//        return true;
-//    }
-
-    public function isAvailableAt($filters = [])
+    public function isAvailableAt($filters = []): bool
     {
         if (empty($filters['start_date']) || empty($filters['end_date'])) {
             return true;
@@ -250,14 +144,14 @@ class HotelRoom extends Bookable
             return false;
         }
 
-        if (!empty($filters['adults'])) {
-            $requested_adults = (int)$filters['adults'];
-            $max_adults_possible = $this->tmp_number * (int)$this->adults;
-
-            if ($requested_adults > $max_adults_possible) {
-                return false;
-            }
-        }
+//        if (!empty($filters['adults'])) {
+//            $requested_adults = (int)$filters['adults'];
+//            $max_adults_possible = $this->tmp_number * (int)$this->adults;
+//
+//            if ($requested_adults > $max_adults_possible) {
+//                return false;
+//            }
+//        }
 
         $this->tmp_price  = array_sum(array_column($allDates, 'price'));
         $this->tmp_dates  = $allDates;

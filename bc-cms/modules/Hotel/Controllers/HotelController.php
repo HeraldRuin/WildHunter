@@ -302,6 +302,7 @@ class HotelController extends Controller
 
     public function checkAvailability(){
         $hotel_id = \request('hotel_id');
+        $adults = \request('adults');
         if(\request()->input('firstLoad') == "false") {
             $rules = [
                 'hotel_id'   => 'required',
@@ -343,7 +344,24 @@ class HotelController extends Controller
 
         $rooms = $hotel->getRoomsAvailability(request()->input());
 
-        return $this->sendSuccess([
+        $requestedAdults = (int) $adults;
+        $totalCapacity = 0;
+
+        foreach ($rooms as $room) {
+            $room_adults = (int) ($room['adults'] ?? 0);
+            $numRooms    = (int) ($room['number'] ?? 0);
+
+            $roomCapacity = $room_adults * $numRooms;
+            $totalCapacity += $roomCapacity;
+        }
+
+        if ($totalCapacity < $requestedAdults) {
+            return $this->sendSuccess([
+                'rooms'=>[]
+            ]);
+        }
+
+            return $this->sendSuccess([
             'rooms'=>$rooms
         ]);
     }

@@ -890,84 +890,76 @@ class Hotel extends Bookable
         $rooms = $this->rooms;
         $res = [];
         $this->tmp_rooms = [];
+
         foreach ($rooms as $room) {
-            if ($room->isAvailableAt($filters)) {
-                // Validate adults and children capacity
-                // Similar to addToCartValidate logic: check if available rooms can accommodate requested guests
-                $requested_adults = isset($filters['adults']) && $filters['adults'] !== '' && $filters['adults'] !== null ? (int)$filters['adults'] : 0;
-                $requested_children = isset($filters['children']) && $filters['children'] !== '' && $filters['children'] !== null ? (int)$filters['children'] : 0;
-
-                // Get available number of rooms for this room type
-                $available_rooms = (int)($room->tmp_number ?? 0);
-
-                // Skip if no rooms available
-                if ($available_rooms <= 0) {
-                    continue;
-                }
-
-                // Get room capacity (ensure it's an integer)
-                // Use getAttribute to ensure we get the value even if it's null
-                // Если number не указан или равен 0, считаем что номер состоит из 1 комнаты
-                $room_number = (int)($room->getAttribute('number') ?? 1);
-                if ($room_number <= 0) {
-                    $room_number = 1; // по умолчанию 1 комната
-                }
-
-                $room_adults = (int)($room->getAttribute('adults') ?? 0); // количество взрослых в одной комнате
-                $room_children = (int)($room->getAttribute('children') ?? 0); // количество детей в одной комнате
-
-                // Базовая проверка: если нет вместимости вообще (ни взрослых, ни детей), пропускаем номер
-                if ($room_adults <= 0 && $room_children <= 0) {
-                    continue;
-                }
-
-                // ВАЖНО: Полная проверка вместимости с учетом запрошенного количества номеров
-                // выполняется в методе search(), здесь не фильтруем по adults/children
-                // чтобы не исключать номера раньше времени
-
-                $translation = $room->translate();
-                $terms = Terms::getTermsByIdForAPI($room->terms->pluck('term_id'));
-                $term_features = [];
-                $i = 0;
-                if (!empty($terms)) {
-                    foreach ($terms as $term) {
-                        if (!empty($term['child'])) {
-                            foreach ($term['child'] as $child) {
-                                $term_features[] = [
-                                    'icon' => $child['icon'] ?? 'fa fa-smile-o',
-                                    'title' => $child['title']
-                                ];
-                                $i++;
-                                if ($i == 5) break;
-                            }
-                        }
-                        if ($i == 5) break;
-                    }
-                }
-                $res[] = [
-                    'id'              => $room->id,
-                    'title'           => $translation->title,
-                    'price'           => $room->tmp_price ?? 0,
-                    'size_html'       => $room->size ? size_unit_format($room->size) : '',
-                    'beds_html'       => $room->beds ? 'x' . $room->beds : '',
-                    'adults_html'     => $room->adults ? 'x' . $room->adults : '',
-                    'adults'          => $room_adults,
-                    'children_html'   => $room->children ? 'x' . $room->children : '',
-                    'children'        => $room_children,
-                    'number_selected' => 0,
-                    'number'          => (int)$room->tmp_number ?? 0,
-                    'min_day_stays'   => $room->min_day_stays ?? 0,
-                    'image'           => $room->image_id ? get_file_url($room->image_id, 'medium') : '',
-                    'tmp_number'      => $room->tmp_number,
-                    'gallery'         => $room->getGallery(),
-                    'price_html'      => format_money($room->tmp_price) . '<span class="unit">/' . ($room->tmp_nights ? __(':count nights', ['count' => $room->tmp_nights]) : __(":count night", ['count' => $room->tmp_nights])) . '</span>',
-                    'price_text'      => format_money($room->tmp_price) . '/' . ($room->tmp_nights ? __(':count nights', ['count' => $room->tmp_nights]) : __(":count night", ['count' => $room->tmp_nights])),
-                    'terms'           => $terms,
-                    'term_features'   => $term_features
-                ];
-                $this->tmp_rooms[] = $room;
+            if (!$room->isAvailableAt($filters)) {
+                continue;
             }
+
+            $available_rooms = (int) ($room->tmp_number ?? 0);
+            if ($available_rooms <= 0) {
+                continue;
+            }
+
+            $room_adults = (int) ($room->getAttribute('adults') ?? 0);
+
+            if ($room_adults <= 0) {
+                continue;
+            }
+
+            $translation = $room->translate();
+            $terms = Terms::getTermsByIdForAPI($room->terms->pluck('term_id'));
+
+            $term_features = [];
+            $i = 0;
+            if (!empty($terms)) {
+                foreach ($terms as $term) {
+                    if (!empty($term['child'])) {
+                        foreach ($term['child'] as $child) {
+                            $term_features[] = [
+                                'icon'  => $child['icon'] ?? 'fa fa-smile-o',
+                                'title' => $child['title']
+                            ];
+                            if (++$i === 5) break;
+                        }
+                    }
+                    if ($i === 5) break;
+                }
+            }
+
+            $res[] = [
+                'id'              => $room->id,
+                'title'           => $translation->title,
+                'price'           => $room->tmp_price ?? 0,
+                'size_html'       => $room->size ? size_unit_format($room->size) : '',
+                'beds_html'       => $room->beds ? 'x' . $room->beds : '',
+                'adults_html'     => $room->adults ? 'x' . $room->adults : '',
+                'adults'          => $room_adults,
+//                'children_html'   => $room->children ? 'x' . $room->children : '',
+//                'children'        => $room_children,
+                'number_selected' => 0,
+                'number'          => $available_rooms,
+                'min_day_stays'   => $room->min_day_stays ?? 0,
+                'image'           => $room->image_id ? get_file_url($room->image_id, 'medium') : '',
+                'tmp_number'      => $available_rooms,
+                'gallery'         => $room->getGallery(),
+                'price_html'      => format_money($room->tmp_price) .
+                    '<span class="unit">/' .
+                    ($room->tmp_nights
+                        ? __(':count nights', ['count' => $room->tmp_nights])
+                        : __(':count night', ['count' => $room->tmp_nights])) .
+                    '</span>',
+                'price_text'      => format_money($room->tmp_price) . '/' .
+                    ($room->tmp_nights
+                        ? __(':count nights', ['count' => $room->tmp_nights])
+                        : __(':count night', ['count' => $room->tmp_nights])),
+                'terms'           => $terms,
+                'term_features'   => $term_features
+            ];
+
+            $this->tmp_rooms[] = $room;
         }
+
         return $res;
     }
 
