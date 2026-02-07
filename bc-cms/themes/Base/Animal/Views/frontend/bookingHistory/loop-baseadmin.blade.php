@@ -168,8 +168,9 @@
             </button>
         @endif
     </td>
-
 </tr>
+
+@include('Hotel::.frontend.bookingHistory.addServices.add-services-baseadmin')
 
 <div class="modal fade" id="confirmBookingModal{{ $booking->id }}" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog">
@@ -204,40 +205,6 @@
                         data-bs-dismiss="modal">{{__('No, keep booking')}}</button>
                 <button type="button" class="btn btn-danger btn-cancel-booking-confirm-vue"
                         data-booking-id="{{ $booking->id }}">{{__('Yes, cancel')}}</button>
-            </div>
-        </div>
-    </div>
-</div>
-
-
-<div class="modal fade" id="bookingAddServiceModal{{ $booking->id }}" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Добавить услуги для брони #{{ $booking->id }}</h5>
-            </div>
-            <div class="modal-body">
-                <div class="row">
-                    <div class="col-md-6">
-                        <h6>Услуги отеля</h6>
-                        <div class="card card-body">
-                            <button type="button" class="btn btn-primary btn-sm">Добавить услугу</button>
-
-
-                        </div>
-                    </div>
-
-                    <div class="col-md-6">
-                        <h6>Услуги охоты</h6>
-                        <div class="card card-body">
-                            <button type="button" class="btn btn-success btn-sm">Добавить услугу</button>
-                            {{-- Можно добавить список услуг здесь --}}
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
             </div>
         </div>
     </div>
