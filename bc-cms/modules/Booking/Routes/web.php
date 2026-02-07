@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 Route::group(['prefix'=>config('booking.booking_route_prefix')],function(){
     Route::post('/addToCart','BookingController@addToCart');
     Route::post('/addToCartAnimal','BookingController@addToCartAnimal');
+    Route::post('/validateRooms','BookingController@validateRooms');
     Route::post('/doCheckout','BookingController@doCheckout')->name('booking.doCheckout');
     Route::get('/confirm/{gateway}','BookingController@confirmPayment')->name('booking.confirm-payment');
     Route::get('/cancel/{gateway}','BookingController@cancelPayment');
@@ -23,6 +24,18 @@ Route::group(['prefix'=>config('booking.booking_route_prefix')],function(){
     Route::post('/{booking}/decline-invitation','BookingController@declineInvitation');
     Route::post('/{booking}/cancel','BookingController@cancelBooking');
     Route::post('/{booking}/complete','BookingController@completeBooking');
+
+    // Добавление услуг
+    Route::post('/{booking}/save-services', 'BookingController@saveServices');
+    Route::get('/{booking}/trophy-services', 'BookingController@getAnimalTrophyServices');
+    Route::get('/{booking}/saved-services', 'BookingController@getBookingServices');
+    Route::delete('/{booking}/service/{service}', 'BookingController@deleteService');
+    Route::get('/booking/{booking}/saved-penalties', 'BookingController@getBookingPenalties');
+
+    Route::get('/{booking}/penalty-services', 'BookingController@getAnimalPenaltyServices');
+    Route::get('/{booking}/preparation-services', 'BookingController@getAnimalPreparationServices');
+    Route::get('/{booking}/food-services', 'BookingController@getAnimalFoodServices');
+
 
 
     //ical
