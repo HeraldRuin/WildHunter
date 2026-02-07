@@ -235,7 +235,7 @@
 @include('Booking::frontend.collection-modal', ['booking' => $booking])
 
 {{-- Модальное окно для добавления услуг --}}
-@include('Booking::frontend.add-services-modal', ['booking' => $booking])
+@include('Animal::.frontend.bookingHistory.addServices.add-services-hunter')
 
 {{-- Модальное окно для просмотра приглашения --}}
 @include('Booking::frontend.invitation-modal', ['booking' => $booking])

@@ -170,7 +170,8 @@
     </td>
 </tr>
 
-@include('Hotel::.frontend.bookingHistory.addServices.add-services-baseadmin')
+{{-- Модальное окно для добавления услуг --}}
+@include('Animal::.frontend.bookingHistory.addServices.add-services-baseadmin')
 
 <div class="modal fade" id="confirmBookingModal{{ $booking->id }}" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog">
