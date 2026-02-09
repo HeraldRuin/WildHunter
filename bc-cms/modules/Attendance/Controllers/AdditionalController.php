@@ -94,10 +94,8 @@ class AdditionalController extends Controller
             'price' => $request->price,
         ]);
 
-        return response()->json([
-            'success' => true,
-            'message' => __('Updated Success'),
-            'additional' => $additional,
+        return $this->sendSuccess([
+            'message' => __("Updated Success")
         ]);
     }
 
