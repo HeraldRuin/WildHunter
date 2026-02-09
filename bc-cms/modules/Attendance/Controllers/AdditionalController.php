@@ -70,6 +70,37 @@ class AdditionalController extends Controller
         ]);
     }
 
+    public function update(Request $request, $id)
+    {
+        $request->validate([
+            'name'  => 'required|string|max:255',
+            'price' => 'required|numeric|min:0',
+        ]);
+
+        $additional = AddetionalPrice::where('id', $id)
+            ->where('user_id', auth()->id())
+            ->where('hotel_id', get_user_hotel_id())
+            ->first();
+
+        if (!$additional) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Услуга не найдена или нет прав на редактирование',
+            ], 404);
+        }
+
+        $additional->update([
+            'name'  => $request->name,
+            'price' => $request->price,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => __('Updated Success'),
+            'additional' => $additional,
+        ]);
+    }
+
     public function destroy($id)
     {
         $additional = AddetionalPrice::where('id', $id)
