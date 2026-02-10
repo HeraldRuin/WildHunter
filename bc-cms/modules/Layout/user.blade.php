@@ -16,6 +16,7 @@
     <link href="{{ asset('libs/icofont/icofont.min.css') }}" rel="stylesheet">
     <link href="{{ asset('dist/frontend/css/notification.css') }}" rel="newest stylesheet">
     <link href="{{ asset('dist/frontend/css/app.css?_ver=' . config('app.asset_version')) }}" rel="stylesheet">
+    <link href="{{ asset('module/additional/css/additional.css') }}" rel="stylesheet">
     <link rel="stylesheet" type="text/css" href="{{ asset('libs/daterange/daterangepicker.css') }}">
     <link rel="stylesheet" type="text/css" href="{{ asset('libs/select2/css/select2.min.css') }}">
     <!-- Fonts -->
