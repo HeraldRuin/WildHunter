@@ -1,5 +1,7 @@
 <?php
 use Illuminate\Support\Facades\Route;
+use Modules\Booking\Controllers\BookingController;
+
 // Booking
 Route::group(['prefix'=>config('booking.booking_route_prefix')],function(){
     Route::post('/addToCart','BookingController@addToCart');
@@ -25,18 +27,30 @@ Route::group(['prefix'=>config('booking.booking_route_prefix')],function(){
     Route::post('/{booking}/cancel','BookingController@cancelBooking');
     Route::post('/{booking}/complete','BookingController@completeBooking');
 
+
     // Добавление услуг
-    Route::post('/{booking}/save-services', 'BookingController@saveServices');
-    Route::get('/{booking}/trophy-services', 'BookingController@getAnimalTrophyServices');
     Route::get('/{booking}/saved-services', 'BookingController@getBookingServices');
-    Route::delete('/{booking}/service/{service}', 'BookingController@deleteService');
+    Route::post('/{booking}/save-services', 'BookingController@saveServices');
+
+    Route::post('/{booking}/trophies', 'BookingController@storeTrophy');
+    Route::get('/trophies/animals', 'BookingController@getAnimalTrophyServices');
+    Route::delete('/{booking}/trophy/{trophyId}', 'BookingController@deleteTrophy');
     Route::get('/booking/{booking}/saved-penalties', 'BookingController@getBookingPenalties');
 
-    Route::get('/{booking}/penalty-services', 'BookingController@getAnimalPenaltyServices');
+    Route::get('/penalty/animals', 'BookingController@getAnimalPenaltyServices');
+    Route::post('/{booking}/penalty', 'BookingController@storePenalty');
+    Route::delete('/{booking}/penalty/{penaltyId}', 'BookingController@deletePenalty');
+
+
     Route::get('/{booking}/preparation-services', 'BookingController@getAnimalPreparationServices');
-    Route::get('/{booking}/food-services', 'BookingController@getAnimalFoodServices');
+     Route::get('/preparation/animals', 'BookingController@getAnimalPreparationServices');
+    Route::post('/{booking}/preparation', 'BookingController@storePreparation');
+    Route::delete('/{booking}/preparation/{preparationId}', 'BookingController@deletePreparation');
 
+    Route::post('/{booking}/food', 'BookingController@storeFoods');
+    Route::delete('/{booking}/food/{foodId}', 'BookingController@deleteFoods');
 
+    Route::get('/addetional', 'BookingController@getAddetionalServices');
 
     //ical
 	Route::get('/export-ical/{type}/{id}','BookingController@exportIcal')->name('booking.admin.export-ical');

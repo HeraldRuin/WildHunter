@@ -1,936 +1,818 @@
 $(document).ready(function () {
+
+    // ─────────────────────────────
+    // 1. Открытие модального окна
+    // ─────────────────────────────
     $('[id^="bookingAddServiceModal"]').on('show.bs.modal', function () {
+
         const bookingId = $(this).attr('id').replace('bookingAddServiceModal', '');
         const block = $('#trophies-block-' + bookingId);
-        const trophiesList = block.find('.trophies-list');
+        block.data('bookingId', bookingId);
 
+        const trophiesList = block.find('.trophies-list');
         trophiesList.empty();
 
-        $.get(`/booking/${bookingId}/saved-services`, function (data) {
-            const savedTrophies = data.trophies || [];
+        addTrophyHeader(trophiesList);
 
-            if (!savedTrophies.length) return;
+        loadTrophyAnimals(block).done(animals => {
+            loadSavedTrophies(bookingId, trophiesList);
+        });
+    });
 
-            // Добавляем заголовки, если их ещё нет
-            if (trophiesList.find('.trophy-header').length === 0) {
-                const headerHtml = `
+    // ─────────────────────────────
+    // 2. Заголовок
+    // ─────────────────────────────
+    function addTrophyHeader(container) {
+        container.append(`
             <div class="d-flex fw-bold mb-2 trophy-header">
                 <span class="flex-fill">Животное</span>
                 <span class="flex-fill">Тип</span>
                 <span class="flex-fill">Количество</span>
-            </div>`;
-                trophiesList.append(headerHtml);
-            }
+                <span style="width:40px"></span>
+            </div>
+        `);
+    }
 
-            savedTrophies.forEach(t => {
-                const html = `
-<div class="d-flex align-items-center gap-2 mb-2 trophy-item"
-     data-service-id="${t.id}"
-     style="border: 2px solid #6c757d; padding: 8px; border-radius: 6px; background-color: #fff;">
-    <span class="flex-fill animal-name">${t.animal}</span>
-    <span class="flex-fill type-name">${t.type}</span>
-    <span class="flex-fill count-span">${t.count}</span>
-    <button type="button" class="btn btn-sm btn-outline-danger remove-trophy-btn">x</button>
-</div>
-`;
-                trophiesList.append(html);
+    // ─────────────────────────────
+    // 3. Загрузка животных
+    // ─────────────────────────────
+    function loadTrophyAnimals(block) {
+        return $.get('/booking/trophies/animals')
+            .done(animals => block.data('trophyAnimals', animals));
+    }
+
+    // ─────────────────────────────
+    // 4. Загрузка сохранённых трофеев
+    // ─────────────────────────────
+    function loadSavedTrophies(bookingId, container) {
+        $.get(`/booking/${bookingId}/saved-services`, res => {
+            (res.trophies || []).forEach(trophy => {
+                container.append(renderSavedTrophyRow(trophy, bookingId));
             });
-        });
-        if (!block.data('loaded')) {
-            $.get(`/booking/${bookingId}/trophy-services`, function (data) {
-                block.data('allTrophies', data.trophies || []);
-                block.data('loaded', true);
-            });
-        }
-    });
-
-
-    // Открытие списка всех трофеев при нажатии «Добавить»
-    $(document).on('click', '.add-trophy-btn', function (e) {
-        e.stopPropagation(); // чтобы клик не закрывал сразу оверлей
-        const block = $(this).closest('.service-block');
-        const overlay = block.find('.all-trophies-overlay');
-        const allTrophies = block.data('allTrophies') || [];
-
-        if (!allTrophies.length) {
-            alert('Сначала подождите, пока список трофеев загрузится');
-            return;
-        }
-
-        overlay.empty();
-
-        allTrophies.forEach((t, index) => {
-            overlay.append(`<div class="trophy-item-select p-2 mb-2 rounded" data-index="${index}">
-            <strong>Животное:</strong> ${t.animal} &nbsp;
-            <strong>Тип трофея:</strong> ${t.type}
-        </div>`);
-        });
-
-        // Показываем и позиционируем
-        overlay.css({
-            display: 'block',
-            top: $(this).position().top + $(this).outerHeight() + 5,
-            left: $(this).position().left,
-            width: '400px'  // ширина оверлея
-        });
-
-        overlay.find('.trophy-item-select').hover(
-            function () {
-                $(this).css('background-color', '#e2e6ea');
-            },
-            function () {
-                $(this).css('background-color', '');
-            }
-        ).css('cursor', 'pointer');
-    });
-
-// Скрываем оверлей при клике вне блока
-    $(document).on('click', function (e) {
-        $('.all-trophies-overlay').hide();
-    });
-
-
-// Выбор записи из списка
-    $(document).on('click', '.trophy-item-select', function () {
-        const block = $(this).closest('.service-block');
-        const index = $(this).data('index');
-        const allTrophies = block.data('allTrophies') || [];
-        const trophy = allTrophies[index];
-
-        const trophiesList = block.find('.trophies-list');
-
-        // Если заголовки ещё не добавлены, добавляем их
-        if (trophiesList.find('.trophy-header').length === 0) {
-            const headerHtml = `
-            <div class="d-flex fw-bold mb-2 trophy-header">
-                <span class="flex-fill">Животное</span>
-                <span class="flex-fill">Тип</span>
-                <span class="flex-fill">Количество</span>
-            </div>`;
-            trophiesList.append(headerHtml);
-        }
-
-        // Проверяем, есть ли уже такой трофей в списке
-        let existing = null;
-        trophiesList.find('.trophy-item').each(function () {
-            const animal = $(this).find('.animal-name').text();
-            const type = $(this).find('.type-name').text();
-            if (animal === trophy.animal && type === trophy.type) {
-                existing = $(this);
-                return false; // прерываем each
-            }
-        });
-
-        if (existing) {
-            // Если есть — увеличиваем количество на 1
-            const countSpan = existing.find('.count-span');
-            const currentCount = parseInt(countSpan.text());
-            countSpan.text(currentCount + 1);
-        } else {
-            // Если нет — добавляем новый блок
-            const html = `
-            <div class="d-flex align-items-center gap-2 mb-2 trophy-item" 
-                 style="border: 2px solid #6c757d; padding: 8px; border-radius: 6px; background-color: #fff;">
-                <span class="flex-fill animal-name">${trophy.animal}</span>
-                <span class="flex-fill type-name">${trophy.type}</span>
-                <span class="flex-fill count-span">${trophy.count}</span>
-                <button type="button" class="btn btn-sm btn-outline-danger remove-trophy-btn">x</button>
-            </div>`;
-            trophiesList.append(html);
-        }
-
-        // Скрываем список выбора
-        block.find('.all-trophies-list').remove();
-
-        saveService(block, 'trophy', function (block) {
-            return [{
-                service_id: trophy.id,
-                animal: trophy.animal,
-                type: trophy.type,
-                count: 1
-            }];
-        });
-    });
-
-    function saveService(block, serviceType, itemsBuilder) {
-        const bookingId = block.attr('id').match(/\d+/)[0];
-
-        const items = itemsBuilder(block);
-
-        if (!items.length) return;
-
-        $.ajax({
-            url: `/booking/${bookingId}/save-services`,
-            method: 'POST',
-            headers: {
-                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-            },
-            data: {
-                service_type: serviceType,
-                items: items
-            },
-            success(response) {
-                items.forEach((item, index) => {
-                    const htmlItem = block.find('.trophy-item').eq(index);
-                    htmlItem.attr('data-service-id', response.items[index].id);
-                });
-            },
-            error(err) {
-                console.error(`Ошибка сохранения ${serviceType}:`, err);
-            }
         });
     }
 
-// Удаление трофея
-    $(document).on('click', '.remove-trophy-btn', function () {
-        const item = $(this).closest('.trophy-item');
-        const serviceId = item.data('service-id'); // <- теперь должно работать
+    // ─────────────────────────────
+    // 5. Сохранённый трофей (READ ONLY)
+    // ─────────────────────────────
+    function renderSavedTrophyRow(trophy, bookingId) {
+        return $(`
+            <div class="trophy-row border rounded p-2 mb-2 d-flex align-items-center"
+                 data-id="${trophy.id}">
+
+                <div class="flex-fill">${trophy.animal_title}</div>
+                <div class="flex-fill">${trophy.type}</div>
+                <div class="flex-fill">${trophy.count}</div>
+
+                <button class="btn btn-sm btn-outline-danger remove-saved-trophy">Удалить</button>
+            </div>
+        `);
+    }
+
+    // ─────────────────────────────
+    // 6. Добавить новую строку
+    // ─────────────────────────────
+    $(document).on('click', '.add-trophy-btn', function () {
+
         const block = $(this).closest('.service-block');
-        const bookingId = block.attr('id').match(/\d+/)[0];
+        const bookingId = block.data('bookingId');
+        const animals = block.data('trophyAnimals') || [];
 
-        // Удаляем визуально
-        item.remove();
+        block.find('.trophies-list')
+            .append(renderNewTrophyRow(animals, bookingId));
+    });
 
-        // Удаляем с бэка
+    // ─────────────────────────────
+    // 7. Новая запись (SELECT ONLY HERE)
+    // ─────────────────────────────
+    function renderNewTrophyRow(animals, bookingId) {
+
+        const $row = $(`
+        <div class="trophy-row border rounded p-2 mb-2 d-flex align-items-center gap-2">
+
+            <div class="col-auto">
+                <select class="form-select form-select-sm trophy-animal" style="width: 270px;">
+                    <option value="" disabled selected hidden>Животное</option>
+                </select>
+            </div>
+
+            <div class="col-auto">
+                <select class="form-select form-select-sm trophy-type" style="width: 270px;" disabled>
+                    <option value="" disabled selected hidden>Тип</option>
+                </select>
+            </div>
+
+            <div class="col-auto">
+                <input type="text" class="form-control form-control-sm trophy-count" placeholder="Количество" style="width: 170px;">
+            </div>
+
+            <div class="col-auto">
+                <button class="btn btn-sm btn-success save-trophy" disabled>Сохранить</button>
+                <button class="btn btn-sm btn-outline-secondary cancel-new">Отмена</button>
+            </div>
+        </div>
+    `);
+
+        const $animal = $row.find('.trophy-animal');
+        const $type = $row.find('.trophy-type');
+        const $count = $row.find('.trophy-count');
+        const $save = $row.find('.save-trophy');
+
+        // животные
+        animals.forEach(a => {
+            $animal.append(`<option value="${a.id}">${a.title}</option>`);
+        });
+
+        // выбор животного
+        $animal.on('change', function () {
+            const animal = animals.find(a => String(a.id) === String(this.value));
+
+            $type.empty()
+                .append('<option value="" disabled selected hidden>Тип</option>')
+                .prop('disabled', true);
+
+            if (animal?.trophies?.length) {
+                animal.trophies.forEach(t => {
+                    $type.append(`<option value="${t.id}">${t.type}</option>`);
+                });
+                $type.prop('disabled', false);
+            }
+
+            check();
+        });
+
+        $type.on('change', check);
+        $count.on('input', check);
+
+        function check() {
+            $save.prop(
+                'disabled',
+                !($animal.val() && $type.val() && $count.val())
+            );
+        }
+
+        // сохранение
+        $save.on('click', function () {
+            $.post(`/booking/${bookingId}/trophies`, {
+                animal_id: $animal.val(),
+                type: $type.find('option:selected').text(),
+                count: $count.val(),
+                _token: $('meta[name="csrf-token"]').attr('content')
+            }).done(saved => {
+                $row.replaceWith(renderSavedTrophyRow(saved, bookingId));
+            });
+        });
+
+        // отмена
+        $row.find('.cancel-new').on('click', () => $row.remove());
+
+        return $row;
+    }
+
+
+    // ─────────────────────────────
+    // 8. Удаление сохранённого
+    // ─────────────────────────────
+    $(document).on('click', '.remove-saved-trophy', function () {
+
+        const row = $(this).closest('.trophy-row');
+        const trophyId = row.data('id'); // id трофея
+        const bookingId = row.closest('.service-block').data('bookingId');
+
         $.ajax({
-            url: `/booking/${bookingId}/service/${serviceId}`,
-            method: 'DELETE',
-            headers: {'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')},
-            success() {
-                console.log(`Сервис с ID ${serviceId} удалён`);
-            },
-            error(err) {
-                console.error('Ошибка удаления сервиса:', err);
-            }
+            url: `/booking/${bookingId}/trophy/${trophyId}`, // <-- используем id трофея
+            type: 'DELETE',
+            data: {_token: $('meta[name="csrf-token"]').attr('content')},
+            success: () => row.remove()
         });
     });
 
-
-    // Штрафы
-    $(document).ready(function () {
-
-        $('[id^="bookingAddServiceModal"]').on('show.bs.modal', function () {
-            const bookingId = $(this).attr('id').replace('bookingAddServiceModal', '');
-
-            const penaltiesBlock = $('#penalties-block-' + bookingId);
-            const penaltiesList = penaltiesBlock.find('.penalties-list');
-
-            penaltiesList.empty();
-
-            // Получаем сохранённые штрафы
-            $.get(`/booking/${bookingId}/saved-services`, function (data) {
-                const savedPenalties = data.penalties || [];
-                if (savedPenalties.length) {
-                    if (!penaltiesList.find('.penalty-header').length) {
-                        penaltiesList.append(`
-                        <div class="d-flex fw-bold mb-2 penalty-header">
-                            <span class="flex-fill">Животное</span>
-                            <span class="flex-fill">Тип штрафа</span>
-                            <span class="flex-fill">Охотник</span>
-                        </div>
-                    `);
-                    }
-                    savedPenalties.forEach(p => {
-                        penaltiesList.append(`
-                        <div class="d-flex align-items-center gap-2 mb-2 penalty-item"
-                             data-service-id="${p.id}"
-                             style="border:2px solid #6c757d; padding:8px; border-radius:6px; background:#fff;">
-                            <span class="flex-fill animal-name">${p.animal}</span>
-                            <span class="flex-fill type-name">${p.type}</span>
-                            <span class="flex-fill hunter-name">${p.hunter}</span>
-                            <button type="button" class="btn btn-sm btn-outline-danger remove-penalty-btn">x</button>
-                        </div>
-                    `);
-                    });
-                }
-            });
-
-            // Загружаем все штрафы для выбора (оверлей)
-            if (!penaltiesBlock.data('loaded')) {
-                $.get(`/booking/${bookingId}/penalty-services`, function (data) {
-                    penaltiesBlock.data('allPenalties', data.penalties || []);
-                    penaltiesBlock.data('loaded', true);
-                });
-            }
-
-        });
-
-        // --- Оверлей для добавления ---
-        function showOverlay(block, allItems, overlaySelector, itemClass, fields) {
-            const overlay = block.find(overlaySelector);
-            overlay.empty();
-
-            allItems.forEach((item, index) => {
-                let html = `<div class="${itemClass} p-2 mb-2 rounded" data-index="${index}">`;
-                fields.forEach(f => {
-                    html += `<strong>${f.label}:</strong> ${item[f.key]} &nbsp;`;
-                });
-                html += `</div>`;
-                overlay.append(html);
-            });
-
-            overlay.css({
-                display: 'block',
-                top: block.find('.btn-outline-primary').position().top + 30,
-                left: block.find('.btn-outline-primary').position().left,
-                width: '400px'
-            });
-            overlay.find(`.${itemClass}`).hover(
-                function () { $(this).css('background-color', '#e2e6ea'); },
-                function () { $(this).css('background-color', ''); }
-            ).css('cursor', 'pointer');
-        }
-
-        // --- Кнопка "Добавить штраф" ---
-        $(document).on('click', '.add-penalty-btn', function (e) {
-            e.stopPropagation();
-            const bookingId = $(this).data('booking');
-            const block = $('#penalties-block-' + bookingId);
-            showOverlay(block, block.data('allPenalties') || [], '.all-penalties-overlay', 'penalty-item-select', [
-                {label: 'Животное', key: 'animal'},
-                {label: 'Тип штрафа', key: 'type'},
-            ]);
-        });
-
-        // --- Выбор штрафа из оверлея ---
-        $(document).on('click', '.penalty-item-select', function () {
-            const block = $(this).closest('.service-block');
-            const index = $(this).data('index');
-            const penalty = block.data('allPenalties')[index];
-            const list = block.find('.penalties-list');
-
-            if (!list.find('.penalty-header').length) {
-                list.append('<div class="d-flex fw-bold mb-2 penalty-header"><span class="flex-fill">Животное</span><span class="flex-fill">Тип штрафа</span></div>');
-            }
-
-            // Проверяем, есть ли уже такой штраф
-            let existing = null;
-            list.find('.penalty-item').each(function () {
-                if ($(this).find('.animal-name').text() === penalty.animal &&
-                    $(this).find('.type-name').text() === penalty.type &&
-                    $(this).find('.hunter-name').text() === penalty.hunter) {
-                    existing = $(this);
-                    return false;
-                }
-            });
-
-            if (existing) {
-                // Если есть — увеличиваем количество
-                let span = existing.find('.count-span');
-                if (!span.length) {
-                    existing.append('<span class="flex-fill count-span">1</span>');
-                    span = existing.find('.count-span');
-                }
-                span.text(parseInt(span.text()) + 1);
-            } else {
-                list.append(`
-                <div class="d-flex align-items-center gap-2 mb-2 penalty-item"
-                     style="border:2px solid #6c757d; padding:8px; border-radius:6px; background:#fff;">
-                    <span class="flex-fill animal-name">${penalty.animal}</span>
-                    <span class="flex-fill type-name">${penalty.type}</span>
-                    <span class="flex-fill hunter-name">${penalty.hunter}</span>
-                    <button type="button" class="btn btn-sm btn-outline-danger remove-penalty-btn">x</button>
-                </div>
-            `);
-            }
-
-            block.find('.all-penalties-overlay').hide();
-
-            savePenalty(block, penalty);
-        });
-
-        // --- Сохранение штрафа ---
-        function savePenalty(block, penalty) {
-            const bookingId = block.attr('id').match(/\d+/)[0];
-
-            $.ajax({
-                url: `/booking/${bookingId}/save-services`,
-                method: 'POST',
-                headers: {'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')},
-                data: {
-                    service_type: 'penalty',
-                    items: [{
-                        service_id: penalty.id,
-                        animal: penalty.animal,
-                        type: penalty.type,
-                        hunter: penalty.hunter,
-                        count: 1
-                    }]
-                },
-                success(response) {
-                    // Устанавливаем правильный ID из базы
-                    const lastItem = block.find('.penalty-item').last();
-                    if (response.items && response.items[0]) {
-                        lastItem.attr('data-service-id', response.items[0].id);
-                    }
-                },
-                error(err) {
-                    console.error('Ошибка сохранения штрафа:', err);
-                }
-            });
-        }
-
-        // --- Удаление штрафа ---
-        $(document).on('click', '.remove-penalty-btn', function () {
-            const item = $(this).closest('.penalty-item');
-            const serviceId = item.data('service-id');
-
-            if (!serviceId) {
-                alert('Сначала сохраните штраф перед удалением!');
-                return;
-            }
-
-            const bookingId = item.closest('.service-block').attr('id').match(/\d+/)[0];
-            item.remove();
-
-            $.ajax({
-                url: `/booking/${bookingId}/service/${serviceId}`,
-                method: 'DELETE',
-                headers: {'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')},
-                success() { console.log(`Штраф с ID ${serviceId} удалён`); },
-                error(err) { console.error('Ошибка удаления штрафа:', err); }
-            });
-        });
-
-        // --- Скрытие оверлея при клике вне ---
-        $(document).on('click', function () {
-            $('.all-penalties-overlay').hide();
-        });
-
-    });
-
-
-    // Разделка
-
-    $(document).ready(function () {
-
-        $('[id^="bookingAddServiceModal"]').on('show.bs.modal', function () {
-            const bookingId = $(this).attr('id').replace('bookingAddServiceModal', '');
-
-            // --- Разделка ---
-            const preparationsBlock = $('#preparations-block-' + bookingId);
-            const preparationsList = preparationsBlock.find('.preparations-list');
-            preparationsList.empty();
-
-            // Получаем сохранённые разделки
-            $.get(`/booking/${bookingId}/saved-services`, function (data) {
-                const savedPreparations = data.preparations || [];
-                if (savedPreparations.length) {
-                    if (!preparationsList.find('.preparation-header').length) {
-                        preparationsList.append(`
-                        <div class="d-flex fw-bold mb-2 preparation-header">
-                            <span class="flex-fill">Животное</span>
-                            <span class="flex-fill">Количество</span>
-                        </div>
-                    `);
-                    }
-                    savedPreparations.forEach(p => {
-                        preparationsList.append(`
-                        <div class="d-flex align-items-center gap-2 mb-2 preparation-item"
-                             data-service-id="${p.id}"
-                             style="border:2px solid #6c757d; padding:8px; border-radius:6px; background:#fff;">
-                            <span class="flex-fill animal-name">${p.animal}</span>
-                            <span class="flex-fill count-span">${p.count}</span>
-                            <button type="button" class="btn btn-sm btn-outline-danger remove-preparation-btn">x</button>
-                        </div>
-                    `);
-                    });
-                }
-            });
-
-            // Загружаем все разделки для выбора (оверлей)
-            if (!preparationsBlock.data('loaded')) {
-                $.get(`/booking/${bookingId}/preparation-services`, function (data) {
-                    preparationsBlock.data('allPreparations', data.preparations || []);
-                    preparationsBlock.data('loaded', true);
-                });
-            }
-        });
-
-        // --- Оверлей для добавления ---
-        function showOverlay(block, allItems, overlaySelector, itemClass, fields) {
-            const overlay = block.find(overlaySelector);
-            overlay.empty();
-
-            allItems.forEach((item, index) => {
-                let html = `<div class="${itemClass} p-2 mb-2 rounded" data-index="${index}">`;
-                fields.forEach(f => {
-                    html += `<strong>${f.label}:</strong> ${item[f.key]} &nbsp;`;
-                });
-                html += `</div>`;
-                overlay.append(html);
-            });
-
-            overlay.css({
-                display: 'block',
-                top: block.find('.btn-outline-primary').position().top + 30,
-                left: block.find('.btn-outline-primary').position().left,
-                width: '400px'
-            });
-
-            overlay.find(`.${itemClass}`).hover(
-                function () {
-                    $(this).css('background-color', '#e2e6ea');
-                },
-                function () {
-                    $(this).css('background-color', '');
-                }
-            ).css('cursor', 'pointer');
-        }
-
-        // --- Кнопка "Добавить разделку" ---
-        $(document).on('click', '.add-preparation-btn', function (e) {
-            e.stopPropagation();
-            const bookingId = $(this).data('booking');
-            const block = $('#preparations-block-' + bookingId);
-            showOverlay(block, block.data('allPreparations') || [], '.all-preparations-overlay', 'preparation-item-select', [
-                {label: 'Животное', key: 'animal'},
-            ]);
-        });
-
-        // --- Выбор элемента из оверлея ---
-        $(document).on('click', '.preparation-item-select', function () {
-            const block = $(this).closest('.service-block');
-            const index = $(this).data('index');
-            const preparation = block.data('allPreparations')[index];
-            const list = block.find('.preparations-list');
-
-            if (!list.find('.preparation-header').length) {
-                list.append('<div class="d-flex fw-bold mb-2 preparation-header"><span class="flex-fill">Животное</span><span class="flex-fill">Кол-во</span></div>');
-            }
-
-            // Проверка на существующий элемент
-            let existing = null;
-            list.find('.preparation-item').each(function () {
-                if ($(this).find('.animal-name').text() === preparation.animal) {
-                    existing = $(this);
-                    return false;
-                }
-            });
-
-            if (existing) {
-                const span = existing.find('.count-span');
-                span.text(parseInt(span.text()) + parseInt(preparation.count || 1));
-            } else {
-                list.append(`
-                <div class="d-flex align-items-center gap-2 mb-2 preparation-item"
-                     data-service-id="${preparation.id}"
-                     style="border:2px solid #6c757d; padding:8px; border-radius:6px; background:#fff;">
-                    <span class="flex-fill animal-name">${preparation.animal}</span>
-                    <span class="flex-fill count-span">${preparation.count || 1}</span>
-                    <button type="button" class="btn btn-sm btn-outline-danger remove-preparation-btn">x</button>
-                </div>
-            `);
-            }
-
-            block.find('.all-preparations-overlay').hide();
-
-            saveService(block, 'preparation', function () {
-                return [{
-                    service_id: preparation.id,
-                    animal: preparation.animal,
-                    count: preparation.count || 1
-                }];
-            });
-        });
-
-        // --- Сохранение сервиса ---
-        function saveService(block, serviceType, itemsBuilder) {
-            const bookingId = block.attr('id').match(/\d+/)[0];
-            const items = itemsBuilder(block);
-            if (!items.length) return;
-
-            $.ajax({
-                url: `/booking/${bookingId}/save-services`,
-                method: 'POST',
-                headers: {'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')},
-                data: {service_type: serviceType, items: items},
-                success(response) {
-                    items.forEach((item, index) => {
-                        const htmlItem = block.find('.preparation-item').eq(index);
-                        htmlItem.attr('data-service-id', response.items[index].id);
-                    });
-                },
-                error(err) {
-                    console.error(`Ошибка сохранения ${serviceType}:`, err);
-                }
-            });
-        }
-
-        // --- Удаление сервисов ---
-        $(document).on('click', '.remove-preparation-btn', function () {
-            const item = $(this).closest('.preparation-item');
-            const serviceId = item.data('service-id');
-            const bookingId = item.closest('.service-block').attr('id').match(/\d+/)[0];
-
-            item.remove();
-
-            $.ajax({
-                url: `/booking/${bookingId}/service/${serviceId}`,
-                method: 'DELETE',
-                headers: {'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')},
-                success() {
-                    console.log(`Сервис с ID ${serviceId} удалён`);
-                },
-                error(err) {
-                    console.error('Ошибка удаления сервиса:', err);
-                }
-            });
-        });
-
-        // --- Скрытие оверлея при клике вне ---
-        $(document).on('click', function (e) {
-            $('.all-preparations-overlay').hide();
-        });
-
-    });
-
-
-    // Питание
-    $(document).ready(function () {
-
-        $('[id^="bookingAddServiceModal"]').on('show.bs.modal', function () {
-            const bookingId = $(this).attr('id').replace('bookingAddServiceModal', '');
-            const block = $('#foods-block-' + bookingId);
-            const foodsList = block.find('.foods-list');
-            foodsList.empty();
-
-            // --- Загружаем сохранённые продукты ---
-            $.get(`/booking/${bookingId}/saved-services`, function (data) {
-                const savedFoods = data.nutrition || [];
-
-                if (!savedFoods.length) return;
-
-                if (!foodsList.find('.food-header').length) {
-                    foodsList.append(`
-                    <div class="d-flex fw-bold mb-2 food-header">
-                        <span class="flex-fill">Количество</span>
-                    </div>
-                `);
-                }
-
-                savedFoods.forEach(f => {
-                    foodsList.append(`
-                    <div class="d-flex align-items-center gap-2 mb-2 food-item"
-                         data-service-id="${f.service_id}" 
-                         data-service-name="${f.name}"
-                         style="border:2px solid #6c757d; padding:8px; border-radius:6px; background:#fff;">
-                        <span class="flex-fill count-span">${f.count}</span>
-                        <button type="button" class="btn btn-sm btn-outline-danger remove-food-btn">x</button>
-                    </div>
-                `);
-                });
-            });
-
-            // --- Загружаем все продукты для оверлея ---
-            if (!block.data('loaded')) {
-                $.get(`/booking/${bookingId}/food-services`, function (data) {
-                    block.data('allFoods', data.foods || []);
-                    block.data('loaded', true);
-                });
-            }
-        });
-
-        // --- Открытие оверлея ---
-        $(document).on('click', '.add-food-btn', function (e) {
-            e.stopPropagation();
-            const block = $(this).closest('.service-block');
-            const overlay = block.find('.all-foods-overlay');
-            const allFoods = block.data('allFoods') || [];
-
-            if (!allFoods.length) {
-                alert('Сначала подождите, пока список питания загрузится');
-                return;
-            }
-
-            overlay.empty();
-            allFoods.forEach((food, index) => {
-                overlay.append(`
-                <div class="food-item-select p-2 mb-2 rounded" data-index="${index}">
-                    <strong>Питание:</strong> ${food.name}
-                </div>
-            `);
-            });
-
-            overlay.css({
-                display: 'block',
-                top: $(this).position().top + $(this).outerHeight() + 5,
-                left: $(this).position().left,
-                width: '400px'
-            });
-
-            overlay.find('.food-item-select').hover(
-                function () { $(this).css('background-color', '#e2e6ea'); },
-                function () { $(this).css('background-color', ''); }
-            ).css('cursor', 'pointer');
-        });
-
-        // --- Выбор продукта из оверлея ---
-        $(document).on('click', '.food-item-select', function () {
-            const block = $(this).closest('.service-block');
-            const index = $(this).data('index');
-            const food = block.data('allFoods')[index];
-            const foodsList = block.find('.foods-list');
-
-            if (!foodsList.find('.food-header').length) {
-                foodsList.append('<div class="d-flex fw-bold mb-2 food-header"><span class="flex-fill">Количество</span></div>');
-            }
-
-            // --- Проверяем, есть ли уже этот продукт по service_id ---
-            let existing = null;
-            foodsList.find('.food-item').each(function () {
-                if ($(this).data('service-id') === food.id) {
-                    existing = $(this);
-                    return false;
-                }
-            });
-
-            if (existing) {
-                const countSpan = existing.find('.count-span');
-                countSpan.text(parseInt(countSpan.text()) + 1);
-            } else {
-                foodsList.append(`
-                <div class="d-flex align-items-center gap-2 mb-2 food-item"
-                     data-service-id="${food.id}" 
-                     data-service-name="${food.name}"
-                     style="border:2px solid #6c757d; padding:8px; border-radius:6px; background:#fff;">
-                    <span class="flex-fill count-span">${food.count || 1}</span>
-                    <button type="button" class="btn btn-sm btn-outline-danger remove-food-btn">x</button>
-                </div>
-            `);
-            }
-
-            block.find('.all-foods-overlay').hide();
-
-            // --- Сохраняем на бэке ---
-            saveService(block, 'nutrition', function () {
-                const items = [];
-                foodsList.find('.food-item').each(function () {
-                    items.push({
-                        service_id: $(this).data('service-id'),
-                        name: $(this).data('service-name'),
-                        count: parseInt($(this).find('.count-span').text())
-                    });
-                });
-                return items;
-            });
-        });
-
-        // --- Удаление продукта ---
-        $(document).on('click', '.remove-food-btn', function () {
-            const item = $(this).closest('.food-item');
-            const serviceId = item.data('service-id');
-            const block = $(this).closest('.service-block');
-            const bookingId = block.attr('id').match(/\d+/)[0];
-
-            item.remove();
-
-            $.ajax({
-                url: `/booking/${bookingId}/service/${serviceId}`,
-                method: 'DELETE',
-                headers: {'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')},
-                success() { console.log(`Сервис с ID ${serviceId} удалён`); },
-                error(err) { console.error('Ошибка удаления продукта:', err); }
-            });
-        });
-
-        // --- Функция сохранения ---
-        function saveService(block, serviceType, itemsBuilder) {
-            const bookingId = block.attr('id').match(/\d+/)[0];
-            const items = itemsBuilder(block);
-            if (!items.length) return;
-
-            $.ajax({
-                url: `/booking/${bookingId}/save-services`,
-                method: 'POST',
-                headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
-                data: { service_type: serviceType, items: items },
-                success(response) {
-                    // Обновляем data-service-id для элементов, чтобы фронт видел правильный id
-                    foodsList.find('.food-item').each(function (i) {
-                        const itemData = items[i];
-                        $(this).attr('data-service-id', itemData.service_id);
-                    });
-                },
-                error(err) { console.error(`Ошибка сохранения ${serviceType}:`, err); }
-            });
-        }
-
-        // --- Скрытие оверлея при клике вне ---
-        $(document).on('click', function () {
-            $('.all-foods-overlay').hide();
-        });
-    });
-
-    // $(document).ready(function () {
-    //
-    //     $('[id^="bookingAddServiceModal"]').on('show.bs.modal', function () {
-    //         const bookingId = $(this).attr('id').replace('bookingAddServiceModal', '');
-    //         const foodsBlock = $('#foods-block-' + bookingId);
-    //         const foodsList = foodsBlock.find('.foods-list');
-    //         foodsList.empty();
-    //
-    //         $.get(`/booking/${bookingId}/saved-services`, function (data) {
-    //             const savedFoods = data.nutrition || [];
-    //
-    //             if (savedFoods.length) {
-    //                 if (!foodsList.find('.food-header').length) {
-    //                     foodsList.append(`
-    //                     <div class="d-flex fw-bold mb-2 food-header">
-    //                         <span class="flex-fill">Количество</span>
-    //                     </div>
-    //                 `);
-    //                 }
-    //
-    //                 savedFoods.forEach(f => {
-    //                     foodsList.append(`
-    //                     <div class="d-flex align-items-center gap-2 mb-2 food-item"
-    //                          data-service-id="${f.id}"
-    //                          style="border:2px solid #6c757d; padding:8px; border-radius:6px; background:#fff;">
-    //                         <span class="flex-fill count-span">${f.count}</span>
-    //                         <button type="button" class="btn btn-sm btn-outline-danger remove-food-btn">x</button>
-    //                     </div>
-    //                 `);
-    //                 });
-    //             }
-    //         });
-    //
-    //         if (!foodsBlock.data('loaded')) {
-    //             $.get(`/booking/${bookingId}/food-services`, function (data) {
-    //                 foodsBlock.data('allFoods', data.foods || []);
-    //                 foodsBlock.data('loaded', true);
-    //             });
-    //         }
-    //     });
-    //
-    //     function showOverlay(block, allItems, overlaySelector, itemClass, fields) {
-    //         const overlay = block.find(overlaySelector);
-    //         overlay.empty();
-    //
-    //         allItems.forEach((item, index) => {
-    //             let html = `<div class="${itemClass} p-2 mb-2 rounded" data-index="${index}">`;
-    //             fields.forEach(f => {
-    //                 html += `<strong>${f.label}:</strong> ${item[f.key]} &nbsp;`;
-    //             });
-    //             html += `</div>`;
-    //             overlay.append(html);
-    //         });
-    //
-    //         overlay.css({
-    //             display: 'block',
-    //             top: block.find('.btn-outline-primary').position().top + 30,
-    //             left: block.find('.btn-outline-primary').position().left,
-    //             width: '400px'
-    //         });
-    //
-    //         overlay.find(`.${itemClass}`).hover(
-    //             function () { $(this).css('background-color', '#e2e6ea'); },
-    //             function () { $(this).css('background-color', ''); }
-    //         ).css('cursor', 'pointer');
-    //     }
-    //
-    //     $(document).on('click', '.add-food-btn', function (e) {
-    //         e.stopPropagation();
-    //         const bookingId = $(this).data('booking');
-    //         const block = $('#foods-block-' + bookingId);
-    //
-    //         showOverlay(
-    //             block,
-    //             block.data('allFoods') || [],
-    //             '.all-foods-overlay',
-    //             'food-item-select',
-    //             [{ label: 'Питание', key: 'name' }]
-    //         );
-    //     });
-    //
-    //     $(document).on('click', '.food-item-select', function () {
-    //         const block = $(this).closest('.service-block');
-    //         const index = $(this).data('index');
-    //         const food = block.data('allFoods')[index];
-    //         const list = block.find('.foods-list');
-    //
-    //         if (!list.find('.food-header').length) {
-    //             list.append('<div class="d-flex fw-bold mb-2 food-header"><span class="flex-fill">Кол-во</span></div>');
-    //         }
-    //
-    //         let existing = null;
-    //         list.find('.food-item').each(function () {
-    //             if ($(this).data('service-id') === (food.db_id || food.id)) {
-    //                 existing = $(this);
-    //                 return false;
-    //             }
-    //         });
-    //
-    //         if (existing) {
-    //             const span = existing.find('.count-span');
-    //             span.text(parseInt(span.text()) + parseInt(food.count || 1));
-    //         } else {
-    //             list.append(`
-    //             <div class="d-flex align-items-center gap-2 mb-2 food-item"
-    //                  data-service-id="${food.db_id || food.id}"
-    //                  style="border:2px solid #6c757d; padding:8px; border-radius:6px; background:#fff;">
-    //                 <span class="flex-fill count-span">${food.count || 1}</span>
-    //                 <button type="button" class="btn btn-sm btn-outline-danger remove-food-btn">x</button>
-    //             </div>
-    //         `);
-    //         }
-    //
-    //         block.find('.all-foods-overlay').hide();
-    //
-    //         saveService(block, 'nutrition', function () {
-    //             const items = [];
-    //             list.find('.food-item').each(function () {
-    //                 items.push({
-    //                     service_id: $(this).data('service-id'),
-    //                     count: parseInt($(this).find('.count-span').text())
-    //                 });
-    //             });
-    //             return items;
-    //         });
-    //     });
-    //
-    //     function saveService(block, serviceType, itemsBuilder) {
-    //         const bookingId = block.attr('id').match(/\d+/)[0];
-    //         const items = itemsBuilder(block);
-    //         if (!items.length) return;
-    //
-    //         $.ajax({
-    //             url: `/booking/${bookingId}/save-services`,
-    //             method: 'POST',
-    //             headers: {'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')},
-    //             data: { service_type: serviceType, items: items },
-    //             success(response) {
-    //                 items.forEach((item, index) => {
-    //                     const htmlItem = block.find('.food-item').eq(index);
-    //                     htmlItem.attr('data-service-id', response.items[index].id);
-    //                 });
-    //             },
-    //             error(err) {
-    //                 console.error(`Ошибка сохранения ${serviceType}:`, err);
-    //             }
-    //         });
-    //     }
-    //
-    //     $(document).on('click', '.remove-food-btn', function () {
-    //         const item = $(this).closest('.food-item');
-    //         const serviceId = item.data('service-id');
-    //         const bookingId = item.closest('.service-block').attr('id').match(/\d+/)[0];
-    //
-    //         item.remove();
-    //
-    //         $.ajax({
-    //             url: `/booking/${bookingId}/service/${serviceId}`,
-    //             method: 'DELETE',
-    //             headers: {'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')},
-    //             success() { console.log(`Сервис с ID ${serviceId} удалён`); },
-    //             error(err) { console.error('Ошибка удаления сервиса:', err); }
-    //         });
-    //     });
-    //
-    //     $(document).on('click', function () {
-    //         $('.all-foods-overlay').hide();
-    //     });
-    //
-    // });
 
 });
+
+// Штрафы
+$(document).ready(function () {
+
+    // ─────────────────────────────
+    // 1. Открытие модального окна
+    // ─────────────────────────────
+    $('[id^="bookingAddServiceModal"]').on('show.bs.modal', function () {
+
+        const bookingId = $(this).attr('id').replace('bookingAddServiceModal', '');
+        const block = $('#penalties-block-' + bookingId);
+        block.data('bookingId', bookingId);
+        const penaltiesList = block.find('.penalties-list');
+        penaltiesList.empty();
+
+        addPenaltyHeader(penaltiesList);
+
+        loadPenaltyAnimals(block).done(animals => {
+            loadSavedPenalties(bookingId, penaltiesList);
+        });
+    });
+
+
+    // ─────────────────────────────
+    // 2. Заголовок
+    // ─────────────────────────────
+    function addPenaltyHeader(container) {
+        container.append(`
+        <div class="d-flex fw-bold mb-2 penalty-header">
+            <span class="flex-fill">Животное</span>
+            <span class="flex-fill">Тип штрафа</span>
+            <span class="flex-fill">Охотник</span>
+            <span style="width:40px"></span>
+        </div>
+    `);
+    }
+
+
+    function loadPenaltyAnimals(block) {
+        return $.get('/booking/penalty/animals').done(res => {
+            block.data('penaltyAnimals', res.animals || []);
+            block.data('hunters', res.hunters || []);
+        });
+    }
+
+    // ─────────────────────────────
+    // 4. Загрузка сохранённых штрафов
+    // ─────────────────────────────
+    function loadSavedPenalties(bookingId, container) {
+        $.get(`/booking/${bookingId}/saved-services`, res => {
+            (res.penalties || []).forEach(penalty => {
+                container.append(renderSavedPenaltyRow(penalty, bookingId));
+            });
+        });
+    }
+
+    // ─────────────────────────────
+    // 5. Сохранённый штраф (READ ONLY)
+    // ─────────────────────────────
+    function renderSavedPenaltyRow(penalty, bookingId) {
+        return $(`
+            <div class="penalty-row border rounded p-2 mb-2 d-flex align-items-center"
+                 data-id="${penalty.id}">
+
+                <div class="flex-fill">${penalty.animal_title}</div>
+                <div class="flex-fill">${penalty.type}</div>
+                <div class="flex-fill">${penalty.hunter_name || ''}</div>
+                <button class="btn btn-sm btn-outline-danger remove-saved-penalty">Удалить</button>
+            </div>
+        `);
+    }
+
+    // ─────────────────────────────
+    // 6. Добавить новую строку
+    // ─────────────────────────────
+    $(document).on('click', '.add-penalty-btn', function () {
+
+        const block = $(this).closest('.service-block');
+        const bookingId = block.data('bookingId');
+        const animals = block.data('penaltyAnimals') || [];
+        const hunters = block.data('hunters') || [];
+
+        block.find('.penalties-list')
+            .append(renderNewPenaltyRow(animals, hunters, bookingId));
+    });
+
+    // ─────────────────────────────
+    // 7. Новая запись
+    // ────────────────────────────
+    function renderNewPenaltyRow(animals, hunters, bookingId) {
+
+        const $row = $(`
+        <div class="penalty-row border rounded p-2 mb-2 d-flex align-items-center gap-2">
+
+            <div class="col-auto">
+                <select class="form-select form-select-sm penalty-animal" style="width: 250px;">
+                    <option value="" disabled selected hidden>Выберите животное</option>
+                </select>
+            </div>
+
+            <div class="col-auto">
+                 <select class="form-select form-select-sm penalty-type" style="width: 250px;" disabled>
+                    <option value="" disabled selected hidden>Выберите тип штрафа</option>
+                </select>
+            </div>
+
+            <div class="col-auto">
+                <select class="form-select form-select-sm hunter" style="width: 250px;">
+                    <option value="" disabled selected hidden>Выберите охотника</option>
+                </select>
+            </div>
+
+            <div class="col-auto">
+                <button class="btn btn-sm btn-success save-penalty" disabled>Сохранить</button>
+                <button class="btn btn-sm btn-outline-secondary cancel-new">Отмена</button>
+            </div>
+        </div>
+    `);
+
+        const $animal = $row.find('.penalty-animal');
+        const $type = $row.find('.penalty-type');
+        const $hunter = $row.find('.hunter');
+        const $save = $row.find('.save-penalty');
+
+        // Заполняем животных
+        animals.forEach(a => {
+            $animal.append(`<option value="${a.id}">${a.title}</option>`);
+        });
+
+        // Заполняем охотников
+        hunters.forEach(h => {
+            $hunter.append(`<option value="${h.id}">${h.name}</option>`);
+        });
+
+        // Проверка для кнопки "Сохранить"
+        function check() {
+            $save.prop(
+                'disabled',
+                !($animal.val() && $type.val() && $hunter.val())
+            );
+        }
+
+        // Выбор животного → подгружаем типы штрафов
+        $animal.on('change', function () {
+            const animal = animals.find(a => String(a.id) === String(this.value));
+
+            $type.empty()
+                .append('<option value="" disabled selected hidden>Выберите тип штрафа</option>')
+                .prop('disabled', true);
+
+            if (animal?.fines?.length) {
+                animal.fines.forEach(f => {
+                    $type.append(`<option value="${f.id}">${f.type}</option>`);
+                });
+                $type.prop('disabled', false);
+            }
+
+            check();
+        });
+
+        // Выбор типа штрафа и охотника → проверка
+        $type.on('change', check);
+        $hunter.on('change', check);
+
+        // Сохранение
+        $save.on('click', function () {
+            $.post(`/booking/${bookingId}/penalty`, {
+                animal_id: $animal.val(),
+                type: $type.find('option:selected').text(),
+                hunter_id: $hunter.val(),
+                _token: $('meta[name="csrf-token"]').attr('content')
+            }).done(saved => {
+                $row.replaceWith(renderSavedPenaltyRow(saved, bookingId));
+            });
+        });
+
+        // Отмена
+        $row.find('.cancel-new').on('click', () => $row.remove());
+
+        return $row;
+    }
+
+
+    // ─────────────────────────────
+    // 8. Удаление сохранённого штрафа
+    // ─────────────────────────────
+    $(document).on('click', '.remove-saved-penalty', function () {
+
+        const row = $(this).closest('.penalty-row');
+        const penaltyId = row.data('id');
+        const bookingId = row.closest('.service-block').data('bookingId');
+
+        $.ajax({
+            url: `/booking/${bookingId}/penalty/${penaltyId}`,
+            type: 'DELETE',
+            data: {_token: $('meta[name="csrf-token"]').attr('content')},
+            success: () => row.remove()
+        });
+    });
+
+});
+
+// Разделка
+$(document).ready(function () {
+
+    // ─────────────────────────────
+    // 1. Открытие модального окна
+    // ─────────────────────────────
+    $('[id^="bookingAddServiceModal"]').on('show.bs.modal', function () {
+        const bookingId = $(this).attr('id').replace('bookingAddServiceModal', '');
+        const block = $('#preparations-block-' + bookingId);
+        block.data('bookingId', bookingId);
+
+        const preparationsList = block.find('.preparations-list');
+        preparationsList.empty();
+
+        addPreparationHeader(preparationsList);
+
+        loadPreparationAnimals(block).done(animals => {
+            loadSavedPreparations(bookingId, preparationsList);
+        });
+    });
+
+
+    // ─────────────────────────────
+    // 2. Заголовок
+    // ─────────────────────────────
+    function addPreparationHeader(container) {
+        container.append(`
+            <div class="d-flex fw-bold mb-2 preparation-header">
+                <span class="flex-fill">Животное</span>
+                <span class="flex-fill">Количество</span>
+                <span style="width:40px"></span>
+            </div>
+        `);
+    }
+
+    // ─────────────────────────────
+    // 3. Загрузка животных
+    // ─────────────────────────────
+    function loadPreparationAnimals(block) {
+        return $.get('/booking/preparation/animals').done(res => {
+            block.data('preparationAnimals', res.animals || []);
+        });
+    }
+
+    // ─────────────────────────────
+    // 4. Загрузка сохранённых разделок
+    // ─────────────────────────────
+    function loadSavedPreparations(bookingId, container) {
+        $.get(`/booking/${bookingId}/saved-services`, res => {
+            (res.preparations || []).forEach(prep => {
+                container.append(renderSavedPreparationRow(prep, bookingId));
+            });
+        });
+    }
+
+    // ─────────────────────────────
+    // 5. Сохранённая запись (READ ONLY)
+    // ─────────────────────────────
+    function renderSavedPreparationRow(prep, bookingId) {
+        return $(`
+            <div class="preparation-row border rounded p-2 mb-2 d-flex align-items-center"
+                 data-id="${prep.id}">
+                 
+                <div class="flex-fill">${prep.animal_title}</div>
+                <div class="flex-fill">${prep.count}</div>
+                <button class="btn btn-sm btn-outline-danger remove-saved-preparation">Удалить</button>
+            </div>
+        `);
+    }
+
+    // ─────────────────────────────
+    // 6. Добавить новую строку
+    // ─────────────────────────────
+    $(document).on('click', '.add-preparation-btn', function () {
+
+        const block = $(this).closest('.service-block');
+        const bookingId = block.data('bookingId');
+        const animals = block.data('preparationAnimals') || [];
+
+        block.find('.preparations-list')
+            .append(renderNewPreparationRow(animals, bookingId));
+    });
+
+    // ─────────────────────────────
+    // 7. Новая запись
+    // ─────────────────────────────
+    function renderNewPreparationRow(animals, bookingId) {
+
+        const $row = $(`
+            <div class="preparation-row border rounded p-2 mb-2 d-flex align-items-center gap-2">
+
+                <div class="col-auto">
+                    <select class="form-select form-select-sm preparation-animal" style="width: 270px;">
+                        <option value="" disabled selected hidden>Выберите животное</option>
+                    </select>
+                </div>
+
+                <div class="col-auto">
+                    <input type="text" class="form-control form-control-sm preparation-count" placeholder="Количество">
+                </div>
+
+                <div class="col-auto">
+                    <button class="btn btn-sm btn-success save-preparation" disabled>Сохранить</button>
+                    <button class="btn btn-sm btn-outline-secondary cancel-new">Отмена</button>
+                </div>
+            </div>
+        `);
+
+        const $animal = $row.find('.preparation-animal');
+        const $count = $row.find('.preparation-count');
+        const $save = $row.find('.save-preparation');
+
+        // Заполняем животных
+        animals.forEach(a => $animal.append(`<option value="${a.id}">${a.title}</option>`));
+
+        // Проверка для кнопки "Сохранить"
+        function check() {
+            $save.prop('disabled', !($animal.val() && $count.val() > 0));
+        }
+
+        $animal.on('change', check);
+        $count.on('input', check);
+
+        // Сохранение
+        $save.on('click', function () {
+            $.post(`/booking/${bookingId}/preparation`, {
+                animal_id: $animal.val(),
+                count: $count.val(),
+                _token: $('meta[name="csrf-token"]').attr('content')
+            }).done(saved => {
+                $row.replaceWith(renderSavedPreparationRow(saved, bookingId));
+            });
+        });
+
+        // Отмена
+        $row.find('.cancel-new').on('click', () => $row.remove());
+
+        return $row;
+    }
+
+    // ─────────────────────────────
+    // 8. Удаление сохранённой записи
+    // ─────────────────────────────
+    $(document).on('click', '.remove-saved-preparation', function () {
+        const row = $(this).closest('.preparation-row');
+        const prepId = row.data('id');
+        const bookingId = row.closest('.service-block').data('bookingId');
+
+        $.ajax({
+            url: `/booking/${bookingId}/preparation/${prepId}`,
+            type: 'DELETE',
+            data: {_token: $('meta[name="csrf-token"]').attr('content')},
+            success: () => row.remove()
+        });
+    });
+
+});
+
+// Питание
+$(document).ready(function () {
+    $('[id^="bookingAddServiceModal"]').on('show.bs.modal', function () {
+
+        const bookingId = $(this).attr('id').replace('bookingAddServiceModal', '');
+        const block = $('#foods-block-' + bookingId);
+        block.data('bookingId', bookingId);
+        const foodsList = block.find('.foods-list');
+        foodsList.empty();
+
+        loadSavedFoods(bookingId, foodsList);
+    });
+
+    // ─────────────────────────────
+    // 2. Заголовок
+    // ─────────────────────────────
+    function addFoodHeader(container) {
+        container.append(`
+            <div class="d-flex fw-bold mb-2 food-header">
+                <span class="flex-fill">Питание</span>
+                <span class="flex-fill">Количество</span>
+                <span style="width:40px"></span>
+            </div>
+        `);
+    }
+
+    // ─────────────────────────────
+    // 4. Загрузка сохранённых
+    // ─────────────────────────────
+    function loadSavedFoods(bookingId, container) {
+        $.get(`/booking/${bookingId}/saved-services`, res => {
+            (res.foods || []).forEach(food => {
+                container.append(renderSavedFoodRow(food));
+            });
+        });
+    }
+
+    // ─────────────────────────────
+    // 5. Сохранённая строка (READ ONLY)
+    // ─────────────────────────────
+    function renderSavedFoodRow(food) {
+        return $(`
+        <div class="food-row border rounded p-2 mb-2 d-flex align-items-center"
+             data-id="${food.id}">
+
+            <div class="flex-fill">Питание</div>
+            <div class="flex-fill">${food.count}</div>
+
+            <button class="btn btn-sm btn-outline-danger remove-saved-food">Удалить</button>
+        </div>
+    `);
+    }
+
+
+    // ─────────────────────────────
+    // 6. Добавить новую строку
+    // ─────────────────────────────
+    $(document).on('click', '.add-food-btn', function () {
+
+        const block = $(this).closest('.service-block');
+        const bookingId = block.data('bookingId');
+
+        block.find('.foods-list')
+            .append(renderNewFoodRow(bookingId));
+    });
+
+
+    // ─────────────────────────────
+    // 7. Новая строка
+    // ─────────────────────────────
+    function renderNewFoodRow(bookingId) {
+
+        const $row = $(`
+        <div class="food-row border rounded p-2 mb-2 d-flex align-items-center gap-2">
+
+            <div class="flex-fill">
+                Питание
+            </div>
+
+            <div class="col-auto">
+                <input
+                    type="text"
+                    class="form-control form-control-sm food-count"
+                    placeholder="Количество" >
+            </div>
+
+            <div class="col-auto">
+                <button class="btn btn-sm btn-success save-food" disabled>Сохранить</button>
+                <button class="btn btn-sm btn-outline-secondary cancel-new">Отмена</button>
+            </div>
+        </div>
+    `);
+
+        const $count = $row.find('.food-count');
+        const $save = $row.find('.save-food');
+
+        function check() {
+            $save.prop('disabled', !($count.val() > 0));
+        }
+
+        $count.on('input', check);
+
+        // сохранение
+        $save.on('click', function () {
+            $.post(`/booking/${bookingId}/food`, {
+                count: $count.val(),
+                _token: $('meta[name="csrf-token"]').attr('content')
+            }).done(saved => {
+                $row.replaceWith(renderSavedFoodRow(saved));
+            });
+        });
+
+        $row.find('.cancel-new').on('click', () => $row.remove());
+
+        return $row;
+    }
+
+
+    // ─────────────────────────────
+    // 8. Удаление сохранённого
+    // ─────────────────────────────
+    $(document).on('click', '.remove-saved-food', function () {
+
+        const row = $(this).closest('.food-row');
+        const foodId = row.data('id');
+        const bookingId = row.closest('.service-block').data('bookingId');
+
+        $.ajax({
+            url: `/booking/${bookingId}/food/${foodId}`,
+            type: 'DELETE',
+            data: {_token: $('meta[name="csrf-token"]').attr('content')},
+            success: () => row.remove()
+        });
+    });
+
+});
+
+// Другое
+$(document).ready(function () {
+    $('[id^="bookingAddServiceModal"]').on('show.bs.modal', function () {
+
+        const bookingId = $(this).attr('id').replace('bookingAddServiceModal', '');
+        const block = $('#others-block-' + bookingId);
+        block.data('bookingId', bookingId);
+        const list = block.find('.others-list');
+        list.empty();
+
+        loadOtherPrices(block).done(() => {
+            loadSavedOthers(bookingId, list);
+        });
+    });
+
+    function loadOtherPrices(block) {
+        return $.get(`/booking/addetional`)
+            .done(res => {
+                block.data('otherPrices', res.addetionals || []);
+            });
+    }
+
+    function loadSavedOthers(bookingId, container) {
+        $.get(`/booking/${bookingId}/saved-services`, res => {
+            (res.foods || []).forEach(item => {
+                container.append(renderSavedOtherRow(item));
+            });
+        });
+    }
+
+    // ─────────────────────────────
+    // 4. Сохранённая строка
+    // ─────────────────────────────
+    function renderSavedOtherRow(item) {
+        return $(`
+            <div class="other-row border rounded p-2 mb-2 d-flex align-items-center"
+                 data-id="${item.id}">
+                 
+                <div class="flex-fill">${item.title}</div>
+                <button class="btn btn-sm btn-outline-danger remove-saved-other">×</button>
+            </div>
+        `);
+    }
+
+    // ─────────────────────────────
+    // 5. Добавить новую строку
+    // ─────────────────────────────
+    $(document).on('click', '.add-other-btn', function () {
+
+        const block = $(this).closest('.service-block');
+        const bookingId = block.data('bookingId');
+        const prices = block.data('otherPrices') || [];
+
+        block.find('.others-list')
+            .append(renderNewOtherRow(prices, bookingId));
+    });
+
+
+    // ─────────────────────────────
+    // 6. Новая строка
+    // ─────────────────────────────
+    function renderNewOtherRow(prices, bookingId) {
+
+        const $row = $(`
+        <div class="other-row border rounded p-2 mb-2 d-flex align-items-center gap-2">
+
+            <div class="flex-fill">
+                <select class="form-select form-select-sm other-price">
+                    <option value="" disabled selected hidden>Выберите услугу</option>
+                </select>
+            </div>
+
+            <div>
+                <button class="btn btn-sm btn-success save-other" disabled>Сохранить</button>
+                <button class="btn btn-sm btn-outline-secondary cancel-new">Отмена</button>
+            </div>
+        </div>
+    `);
+
+        const $select = $row.find('.other-price');
+        const $save   = $row.find('.save-other');
+
+        // наполняем select
+        prices.forEach(p => {
+            $select.append(`<option value="${p.id}">${p.title}</option>`);
+        });
+
+        $select.on('change', () => {
+            $save.prop('disabled', !$select.val());
+        });
+
+        // сохранение
+        $save.on('click', function () {
+            $.post(`/booking/${bookingId}/other`, {
+                price_id: $select.val(),
+                _token: $('meta[name="csrf-token"]').attr('content')
+            }).done(saved => {
+                $row.replaceWith(renderSavedOtherRow(saved));
+            });
+        });
+
+        $row.find('.cancel-new').on('click', () => $row.remove());
+
+        return $row;
+    }
+
+
+    // ─────────────────────────────
+    // 7. Удаление
+    // ─────────────────────────────
+    $(document).on('click', '.remove-saved-other', function () {
+
+        const row = $(this).closest('.other-row');
+        const id = row.data('id');
+        const bookingId = row.closest('.service-block').data('bookingId');
+
+        $.ajax({
+            url: `/booking/${bookingId}/other/${id}`,
+            type: 'DELETE',
+            data: {_token: $('meta[name="csrf-token"]').attr('content')},
+            success: () => row.remove()
+        });
+    });
+
+});
+
+
+
+
+

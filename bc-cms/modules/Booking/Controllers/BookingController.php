@@ -46,11 +46,13 @@ class BookingController extends \App\Http\Controllers\Controller
     protected $booking;
     protected $enquiryClass;
     protected $bookingInst;
+    protected $animalClass;
 
-    public function __construct(Booking $booking, Enquiry $enquiryClass)
+    public function __construct(Booking $booking, Enquiry $enquiryClass, Animal $animalClass)
     {
         $this->booking = $booking;
         $this->enquiryClass = $enquiryClass;
+        $this->animalClass = $animalClass;
     }
 
     protected function validateCheckout($code)
@@ -1721,82 +1723,205 @@ class BookingController extends \App\Http\Controllers\Controller
         ]);
     }
 
-    public function getAnimalTrophyServices(Booking $bookingId)
-    {
-        $trophies = AnimalTrophy::with('animal')
-            ->orderBy('animal_id')
-            ->get()
-            ->map(fn ($trophy) => [
-                'id'     => $trophy->id,
-                'animal' => $trophy->animal->title ?? '',
-                'type'   => $trophy->type,
-                'count'  => 1,
-                'price'  => $trophy->price,
-            ])
-            ->values() // сбрасываем ключи
-            ->toArray(); // преобразуем в чистый массив
 
-        return response()->json([
-            'trophies' => $trophies,
-        ]);
-    }
-    public function saveServices(Request $request, Booking $booking)
-    {
-        $request->validate([
-            'service_type' => 'required|string',
-            'items'        => 'required|array',
-            'items.*.service_id' => 'required|integer',
-            'items.*.count'      => 'required|integer|min:1',
-        ]);
-
-        $item = $request->input('items.0');
-
-        $service = BookingService::firstOrNew([
-            'booking_id'   => $booking->id,
-            'service_type' => $request->input('service_type'),
-            'service_id'   => $item['service_id'],
-            'animal'   => $item['animal'] ?? null,
-            'type'   => $item['type'] ?? null,
-        ]);
-
-        $service->count = ($service->count ?? 0) + 1;
-
-        if ($request->has('hunter_id')) {
-            $service->hunter_id = $request->input('hunter_id');
-        }
-
-        $service->save();
-
-        $savedItems = [
-            [
-                'id'         => $service->id,
-                'service_id' => $service->service_id,
-                'service_type'=> $service->service_type,
-                'animal'     => $service->animal,
-                'type'       => $service->type,
-                'count'      => $service->count,
-                'hunter_id'  => $service->hunter_id,
-            ]
-        ];
-
-        return response()->json([
-            'status' => 'ok',
-            'items' => $savedItems
-        ]);
-    }
     public function getBookingServices(Booking $booking): JsonResponse
     {
         $services = BookingService::where('booking_id', $booking->id)->get();
 
+        $trophies = BookingService::query()
+            ->where('bc_booking_services.booking_id', $booking->id)
+            ->where('bc_booking_services.service_type', 'trophy')
+            ->leftJoin(
+                'bc_animals',
+                'bc_animals.id',
+                '=',
+                'bc_booking_services.animal'
+            )
+            ->select([
+                'bc_booking_services.id',
+                'bc_booking_services.booking_id',
+                'bc_booking_services.service_type',
+                'bc_booking_services.animal as animal_id',
+                'bc_animals.title as animal_title',
+                'bc_booking_services.type',
+                'bc_booking_services.count',
+                'bc_booking_services.created_at',
+                'bc_booking_services.updated_at',
+            ])
+            ->get();
+
+        $penalties = BookingService::query()
+            ->where('bc_booking_services.booking_id', $booking->id)
+            ->where('bc_booking_services.service_type', 'penalty')
+            ->leftJoin(
+                'bc_animals',
+                'bc_animals.id',
+                '=',
+                'bc_booking_services.animal'
+            )
+            ->leftJoin('users', 'users.id', '=', 'bc_booking_services.hunter_id')
+            ->select([
+                'bc_booking_services.id',
+                'bc_booking_services.booking_id',
+                'bc_booking_services.service_type',
+                'bc_booking_services.animal as animal_id',
+                'bc_animals.title as animal_title',
+                'bc_booking_services.type',
+                'users.id as hunter_id',
+                'users.name as hunter_name',
+                'bc_booking_services.created_at',
+                'bc_booking_services.updated_at',
+            ])
+            ->get();
+
+        $preparations = BookingService::query()
+            ->where('bc_booking_services.booking_id', $booking->id)
+            ->where('bc_booking_services.service_type', 'preparation')
+            ->leftJoin(
+                'bc_animals',
+                'bc_animals.id',
+                '=',
+                'bc_booking_services.animal'
+            )
+            ->select([
+                'bc_booking_services.id',
+                'bc_booking_services.booking_id',
+                'bc_booking_services.service_type',
+                'bc_booking_services.animal as animal_id',
+                'bc_animals.title as animal_title',
+                'bc_booking_services.count',
+                'bc_booking_services.created_at',
+                'bc_booking_services.updated_at',
+            ])
+            ->get();
+
         return response()->json([
-            'trophies' => $services->where('service_type', 'trophy')->values(),
-            'penalties' => $services->where('service_type', 'penalty')->values(),
-            'preparations' => $services->where('service_type', 'preparation')->values(),
-            'nutrition' => $services->where('service_type', 'nutrition')->values(),
+            'trophies' => $trophies,
+            'penalties' => $penalties,
+            'preparations' => $preparations,
+            'foods' => $services->where('service_type', 'food')->values(),
+            'addetionals' => $services->where('service_type', 'other')->values(),
         ]);
     }
 
-    public function deleteService(Booking $booking, $serviceId): JsonResponse
+    public function getAnimalTrophyServices(): JsonResponse
+    {
+        $userHotelId = get_user_hotel_id();
+
+        $animals = $this->animalClass::query()
+            ->join('bc_hotel_animals as bha', function ($join) use ($userHotelId) {
+                $join->on('bha.animal_id', '=', 'bc_animals.id')
+                    ->where('bha.hotel_id', '=', $userHotelId);
+            })
+            ->select([
+                'bc_animals.id',
+                'bc_animals.title as title',
+                'bha.status as animal_status'
+            ])
+            ->with('trophies:id,animal_id,type')
+            ->get();
+
+        return response()->json($animals);
+    }
+
+
+    public function storeTrophy(Request $request, Booking $booking): JsonResponse
+    {
+        $request->validate([
+            'animal_id' => 'required|integer|exists:bc_animals,id',
+            'type'      => 'required|string',
+            'count'     => 'required|integer|min:1',
+        ]);
+
+        $service = BookingService::create([
+            'booking_id'   => $booking->id,
+            'service_type' => 'trophy',
+            'type'         => $request->input('type'),
+            'service_id'   => null,
+            'animal'       => $request->input('animal_id'),
+            'count'        => $request->input('count'),
+        ]);
+
+        $animal = Animal::find($request->input('animal_id'));
+
+        return response()->json([
+            'id'           => $service->id,
+            'animal_title' => $animal->title ?? '—',
+            'type'         => $service->type,
+            'count'        => $service->count,
+            'created_at'   => $service->created_at,
+            'updated_at'   => $service->updated_at,
+        ]);
+    }
+
+    public function deleteTrophy(Booking $booking, $serviceId): JsonResponse
+    {
+        $service = BookingService::where('id', $serviceId)
+            ->where('booking_id', $booking->id)
+            ->firstOrFail();
+
+        $service->delete();
+
+        return response()->json(['status' => 'ok']);
+    }
+
+    //Штрафы
+    public function getAnimalPenaltyServices(): JsonResponse
+    {
+        $userHotelId = get_user_hotel_id();
+
+        $animals = $this->animalClass::query()
+            ->join('bc_hotel_animals as bha', function ($join) use ($userHotelId) {
+                $join->on('bha.animal_id', '=', 'bc_animals.id')
+                    ->where('bha.hotel_id', '=', $userHotelId);
+            })
+            ->select([
+                'bc_animals.id',
+                'bc_animals.title as title',
+                'bha.status as animal_status'
+            ])
+            ->with('fines:id,animal_id,type')
+            ->get();
+
+        $hunters = User::query()
+//            ->where('role', 'hunter')
+            ->select(['id', 'name'])
+            ->get();
+
+        return response()->json([
+            'animals'  => $animals,
+            'hunters'  => $hunters,
+        ]);
+    }
+    public function storePenalty(Request $request, Booking $booking): JsonResponse
+    {
+        $request->validate([
+            'animal_id' => 'required|integer|exists:bc_animals,id',
+            'type'      => 'required|string',
+            'hunter_id'     => 'required|integer',
+        ]);
+
+        $service = BookingService::create([
+            'booking_id'   => $booking->id,
+            'service_type' => 'penalty',
+            'type'         => $request->input('type'),
+            'service_id'   => null,
+            'hunter_id'   => $request->input('hunter_id'),
+            'animal'       => $request->input('animal_id'),
+        ]);
+
+        $animal = Animal::find($request->input('animal_id'));
+
+        return response()->json([
+            'id'           => $service->id,
+            'animal_title' => $animal->title ?? '—',
+            'type'         => $service->type,
+            'count'        => 1,
+            'created_at'   => $service->created_at,
+            'updated_at'   => $service->updated_at,
+        ]);
+    }
+    public function deletePenalty(Booking $booking, $serviceId): JsonResponse
     {
         $service = BookingService::where('id', $serviceId)
             ->where('booking_id', $booking->id)
@@ -1808,51 +1933,101 @@ class BookingController extends \App\Http\Controllers\Controller
     }
 
 
-    //Штрафы
-    public function getAnimalPenaltyServices(Booking $booking): JsonResponse
+// Разделка
+
+    public function getAnimalPreparationServices(): JsonResponse
     {
-        $penalties = AnimalFine::with('animal')
-            ->orderBy('animal_id')
-            ->get()
-            ->map(fn ($penalty) => [
-                'id'     => $penalty->id,
-                'animal' => $penalty->animal->title ?? '',
-                'type'   => $penalty->type,
-                'count'  => 1,
-                'price'  => $penalty->price,
+        $userHotelId = get_user_hotel_id();
+
+        $animals = $this->animalClass::query()
+            ->join('bc_hotel_animals as bha', function ($join) use ($userHotelId) {
+                $join->on('bha.animal_id', '=', 'bc_animals.id')
+                    ->where('bha.hotel_id', '=', $userHotelId);
+            })
+            ->select([
+                'bc_animals.id',
+                'bc_animals.title as title',
+                'bha.status as animal_status'
             ])
-            ->values()
-            ->toArray();
+            ->with('fines:id,animal_id,type')
+            ->get();
 
         return response()->json([
-            'penalties' => $penalties,
+            'animals'  => $animals,
         ]);
     }
-
-// Разделка
-    public function getAnimalPreparationServices(Booking $booking): JsonResponse
+    public function storePreparation(Request $request, Booking $booking): JsonResponse
     {
-        $preparations = AnimalPreparation::with('animal')
-            ->orderBy('animal_id')
-            ->get()
-            ->map(fn ($preparation) => [
-                'id'     => $preparation->id,
-                'animal' => $preparation->animal->title ?? '',
-                'type'   => $preparation->type,
-                'price'  => $preparation->price,
-            ])
-            ->values()
-            ->toArray();
+        $request->validate([
+            'animal_id' => 'required|integer|exists:bc_animals,id',
+            'count'     => 'required|integer|min:1',
+        ]);
+
+        $service = BookingService::create([
+            'booking_id'   => $booking->id,
+            'service_type' => 'preparation',
+            'type'         => $request->input('type'),
+            'service_id'   => null,
+            'animal'       => $request->input('animal_id'),
+            'count'        => $request->input('count'),
+        ]);
+
+        $animal = Animal::find($request->input('animal_id'));
 
         return response()->json([
-            'preparations' => $preparations,
+            'id'           => $service->id,
+            'animal_title' => $animal->title ?? '—',
+            'count'        => $service->count,
+            'created_at'   => $service->created_at,
+            'updated_at'   => $service->updated_at,
         ]);
+    }
+    public function deletePreparation(Booking $booking, $serviceId): JsonResponse
+    {
+        $service = BookingService::where('id', $serviceId)
+            ->where('booking_id', $booking->id)
+            ->firstOrFail();
+
+        $service->delete();
+
+        return response()->json(['status' => 'ok']);
     }
 
     // Питание
-    public function getAnimalFoodServices(Booking $booking): JsonResponse
+    public function storeFoods(Request $request, Booking $booking): JsonResponse
     {
-        $foods = AddetionalPrice::where('type', 'food')
+        $request->validate([
+            'count'     => 'required|integer|min:1',
+        ]);
+
+        $service = BookingService::create([
+            'booking_id'   => $booking->id,
+            'service_type' => 'food',
+            'count'        => $request->input('count'),
+        ]);
+
+        return response()->json([
+            'id'           => $service->id,
+            'count'        => $service->count,
+            'created_at'   => $service->created_at,
+            'updated_at'   => $service->updated_at,
+        ]);
+    }
+    public function deleteFoods(Booking $booking, $serviceId): JsonResponse
+    {
+        $service = BookingService::where('id', $serviceId)
+            ->where('booking_id', $booking->id)
+            ->firstOrFail();
+
+        $service->delete();
+
+        return response()->json(['status' => 'ok']);
+    }
+
+    //Другое
+    public function getAddetionalServices(): JsonResponse
+    {
+        $addetionals = AddetionalPrice::where('type', '!=', 'food')
             ->get()
             ->map(fn ($food) => [
                 'id'     => $food->id,
@@ -1863,7 +2038,7 @@ class BookingController extends \App\Http\Controllers\Controller
             ->toArray();
 
         return response()->json([
-            'foods' => $foods,
+            'addetionals' => $addetionals,
         ]);
     }
 }
