@@ -1911,12 +1911,14 @@ class BookingController extends \App\Http\Controllers\Controller
         ]);
 
         $animal = Animal::find($request->input('animal_id'));
+        $hunter = User::where('id', $service->hunter_id)->first();
 
         return response()->json([
             'id'           => $service->id,
             'animal_title' => $animal->title ?? '—',
             'type'         => $service->type,
             'count'        => 1,
+            'hunter_name'  => $hunter->name ?? '—',
             'created_at'   => $service->created_at,
             'updated_at'   => $service->updated_at,
         ]);
