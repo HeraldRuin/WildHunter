@@ -546,7 +546,6 @@ $(document).ready(function () {
 
         $count.on('input', check);
 
-        // сохранение
         $save.on('click', function () {
             $.post(`/booking/${bookingId}/food`, {
                 count: $count.val(),
@@ -593,7 +592,7 @@ $(document).ready(function () {
     });
 
     function loadOtherPrices(block) {
-        return $.get(`/booking/addetional`)
+        return $.get(`/booking/addetional/services`)
             .done(res => {
                 block.data('otherPrices', res.addetionals || []);
             });
@@ -601,23 +600,22 @@ $(document).ready(function () {
 
     function loadSavedOthers(bookingId, container) {
         $.get(`/booking/${bookingId}/saved-services`, res => {
-            (res.foods || []).forEach(item => {
-                container.append(renderSavedOtherRow(item));
+            (res.addetionals || []).forEach(addetional => {
+                container.append(renderSavedOtherRow(addetional));
             });
         });
     }
 
-    function renderSavedOtherRow(item) {
+    function renderSavedOtherRow(addetional) {
         return $(`
         <div class="other-row border rounded p-2 mb-2 d-flex align-items-center"
-             data-id="${item.id}">
+             data-id="${addetional.id}">
+            <div class="other-col type-col other-name-col">${addetional.type ?? '—'}</div>
 
-            <div class="other-col title-col">${item.title}</div>
-            <button class="btn btn-sm btn-outline-danger remove-saved-other">×</button>
+            <button class="btn btn-sm btn-outline-danger remove-saved-other">Удалить</button>
         </div>
     `);
     }
-
     $(document).on('click', '.add-other-btn', function () {
 
         const block = $(this).closest('.service-block');
@@ -650,7 +648,7 @@ $(document).ready(function () {
         const $save   = $row.find('.save-other');
 
         prices.forEach(p => {
-            $select.append(`<option value="${p.id}">${p.title}</option>`);
+            $select.append(`<option value="${p.id}">${p.name}</option>`);
         });
 
         $select.on('change', () => {
@@ -658,8 +656,8 @@ $(document).ready(function () {
         });
 
         $save.on('click', function () {
-            $.post(`/booking/${bookingId}/other`, {
-                price_id: $select.val(),
+            $.post(`/booking/${bookingId}/addetional`, {
+                addetional: $select.find('option:selected').text(),
                 _token: $('meta[name="csrf-token"]').attr('content')
             }).done(saved => {
                 $row.replaceWith(renderSavedOtherRow(saved));
@@ -678,7 +676,7 @@ $(document).ready(function () {
         const bookingId = row.closest('.service-block').data('bookingId');
 
         $.ajax({
-            url: `/booking/${bookingId}/other/${id}`,
+            url: `/booking/${bookingId}/addetional/${id}`,
             type: 'DELETE',
             data: {_token: $('meta[name="csrf-token"]').attr('content')},
             success: () => row.remove()

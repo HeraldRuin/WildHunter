@@ -1800,7 +1800,7 @@ class BookingController extends \App\Http\Controllers\Controller
             'penalties' => $penalties,
             'preparations' => $preparations,
             'foods' => $services->where('service_type', 'food')->values(),
-            'addetionals' => $services->where('service_type', 'other')->values(),
+            'addetionals' => $services->where('service_type', 'addetional')->values(),
         ]);
     }
 
@@ -2029,12 +2029,10 @@ class BookingController extends \App\Http\Controllers\Controller
     //Другое
     public function getAddetionalServices(): JsonResponse
     {
-        $addetionals = AddetionalPrice::where('type', '!=', 'food')
-            ->get()
-            ->map(fn ($food) => [
-                'id'     => $food->id,
-                'name'   => $food->name,
-                'type'   => $food->type,
+        $addetionals = AddetionalPrice::whereNull('type')->get()
+            ->map(fn ($addetional) => [
+                'type'   => $addetional->type,
+                'name'   => $addetional->name,
             ])
             ->values()
             ->toArray();
@@ -2042,5 +2040,34 @@ class BookingController extends \App\Http\Controllers\Controller
         return response()->json([
             'addetionals' => $addetionals,
         ]);
+    }
+    public function storeAddetional(Request $request, Booking $booking): JsonResponse
+    {
+        $request->validate([
+            'addetional'     => 'required|string|',
+        ]);
+
+        $service = BookingService::create([
+            'booking_id'   => $booking->id,
+            'service_type' => 'addetional',
+            'type'       => $request->input('addetional'),
+        ]);
+
+        return response()->json([
+            'id'           => $service->id,
+            'type'         => $service->type,
+            'created_at'   => $service->created_at,
+            'updated_at'   => $service->updated_at,
+        ]);
+    }
+    public function deleteAddetional(Booking $booking, $serviceId): JsonResponse
+    {
+        $service = BookingService::where('id', $serviceId)
+            ->where('booking_id', $booking->id)
+            ->firstOrFail();
+
+        $service->delete();
+
+        return response()->json(['status' => 'ok']);
     }
 }

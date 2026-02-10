@@ -1,6 +1,5 @@
 <?php
 use Illuminate\Support\Facades\Route;
-use Modules\Booking\Controllers\BookingController;
 
 // Booking
 Route::group(['prefix'=>config('booking.booking_route_prefix')],function(){
@@ -50,7 +49,9 @@ Route::group(['prefix'=>config('booking.booking_route_prefix')],function(){
     Route::post('/{booking}/food', 'BookingController@storeFoods');
     Route::delete('/{booking}/food/{foodId}', 'BookingController@deleteFoods');
 
-    Route::get('/addetional', 'BookingController@getAddetionalServices');
+    Route::get('/addetional/services', 'BookingController@getAddetionalServices');
+    Route::post('/{booking}/addetional', 'BookingController@storeAddetional');
+    Route::delete('/{booking}/addetional/{addetionalId}', 'BookingController@deleteAddetional');
 
     //ical
 	Route::get('/export-ical/{type}/{id}','BookingController@exportIcal')->name('booking.admin.export-ical');
