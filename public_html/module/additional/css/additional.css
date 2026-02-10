@@ -1,4 +1,77 @@
-/*.trophy-row .row.no-gutter {*/
-/*    padding-left: 10px;*/
-/*    padding-right: 250px;*/
-/*}*/
+.trophy-animal-col { width: 340px; }
+.trophy-type-col   { width: 360px; }
+.trophy-count-col { width: 200px; }
+
+.preparation-row.prep-col {
+    flex: 0 0 auto;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.animal-col { width: 530px; }
+.count-col   { width: 360px; }
+
+.penalty-row.penalty-col {
+    flex: 0 0 auto;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.animal-penalty-col { width: 340px; }
+.type-col   { width: 360px; }
+.hunter-col { width: 200px; }
+
+.preparation-row.prep-col {
+    flex: 0 0 auto;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.animal-col { width: 530px; }
+.count-col   { width: 370px; }
+
+ /*Питание*/
+.food-row {
+    align-items: center;
+    gap: 10px;
+}
+
+.food-col {
+    flex: 0 0 auto;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.food-name-col {
+    width: 512px;
+}
+
+.food-count-col {
+    width: 80px;
+}
+
+
+.other-row {
+    align-items: center;
+}
+
+.other-col {
+    flex: 0 0 auto;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.title-col {
+    width: 250px;
+    margin-right: 10px;
+}
+
+
+
+
+

@@ -1,8 +1,4 @@
 $(document).ready(function () {
-
-    // ─────────────────────────────
-    // 1. Открытие модального окна
-    // ─────────────────────────────
     $('[id^="bookingAddServiceModal"]').on('show.bs.modal', function () {
 
         const bookingId = $(this).attr('id').replace('bookingAddServiceModal', '');
@@ -19,9 +15,6 @@ $(document).ready(function () {
         });
     });
 
-    // ─────────────────────────────
-    // 2. Заголовок
-    // ─────────────────────────────
     function addTrophyHeader(container) {
         container.append(`
             <div class="d-flex fw-bold mb-2 trophy-header">
@@ -33,17 +26,11 @@ $(document).ready(function () {
         `);
     }
 
-    // ─────────────────────────────
-    // 3. Загрузка животных
-    // ─────────────────────────────
     function loadTrophyAnimals(block) {
         return $.get('/booking/trophies/animals')
             .done(animals => block.data('trophyAnimals', animals));
     }
 
-    // ─────────────────────────────
-    // 4. Загрузка сохранённых трофеев
-    // ─────────────────────────────
     function loadSavedTrophies(bookingId, container) {
         $.get(`/booking/${bookingId}/saved-services`, res => {
             (res.trophies || []).forEach(trophy => {
@@ -52,26 +39,20 @@ $(document).ready(function () {
         });
     }
 
-    // ─────────────────────────────
-    // 5. Сохранённый трофей (READ ONLY)
-    // ─────────────────────────────
     function renderSavedTrophyRow(trophy, bookingId) {
         return $(`
-            <div class="trophy-row border rounded p-2 mb-2 d-flex align-items-center"
-                 data-id="${trophy.id}">
+        <div class="trophy-row border rounded p-2 mb-2 d-flex align-items-center"
+             data-id="${trophy.id}">
 
-                <div class="flex-fill">${trophy.animal_title}</div>
-                <div class="flex-fill">${trophy.type}</div>
-                <div class="flex-fill">${trophy.count}</div>
+            <div class="trophy-col trophy-animal-col">${trophy.animal_title}</div>
+            <div class="trophy-col trophy-type-col">${trophy.type}</div>
+            <div class="trophy-col trophy-count-col">${trophy.count}</div>
 
-                <button class="btn btn-sm btn-outline-danger remove-saved-trophy">Удалить</button>
-            </div>
-        `);
+            <button class="btn btn-sm btn-outline-danger remove-saved-trophy">Удалить</button>
+        </div>
+    `);
     }
 
-    // ─────────────────────────────
-    // 6. Добавить новую строку
-    // ─────────────────────────────
     $(document).on('click', '.add-trophy-btn', function () {
 
         const block = $(this).closest('.service-block');
@@ -82,9 +63,6 @@ $(document).ready(function () {
             .append(renderNewTrophyRow(animals, bookingId));
     });
 
-    // ─────────────────────────────
-    // 7. Новая запись (SELECT ONLY HERE)
-    // ─────────────────────────────
     function renderNewTrophyRow(animals, bookingId) {
 
         const $row = $(`
@@ -118,12 +96,10 @@ $(document).ready(function () {
         const $count = $row.find('.trophy-count');
         const $save = $row.find('.save-trophy');
 
-        // животные
         animals.forEach(a => {
             $animal.append(`<option value="${a.id}">${a.title}</option>`);
         });
 
-        // выбор животного
         $animal.on('change', function () {
             const animal = animals.find(a => String(a.id) === String(this.value));
 
@@ -151,7 +127,6 @@ $(document).ready(function () {
             );
         }
 
-        // сохранение
         $save.on('click', function () {
             $.post(`/booking/${bookingId}/trophies`, {
                 animal_id: $animal.val(),
@@ -169,10 +144,6 @@ $(document).ready(function () {
         return $row;
     }
 
-
-    // ─────────────────────────────
-    // 8. Удаление сохранённого
-    // ─────────────────────────────
     $(document).on('click', '.remove-saved-trophy', function () {
 
         const row = $(this).closest('.trophy-row');
@@ -192,10 +163,6 @@ $(document).ready(function () {
 
 // Штрафы
 $(document).ready(function () {
-
-    // ─────────────────────────────
-    // 1. Открытие модального окна
-    // ─────────────────────────────
     $('[id^="bookingAddServiceModal"]').on('show.bs.modal', function () {
 
         const bookingId = $(this).attr('id').replace('bookingAddServiceModal', '');
@@ -211,10 +178,6 @@ $(document).ready(function () {
         });
     });
 
-
-    // ─────────────────────────────
-    // 2. Заголовок
-    // ─────────────────────────────
     function addPenaltyHeader(container) {
         container.append(`
         <div class="d-flex fw-bold mb-2 penalty-header">
@@ -234,9 +197,6 @@ $(document).ready(function () {
         });
     }
 
-    // ─────────────────────────────
-    // 4. Загрузка сохранённых штрафов
-    // ─────────────────────────────
     function loadSavedPenalties(bookingId, container) {
         $.get(`/booking/${bookingId}/saved-services`, res => {
             (res.penalties || []).forEach(penalty => {
@@ -245,25 +205,20 @@ $(document).ready(function () {
         });
     }
 
-    // ─────────────────────────────
-    // 5. Сохранённый штраф (READ ONLY)
-    // ─────────────────────────────
     function renderSavedPenaltyRow(penalty, bookingId) {
         return $(`
-            <div class="penalty-row border rounded p-2 mb-2 d-flex align-items-center"
-                 data-id="${penalty.id}">
+        <div class="penalty-row border rounded p-2 mb-2 d-flex align-items-center"
+             data-id="${penalty.id}">
 
-                <div class="flex-fill">${penalty.animal_title}</div>
-                <div class="flex-fill">${penalty.type}</div>
-                <div class="flex-fill">${penalty.hunter_name || ''}</div>
-                <button class="btn btn-sm btn-outline-danger remove-saved-penalty">Удалить</button>
-            </div>
-        `);
+            <div class="penalty-col animal-penalty-col">${penalty.animal_title}</div>
+            <div class="penalty-col type-col">${penalty.type}</div>
+            <div class="penalty-col hunter-col">${penalty.hunter_name || ''}</div>
+            <button class="btn btn-sm btn-outline-danger remove-saved-penalty">Удалить</button>
+        </div>
+    `);
     }
 
-    // ─────────────────────────────
-    // 6. Добавить новую строку
-    // ─────────────────────────────
+
     $(document).on('click', '.add-penalty-btn', function () {
 
         const block = $(this).closest('.service-block');
@@ -275,9 +230,6 @@ $(document).ready(function () {
             .append(renderNewPenaltyRow(animals, hunters, bookingId));
     });
 
-    // ─────────────────────────────
-    // 7. Новая запись
-    // ────────────────────────────
     function renderNewPenaltyRow(animals, hunters, bookingId) {
 
         const $row = $(`
@@ -313,17 +265,14 @@ $(document).ready(function () {
         const $hunter = $row.find('.hunter');
         const $save = $row.find('.save-penalty');
 
-        // Заполняем животных
         animals.forEach(a => {
             $animal.append(`<option value="${a.id}">${a.title}</option>`);
         });
 
-        // Заполняем охотников
         hunters.forEach(h => {
             $hunter.append(`<option value="${h.id}">${h.name}</option>`);
         });
 
-        // Проверка для кнопки "Сохранить"
         function check() {
             $save.prop(
                 'disabled',
@@ -331,7 +280,6 @@ $(document).ready(function () {
             );
         }
 
-        // Выбор животного → подгружаем типы штрафов
         $animal.on('change', function () {
             const animal = animals.find(a => String(a.id) === String(this.value));
 
@@ -349,11 +297,9 @@ $(document).ready(function () {
             check();
         });
 
-        // Выбор типа штрафа и охотника → проверка
         $type.on('change', check);
         $hunter.on('change', check);
 
-        // Сохранение
         $save.on('click', function () {
             $.post(`/booking/${bookingId}/penalty`, {
                 animal_id: $animal.val(),
@@ -365,16 +311,11 @@ $(document).ready(function () {
             });
         });
 
-        // Отмена
         $row.find('.cancel-new').on('click', () => $row.remove());
 
         return $row;
     }
 
-
-    // ─────────────────────────────
-    // 8. Удаление сохранённого штрафа
-    // ─────────────────────────────
     $(document).on('click', '.remove-saved-penalty', function () {
 
         const row = $(this).closest('.penalty-row');
@@ -394,9 +335,6 @@ $(document).ready(function () {
 // Разделка
 $(document).ready(function () {
 
-    // ─────────────────────────────
-    // 1. Открытие модального окна
-    // ─────────────────────────────
     $('[id^="bookingAddServiceModal"]').on('show.bs.modal', function () {
         const bookingId = $(this).attr('id').replace('bookingAddServiceModal', '');
         const block = $('#preparations-block-' + bookingId);
@@ -412,10 +350,6 @@ $(document).ready(function () {
         });
     });
 
-
-    // ─────────────────────────────
-    // 2. Заголовок
-    // ─────────────────────────────
     function addPreparationHeader(container) {
         container.append(`
             <div class="d-flex fw-bold mb-2 preparation-header">
@@ -426,18 +360,12 @@ $(document).ready(function () {
         `);
     }
 
-    // ─────────────────────────────
-    // 3. Загрузка животных
-    // ─────────────────────────────
     function loadPreparationAnimals(block) {
         return $.get('/booking/preparation/animals').done(res => {
             block.data('preparationAnimals', res.animals || []);
         });
     }
 
-    // ─────────────────────────────
-    // 4. Загрузка сохранённых разделок
-    // ─────────────────────────────
     function loadSavedPreparations(bookingId, container) {
         $.get(`/booking/${bookingId}/saved-services`, res => {
             (res.preparations || []).forEach(prep => {
@@ -446,24 +374,18 @@ $(document).ready(function () {
         });
     }
 
-    // ─────────────────────────────
-    // 5. Сохранённая запись (READ ONLY)
-    // ─────────────────────────────
     function renderSavedPreparationRow(prep, bookingId) {
         return $(`
-            <div class="preparation-row border rounded p-2 mb-2 d-flex align-items-center"
-                 data-id="${prep.id}">
-                 
-                <div class="flex-fill">${prep.animal_title}</div>
-                <div class="flex-fill">${prep.count}</div>
-                <button class="btn btn-sm btn-outline-danger remove-saved-preparation">Удалить</button>
-            </div>
-        `);
+        <div class="preparation-row border rounded p-2 mb-2 d-flex align-items-center"
+             data-id="${prep.id}">
+
+            <div class="prep-col animal-col">${prep.animal_title}</div>
+            <div class="prep-col count-col">${prep.count}</div>
+            <button class="btn btn-sm btn-outline-danger remove-saved-preparation">Удалить</button>
+        </div>
+    `);
     }
 
-    // ─────────────────────────────
-    // 6. Добавить новую строку
-    // ─────────────────────────────
     $(document).on('click', '.add-preparation-btn', function () {
 
         const block = $(this).closest('.service-block');
@@ -474,9 +396,6 @@ $(document).ready(function () {
             .append(renderNewPreparationRow(animals, bookingId));
     });
 
-    // ─────────────────────────────
-    // 7. Новая запись
-    // ─────────────────────────────
     function renderNewPreparationRow(animals, bookingId) {
 
         const $row = $(`
@@ -503,10 +422,8 @@ $(document).ready(function () {
         const $count = $row.find('.preparation-count');
         const $save = $row.find('.save-preparation');
 
-        // Заполняем животных
         animals.forEach(a => $animal.append(`<option value="${a.id}">${a.title}</option>`));
 
-        // Проверка для кнопки "Сохранить"
         function check() {
             $save.prop('disabled', !($animal.val() && $count.val() > 0));
         }
@@ -514,7 +431,6 @@ $(document).ready(function () {
         $animal.on('change', check);
         $count.on('input', check);
 
-        // Сохранение
         $save.on('click', function () {
             $.post(`/booking/${bookingId}/preparation`, {
                 animal_id: $animal.val(),
@@ -525,15 +441,11 @@ $(document).ready(function () {
             });
         });
 
-        // Отмена
         $row.find('.cancel-new').on('click', () => $row.remove());
 
         return $row;
     }
 
-    // ─────────────────────────────
-    // 8. Удаление сохранённой записи
-    // ─────────────────────────────
     $(document).on('click', '.remove-saved-preparation', function () {
         const row = $(this).closest('.preparation-row');
         const prepId = row.data('id');
@@ -562,9 +474,6 @@ $(document).ready(function () {
         loadSavedFoods(bookingId, foodsList);
     });
 
-    // ─────────────────────────────
-    // 2. Заголовок
-    // ─────────────────────────────
     function addFoodHeader(container) {
         container.append(`
             <div class="d-flex fw-bold mb-2 food-header">
@@ -575,9 +484,6 @@ $(document).ready(function () {
         `);
     }
 
-    // ─────────────────────────────
-    // 4. Загрузка сохранённых
-    // ─────────────────────────────
     function loadSavedFoods(bookingId, container) {
         $.get(`/booking/${bookingId}/saved-services`, res => {
             (res.foods || []).forEach(food => {
@@ -586,26 +492,19 @@ $(document).ready(function () {
         });
     }
 
-    // ─────────────────────────────
-    // 5. Сохранённая строка (READ ONLY)
-    // ─────────────────────────────
     function renderSavedFoodRow(food) {
         return $(`
         <div class="food-row border rounded p-2 mb-2 d-flex align-items-center"
              data-id="${food.id}">
 
-            <div class="flex-fill">Питание</div>
-            <div class="flex-fill">${food.count}</div>
+            <div class="food-col food-name-col">Питание</div>
+            <div class="food-col count-col">${food.count}</div>
 
             <button class="btn btn-sm btn-outline-danger remove-saved-food">Удалить</button>
         </div>
     `);
     }
 
-
-    // ─────────────────────────────
-    // 6. Добавить новую строку
-    // ─────────────────────────────
     $(document).on('click', '.add-food-btn', function () {
 
         const block = $(this).closest('.service-block');
@@ -615,10 +514,6 @@ $(document).ready(function () {
             .append(renderNewFoodRow(bookingId));
     });
 
-
-    // ─────────────────────────────
-    // 7. Новая строка
-    // ─────────────────────────────
     function renderNewFoodRow(bookingId) {
 
         const $row = $(`
@@ -666,10 +561,6 @@ $(document).ready(function () {
         return $row;
     }
 
-
-    // ─────────────────────────────
-    // 8. Удаление сохранённого
-    // ─────────────────────────────
     $(document).on('click', '.remove-saved-food', function () {
 
         const row = $(this).closest('.food-row');
@@ -716,23 +607,17 @@ $(document).ready(function () {
         });
     }
 
-    // ─────────────────────────────
-    // 4. Сохранённая строка
-    // ─────────────────────────────
     function renderSavedOtherRow(item) {
         return $(`
-            <div class="other-row border rounded p-2 mb-2 d-flex align-items-center"
-                 data-id="${item.id}">
-                 
-                <div class="flex-fill">${item.title}</div>
-                <button class="btn btn-sm btn-outline-danger remove-saved-other">×</button>
-            </div>
-        `);
+        <div class="other-row border rounded p-2 mb-2 d-flex align-items-center"
+             data-id="${item.id}">
+
+            <div class="other-col title-col">${item.title}</div>
+            <button class="btn btn-sm btn-outline-danger remove-saved-other">×</button>
+        </div>
+    `);
     }
 
-    // ─────────────────────────────
-    // 5. Добавить новую строку
-    // ─────────────────────────────
     $(document).on('click', '.add-other-btn', function () {
 
         const block = $(this).closest('.service-block');
@@ -743,10 +628,6 @@ $(document).ready(function () {
             .append(renderNewOtherRow(prices, bookingId));
     });
 
-
-    // ─────────────────────────────
-    // 6. Новая строка
-    // ─────────────────────────────
     function renderNewOtherRow(prices, bookingId) {
 
         const $row = $(`
@@ -768,7 +649,6 @@ $(document).ready(function () {
         const $select = $row.find('.other-price');
         const $save   = $row.find('.save-other');
 
-        // наполняем select
         prices.forEach(p => {
             $select.append(`<option value="${p.id}">${p.title}</option>`);
         });
@@ -777,7 +657,6 @@ $(document).ready(function () {
             $save.prop('disabled', !$select.val());
         });
 
-        // сохранение
         $save.on('click', function () {
             $.post(`/booking/${bookingId}/other`, {
                 price_id: $select.val(),
@@ -792,10 +671,6 @@ $(document).ready(function () {
         return $row;
     }
 
-
-    // ─────────────────────────────
-    // 7. Удаление
-    // ─────────────────────────────
     $(document).on('click', '.remove-saved-other', function () {
 
         const row = $(this).closest('.other-row');
@@ -809,7 +684,6 @@ $(document).ready(function () {
             success: () => row.remove()
         });
     });
-
 });
 
 
