@@ -19,6 +19,7 @@ class HotelObserver
             if (!$exists) {
                 AddetionalPrice::create([
                     'name'     => 'Питание',
+                    'type'    => 'food',
                     'price'    => 0,
                     'user_id'  => $authUser->id,
                     'hotel_id' => $hotel->id ?? null,
