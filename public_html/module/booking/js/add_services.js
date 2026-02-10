@@ -586,13 +586,13 @@ $(document).ready(function () {
         const list = block.find('.others-list');
         list.empty();
 
-        loadOtherPrices(block).done(() => {
+        loadOtherPrices(block, bookingId).done(() => {
             loadSavedOthers(bookingId, list);
         });
     });
 
-    function loadOtherPrices(block) {
-        return $.get(`/booking/addetional/services`)
+    function loadOtherPrices(block, bookingId) {
+        return $.get(`/booking/${bookingId}/addetional/services`)
             .done(res => {
                 block.data('otherPrices', res.addetionals || []);
             });

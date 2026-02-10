@@ -2027,9 +2027,9 @@ class BookingController extends \App\Http\Controllers\Controller
     }
 
     //Другое
-    public function getAddetionalServices(): JsonResponse
+    public function getAddetionalServices(Booking $booking): JsonResponse
     {
-        $addetionals = AddetionalPrice::whereNull('type')->get()
+        $addetionals = AddetionalPrice::whereNull('type')->where('hotel_id', $booking->hotel_id)->get()
             ->map(fn ($addetional) => [
                 'type'   => $addetional->type,
                 'name'   => $addetional->name,

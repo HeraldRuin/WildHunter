@@ -49,7 +49,7 @@ Route::group(['prefix'=>config('booking.booking_route_prefix')],function(){
     Route::post('/{booking}/food', 'BookingController@storeFoods');
     Route::delete('/{booking}/food/{foodId}', 'BookingController@deleteFoods');
 
-    Route::get('/addetional/services', 'BookingController@getAddetionalServices');
+    Route::get('/{booking}/addetional/services', 'BookingController@getAddetionalServices');
     Route::post('/{booking}/addetional', 'BookingController@storeAddetional');
     Route::delete('/{booking}/addetional/{addetionalId}', 'BookingController@deleteAddetional');
 
