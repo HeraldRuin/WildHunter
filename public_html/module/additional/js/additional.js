@@ -18,6 +18,7 @@
                     let data = {
                         name: row.find('input[name="name"]').val(),
                         price: row.find('input[name="price"]').val(),
+                        count: row.find('input[name="count"]').val(),
                         _token: $('meta[name="csrf-token"]').attr('content')
                     };
 

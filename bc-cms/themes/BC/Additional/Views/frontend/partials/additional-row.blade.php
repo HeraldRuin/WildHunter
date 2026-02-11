@@ -1,7 +1,20 @@
 <tr data-id="{{ $additional->id }}">
     <td>
-        <input type="text" name="name" class="form-control" value="{{ $additional->name }}"
-               @if($additional->name === 'Питание') readonly @endif>
+        <div class="d-flex gap-3">
+            <input type="text"
+                   name="name"
+                   class="form-control"
+                   value="{{ $additional->name }}"
+                   @if($additional->name === 'Питание') readonly @endif>
+
+            @if($additional->name !== 'Питание')
+                <input type="text"
+                       name="count"
+                       class="form-control"
+                       value="{{ $additional->count ?? '' }}"
+                       placeholder="кол-во">
+            @endif
+        </div>
     </td>
 
     <td>
@@ -12,7 +25,7 @@
                inputmode="decimal">
     </td>
 
-    <td class="text-center">
+    <td class="text-center" style="width: 260px">
         <button class="btn btn-success btn-sm save-period"
                 data-id="{{ $additional->id }}">
             {{ __("Save") }}
