@@ -1866,8 +1866,9 @@ class BookingController extends \App\Http\Controllers\Controller
     }
 
     //Штрафы
-    public function getAnimalPenaltyServices(): JsonResponse
+    public function getAnimalPenaltyServices(Booking $booking): JsonResponse
     {
+        $booking->load('bookingHunter.invitations');
         $userHotelId = get_user_hotel_id();
 
         $animals = $this->animalClass::query()
@@ -1883,8 +1884,10 @@ class BookingController extends \App\Http\Controllers\Controller
             ->with('fines:id,animal_id,type')
             ->get();
 
+        $hunterIds = $booking->bookingHunter?->invitations?->pluck('hunter_id')->unique();
+
         $hunters = User::query()
-//            ->where('role', 'hunter')
+            ->whereIn('id', $hunterIds)
             ->select(['id', 'name'])
             ->get();
 

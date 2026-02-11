@@ -36,7 +36,7 @@ Route::group(['prefix'=>config('booking.booking_route_prefix')],function(){
     Route::delete('/{booking}/trophy/{trophyId}', 'BookingController@deleteTrophy');
     Route::get('/booking/{booking}/saved-penalties', 'BookingController@getBookingPenalties');
 
-    Route::get('/penalty/animals', 'BookingController@getAnimalPenaltyServices');
+    Route::get('/{booking}/penalty/animals', 'BookingController@getAnimalPenaltyServices');
     Route::post('/{booking}/penalty', 'BookingController@storePenalty');
     Route::delete('/{booking}/penalty/{penaltyId}', 'BookingController@deletePenalty');
 

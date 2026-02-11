@@ -164,7 +164,6 @@ $(document).ready(function () {
 // Штрафы
 $(document).ready(function () {
     $('[id^="bookingAddServiceModal"]').on('show.bs.modal', function () {
-
         const bookingId = $(this).attr('id').replace('bookingAddServiceModal', '');
         const block = $('#penalties-block-' + bookingId);
         block.data('bookingId', bookingId);
@@ -173,7 +172,7 @@ $(document).ready(function () {
 
         addPenaltyHeader(penaltiesList);
 
-        loadPenaltyAnimals(block).done(animals => {
+        loadPenaltyAnimals(block, bookingId).done(animals => {
             loadSavedPenalties(bookingId, penaltiesList);
         });
     });
@@ -190,8 +189,8 @@ $(document).ready(function () {
     }
 
 
-    function loadPenaltyAnimals(block) {
-        return $.get('/booking/penalty/animals').done(res => {
+    function loadPenaltyAnimals(block, bookingId) {
+        return $.get(`/booking/${bookingId}/penalty/animals`).done(res => {
             block.data('penaltyAnimals', res.animals || []);
             block.data('hunters', res.hunters || []);
         });
