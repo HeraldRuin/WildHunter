@@ -44,7 +44,6 @@ class HotelController extends Controller
 
     public function index(Request $request)
     {
-
         $layout = setting_item("hotel_layout_search", 'normal');
         if ($request->query('_layout')) {
             $layout = $request->query('_layout');
@@ -58,38 +57,48 @@ class HotelController extends Controller
             $limit = !empty(setting_item("hotel_page_limit_item"))? setting_item("hotel_page_limit_item") : 9;
         }
 
-        $start = Carbon::createFromFormat('d.m.Y', $request->input('start'))->startOfDay();
-        $end   = Carbon::createFromFormat('d.m.Y', $request->input('end'))->endOfDay();
+        $startInput = $request->input('start');
+        $endInput   = $request->input('end');
 
-        $query = $this->hotelClass->search($request->input());
-        $list  = $query->paginate($limit);
-//        $hotelsCollection = collect($list->items());
-        $hotelsCollection = collect($query->get());
+        if ($startInput && $endInput) {
+            $start = Carbon::parse($startInput)->startOfDay();
+            $end   = Carbon::parse($endInput)->endOfDay();
 
-        $hotelsCollection = $this->filterHotelsByAvailability($hotelsCollection, $start, $end);
+            $query = $this->hotelClass->search($request->input());
+            $hotelsCollection = collect($query->get());
 
-        $roomCount = (int) $request->input('room');
-        if ($roomCount > 0) {
-            $hotelsCollection = $this->filterHotelsByRoomCount($hotelsCollection, $roomCount, $start, $end);
+            $hotelsCollection = $this->filterHotelsByAvailability($hotelsCollection, $start, $end);
+
+            $roomCount = (int) $request->input('room');
+            if ($roomCount > 0) {
+                $hotelsCollection = $this->filterHotelsByRoomCount($hotelsCollection, $roomCount, $start, $end);
+            }
+
+            $guestCount = (int) $request->input('adults');
+            if ($guestCount > 0) {
+                $hotelsCollection = $this->filterHotelsByGuestCount($hotelsCollection, $roomCount, $guestCount, $start, $end);
+            }
+        } else {
+            $hotelsCollection = collect($this->hotelClass::query()->get());
         }
-        $guestCount = (int) $request->input('adults');
-        if ($guestCount > 0) {
-            $hotelsCollection = $this->filterHotelsByGuestCount($hotelsCollection, $roomCount, $guestCount, $start, $end);
-        }
+
+
+        $perPage = $limit;
+        $currentPage = \Illuminate\Pagination\LengthAwarePaginator::resolveCurrentPage();
 
         $list = new \Illuminate\Pagination\LengthAwarePaginator(
-            $hotelsCollection,
+            $hotelsCollection->forPage($currentPage, $perPage),
             $hotelsCollection->count(),
-            $list->perPage(),
-            $list->currentPage(),
+            $perPage,
+            $currentPage,
             [
-                'path' => request()->url(),
+                'path'  => request()->url(),
                 'query' => request()->query(),
             ]
         );
 
         $markers = [];
-        if ($for_map and !empty($list)) {
+        if ($for_map && $list->count()) {
             foreach ($list as $row) {
                 $markers[] = [
                     "id"      => $row->id,
