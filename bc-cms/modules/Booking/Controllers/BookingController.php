@@ -2034,6 +2034,7 @@ class BookingController extends \App\Http\Controllers\Controller
             ->map(fn ($addetional) => [
                 'type'   => $addetional->type,
                 'name'   => $addetional->name,
+                'count'   => $addetional->count,
             ])
             ->values()
             ->toArray();
@@ -2052,11 +2053,13 @@ class BookingController extends \App\Http\Controllers\Controller
             'booking_id'   => $booking->id,
             'service_type' => 'addetional',
             'type'       => $request->input('addetional'),
+            'count'       => $request->input('count'),
         ]);
 
         return response()->json([
             'id'           => $service->id,
             'type'         => $service->type,
+            'count'         => $service->count,
             'created_at'   => $service->created_at,
             'updated_at'   => $service->updated_at,
         ]);

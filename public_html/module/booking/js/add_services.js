@@ -470,6 +470,7 @@ $(document).ready(function () {
         const foodsList = block.find('.foods-list');
         foodsList.empty();
 
+        addFoodHeader(foodsList)
         loadSavedFoods(bookingId, foodsList);
     });
 
@@ -577,6 +578,7 @@ $(document).ready(function () {
 
 // Другое
 $(document).ready(function () {
+
     $('[id^="bookingAddServiceModal"]').on('show.bs.modal', function () {
 
         const bookingId = $(this).attr('id').replace('bookingAddServiceModal', '');
@@ -585,10 +587,24 @@ $(document).ready(function () {
         const list = block.find('.others-list');
         list.empty();
 
+        addOthersHeader(list);
+
+        // Загружаем все доступные услуги
         loadOtherPrices(block, bookingId).done(() => {
+            // Загружаем уже сохраненные услуги
             loadSavedOthers(bookingId, list);
         });
     });
+
+    function addOthersHeader(container) {
+        container.append(`
+            <div class="d-flex fw-bold mb-2 food-header">
+                <span class="flex-fill">Название</span>
+                <span class="flex-fill">Количество</span>
+                <span style="width:40px"></span>
+            </div>
+        `);
+    }
 
     function loadOtherPrices(block, bookingId) {
         return $.get(`/booking/${bookingId}/addetional/services`)
@@ -607,56 +623,67 @@ $(document).ready(function () {
 
     function renderSavedOtherRow(addetional) {
         return $(`
-        <div class="other-row border rounded p-2 mb-2 d-flex align-items-center"
-             data-id="${addetional.id}">
-            <div class="other-col type-col other-name-col">${addetional.type ?? '—'}</div>
+            <div class="other-row border rounded p-2 mb-2 d-flex align-items-center"
+                 data-id="${addetional.id}">
+                <div class="other-col type-col other-name-col">${addetional.type ?? '—'}</div>
+                <div class="other-col type-col other-count-col">${addetional.count ?? '—'}</div>
 
-            <button class="btn btn-sm btn-outline-danger remove-saved-other">Удалить</button>
-        </div>
-    `);
+                <button class="btn btn-sm btn-outline-danger remove-saved-other">Удалить</button>
+            </div>
+        `);
     }
-    $(document).on('click', '.add-other-btn', function () {
 
+    // Добавление новой строки
+    $(document).on('click', '.add-other-btn', function () {
         const block = $(this).closest('.service-block');
         const bookingId = block.data('bookingId');
         const prices = block.data('otherPrices') || [];
 
-        block.find('.others-list')
-            .append(renderNewOtherRow(prices, bookingId));
+        block.find('.others-list').append(renderNewOtherRow(prices, bookingId));
     });
 
     function renderNewOtherRow(prices, bookingId) {
-
         const $row = $(`
-        <div class="other-row border rounded p-2 mb-2 d-flex align-items-center gap-2">
+            <div class="other-row border rounded p-2 mb-2 d-flex align-items-center gap-2">
 
-            <div class="flex-fill">
-                <select class="form-select form-select-sm other-price" style="width: 370px;">
-                    <option value="" disabled selected hidden>Выберите услугу</option>
-                </select>
-            </div>
+                <div class="flex-fill">
+                    <select class="form-select form-select-sm other-price" style="width: 190px;">
+                        <option value="" disabled selected hidden>Выберите услугу</option>
+                    </select>
+                </div>
 
-            <div>
-                <button class="btn btn-sm btn-success save-other" disabled>Сохранить</button>
-                <button class="btn btn-sm btn-outline-secondary cancel-new">Отмена</button>
+                <div class="flex-fill">
+                    <span class="other-count-placeholder">—</span>
+                </div>
+
+                <div>
+                    <button class="btn btn-sm btn-success save-other" disabled>Сохранить</button>
+                    <button class="btn btn-sm btn-outline-secondary cancel-new">Отмена</button>
+                </div>
             </div>
-        </div>
-    `);
+        `);
 
         const $select = $row.find('.other-price');
-        const $save   = $row.find('.save-other');
+        const $save = $row.find('.save-other');
+        const $count = $row.find('.other-count-placeholder');
 
+        // Заполняем селект и добавляем count в data-атрибут
         prices.forEach(p => {
-            $select.append(`<option value="${p.id}">${p.name}</option>`);
+            $select.append(`<option value="${p.id}" data-count="${p.count ?? 1}">${p.name}</option>`);
         });
 
         $select.on('change', () => {
+            const selected = $select.find('option:selected');
+            $count.text(selected.data('count') ?? '—');
             $save.prop('disabled', !$select.val());
         });
 
-        $save.on('click', function () {
+        // Сохраняем один раз, чтобы не дублировать строки
+        $save.one('click', function () {
+            const selected = $select.find('option:selected');
             $.post(`/booking/${bookingId}/addetional`, {
-                addetional: $select.find('option:selected').text(),
+                addetional: selected.text(),
+                count: selected.data('count') ?? 1,
                 _token: $('meta[name="csrf-token"]').attr('content')
             }).done(saved => {
                 $row.replaceWith(renderSavedOtherRow(saved));
@@ -668,8 +695,8 @@ $(document).ready(function () {
         return $row;
     }
 
+    // Удаление сохраненной услуги
     $(document).on('click', '.remove-saved-other', function () {
-
         const row = $(this).closest('.other-row');
         const id = row.data('id');
         const bookingId = row.closest('.service-block').data('bookingId');

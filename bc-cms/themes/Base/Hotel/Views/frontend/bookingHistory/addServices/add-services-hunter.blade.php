@@ -31,9 +31,7 @@
                      id="foods-block-{{ $booking->id }}">
                     <div class="d-flex justify-content-between align-items-center mb-2">
                         <h6>Питание:</h6>
-                        <button type="button" class="btn btn-sm btn-outline-primary add-food-btn"
-                                data-booking="{{ $booking->id }}">+
-                        </button>
+                        <button type="button" class="btn btn-sm btn-outline-primary add-food-btn"data-booking="{{ $booking->id }}">+</button>
                     </div>
 
                     <div class="foods-list"></div>
