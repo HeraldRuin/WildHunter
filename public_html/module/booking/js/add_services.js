@@ -631,7 +631,7 @@ $(document).ready(function () {
         <div class="other-row border rounded p-2 mb-2 d-flex align-items-center gap-2">
 
             <div class="flex-fill">
-                <select class="form-select form-select-sm other-price">
+                <select class="form-select form-select-sm other-price" style="width: 370px;">
                     <option value="" disabled selected hidden>Выберите услугу</option>
                 </select>
             </div>
