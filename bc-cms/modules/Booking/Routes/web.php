@@ -40,9 +40,7 @@ Route::group(['prefix'=>config('booking.booking_route_prefix')],function(){
     Route::post('/{booking}/penalty', 'BookingController@storePenalty');
     Route::delete('/{booking}/penalty/{penaltyId}', 'BookingController@deletePenalty');
 
-
-    Route::get('/{booking}/preparation-services', 'BookingController@getAnimalPreparationServices');
-     Route::get('/preparation/animals', 'BookingController@getAnimalPreparationServices');
+    Route::get('/{booking}/preparation/animals', 'BookingController@getAnimalPreparationServices');
     Route::post('/{booking}/preparation', 'BookingController@storePreparation');
     Route::delete('/{booking}/preparation/{preparationId}', 'BookingController@deletePreparation');
 

@@ -345,7 +345,7 @@ $(document).ready(function () {
 
         addPreparationHeader(preparationsList);
 
-        loadPreparationAnimals(block).done(animals => {
+        loadPreparationAnimals(block, bookingId).done(animals => {
             loadSavedPreparations(bookingId, preparationsList);
         });
     });
@@ -360,8 +360,8 @@ $(document).ready(function () {
         `);
     }
 
-    function loadPreparationAnimals(block) {
-        return $.get('/booking/preparation/animals').done(res => {
+    function loadPreparationAnimals(block, bookingId) {
+        return $.get(`/booking/${bookingId}/preparation/animals`).done(res => {
             block.data('preparationAnimals', res.animals || []);
         });
     }

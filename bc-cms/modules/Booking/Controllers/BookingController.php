@@ -1937,14 +1937,12 @@ class BookingController extends \App\Http\Controllers\Controller
 
 // Разделка
 
-    public function getAnimalPreparationServices(): JsonResponse
+    public function getAnimalPreparationServices(Booking $booking): JsonResponse
     {
-        $userHotelId = get_user_hotel_id();
-
         $animals = $this->animalClass::query()
-            ->join('bc_hotel_animals as bha', function ($join) use ($userHotelId) {
+            ->join('bc_hotel_animals as bha', function ($join) use ($booking) {
                 $join->on('bha.animal_id', '=', 'bc_animals.id')
-                    ->where('bha.hotel_id', '=', $userHotelId);
+                    ->where('bha.hotel_id', '=', $booking->hotel_id);
             })
             ->select([
                 'bc_animals.id',

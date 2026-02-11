@@ -1,5 +1,5 @@
 <div class="modal fade" id="bookingAddServiceModal{{ $booking->id }}" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
+    <div class="modal-dialog modal-xl">
         <div class="modal-content" id="bookingServiceApp{{ $booking->id }}">
             <div class="modal-header">
                 <h5 class="modal-title">Добавить услуги для брони #{{ $booking->id }}</h5>
@@ -17,9 +17,7 @@
                              id="preparations-block-{{ $booking->id }}">
                             <div class="d-flex justify-content-between align-items-center mb-2">
                                 <h6>Разделка:</h6>
-                                <button type="button" class="btn btn-sm btn-outline-primary add-preparation-btn"
-                                        data-booking="{{ $booking->id }}">+
-                                </button>
+                                <button type="button" class="btn btn-sm btn-outline-primary add-preparation-btn" data-booking="{{ $booking->id }}">+</button>
                             </div>
 
                             <div class="preparations-list"></div>
