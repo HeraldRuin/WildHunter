@@ -34,9 +34,7 @@ class AvailabilityController extends FrontendController{
 
     public function __construct(AddDataInView $cabinetService)
     {
-        if ($cabinetService) {
-            parent::__construct();
-        }
+        parent::__construct();
         $this->roomClass = HotelRoom::class;
         $this->roomDateClass = HotelRoomDate::class;
         $this->bookingClass = Booking::class;
@@ -119,6 +117,210 @@ class AvailabilityController extends FrontendController{
         return view($this->indexView,compact('rows','breadcrumbs','current_month','page_title','request','hotel', 'user', 'viewAdminCabinet'));
     }
 
+//
+//    public function loadDates(Request $request, $hotel_id)
+//    {
+//        $request->validate([
+//            'id' => 'required',
+//            'start' => 'required',
+//            'end' => 'required',
+//        ]);
+//
+//        if (!$this->hasHotelPermission($hotel_id)) {
+//            return $this->sendError(__("Hotel not found"));
+//        }
+//
+//        $room = $this->roomClass::find($request->query('id'));
+//        if (!$room) {
+//            return $this->sendError(__('room not found'));
+//        }
+//
+//        $is_single = $request->query('for_single');
+//
+//        /** ----------------------------------------
+//         * 1. Загружаем кастомные даты
+//         * ---------------------------------------- */
+//        $rows = $this->roomDateClass::query()
+//            ->where('target_id', $room->id)
+//            ->whereBetween('start_date', [
+//                date('Y-m-d 00:00:00', strtotime($request->query('start'))),
+//                date('Y-m-d 23:59:59', strtotime($request->query('end')))
+//            ])
+//            ->get()
+//            ->keyBy(fn ($row) => date('Y-m-d', strtotime($row->start_date)));
+//
+//        /** ----------------------------------------
+//         * 2. Генерируем ВСЕ дни периода
+//         * ---------------------------------------- */
+//        $allDates = [];
+//        $period = periodDate($request->input('start'), $request->input('end'), false);
+//
+//        foreach ($period as $dt) {
+//            $dateKey = $dt->format('Y-m-d');
+//
+//            $allDates[$dateKey] = [
+//                'id' => uniqid(),
+//                'start' => $dateKey,
+//                'allDay' => true,
+//
+//                'price' => $room->price,
+//                'number' => $room->number,
+//                'active' => 1,
+//                'extendedProps' => [
+//                    'max_number' => $room->number,
+//                ],
+//            ];
+//
+//            $priceHtml = format_money($room->price);
+//            if (!$is_single) {
+//                $priceHtml = format_money_main($room->price);
+//            }
+//
+//            $allDates[$dateKey]['title'] = $priceHtml . ' x ' . $room->number;
+//        }
+//
+//        /** ----------------------------------------
+//         * 3. Мержим кастомные даты (НЕ затирая extendedProps)
+//         * ---------------------------------------- */
+//        foreach ($rows as $dateKey => $row) {
+//            $price = $row->price ?: $room->price;
+//            // Если number явно установлен (включая 0), используем его, иначе базовое значение
+//            $number = ($row->number !== null) ? (int)$row->number : $room->number;
+//
+//            $existing = $allDates[$dateKey];
+//
+//            // Определяем, изменилась ли цена или количество
+//            // Только для активных дней (не заблокированных)
+//            $isActive = (int) $row->active;
+//            $priceChanged = false;
+//            $numberChanged = false;
+//
+//            if ($isActive) {
+//                // Цена изменена, если явно установлена и отличается от базовой
+//                $priceChanged = $row->price !== null && abs((float)$row->price - (float)$room->price) > 0.01;
+//                // Количество изменено, если явно установлено и отличается от базового
+//                $numberChanged = $row->number !== null && (int)$row->number != (int)$room->number;
+//            }
+//
+//            // Определяем title в зависимости от статуса
+//            $title = '';
+//            if (!$isActive) {
+//                // День заблокирован
+//                $title = __('Blocked');
+//            } elseif ($number == 0) {
+//                // Нет номеров (полная бронь)
+//                $title = __('Full Books');
+//            } else {
+//                // Обычный день с доступными номерами
+//                $title = format_money_main($price) . ' x ' . $number;
+//            }
+//
+//            $allDates[$dateKey] = array_merge(
+//                $existing,
+//                [
+//                    'price' => $price,
+//                    'number' => $number,
+//                    'active' => $isActive,
+//                    'classNames' => $isActive ? ['available-event'] : ['blocked-event'],
+//                    'title' => $title,
+//                ],
+//                [
+//                    'extendedProps' => array_merge(
+//                        $existing['extendedProps'],
+//                        [
+//                            'max_number' => $room->number,
+//                            'price_changed' => $priceChanged,
+//                            'number_changed' => $numberChanged,
+//                        ]
+//                    ),
+//                ]
+//            );
+//        }
+//
+//        /** ----------------------------------------
+//         * 4. Учитываем бронирования
+//         * ---------------------------------------- */
+//        $bookings = $room->getBookingsInRange(
+//            $request->query('start'),
+//            $request->query('end')
+//        );
+//
+//        foreach ($bookings as $roomBooking) {
+//            $booking = Booking::find($roomBooking->booking_id);
+//            if (!$booking) continue;
+//
+//            $period = periodDate(
+//                $roomBooking->start_date,
+//                Carbon::parse($roomBooking->end_date)->subDay(),
+//                false
+//            );
+//
+//
+//            foreach ($period as $dt) {
+//                $dateKey = $dt->format('Y-m-d');
+//                if (!isset($allDates[$dateKey])) continue;
+//
+//                $day = &$allDates[$dateKey];
+//
+//                $day['bookings'][] = [
+//                    'id' => $booking->id,
+//                    'code' => $booking->code,
+//                    'status' => $booking->status,
+//                    'statusName' => $booking->statusName,
+//                ];
+//
+//                // Используем количество забронированных номеров из roomBooking, а не количество гостей
+//                $bookedRooms = (int)($roomBooking->number ?? 0);
+//                $day['occupiedRooms'] = ($day['occupiedRooms'] ?? 0) + $bookedRooms;
+//
+//                // Используем базовое количество из кастомной даты или базовое количество номера
+////                $baseNumber = $day['number'] ?? $room->number;
+//                $baseNumber = $day['extendedProps']['max_number'];
+//
+//                // Вычисляем количество свободных номеров
+//                $freeRooms = max($baseNumber - ($day['occupiedRooms'] ?? 0), 0);
+//
+//                if ($freeRooms <= 0) {
+//                    // Полное бронирование - нет свободных номеров
+//                    $day['active'] = 1; // Оставляем active = 1, чтобы отличать от заблокированного
+//                    $day['number'] = 0;
+//                    $day['classNames'] = ['full-book-event'];
+//                    $day['title'] = __('Full Books');
+//                } else {
+//                    // Есть свободные номера
+//                    $day['active'] = 1;
+//                    $day['number'] = $freeRooms;
+//                    $day['classNames'] = ['available-event'];
+//                    $day['title'] = format_money_main($day['price']) . ' x ' . $day['number'];
+//                }
+//            }
+//        }
+//
+//        /** ----------------------------------------
+//         * 5. HTML для броней
+//         * ---------------------------------------- */
+//        foreach ($allDates as &$day) {
+//            if (empty($day['bookings'])) { continue; }
+//            $bookingHtml = '<div class="calendar-bookings">';
+//            foreach ($day['bookings'] as $b) {
+//                $status = htmlspecialchars($b['status'] ?? '');
+//                $code = htmlspecialchars($b['code'] ?? '');
+//                $label = htmlspecialchars($b['statusName'] ?? '');
+//                $bookingHtml
+//                    .= '<div class="booking-item booking-status-' . $status . '">'
+//                    . '<span class="booking-id" data-id="' . (int)$b['id'] . '" data-code="' . e($b['code']) . '">'
+//                    . 'Б' . (int)$b['id'] .
+//                    '</span>'
+//                    . '<span class="booking-status">' . $label . '</span>' . '</div>'; }
+//
+//            $bookingHtml .= '</div>';
+//            $day['bookings_html'] = $bookingHtml;
+//        }
+//        unset($day);
+//
+//        return response()->json(array_values($allDates));
+//    }
+
     public function loadDates(Request $request, $hotel_id)
     {
         $request->validate([
@@ -185,34 +387,25 @@ class AvailabilityController extends FrontendController{
          * ---------------------------------------- */
         foreach ($rows as $dateKey => $row) {
             $price = $row->price ?: $room->price;
-            // Если number явно установлен (включая 0), используем его, иначе базовое значение
             $number = ($row->number !== null) ? (int)$row->number : $room->number;
 
             $existing = $allDates[$dateKey];
 
-            // Определяем, изменилась ли цена или количество
-            // Только для активных дней (не заблокированных)
             $isActive = (int) $row->active;
             $priceChanged = false;
             $numberChanged = false;
 
             if ($isActive) {
-                // Цена изменена, если явно установлена и отличается от базовой
                 $priceChanged = $row->price !== null && abs((float)$row->price - (float)$room->price) > 0.01;
-                // Количество изменено, если явно установлено и отличается от базового
                 $numberChanged = $row->number !== null && (int)$row->number != (int)$room->number;
             }
 
-            // Определяем title в зависимости от статуса
             $title = '';
             if (!$isActive) {
-                // День заблокирован
                 $title = __('Blocked');
             } elseif ($number == 0) {
-                // Нет номеров (полная бронь)
                 $title = __('Full Books');
             } else {
-                // Обычный день с доступными номерами
                 $title = format_money_main($price) . ' x ' . $number;
             }
 
@@ -239,7 +432,7 @@ class AvailabilityController extends FrontendController{
         }
 
         /** ----------------------------------------
-         * 4. Учитываем бронирования
+         * 4. Учитываем бронирования с учётом дня выезда
          * ---------------------------------------- */
         $bookings = $room->getBookingsInRange(
             $request->query('start'),
@@ -250,11 +443,16 @@ class AvailabilityController extends FrontendController{
             $booking = Booking::find($roomBooking->booking_id);
             if (!$booking) continue;
 
+            // -------------------------------
+            // ИЗМЕНЕНИЕ: включаем день выезда в период для отображения
+            // раньше был ->subDay(), теперь полный диапазон
             $period = periodDate(
                 $roomBooking->start_date,
-                Carbon::parse($roomBooking->end_date)->subDay(),
+                $roomBooking->end_date,
                 false
             );
+
+            $endDate = Carbon::parse($roomBooking->end_date)->format('Y-m-d');
 
             foreach ($period as $dt) {
                 $dateKey = $dt->format('Y-m-d');
@@ -262,6 +460,7 @@ class AvailabilityController extends FrontendController{
 
                 $day = &$allDates[$dateKey];
 
+                // Добавляем бронь в массив
                 $day['bookings'][] = [
                     'id' => $booking->id,
                     'code' => $booking->code,
@@ -269,28 +468,28 @@ class AvailabilityController extends FrontendController{
                     'statusName' => $booking->statusName,
                 ];
 
-                // Используем количество забронированных номеров из roomBooking, а не количество гостей
-                $bookedRooms = (int)($roomBooking->number ?? 0);
-                $day['occupiedRooms'] = ($day['occupiedRooms'] ?? 0) + $bookedRooms;
+                // -------------------------------
+                // ИЗМЕНЕНИЕ: расчет свободных комнат только если день не день выезда
+                if ($dateKey !== $endDate) {
+                    $bookedRooms = (int)($roomBooking->number ?? 0);
+                    $day['occupiedRooms'] = ($day['occupiedRooms'] ?? 0) + $bookedRooms;
 
-                // Используем базовое количество из кастомной даты или базовое количество номера
-//                $baseNumber = $day['number'] ?? $room->number;
-                $baseNumber = $day['extendedProps']['max_number'];
+                    $baseNumber = $day['extendedProps']['max_number'];
+                    $freeRooms = max($baseNumber - ($day['occupiedRooms'] ?? 0), 0);
 
-                // Вычисляем количество свободных номеров
-                $freeRooms = max($baseNumber - ($day['occupiedRooms'] ?? 0), 0);
-
-                if ($freeRooms <= 0) {
-                    // Полное бронирование - нет свободных номеров
-                    $day['active'] = 1; // Оставляем active = 1, чтобы отличать от заблокированного
-                    $day['number'] = 0;
-                    $day['classNames'] = ['full-book-event'];
-                    $day['title'] = __('Full Books');
+                    if ($freeRooms <= 0) {
+                        $day['active'] = 1;
+                        $day['number'] = 0;
+                        $day['classNames'] = ['full-book-event'];
+                        $day['title'] = __('Full Books');
+                    } else {
+                        $day['active'] = 1;
+                        $day['number'] = $freeRooms;
+                        $day['classNames'] = ['available-event'];
+                        $day['title'] = format_money_main($day['price']) . ' x ' . $day['number'];
+                    }
                 } else {
-                    // Есть свободные номера
-                    $day['active'] = 1;
-                    $day['number'] = $freeRooms;
-                    $day['classNames'] = ['available-event'];
+                    $day['classNames'] = ['checkout-day-event'];
                     $day['title'] = format_money_main($day['price']) . ' x ' . $day['number'];
                 }
             }
@@ -306,20 +505,40 @@ class AvailabilityController extends FrontendController{
                 $status = htmlspecialchars($b['status'] ?? '');
                 $code = htmlspecialchars($b['code'] ?? '');
                 $label = htmlspecialchars($b['statusName'] ?? '');
-                $bookingHtml
-                    .= '<div class="booking-item booking-status-' . $status . '">'
+
+                // Проверяем, день выезда ли это для этой брони
+                $isCheckout = false;
+                $bookingModel = Booking::find($b['id']);
+                if ($bookingModel) {
+                    $endDate = Carbon::parse($bookingModel->end_date)->format('Y-m-d');
+                    if ($endDate === $day['start']) {
+                        $isCheckout = true;
+                    }
+                }
+
+                $bookingHtml .= '<div class="booking-item booking-status-' . $status . '">'
                     . '<span class="booking-id" data-id="' . (int)$b['id'] . '" data-code="' . e($b['code']) . '">'
                     . 'Б' . (int)$b['id'] .
                     '</span>'
-                    . '<span class="booking-status">' . $label . '</span>' . '</div>'; }
+                    . '<span class="booking-status">' . $label . '</span>';
+
+                // Добавляем (Выезд) только рядом с этой бронью
+                if ($isCheckout) {
+                    $bookingHtml .= ' <span class="checkout-label">(В)</span>';
+                }
+
+                $bookingHtml .= '</div>';
+            }
 
             $bookingHtml .= '</div>';
             $day['bookings_html'] = $bookingHtml;
         }
         unset($day);
 
+
         return response()->json(array_values($allDates));
     }
+
 
     public function store(Request $request,$hotel_id)
     {
