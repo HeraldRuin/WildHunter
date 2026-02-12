@@ -81,7 +81,7 @@ $(document).ready(function () {
             </div>
 
             <div class="col-auto">
-                <input type="text" class="form-control form-control-sm trophy-count" placeholder="Количество" style="width: 170px;">
+                <input type="text" class="form-control form-control-sm trophy-count" placeholder="Количество" style="width: 230px;">
             </div>
 
             <div class="col-auto">
@@ -234,20 +234,20 @@ $(document).ready(function () {
         const $row = $(`
         <div class="penalty-row border rounded p-2 mb-2 d-flex align-items-center gap-2">
 
-            <div class="col-auto">
-                <select class="form-select form-select-sm penalty-animal" style="width: 250px;">
+            <div>
+                <select class="form-select form-select-sm penalty-animal" style="width: 267px;">
                     <option value="" disabled selected hidden>Выберите животное</option>
                 </select>
             </div>
 
             <div class="col-auto">
-                 <select class="form-select form-select-sm penalty-type" style="width: 250px;" disabled>
+                 <select class="form-select form-select-sm penalty-type" style="width: 267px;" disabled>
                     <option value="" disabled selected hidden>Выберите тип штрафа</option>
                 </select>
             </div>
 
             <div class="col-auto">
-                <select class="form-select form-select-sm hunter" style="width: 250px;">
+                <select class="form-select form-select-sm hunter" style="width: 267px;">
                     <option value="" disabled selected hidden>Выберите охотника</option>
                 </select>
             </div>
@@ -400,17 +400,17 @@ $(document).ready(function () {
         const $row = $(`
             <div class="preparation-row border rounded p-2 mb-2 d-flex align-items-center gap-2">
 
-                <div class="col-auto">
+                <div>
                     <select class="form-select form-select-sm preparation-animal" style="width: 270px;">
                         <option value="" disabled selected hidden>Выберите животное</option>
                     </select>
                 </div>
 
-                <div class="col-auto">
+                <div class="col-auto" style="margin-left: 165px">
                     <input type="text" class="form-control form-control-sm preparation-count" placeholder="Количество">
                 </div>
 
-                <div class="col-auto">
+                <div class="col-auto" style="margin-left: 110px">
                     <button class="btn btn-sm btn-success save-preparation" disabled>Сохранить</button>
                     <button class="btn btn-sm btn-outline-secondary cancel-new">Отмена</button>
                 </div>
@@ -523,7 +523,7 @@ $(document).ready(function () {
                 Питание
             </div>
 
-            <div class="col-auto">
+            <div class="col-auto" style="margin-right: 100px">
                 <input
                     type="text"
                     class="form-control form-control-sm food-count"
@@ -644,46 +644,75 @@ $(document).ready(function () {
 
     function renderNewOtherRow(prices, bookingId) {
         const $row = $(`
-            <div class="other-row border rounded p-2 mb-2 d-flex align-items-center gap-2">
+        <div class="other-row border rounded p-2 mb-2 d-flex align-items-center gap-2">
 
-                <div class="flex-fill">
-                    <select class="form-select form-select-sm other-price" style="width: 190px;">
-                        <option value="" disabled selected hidden>Выберите услугу</option>
-                    </select>
-                </div>
-
-                <div class="flex-fill">
-                    <span class="other-count-placeholder">—</span>
-                </div>
-
-                <div>
-                    <button class="btn btn-sm btn-success save-other" disabled>Сохранить</button>
-                    <button class="btn btn-sm btn-outline-secondary cancel-new">Отмена</button>
-                </div>
+            <div class="flex-fill">
+                <select class="form-select form-select-sm other-price" style="width: 190px;">
+                    <option value="" disabled selected hidden>Выберите услугу</option>
+                </select>
             </div>
-        `);
+
+            <div style="width: 220px; margin-right: 200px">
+                <input
+                    type="number"
+                    class="form-control form-control-sm other-count"
+                    min="1"
+                    value="1"
+                    disabled
+                />
+            </div>
+
+            <div class="col-auto">
+                <button class="btn btn-sm btn-success save-other" disabled>Сохранить</button>
+                <button class="btn btn-sm btn-outline-secondary cancel-new">Отмена</button>
+            </div>
+        </div>
+    `);
 
         const $select = $row.find('.other-price');
+        const $countInput = $row.find('.other-count');
         const $save = $row.find('.save-other');
-        const $count = $row.find('.other-count-placeholder');
 
-        // Заполняем селект и добавляем count в data-атрибут
+        // Заполняем select
         prices.forEach(p => {
-            $select.append(`<option value="${p.id}" data-count="${p.count ?? 1}">${p.name}</option>`);
+            $select.append(`
+            <option value="${p.id}" data-max="${p.count ?? 1}">
+                ${p.name}
+            </option>
+        `);
         });
 
-        $select.on('change', () => {
-            const selected = $select.find('option:selected');
-            $count.text(selected.data('count') ?? '—');
-            $save.prop('disabled', !$select.val());
+        // При выборе услуги
+        $select.on('change', function () {
+            const max = parseInt($(this).find('option:selected').data('max'), 10);
+
+            $countInput
+                .prop('disabled', false)
+                .attr('max', max)
+                .val(1);
+
+            $save.prop('disabled', false);
         });
 
-        // Сохраняем один раз, чтобы не дублировать строки
+        // Жёстко ограничиваем ввод
+        $countInput.on('input', function () {
+            const max = parseInt($(this).attr('max'), 10);
+            let val = parseInt($(this).val(), 10);
+
+            if (isNaN(val) || val < 1) val = 1;
+            if (val > max) val = max;
+
+            $(this).val(val);
+        });
+
+        // Сохранение
         $save.one('click', function () {
             const selected = $select.find('option:selected');
+            const count = parseInt($countInput.val(), 10);
+
             $.post(`/booking/${bookingId}/addetional`, {
                 addetional: selected.text(),
-                count: selected.data('count') ?? 1,
+                count: count,
                 _token: $('meta[name="csrf-token"]').attr('content')
             }).done(saved => {
                 $row.replaceWith(renderSavedOtherRow(saved));
@@ -694,6 +723,7 @@ $(document).ready(function () {
 
         return $row;
     }
+
 
     // Удаление сохраненной услуги
     $(document).on('click', '.remove-saved-other', function () {
