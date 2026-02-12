@@ -6,12 +6,13 @@
             <div class="col-md-12 timer-width">
                 <div class="panel">
                     <div class="panel-title">
-                        <strong>{{ __('Настройки таймера сбора') }}</strong>
+                        <strong>{{ __('Настройки таймера койко-мест') }}</strong>
                     </div>
                     <div class="panel-body">
-                        <form action="{{ route('settings.vendor.collection-timer.store') }}" method="POST">
+                        <form action="{{ route('settings.vendor.beds-timer.store') }}" method="POST">
                             @csrf
 
+                            <input type="hidden" name="type" value="{{ \Modules\Settings\Models\CollectionTimerSettings::TYPE_BEDS }}">
                             <div class="form-group">
                                 <label for="timer_hours">{{ __('Размер таймера (часы)') }} *</label>
                                 <input type="number"
@@ -21,7 +22,7 @@
                                        value="{{ old('timer_hours', $timer_hours) }}"
                                        min="1"
                                        required>
-                                <small class="form-text text-muted">{{ __('Установите размер таймера сбора в часах (например: 24)') }}</small>
+                                <small class="form-text text-muted">{{ __('Установите размер таймера койко-мест в часах (например: 24)') }}</small>
                             </div>
 
                             <div class="form-group">
