@@ -1455,7 +1455,7 @@ document.addEventListener('DOMContentLoaded', function () {
                                     if (invitedCount < requiredHunters) {
                                         finishBtn.disabled = true;
                                         finishBtn.classList.add('disabled');
-                                        finishBtn.title = 'Таймер закончен, но не все охотники приглашены. Необходимо пригласить ' + requiredHunters + ' охотников.';
+                                        finishBtn.title = 'Таймер закончен, но не все охотники собранны. Необходимо собрать ' + requiredHunters + ' охотников.';
                                     } else {
                                         // Если достаточно охотников - разрешаем кнопку
                                         finishBtn.disabled = false;
