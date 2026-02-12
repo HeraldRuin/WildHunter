@@ -40,9 +40,14 @@ class ModuleProvider extends ModuleServiceProvider
                 'position'   => 70,
                 'permission' => 'settings_view',
                 'children' => [
-                    'timer'=>[
+                    'timer_collection'=>[
                         'url'        => route('settings.vendor.collection-timer'),
                         'title'      => __("Time collection"),
+                        'permission' => 'settings_view',
+                    ],
+                    'timer_beds'=>[
+                        'url'        => route('settings.vendor.beds-timer'),
+                        'title'      => __("Time beds"),
                         'permission' => 'settings_view',
                     ],
                 ]
