@@ -4,11 +4,13 @@ namespace Modules\Hotel\Controllers;
 use App\Http\Controllers\Controller;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Log;
 use Modules\Animals\Models\Animal;
 use Modules\Booking\Models\BookedDay;
 use Modules\Hotel\Models\Hotel;
 use Illuminate\Http\Request;
+use Modules\Hotel\Models\HotelRoomBooking;
 use Modules\Hotel\Models\HotelRoomDate;
 use Modules\Location\Models\Location;
 use Modules\Location\Models\LocationCategory;
@@ -76,7 +78,7 @@ class HotelController extends Controller
 
             $guestCount = (int) $request->input('adults');
             if ($guestCount > 0) {
-                $hotelsCollection = $this->filterHotelsByGuestCount($hotelsCollection, $roomCount, $guestCount, $start, $end);
+                $hotelsCollection = $this->filterHotelsByGuestCountAndAvailability($hotelsCollection, $roomCount, $guestCount, $start, $end);
             }
         } else {
             $hotelsCollection = collect($this->hotelClass::query()->get());
@@ -84,9 +86,9 @@ class HotelController extends Controller
 
 
         $perPage = $limit;
-        $currentPage = \Illuminate\Pagination\LengthAwarePaginator::resolveCurrentPage();
+        $currentPage = LengthAwarePaginator::resolveCurrentPage();
 
-        $list = new \Illuminate\Pagination\LengthAwarePaginator(
+        $list = new LengthAwarePaginator(
             $hotelsCollection->forPage($currentPage, $perPage),
             $hotelsCollection->count(),
             $perPage,
@@ -206,25 +208,22 @@ class HotelController extends Controller
     protected function filterHotelsByRoomCount($hotels, int $roomCount, $start, $end)
     {
         $start = Carbon::parse($start)->startOfDay();
-        $end   = Carbon::parse($end)->startOfDay(); // день выезда не считаем
+        $end   = Carbon::parse($end)->startOfDay();
 
         return $hotels->filter(function ($hotel) use ($roomCount, $start, $end) {
 
-            // ✅ всего номеров в отеле
             $totalRooms = $hotel->rooms->sum('number');
 
             if ($totalRooms < $roomCount) {
                 return false;
             }
 
-            // 🔁 проверяем каждую дату проживания
             for ($date = $start->copy(); $date->lt($end); $date->addDay()) {
 
-                // ❗ считаем ТОЛЬКО реальные брони
-                $bookedRooms = \Modules\Hotel\Models\HotelRoomBooking::query()
+                $bookedRooms = HotelRoomBooking::query()
                     ->whereIn('room_id', $hotel->rooms->pluck('id'))
                     ->whereDate('start_date', '<=', $date)
-                    ->whereDate('end_date', '>', $date) // ключевая строка
+                    ->whereDate('end_date', '>', $date)
                     ->sum('number');
 
                 $freeRooms = $totalRooms - $bookedRooms;
@@ -237,24 +236,79 @@ class HotelController extends Controller
             return true;
         });
     }
-    protected function filterHotelsByGuestCount($hotels, int $roomCount, int $guestCount)
+
+    protected function filterHotelsByGuestCountAndAvailability($hotels, int $roomCount, int $guestCount, Carbon $start, Carbon $end)
     {
-        return $hotels->filter(function($hotel) use ($roomCount, $guestCount) {
-            $selectedRoomsCapacity = [];
+        return $hotels->filter(function($hotel) use ($roomCount, $guestCount, $start, $end) {
+            $period = CarbonPeriod::create($start, $end);
 
-            // Берём только первые $roomCount свободных комнат отеля
-            $freeRooms = $hotel->rooms->pluck('adults')->toArray(); // допустим, предыдущий фильтр уже оставил свободные комнаты
-            rsort($freeRooms); // сортируем по убыванию вместимости
+            $availableRooms = [];
 
-            $selectedRoomsCapacity = array_slice($freeRooms, 0, $roomCount);
+            foreach ($hotel->rooms as $room) {
+                $minAvailableInPeriod = PHP_INT_MAX;
 
-            $totalCapacity = array_sum($selectedRoomsCapacity);
+                $customDates = $this->roomDateClass::query()
+                    ->where('target_id', $room->id)
+                    ->whereBetween('start_date', [$start->format('Y-m-d'), $end->format('Y-m-d')])
+                    ->get()
+                    ->keyBy(fn($row) => (new \Carbon\Carbon($row->start_date))->toDateString());
 
-            \Log::info("Отель {$hotel->id}: выбранных номеров={$roomCount}, выбранные комнаты=".implode(',', $selectedRoomsCapacity).", общая вместимость={$totalCapacity}, гостей требуется={$guestCount}");
+                $bookings = $room->getBookingsInRange($start, $end);
+
+                foreach ($period as $date) {
+                    $dateKey = $date->format('Y-m-d');
+
+                    $baseNumber = $room->number;
+                    if (isset($customDates[$dateKey]) && $customDates[$dateKey]->number !== null) {
+                        $baseNumber = (int)$customDates[$dateKey]->number;
+                    }
+
+                    $occupied = 0;
+                    foreach ($bookings as $booking) {
+                        $bookingPeriod = periodDate($booking->start_date, Carbon::parse($booking->end_date)->subDay(), false);
+                        foreach ($bookingPeriod as $bDate) {
+                            if ($bDate->format('Y-m-d') === $dateKey) {
+                                $occupied += $booking->number;
+                            }
+                        }
+                    }
+
+                    $freeRooms = max($baseNumber - $occupied, 0);
+
+                    if ($freeRooms <= 0) {
+                        $minAvailableInPeriod = 0;
+                        break;
+                    }
+
+                    $minAvailableInPeriod = min($minAvailableInPeriod, $freeRooms);
+                }
+
+                if ($minAvailableInPeriod > 0) {
+                    $availableRooms[] = [
+                        'adults'    => $room->adults,
+                        'available' => $minAvailableInPeriod
+                    ];
+                }
+            }
+            usort($availableRooms, fn($a, $b) => $b['adults'] <=> $a['adults']);
+
+            $totalCapacity = 0;
+            $roomsUsed = 0;
+
+            foreach ($availableRooms as $room) {
+                for ($i = 0; $i < $room['available']; $i++) {
+                    $totalCapacity += $room['adults'];
+                    $roomsUsed++;
+                    if ($roomsUsed >= $roomCount) break 2;
+                }
+            }
 
             return $totalCapacity >= $guestCount;
         });
     }
+
+
+
 
     public function detail(Request $request, $slug)
     {
