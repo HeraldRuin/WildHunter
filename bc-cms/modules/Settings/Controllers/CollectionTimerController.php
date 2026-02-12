@@ -13,7 +13,7 @@ class CollectionTimerController extends FrontendController
         $this->setActiveMenu(route('settings.vendor.collection-timer'));
     }
 
-    public function index(Request $request)
+    public function indexTimerCollection(Request $request)
     {
         $this->checkPermission('settings_view');
 
@@ -35,11 +35,40 @@ class CollectionTimerController extends FrontendController
                 ],
             ],
             'page_title' => __('Таймер сбора'),
-            'timer_hours' => CollectionTimerSettings::getTimerHours($hotelId),
+            'timer_hours' => CollectionTimerSettings::getTimerHours(CollectionTimerSettings::TYPE_COLLECT, $hotelId),
             'hotel_id' => $hotelId
         ];
 
-        return view('Settings::user.collection-timer.index', $data);
+        return view('Settings::user.collection-timer.collection_timer', $data);
+    }
+
+    public function indexTimerBeds(Request $request)
+    {
+        $this->checkPermission('settings_view');
+
+        $hotelId = get_user_hotel_id();
+
+        if (!$hotelId) {
+            return redirect()->back()->with('error', __('Отель не найден'));
+        }
+
+        $data = [
+            'breadcrumbs' => [
+                [
+                    'name' => __('Настройки'),
+                    'url'  => route('settings.vendor.beds-timer')
+                ],
+                [
+                    'name'  => __('Таймер койко-мест'),
+                    'class' => 'active'
+                ],
+            ],
+            'page_title' => __('Таймер койко-мест'),
+            'timer_hours' => CollectionTimerSettings::getTimerHours(CollectionTimerSettings::TYPE_BEDS, $hotelId),
+            'hotel_id' => $hotelId
+        ];
+
+        return view('Settings::user.collection-timer.beds_timer', $data);
     }
 
     public function store(Request $request)
@@ -55,7 +84,7 @@ class CollectionTimerController extends FrontendController
         $data = $request->validate([
             'timer_hours' => 'required|integer|min:1',
         ]);
-        CollectionTimerSettings::saveTimerHours($data['timer_hours'], $hotelId);
+        CollectionTimerSettings::saveTimerHours($data['timer_hours'], $request->input('type'), $hotelId);
 
         return redirect()->back()->with('success', __('Настройки успешно сохранены'));
     }
