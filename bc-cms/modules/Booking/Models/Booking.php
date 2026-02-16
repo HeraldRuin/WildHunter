@@ -20,6 +20,7 @@ use Modules\Booking\Events\BookingUpdatedEvent;
 use Modules\Booking\Traits\HasPassenger;
 use Modules\Coupon\Models\CouponBookings;
 use Modules\Hotel\Models\Hotel;
+use Modules\Hotel\Models\HotelAnimal;
 use Modules\Hotel\Models\HotelRoom;
 use Modules\Hotel\Models\HotelRoomBooking;
 use Modules\Space\Models\Space;
@@ -44,6 +45,7 @@ class Booking extends BaseModel
     const START_COLLECTION = 'collection';
     const FINISHED_COLLECTION = 'finished_collection';
     const INVITATION = 'invitation';
+    const PREPAYMENT_COLLECTION = 'prepayment_collection';
 
     const CONFIRMED  = 'confirmed';
     const COMPLETED  = 'completed'; //
@@ -1506,6 +1508,12 @@ class Booking extends BaseModel
     public function hotel()
     {
         return $this->belongsTo(Hotel::class, 'hotel_id', 'id');
+    }
+    public function hotelAnimal()
+    {
+        return HotelAnimal::where('hotel_id', $this->hotel_id)
+            ->where('animal_id', $this->animal_id)
+            ->first();
     }
     public function hotelRooms()
     {

@@ -1,13 +1,15 @@
 @php
-    // Определяем количество охотников в зависимости от типа бронирования
     $huntersCount = 0;
+    $animalMinHunters = 0;
     if ($booking->type === 'hotel') {
         $huntersCount = $booking->total_guests ?? 0;
+        $animalMinHunters = $booking->hotelAnimal()->hunters_count ?? 0;
     } elseif ($booking->type === 'animal') {
         $huntersCount = $booking->total_hunting ?? 0;
+        $animalMinHunters = $booking->hotelAnimal()->hunters_count ?? 0;
     } elseif ($booking->type === 'hotel_animal') {
-        // Для hotel_animal берем только количество охотников из части animal
         $huntersCount = $booking->total_hunting ?? 0;
+        $animalMinHunters = $booking->hotelAnimal()->hunters_count ?? 0;
     }
 
     $currentUserId = auth()->id();
@@ -54,12 +56,12 @@
 
 <div class="modal fade" id="collectionModal{{ $booking->id }}" tabindex="-1" aria-hidden="true"
      data-hunters-count="{{ $huntersCount }}"
+     data-animal-min-hunters="{{ $animalMinHunters }}"
      data-booking-id="{{ $booking->id }}">
     <div class="modal-dialog modal-xl">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title">{{ __('Open collection for booking') }} #{{ $booking->id }}</h5>
-{{--                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>--}}
             </div>
             <div class="modal-body">
                 @if($isInvited)

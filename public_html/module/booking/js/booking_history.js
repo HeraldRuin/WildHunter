@@ -158,6 +158,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     this.hunterSlots = [];
                 }
             },
+
             loadInvitedHunters(bookingId) {
                 console.log('Загрузка приглашенных охотников для брони:', bookingId);
                 fetch(`/booking/${bookingId}/invited-hunters`)
@@ -167,22 +168,22 @@ document.addEventListener('DOMContentLoaded', function () {
                         // sendSuccess возвращает данные напрямую, не в data.data
                         const allHunters = data.hunters || [];
                         console.log('Найдено приглашенных охотников:', allHunters.length, allHunters);
-                        
+
                         // Разделяем охотников на активных (не declined) и declined
                         const activeHunters = allHunters.filter(h => h.invitation_status !== 'declined');
                         const declinedHunters = allHunters.filter(h => h.invitation_status === 'declined');
-                        
+
                         // Сохраняем declined охотников в отдельный массив для истории
                         this.$set(this, 'declinedHunters', declinedHunters);
-                        
+
                         if (data.status && activeHunters.length > 0) {
                             console.log('Обработка', activeHunters.length, 'активных охотников');
-                            
+
                             // Создаем новый массив слотов только для активных охотников (не declined)
                             const updatedSlots = this.hunterSlots.map((slot, index) => {
                                 if (index < activeHunters.length) {
                                     const hunter = activeHunters[index];
-                                    
+
                                     // Инициализируем флаги для охотника
                                     if (typeof hunter.showEmailInput === 'undefined') {
                                         hunter.showEmailInput = false;
@@ -190,7 +191,7 @@ document.addEventListener('DOMContentLoaded', function () {
                                     if (typeof hunter.emailMessage === 'undefined') {
                                         hunter.emailMessage = '';
                                     }
-                                    
+
                                     // Формируем текст для поля ввода
                                     // Для внешних охотников (без системы) используем email
                                     let queryText = '';
@@ -199,7 +200,7 @@ document.addEventListener('DOMContentLoaded', function () {
                                     } else {
                                         queryText = hunter.user_name || (hunter.first_name + ' ' + hunter.last_name).trim() || '';
                                     }
-                                    
+
                                     console.log(`Слот ${index} заполнен охотником:`, {
                                         id: hunter.id,
                                         name: hunter.first_name + ' ' + hunter.last_name,
@@ -210,7 +211,7 @@ document.addEventListener('DOMContentLoaded', function () {
                                         invited: hunter.invited,
                                         status: hunter.invitation_status
                                     });
-                                    
+
                                     // Возвращаем обновленный слот
                                     return {
                                         ...slot,
@@ -225,13 +226,13 @@ document.addEventListener('DOMContentLoaded', function () {
                                     query: ''
                                 };
                             });
-                            
+
                             // Заменяем весь массив для реактивности Vue
                             this.$set(this, 'hunterSlots', updatedSlots);
-                            
+
                             console.log('Массив hunterSlots обновлен:', this.hunterSlots.length, 'слотов');
                             console.log('Отказавшиеся охотники:', declinedHunters.length);
-                            
+
                             // Принудительно обновляем Vue для отображения
                             this.$nextTick(() => {
                                 this.$forceUpdate();
@@ -248,7 +249,7 @@ document.addEventListener('DOMContentLoaded', function () {
                                 query: ''
                             }));
                             this.$set(this, 'hunterSlots', clearedSlots);
-                            
+
                             // Даже если нет охотников, проверяем состояние кнопки
                             this.$nextTick(() => {
                                 this.checkFinishCollectionButton(bookingId);
@@ -260,12 +261,13 @@ document.addEventListener('DOMContentLoaded', function () {
                     });
             },
             checkFinishCollectionButton(bookingId) {
+
                 // Проверяем, должен ли быть отключен кнопка "Завершить сбор"
                 // Если таймер закончен и не хватает охотников - блокируем кнопку
                 const finishBtn = document.querySelector('.btn-finish-collection[data-booking-id="' + bookingId + '"]');
                 const modal = document.getElementById('collectionModal' + bookingId);
                 if (!finishBtn || !modal) return;
-                
+
                 // Проверяем, закончен ли таймер
                 const timerEl = document.querySelector('.collection-timer[data-booking-id="' + bookingId + '"]');
                 if (!timerEl) {
@@ -275,7 +277,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     finishBtn.title = '';
                     return;
                 }
-                
+
                 const end = parseInt(timerEl.dataset.end, 10);
                 if (!end) {
                     finishBtn.disabled = false;
@@ -283,31 +285,32 @@ document.addEventListener('DOMContentLoaded', function () {
                     finishBtn.title = '';
                     return;
                 }
-                
+
                 const now = Date.now();
                 const diffMs = end - now;
                 const isTimerFinished = diffMs <= 0;
-                
+
                 if (isTimerFinished) {
                     // Таймер закончен - проверяем количество охотников
                     const requiredHunters = parseInt(modal.dataset.huntersCount || '0', 10);
-                    
+                    const animalMinHunters = parseInt(modal.dataset.animalMinHunters || '0', 10);
+
                     // Считаем приглашенных охотников (со статусом не declined)
                     // Учитываем как охотников из системы, так и внешних (по email)
                     let invitedCount = 0;
                     if (this.hunterSlots && this.hunterSlots.length > 0) {
-                        invitedCount = this.hunterSlots.filter(slot => 
-                            slot.hunter && 
-                            slot.hunter.invited && 
+                        invitedCount = this.hunterSlots.filter(slot =>
+                            slot.hunter &&
+                            slot.hunter.invited &&
                             slot.hunter.invitation_status !== 'declined'
                         ).length;
                     }
-                    
+
                     // Если не хватает охотников - блокируем кнопку
-                    if (invitedCount < requiredHunters) {
+                    if (invitedCount < animalMinHunters) {
                         finishBtn.disabled = true;
                         finishBtn.classList.add('disabled');
-                        finishBtn.title = 'Таймер закончен, но не все охотники собраны. Необходимо собрать ' + requiredHunters + ' охотников.';
+                       finishBtn.title = 'Таймер закончен, но не все охотники собраны. Необходимо собрать ' + animalMinHunters + ' охотников.';
                     } else {
                         // Если достаточно охотников - разрешаем кнопку
                         finishBtn.disabled = false;
@@ -1428,7 +1431,7 @@ document.addEventListener('DOMContentLoaded', function () {
                                 extendBtn.disabled = false;
                                 extendBtn.classList.remove('disabled');
                             }
-                            
+
                             // Проверяем, достаточно ли охотников приглашено
                             // Если таймер закончен, но не все охотники собраны - блокируем кнопку "Завершить сбор"
                             const finishBtn = document.querySelector('.btn-finish-collection[data-booking-id="' + bookingId + '"]');
@@ -1436,32 +1439,32 @@ document.addEventListener('DOMContentLoaded', function () {
                                 // Получаем Vue компонент для доступа к hunterSlots
                                 const vueEl = document.getElementById('booking-history');
                                 const modal = document.getElementById('collectionModal' + bookingId);
-                                
+
                                 if (vueEl && vueEl.__vue__ && modal) {
                                     const vueComponent = vueEl.__vue__;
                                     const requiredHunters = parseInt(modal.dataset.huntersCount || '0', 10);
-                                    
+
                                     // Считаем приглашенных охотников (со статусом не declined)
                                     let invitedCount = 0;
                                     if (vueComponent.hunterSlots && vueComponent.hunterSlots.length > 0) {
-                                        invitedCount = vueComponent.hunterSlots.filter(slot => 
-                                            slot.hunter && 
-                                            slot.hunter.invited && 
+                                        invitedCount = vueComponent.hunterSlots.filter(slot =>
+                                            slot.hunter &&
+                                            slot.hunter.invited &&
                                             slot.hunter.invitation_status !== 'declined'
                                         ).length;
                                     }
-                                    
+
                                     // Если не хватает охотников - блокируем кнопку
-                                    if (invitedCount < requiredHunters) {
-                                        finishBtn.disabled = true;
-                                        finishBtn.classList.add('disabled');
-                                        finishBtn.title = 'Таймер закончен, но не все охотники собранны. Необходимо собрать ' + requiredHunters + ' охотников.';
-                                    } else {
-                                        // Если достаточно охотников - разрешаем кнопку
-                                        finishBtn.disabled = false;
-                                        finishBtn.classList.remove('disabled');
-                                        finishBtn.title = '';
-                                    }
+                                    // if (invitedCount < requiredHunters) {
+                                    //     finishBtn.disabled = true;
+                                    //     finishBtn.classList.add('disabled');
+                                    //     finishBtn.title = 'Таймер закончен, но не все охотники собранны. Необходимо собрать ' + requiredHunters + ' охотников.';
+                                    // } else {
+                                    //     // Если достаточно охотников - разрешаем кнопку
+                                    //     finishBtn.disabled = false;
+                                    //     finishBtn.classList.remove('disabled');
+                                    //     finishBtn.title = '';
+                                    // }
                                 }
                             }
                         }
@@ -1482,7 +1485,7 @@ document.addEventListener('DOMContentLoaded', function () {
                             extendBtn.disabled = true;
                             extendBtn.classList.add('disabled');
                         }
-                        
+
                         // Пока таймер идет - кнопка "Завершить сбор" должна быть активна
                         const finishBtn = document.querySelector('.btn-finish-collection[data-booking-id="' + bookingId + '"]');
                         if (finishBtn) {
