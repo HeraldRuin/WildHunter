@@ -1222,7 +1222,7 @@ class BookingController extends \App\Http\Controllers\Controller
             return $this->sendError($message)->setStatusCode(422);
         }
 
-        $booking->status = Booking::FINISHED_COLLECTION;
+        $booking->status = Booking::PREPAYMENT_COLLECTION;
 
         // Полностью удаляем ВСЕ мета-данные таймера (сброс таймера)
         // Используем прямой SQL для гарантированного удаления

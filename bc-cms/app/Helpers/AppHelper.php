@@ -724,6 +724,12 @@ function status_to_text($status)
         case "invitation":
             return __('Invitation');
             break;
+        case "prepayment_collection":
+            return __('Prepayment collection');
+            break;
+        case "finish_prepayment":
+            return __('Finish prepayment');
+            break;
         case "fail":
         case "failed":
             return __('Failed');

@@ -46,6 +46,7 @@ class Booking extends BaseModel
     const FINISHED_COLLECTION = 'finished_collection';
     const INVITATION = 'invitation';
     const PREPAYMENT_COLLECTION = 'prepayment_collection';
+    const FINISHED_PREPAYMENT = 'finish_prepayment';
 
     const CONFIRMED  = 'confirmed';
     const COMPLETED  = 'completed'; //
