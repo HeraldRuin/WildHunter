@@ -302,7 +302,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         invitedCount = this.hunterSlots.filter(slot =>
                             slot.hunter &&
                             slot.hunter.invited &&
-                            slot.hunter.invitation_status !== 'declined'
+                            slot.hunter.invitation_status === 'accepted'
                         ).length;
                     }
 
