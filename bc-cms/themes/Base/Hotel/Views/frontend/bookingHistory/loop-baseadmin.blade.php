@@ -105,6 +105,8 @@
                 $allInvitations = $booking->getAllInvitations();
                 $acceptedInvitations = $allInvitations->where('status', 'accepted');
                 $acceptedCount = $acceptedInvitations->count();
+                $paidInvitations = $allInvitations->where('prepayment_paid', true);
+                $paidCount = $paidInvitations->count();
             @endphp
 
             {{$booking->statusName}}
@@ -142,7 +144,7 @@
 
         @if($booking->status === \Modules\Booking\Models\Booking::PREPAYMENT_COLLECTION)
             <div class="text-muted mt-1" style="font-size: 0.9em;">
-                Собранно {{ $acceptedCount }}/{{ $totalHuntersNeeded }}
+                Собранно {{ $paidCount }}/{{ $totalHuntersNeeded }}
             </div>
 
             <div class="mt-3">

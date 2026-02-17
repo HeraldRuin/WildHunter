@@ -92,31 +92,17 @@
             </div>
         @endif
     </td>
+
     <td class="{{$booking->status_for_user}} a-hidden">
         <div>
-            {{$booking->statusNameForUser}}
-            @if($booking->status === \Modules\Booking\Models\Booking::START_COLLECTION && $booking->hotel && $booking->hotel->collection_timer_hours)
-                ({{$booking->hotel->collection_timer_hours}} {{ __('ч') }})
-            @endif
-        </div>
-        @if($booking->status === \Modules\Booking\Models\Booking::START_COLLECTION)
             @php
-                $endTimestamp = null;
-                try {
-                    $collectionEndAt = $booking->getMeta('collection_end_at');
-                    if ($collectionEndAt) {
-                        $endCarbon = \Carbon\Carbon::parse($collectionEndAt);
-                        $endTimestamp = $endCarbon->timestamp * 1000;
-                    }
-                } catch (\Exception $e) {
-                    $endTimestamp = null;
-                }
-
                 // Получаем информацию об охотниках
                 $totalHuntersNeeded = $booking->total_hunting ?? 0;
                 $allInvitations = $booking->getAllInvitations();
                 $acceptedInvitations = $allInvitations->where('status', 'accepted');
                 $acceptedCount = $acceptedInvitations->count();
+                $paidInvitations = $allInvitations->where('prepayment_paid', true);
+                $paidCount = $paidInvitations->count();
 
                 // Получаем мастера охотника
                 $bookingHunter = $booking->bookingHunter;
@@ -145,16 +131,52 @@
                     return null;
                 })->filter()->values();
             @endphp
+
+            {{$booking->statusNameForUser}}
+
+            @if($booking->status === \Modules\Booking\Models\Booking::START_COLLECTION && $booking->hotel && $booking->hotel->collection_timer_hours)
+                ({{$booking->hotel->collection_timer_hours}} {{ __('ч') }})
+            @endif
+        </div>
+
+        @if($booking->status === \Modules\Booking\Models\Booking::START_COLLECTION)
+            @php
+                $endTimestamp = null;
+                try {
+                    $collectionEndAt = $booking->getMeta('collection_end_at');
+                    if ($collectionEndAt) {
+                        $endCarbon = \Carbon\Carbon::parse($collectionEndAt);
+                        $endTimestamp = $endCarbon->timestamp * 1000;
+                    }
+                } catch (\Exception $e) {
+                    $endTimestamp = null;
+                }
+            @endphp
+
             @if($endTimestamp)
                 <div class="text-muted collection-timer" data-end="{{ $endTimestamp }}"
                      data-booking-id="{{ $booking->id }}">[0 мин]
                 </div>
             @endif
+
             @if($totalHuntersNeeded > 0)
                 <div class="text-muted mt-1" style="font-size: 0.9em;">
                     Собранно {{ $acceptedCount }}/{{ $totalHuntersNeeded }}
                 </div>
             @endif
+        @endif
+
+        @if($booking->status === \Modules\Booking\Models\Booking::PREPAYMENT_COLLECTION)
+            <div class="text-muted mt-1" style="font-size: 0.9em;">
+                Собранно {{ $paidCount }}/{{ $totalHuntersNeeded }}
+            </div>
+
+            <div class="mt-3">
+                {{'Сбор завершен'}}
+                <div class="text-muted mt-1" style="font-size: 0.9em;">
+                    Собранно {{ $acceptedCount }}/{{ $totalHuntersNeeded }}
+                </div>
+            </div>
         @endif
     </td>
 
@@ -226,7 +248,7 @@
                         type="button"
                         class="btn btn-primary btn-sm mt-2"
                         data-bs-toggle="modal"
-                        data-bs-target="#bookingAddServiceModal{{ $booking->id }}">
+                        data-bs-target="#bookingPrepaymentModal{{ $booking->id }}">
                         {{__("Prepayment")}}
                     </button>
                 @endif
@@ -253,7 +275,7 @@
 
             @if($booking->is_master_hunter && $booking->type != 'hotel')
                 @if(in_array($booking->status, [\Modules\Booking\Models\Booking::PREPAYMENT_COLLECTION, \Modules\Booking\Models\Booking::START_COLLECTION, \Modules\Booking\Models\Booking::FINISHED_PREPAYMENT]))
-                        <button
+                    <button
                         type="button"
                         class="btn btn-primary btn-sm mt-2"
                         data-bs-toggle="modal"
@@ -277,7 +299,9 @@
                     type="button"
                     class="btn btn-primary btn-sm mt-2"
                     data-bs-toggle="modal"
-                    data-bs-target="#bookingAddServiceModal{{ $booking->id }}">
+                    data-booking-id="{{ $booking->id }}"
+                    data-prepayment-paid="{{ $booking->prepayment_paid ? 1 : 0 }}"
+                    data-bs-target="#bookingPrepaymentModal{{ $booking->id }}">
                     {{__("Prepayment")}}
                 </button>
             @endif
@@ -322,6 +346,9 @@
 
 {{-- Модальное окно для просмотра приглашения --}}
 @include('Booking::frontend.invitation-modal', ['booking' => $booking])
+
+{{-- Модальное окно для предоплаты --}}
+@include('Booking::frontend.prepayment-modal', ['booking' => $booking])
 
 {{-- Отмена бронирования --}}
 <div class="modal fade" id="cancelBookingModal{{ $booking->id }}" tabindex="-1" aria-hidden="true">
