@@ -51,6 +51,9 @@ Route::group(['prefix'=>config('booking.booking_route_prefix')],function(){
     Route::post('/{booking}/addetional', 'BookingController@storeAddetional');
     Route::delete('/{booking}/addetional/{addetionalId}', 'BookingController@deleteAddetional');
 
+    //Предоплата
+    Route::post('/{booking}/prepayment-paid', 'BookingController@storePrepayment');
+
     //ical
 	Route::get('/export-ical/{type}/{id}','BookingController@exportIcal')->name('booking.admin.export-ical');
     //inquiry
