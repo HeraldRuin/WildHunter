@@ -37,6 +37,7 @@
                     'status' => $invitation->status,
                     'invited_at' => $invitation->invited_at,
                     'is_self' => $isCurrentUser,
+                    'prepayment_paid' => (bool) ($invitation->prepayment_paid ?? false),
                 ];
             } elseif ($invitation->email) {
                 $invitedHunters[] = [
@@ -48,6 +49,7 @@
                     'invited_at' => $invitation->invited_at,
                     'is_self' => false,
                     'is_external' => true,
+                    'prepayment_paid' => (bool) ($invitation->prepayment_paid ?? false),
                 ];
             }
         }
@@ -106,7 +108,7 @@
                                             @endif
 
                                             {{-- Статус предоплаты --}}
-                                            @if($hunter->prepayment_paid ?? false)
+                                            @if($hunter['prepayment_paid'])
                                                 <span class="badge">{{ __('Paid') }}</span>
                                             @else
                                                 <span class="badge">{{ __('Awaiting prepayment') }}</span>
