@@ -114,7 +114,7 @@
 
         @if($booking->status === \Modules\Booking\Models\Booking::PREPAYMENT_COLLECTION)
             <div class="text-muted mt-1" style="font-size: 0.9em;">
-                Собранно {{ $paidCount }}/{{ $totalHuntersNeeded }}
+                Оплачено {{ $paidCount }}/{{ $totalHuntersNeeded }}
             </div>
 
             <div class="mt-3">
