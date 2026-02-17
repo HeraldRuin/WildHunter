@@ -207,7 +207,8 @@
     <td>
         @php
             $isInvited = $booking->isInvited();
-            $isCollectionStatus = $booking->status_for_user === \Modules\Booking\Models\Booking::START_COLLECTION;
+            $isCollectionStatus = in_array($booking->status, [\Modules\Booking\Models\Booking::START_COLLECTION, \Modules\Booking\Models\Booking::PREPAYMENT_COLLECTION,
+            \Modules\Booking\Models\Booking::FINISHED_PREPAYMENT, \Modules\Booking\Models\Booking::PAID, \Modules\Booking\Models\Booking::COMPLETED]);
             $invitation = $booking->getCurrentUserInvitation();
             $isInvitationAccepted = $invitation && $invitation->status === 'accepted';
         @endphp

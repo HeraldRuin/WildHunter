@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
@@ -166,7 +167,7 @@ class Booking extends BaseModel
 
     public function getStatusForUserAttribute()
     {
-        $userId = \Illuminate\Support\Facades\Auth::id();
+        $userId = Auth::id();
         $creatorId = $this->create_user ?? $this->customer_id;
 
         if ($userId && $userId === $creatorId) {
