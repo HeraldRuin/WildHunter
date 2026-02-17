@@ -71,6 +71,11 @@
                             <strong>{{ __('Collection completed') }}</strong>
                         </div>
                     @endif
+                    @if($booking->status === \Modules\Booking\Models\Booking::PREPAYMENT_COLLECTION)
+                        <div class="alert alert-success mb-4">
+                            <strong>{{ __('Prepayment completed') }}</strong>
+                        </div>
+                    @endif
                     <div class="mb-4">
                         <h6 class="mb-3">Приглашенные охотники</h6>
                         @if(count($invitedHunters) > 0)
@@ -98,6 +103,13 @@
                                                 <span class="badge bg-warning">Приглашен</span>
                                             @elseif($hunter['status'] === 'declined')
                                                 <span class="badge bg-danger">Приглашение отклонено</span>
+                                            @endif
+
+                                            {{-- Статус предоплаты --}}
+                                            @if($hunter->prepayment_paid ?? false)
+                                                <span class="badge">{{ __('Paid') }}</span>
+                                            @else
+                                                <span class="badge">{{ __('Awaiting prepayment') }}</span>
                                             @endif
                                         </div>
                                     </div>

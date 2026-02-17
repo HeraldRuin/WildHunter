@@ -71,6 +71,13 @@
                                                     {{ __('Invited') }}
                                                 @endif
                                             </span>
+                                            <span class="ml-2">
+                                                     @if($inv->prepayment_paid === 1)
+                                                    {{ __('Paid') }}
+                                                @else
+                                                    {{ __('Awaiting prepayment') }}
+                                                @endif
+                                            </span>
                                         </div>
                                         @if($inv->invited_at)
                                             <small class="text-muted">{{ __('Invited At') }}
