@@ -6,18 +6,14 @@
                 <h5 class="modal-title">{{__('Prepayment booking')}} #{{ $booking->id }}</h5>
             </div>
             @php
-                $authUserId = Auth::id();
+                   $prepaymentPaid = false;
 
-                // Находим запись приглашения конкретного пользователя
-                $invitation = $booking->bookingHunter
-                    ->invitations
-                    ->firstWhere('hunter_id', $authUserId);
-
-                $prepaymentPaid = $invitation?->prepayment_paid ?? false;
+                   if ($booking->bookingHunter) {
+                       $bookingHunter = $booking->bookingHunter;
+                       $invitation = $bookingHunter->invitations->firstWhere('hunter_id', Auth::id());
+                       $prepaymentPaid = $invitation?->prepayment_paid ?? false;
+                   }
             @endphp
-            {{--            <div class="modal-body">--}}
-            {{--                <p>{{__('Are you sure you want to cancel this booking?')}}</p>--}}
-            {{--            </div>--}}
             <div class="modal-footer">
 
                 <button type="button"

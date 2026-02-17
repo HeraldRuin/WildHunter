@@ -188,7 +188,8 @@
                     <button
                         type="button"
                         class="btn btn-primary btn-sm mt-2"
-                        data-bs-toggle="modal">
+                        data-bs-toggle="modal"
+                        data-bs-target="#placeBookingModal{{ $booking->id }}">
                         {{__("Select bed place")}}
                     </button>
                 @endif
@@ -206,7 +207,7 @@
                         type="button"
                         class="btn btn-primary btn-sm mt-2"
                         data-bs-toggle="modal"
-                        data-bs-target="#cancelBookingModal{{ $booking->id }}">
+                        data-bs-target="#calculatingBookingModal{{ $booking->id }}">
                         {{__("Calculating")}}
                     </button>
                 @endif
@@ -258,7 +259,8 @@
                 <button
                     type="button"
                     class="btn btn-primary btn-sm mt-2"
-                    data-bs-toggle="modal">
+                    data-bs-toggle="modal"
+                    data-bs-target="#placeBookingModal{{ $booking->id }}">
                     {{__("Select bed place")}}
                 </button>
             @endif
@@ -278,7 +280,7 @@
                     type="button"
                     class="btn btn-primary btn-sm mt-2"
                     data-bs-toggle="modal"
-                    data-bs-target="#cancelBookingModal{{ $booking->id }}">
+                    data-bs-target="#calculatingBookingModal{{ $booking->id }}">
                     {{__("Calculating")}}
                 </button>
             @endif
@@ -287,16 +289,19 @@
 </tr>
 
 {{-- Модальное окно для сбора охотников --}}
-@include('Booking::frontend.collection-modal', ['booking' => $booking])
+@include('Booking::frontend.modals.collection-modal', ['booking' => $booking])
 
 {{-- Модальное окно для добавления услуг --}}
 @include('Animal::.frontend.bookingHistory.addServices.add-services-hunter')
 
 {{-- Модальное окно для просмотра приглашения --}}
-@include('Booking::frontend.invitation-modal', ['booking' => $booking])
+@include('Booking::frontend.modals.invitation-modal', ['booking' => $booking])
 
 {{-- Модальное окно для предоплаты --}}
-@include('Booking::frontend.prepayment-modal', ['booking' => $booking])
+@include('Booking::frontend.modals.prepayment-modal', ['booking' => $booking])
+
+{{-- Модальное окно для койко место --}}
+@include('Booking::frontend.modals.place-modal', ['booking' => $booking])
 
 {{-- Отмена бронирования --}}
 <div class="modal fade" id="cancelBookingModal{{ $booking->id }}" tabindex="-1" aria-hidden="true">

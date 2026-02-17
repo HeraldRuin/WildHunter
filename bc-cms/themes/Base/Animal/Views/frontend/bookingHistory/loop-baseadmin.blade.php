@@ -164,7 +164,7 @@
                 type="button"
                 class="btn btn-primary btn-sm mt-2"
                 data-bs-toggle="modal"
-                data-bs-target="#cancelBookingModal{{ $booking->id }}">
+                data-bs-target="#calculatingBookingModal{{ $booking->id }}">
                 {{__("Calculating")}}
             </button>
         @endif
