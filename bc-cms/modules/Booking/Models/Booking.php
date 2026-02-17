@@ -1548,6 +1548,12 @@ class Booking extends BaseModel
     {
         return $this->hasOne(BookingHunter::class, 'booking_id');
     }
+    public function invitationForUser(int $userId)
+    {
+        return optional($this->bookingHunter)
+            ->invitations
+            ->firstWhere('hunter_id', $userId);
+    }
 
     public function bookingHunters(): HasMany
     {
