@@ -2074,4 +2074,21 @@ class BookingController extends \App\Http\Controllers\Controller
 
         return response()->json(['status' => 'ok']);
     }
+
+    public function storePrepayment(Booking $booking): JsonResponse
+    {
+        $nonMasterBookingHunterIds = BookingHunter::where('booking_id', $booking->id)
+            ->where('is_master', true)
+            ->pluck('id');
+
+        if ($nonMasterBookingHunterIds->isNotEmpty()) {
+            BookingHunterInvitation::whereIn('booking_hunter_id', $nonMasterBookingHunterIds)
+                ->where('hunter_id', Auth::id())
+                ->update(['prepayment_paid' => true]);
+        }
+        $booking->prepayment_paid = true;
+        $booking->save();
+
+        return response()->json(['status' => 'ok']);
+    }
 }
