@@ -112,7 +112,7 @@
             @endif
         @endif
 
-        @if($booking->status === \Modules\Booking\Models\Booking::PREPAYMENT_COLLECTION)
+        @if(in_array($booking->status, [\Modules\Booking\Models\Booking::PREPAYMENT_COLLECTION, \Modules\Booking\Models\Booking::FINISHED_PREPAYMENT]))
             <div class="text-muted mt-1" style="font-size: 0.9em;">
                 Оплачено {{ $paidCount }}/{{ $totalHuntersNeeded }}
             </div>
@@ -227,7 +227,7 @@
                         data-bs-target="#collectionModal{{ $booking->id }}">
                         {{__("Open collection")}}
                     </button>
-                @elseif(in_array($booking->status, [\Modules\Booking\Models\Booking::CONFIRMED]))
+                    @elseif($booking->status === \Modules\Booking\Models\Booking::CONFIRMED)
                     <button
                         type="button"
                         class="btn btn-primary btn-sm mt-2"
@@ -239,7 +239,7 @@
                 @endif
             @endif
 
-            @if($booking->is_master_hunter && in_array($booking->status, [\Modules\Booking\Models\Booking::PREPAYMENT_COLLECTION]))
+                @if($booking->is_master_hunter && $booking->status === \Modules\Booking\Models\Booking::PREPAYMENT_COLLECTION))
                 <button
                     type="button"
                     class="btn btn-primary btn-sm mt-2"
@@ -258,7 +258,7 @@
                 </button>
             @endif
 
-            @if($booking->is_master_hunter && in_array($booking->status, [\Modules\Booking\Models\Booking::FINISHED_PREPAYMENT]))
+            @if($booking->is_master_hunter && $booking->status === \Modules\Booking\Models\Booking::FINISHED_PREPAYMENT))
                 <button
                     type="button"
                     class="btn btn-primary btn-sm mt-2"

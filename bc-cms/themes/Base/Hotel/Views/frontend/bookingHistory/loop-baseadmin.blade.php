@@ -142,7 +142,7 @@
             @endif
         @endif
 
-        @if($booking->status === \Modules\Booking\Models\Booking::PREPAYMENT_COLLECTION)
+        @if(in_array($booking->status, [\Modules\Booking\Models\Booking::PREPAYMENT_COLLECTION, \Modules\Booking\Models\Booking::FINISHED_PREPAYMENT]))
             <div class="text-muted mt-1" style="font-size: 0.9em;">
                 Оплачено {{ $paidCount }}/{{ $totalHuntersNeeded }}
             </div>
