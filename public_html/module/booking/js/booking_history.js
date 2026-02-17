@@ -5,7 +5,6 @@ document.addEventListener('DOMContentLoaded', function () {
     new Vue({
         el: '#booking-history',
         data: {
-            userSearchQuery: '',
             searchResults: [],
             selectedUser: null,
             currentUserId: null,
@@ -14,6 +13,7 @@ document.addEventListener('DOMContentLoaded', function () {
             isSearching: false,
             isResults: false,
             noResults: false,
+            userSearchQuery: '',
 
             hunterSearchQuery: '',
             hunterSearchResults: [],
@@ -33,6 +33,7 @@ document.addEventListener('DOMContentLoaded', function () {
             invitedText: el.dataset.invitedText || 'Приглашен',
             acceptedText: el.dataset.acceptedText || 'Подтвержден',
             declinedText: el.dataset.declinedText || 'Отказался',
+            prepaymentPaidMap: {}
         },
         methods: {
             userPopoverContent(booking) {
@@ -1260,6 +1261,30 @@ document.addEventListener('DOMContentLoaded', function () {
                         }
                     }
                 });
+            },
+            bookingPrepaymentPaid(event) {
+
+                const btn = event.currentTarget;
+                if (!btn) return;
+
+                const bookingId = btn.dataset.bookingId;
+                if (!bookingId) return;
+
+                // Если уже нажато — ничего не делаем
+                if (this.prepaymentPaidMap[bookingId]) return;
+
+                fetch(`/booking/${bookingId}/prepayment-paid`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                    }
+                }).then(res => {
+                    if (!res.ok) {
+                        throw new Error();
+                    }
+
+                    this.$set(this.prepaymentPaidMap, bookingId, true);
+                });
             }
         },
 
@@ -1518,6 +1543,13 @@ document.addEventListener('DOMContentLoaded', function () {
             updateCollectionTimers();
             // Обновляем таймер каждую секунду, чтобы он работал "в реальном времени"
             setInterval(updateCollectionTimers, 1000);
+
+            //Кнопка оплата или оплачено в модальном окне предоплата
+            document.querySelectorAll('.btn-prepayment').forEach(btn => {
+                const bookingId = btn.dataset.bookingId;
+                const isPaid = btn.dataset.prepaymentPaid === '1' || btn.dataset.prepaymentPaid === 'true';
+                this.$set(this.prepaymentPaidMap, bookingId, isPaid);
+            });
         }
 
     });
