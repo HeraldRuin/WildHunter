@@ -99,20 +99,24 @@
     </td>
     <td class="{{$booking->status}} a-hidden">
         <div>
-            {{$booking->statusName}}
-            @if($booking->status === \Modules\Booking\Models\Booking::START_COLLECTION && $booking->hotel && $booking->hotel->collection_timer_hours)
-                ({{$booking->hotel->collection_timer_hours}} {{ __('ч') }})
-            @endif
-        </div>
-        @if($booking->status === \Modules\Booking\Models\Booking::START_COLLECTION)
             @php
-                $endTimestamp = null;
                 // Получаем информацию об охотниках
                 $totalHuntersNeeded = $booking->total_hunting ?? 0;
                 $allInvitations = $booking->getAllInvitations();
                 $acceptedInvitations = $allInvitations->where('status', 'accepted');
                 $acceptedCount = $acceptedInvitations->count();
+            @endphp
 
+            {{$booking->statusName}}
+
+            @if($booking->status === \Modules\Booking\Models\Booking::START_COLLECTION && $booking->hotel && $booking->hotel->collection_timer_hours)
+                ({{$booking->hotel->collection_timer_hours}} {{ __('ч') }})
+            @endif
+        </div>
+
+        @if($booking->status === \Modules\Booking\Models\Booking::START_COLLECTION)
+            @php
+                $endTimestamp = null;
                 try {
                     $collectionEndAt = $booking->getMeta('collection_end_at');
                     if ($collectionEndAt) {
@@ -124,18 +128,29 @@
                 }
             @endphp
             @if($endTimestamp)
-                <div
-                    class="text-muted collection-timer"
-                    data-end="{{ $endTimestamp }}"
-                    data-booking-id="{{ $booking->id }}"
-                >[0 мин]
+                <div class="text-muted collection-timer" data-end="{{ $endTimestamp }}"
+                     data-booking-id="{{ $booking->id }}">[0 мин]
                 </div>
             @endif
+
             @if($totalHuntersNeeded > 0)
                 <div class="text-muted mt-1" style="font-size: 0.9em;">
                     Собранно {{ $acceptedCount }}/{{ $totalHuntersNeeded }}
                 </div>
             @endif
+        @endif
+
+        @if($booking->status === \Modules\Booking\Models\Booking::PREPAYMENT_COLLECTION)
+            <div class="text-muted mt-1" style="font-size: 0.9em;">
+                Собранно {{ $acceptedCount }}/{{ $totalHuntersNeeded }}
+            </div>
+
+            <div class="mt-3">
+                {{'Сбор завершен'}}
+                <div class="text-muted mt-1" style="font-size: 0.9em;">
+                    Собранно {{ $acceptedCount }}/{{ $totalHuntersNeeded }}
+                </div>
+            </div>
         @endif
     </td>
 

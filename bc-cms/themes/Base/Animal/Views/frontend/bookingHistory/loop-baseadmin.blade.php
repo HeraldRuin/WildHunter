@@ -36,70 +36,64 @@
             </div>
         @endif
     </td>
+
     <td class="{{$booking->status}} a-hidden">
         <div>
-            {{$booking->statusName}}
-            @if($booking->status === \Modules\Booking\Models\Booking::START_COLLECTION && $booking->hotel && $booking->hotel->collection_timer_hours)
-                ({{$booking->hotel->collection_timer_hours}} {{ __('ч') }})
-            @endif
-        </div>
-        @if($booking->status === \Modules\Booking\Models\Booking::START_COLLECTION)
             @php
-                // Получаем данные таймера: время начала и количество часов
-                $startRecord = \Illuminate\Support\Facades\DB::table('bc_booking_meta')
-                    ->where('booking_id', $booking->id)
-                    ->where('name', 'collection_start_at')
-                    ->first();
-
-                $timerHoursRecord = \Illuminate\Support\Facades\DB::table('bc_booking_meta')
-                    ->where('booking_id', $booking->id)
-                    ->where('name', 'collection_timer_hours')
-                    ->first();
-
-                $endTimestamp = null;
                 // Получаем информацию об охотниках
                 $totalHuntersNeeded = $booking->total_hunting ?? 0;
                 $allInvitations = $booking->getAllInvitations();
                 $acceptedInvitations = $allInvitations->where('status', 'accepted');
                 $acceptedCount = $acceptedInvitations->count();
-                $initialTimerHours = null;
+            @endphp
 
-                // Вычисляем оставшееся время: таймер в часах - прошедшее время
-                if ($startRecord && $timerHoursRecord) {
-                    try {
-                        $startCarbon = \Carbon\Carbon::parse($startRecord->val);
-                        $timerHours = (int)$timerHoursRecord->val;
-                        $initialTimerHours = $timerHours; // Начальное значение таймера
-                        $now = \Carbon\Carbon::now();
+            {{$booking->statusName}}
 
-                        // Прошедшее время в секундах, затем переводим в часы с точностью
-                        $elapsedSeconds = $now->diffInSeconds($startCarbon, false);
-                        $elapsedHours = $elapsedSeconds / 3600; // Точное значение в часах
+            @if($booking->status === \Modules\Booking\Models\Booking::START_COLLECTION && $booking->hotel && $booking->hotel->collection_timer_hours)
+                ({{$booking->hotel->collection_timer_hours}} {{ __('ч') }})
+            @endif
+        </div>
 
-                        // Оставшееся время в часах
-                        $remainingHours = max(0, $timerHours - $elapsedHours);
-
-                        // Вычисляем время окончания для JavaScript (текущее время + оставшееся время)
-                        $remainingSeconds = $remainingHours * 3600;
-                        $endCarbon = $now->copy()->addSeconds((int)$remainingSeconds);
+        @if($booking->status === \Modules\Booking\Models\Booking::START_COLLECTION)
+            @php
+                $endTimestamp = null;
+                try {
+                    $collectionEndAt = $booking->getMeta('collection_end_at');
+                    if ($collectionEndAt) {
+                        $endCarbon = \Carbon\Carbon::parse($collectionEndAt);
                         $endTimestamp = $endCarbon->timestamp * 1000;
-                    } catch (\Exception $e) {
-                        $endTimestamp = null;
                     }
+                } catch (\Exception $e) {
+                    $endTimestamp = null;
                 }
             @endphp
-            @if($endTimestamp && $initialTimerHours)
+            @if($endTimestamp)
                 <div class="text-muted collection-timer" data-end="{{ $endTimestamp }}"
-                     data-initial-hours="{{ $initialTimerHours }}">({{ $initialTimerHours }}) [0 мин]
+                     data-booking-id="{{ $booking->id }}">[0 мин]
                 </div>
             @endif
+
             @if($totalHuntersNeeded > 0)
                 <div class="text-muted mt-1" style="font-size: 0.9em;">
                     Собранно {{ $acceptedCount }}/{{ $totalHuntersNeeded }}
                 </div>
             @endif
         @endif
+
+        @if($booking->status === \Modules\Booking\Models\Booking::PREPAYMENT_COLLECTION)
+            <div class="text-muted mt-1" style="font-size: 0.9em;">
+                Собранно {{ $acceptedCount }}/{{ $totalHuntersNeeded }}
+            </div>
+
+            <div class="mt-3">
+                {{'Сбор завершен'}}
+                <div class="text-muted mt-1" style="font-size: 0.9em;">
+                    Собранно {{ $acceptedCount }}/{{ $totalHuntersNeeded }}
+                </div>
+            </div>
+        @endif
     </td>
+
     <td class="price-cell">
         <div>{{ format_money($booking->amount_hunting) }}</div>
 
