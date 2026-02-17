@@ -68,16 +68,16 @@
             <div class="modal-body">
                 @if($isInvited)
                     {{-- Шаблон для приглашенного охотника: только просмотр списка приглашенных --}}
-                    @if($booking->status === \Modules\Booking\Models\Booking::FINISHED_COLLECTION)
+                    @if(in_array($booking->status, [\Modules\Booking\Models\Booking::PREPAYMENT_COLLECTION, \Modules\Booking\Models\Booking::FINISHED_PREPAYMENT]))
                         <div class="alert alert-success mb-4">
                             <strong>{{ __('Collection completed') }}</strong>
                         </div>
                     @endif
-                    @if($booking->status === \Modules\Booking\Models\Booking::PREPAYMENT_COLLECTION)
-                        <div class="alert alert-success mb-4">
-                            <strong>{{ __('Prepayment completed') }}</strong>
-                        </div>
-                    @endif
+{{--                    @if($booking->status === \Modules\Booking\Models\Booking::PREPAYMENT_COLLECTION)--}}
+{{--                        <div class="alert alert-success mb-4">--}}
+{{--                            <strong>{{ __('Prepayment completed') }}</strong>--}}
+{{--                        </div>--}}
+{{--                    @endif--}}
                     <div class="mb-4">
                         <h6 class="mb-3">Приглашенные охотники</h6>
                         @if(count($invitedHunters) > 0)
