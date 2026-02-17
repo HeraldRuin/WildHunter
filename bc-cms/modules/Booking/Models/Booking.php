@@ -41,7 +41,7 @@ class Booking extends BaseModel
     //protected $cachedMetaArr = [];
     const DRAFT      = 'draft'; // New booking, before payment processing
     const UNPAID     = 'unpaid'; // Require payment
-    const PROCESSING = 'processing'; // like offline - payment
+    const PROCESSING = 'processing'; // обработка заказа
     const START_COLLECTION = 'collection';
     const FINISHED_COLLECTION = 'finished_collection';
     const INVITATION = 'invitation';
@@ -168,16 +168,23 @@ class Booking extends BaseModel
     {
         $userId = \Illuminate\Support\Facades\Auth::id();
         $creatorId = $this->create_user ?? $this->customer_id;
-        if ($userId && $userId == $creatorId) {
+
+        if ($userId && $userId === $creatorId) {
             return $this->status;
         }
-        if ($userId && $this->isInvited($userId)) {
-            if ($this->status === self::FINISHED_COLLECTION) {
-                return self::FINISHED_COLLECTION;
-            }
-            return self::START_COLLECTION;
-        }
 
+        if ($userId && $this->isInvited($userId)) {
+            return match ($this->status) {
+                self::PREPAYMENT_COLLECTION,
+                self::CANCELLED,
+                self::COMPLETED,
+                self::PAID,
+                self::CONFIRMED,
+                self::PROCESSING,
+                self::FINISHED_PREPAYMENT => $this->status,
+                default => self::START_COLLECTION,
+            };
+        }
         return $this->status;
     }
 

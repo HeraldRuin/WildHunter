@@ -129,7 +129,9 @@
     <td>
         @php
             $isInvited = $booking->isInvited();
-            $isCollectionStatus = $booking->status_for_user === \Modules\Booking\Models\Booking::START_COLLECTION;
+            $isCollectionStatus = in_array($booking->status, [\Modules\Booking\Models\Booking::START_COLLECTION, \Modules\Booking\Models\Booking::PREPAYMENT_COLLECTION,
+            \Modules\Booking\Models\Booking::FINISHED_PREPAYMENT, \Modules\Booking\Models\Booking::PAID, \Modules\Booking\Models\Booking::COMPLETED]);
+
             $invitation = $booking->getCurrentUserInvitation();
             $isInvitationAccepted = $invitation && $invitation->status === 'accepted';
         @endphp
@@ -147,6 +149,7 @@
                 </button>
             @endif
             @if($isInvitationAccepted && in_array($booking->type, ['animal', 'hotel_animal']))
+                @if(!$booking->is_master_hunter && in_array($booking->status, [\Modules\Booking\Models\Booking::PREPAYMENT_COLLECTION, \Modules\Booking\Models\Booking::FINISHED_PREPAYMENT, \Modules\Booking\Models\Booking::START_COLLECTION]))
                 <button
                     type="button"
                     class="btn btn-primary btn-sm mt-2"
@@ -155,10 +158,37 @@
                     @click="openCollectionAsHunter({{ $booking->id }})">
                     {{__("Open collection")}}
                 </button>
+                @endif
+                @if(!$booking->is_master_hunter && $booking->status ===  \Modules\Booking\Models\Booking::FINISHED_PREPAYMENT)
+                    <button
+                        type="button"
+                        class="btn btn-primary btn-sm mt-2"
+                        data-bs-toggle="modal">
+                        {{__("Select bed place")}}
+                    </button>
+                @endif
+                @if(!$booking->is_master_hunter && $booking->status ===  \Modules\Booking\Models\Booking::PREPAYMENT_COLLECTION)
+                    <button
+                        type="button"
+                        class="btn btn-primary btn-sm mt-2"
+                        data-bs-toggle="modal"
+                        data-bs-target="#bookingAddServiceModal{{ $booking->id }}">
+                        {{__("Prepayment")}}
+                    </button>
+                @endif
+                @if(!$booking->is_master_hunter && in_array($booking->status, [\Modules\Booking\Models\Booking::PAID, \Modules\Booking\Models\Booking::COMPLETED, \Modules\Booking\Models\Booking::FINISHED_PREPAYMENT]))
+                    <button
+                        type="button"
+                        class="btn btn-primary btn-sm mt-2"
+                        data-bs-toggle="modal"
+                        data-bs-target="#cancelBookingModal{{ $booking->id }}">
+                        {{__("Calculating")}}
+                    </button>
+                @endif
             @endif
         @else
 
-            @if($booking->is_master_hunter && in_array($booking->status, [\Modules\Booking\Models\Booking::PROCESSING, \Modules\Booking\Models\Booking::CONFIRMED, \Modules\Booking\Models\Booking::PREPAYMENT_COLLECTION, \Modules\Booking\Models\Booking::START_COLLECTION]))
+            @if($booking->is_master_hunter && in_array($booking->status, [\Modules\Booking\Models\Booking::PROCESSING, \Modules\Booking\Models\Booking::CONFIRMED, \Modules\Booking\Models\Booking::PREPAYMENT_COLLECTION, \Modules\Booking\Models\Booking::START_COLLECTION, \Modules\Booking\Models\Booking::FINISHED_PREPAYMENT]))
                 <button
                     type="button"
                     class="btn btn-danger btn-sm mt-2"
@@ -188,18 +218,6 @@
                     </button>
                 @endif
             @endif
-            {{--            @if(!$booking->is_master_hunter && $booking->status ===  \Modules\Booking\Models\Booking::FINISHED_COLLECTION && $booking->type != 'hotel')--}}
-            {{--                <button--}}
-            {{--                    type="button"--}}
-            {{--                    class="btn btn-primary btn-sm mt-2"--}}
-            {{--                    data-bs-toggle="modal"--}}
-            {{--                    data-bs-target="#collectionModal{{ $booking->id }}"--}}
-            {{--                    @click="openCollectionAsHunter({{ $booking->id }})">--}}
-            {{--                    {{__("Open collection")}}--}}
-            {{--                </button>--}}
-            {{--            @endif--}}
-
-
 
             @if($booking->is_master_hunter && in_array($booking->status, [\Modules\Booking\Models\Booking::PREPAYMENT_COLLECTION]))
                 <button
@@ -210,27 +228,8 @@
                     {{__("Prepayment")}}
                 </button>
             @endif
-            @if(!$booking->is_master_hunter && in_array($booking->status, [\Modules\Booking\Models\Booking::PREPAYMENT_COLLECTION]))
-                <button
-                    type="button"
-                    class="btn btn-primary btn-sm mt-2"
-                    data-bs-toggle="modal"
-                    data-bs-target="#bookingAddServiceModal{{ $booking->id }}">
-                    {{__("Prepayment")}}
-                </button>
-            @endif
-
-
 
             @if($booking->is_master_hunter && $booking->status ===  \Modules\Booking\Models\Booking::FINISHED_PREPAYMENT)
-                <button
-                    type="button"
-                    class="btn btn-primary btn-sm mt-2"
-                    data-bs-toggle="modal">
-                    {{__("Select bed place")}}
-                </button>
-            @endif
-            @if(!$booking->is_master_hunter && $booking->status ===  \Modules\Booking\Models\Booking::FINISHED_PREPAYMENT)
                 <button
                     type="button"
                     class="btn btn-primary btn-sm mt-2"
@@ -258,19 +257,8 @@
                     {{__("Calculating")}}
                 </button>
             @endif
-
-            @if(!$booking->is_master_hunter && in_array($booking->status, [\Modules\Booking\Models\Booking::PAID, \Modules\Booking\Models\Booking::COMPLETED, \Modules\Booking\Models\Booking::FINISHED_PREPAYMENT]))
-                <button
-                    type="button"
-                    class="btn btn-primary btn-sm mt-2"
-                    data-bs-toggle="modal"
-                    data-bs-target="#cancelBookingModal{{ $booking->id }}">
-                    {{__("Calculating")}}
-                </button>
-            @endif
         @endif
     </td>
-
 </tr>
 
 {{-- Модальное окно для сбора охотников --}}
