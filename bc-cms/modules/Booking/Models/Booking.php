@@ -391,7 +391,7 @@ class Booking extends BaseModel
             'booking_hunter_id' => $bookingHunter->id,
             'hunter_id' => $creatorId,
             'email' => $creator->email,
-            'invited' => true,
+ //            'invited' => true,
             'status' => 'accepted',
             'invited_at' => now(),
             'accepted_at' => now(),
@@ -731,12 +731,13 @@ class Booking extends BaseModel
         $to = false,
         $booking_id = false
     ) {
-        // 1️⃣ Получаем ID броней, куда пользователя пригласили
+        //  Получаем ID броней, куда пользователя пригласили
         $invitedBookingIds = [];
         if ($customer_id_or_name) {
             $invitedBookingIds = DB::table('bc_booking_hunter_invitations as i')
                 ->join('bc_booking_hunters as h', 'i.booking_hunter_id', '=', 'h.id')
                 ->where('i.hunter_id', $customer_id_or_name)
+                ->where('i.invited', true)
                 ->whereNull('i.deleted_at')
                 ->whereNull('h.deleted_at')
                 ->whereNotIn('i.status', ['declined', 'removed'])
@@ -744,7 +745,6 @@ class Booking extends BaseModel
                 ->toArray();
         }
 
-        // 2️⃣ Базовый запрос с eager loading
         $list_booking = parent::query()
             ->with([
                 'animal',
@@ -763,11 +763,10 @@ class Booking extends BaseModel
         ")
             ->orderBy('id', 'desc');
 
-        // 3️⃣ Фильтруем по пользователю
         if ($customer_id_or_name) {
 
             if ($booking_status === 'invitation') {
-                // 🔹 Вкладка "Приглашения" — только приглашённый
+                // Вкладка "Приглашения" — только приглашённые брони
                 if (!empty($invitedBookingIds)) {
                     $list_booking->whereIn('id', $invitedBookingIds);
                 } else {
@@ -775,7 +774,7 @@ class Booking extends BaseModel
                 }
 
             } else {
-                // 🔹 Обычные вкладки — создатель / мастер / vendor
+                // Обычные вкладки — мастера охоты
                 $list_booking->where(function ($q) use ($customer_id_or_name) {
 
                     // 3.1 Создатель
@@ -786,28 +785,23 @@ class Booking extends BaseModel
                             $h->where('is_master', 1)
                                 ->where('invited_by', $customer_id_or_name);
                         })
-
-                        // 3.3 Vendor
                         ->orWhere('vendor_id', $customer_id_or_name);
                 });
             }
 
         } else {
-            // 🔹 Для админа — фильтруем только "не сбор охотников"
-            $list_booking->whereNotIn('status', ['collection', 'finished_collection']);
+            // Для админа — фильтруем только "не сбор охотников"
+            $list_booking->whereNotIn('status', ['collection', 'finish_prepayment']);
         }
 
-        // 4️⃣ Фильтр по статусу (к основной таблице)
         if ($booking_status && $booking_status !== 'invitation') {
             $list_booking->where('status', $booking_status);
         }
 
-        // 5️⃣ Фильтр по сервису
         if ($service) {
             $list_booking->where('object_model', $service);
         }
 
-        // 6️⃣ Фильтр по дате
         if ($from && $to) {
             $list_booking->whereBetween('created_at', [
                 $from . ' 00:00:00',
@@ -815,7 +809,6 @@ class Booking extends BaseModel
             ]);
         }
 
-        // 7️⃣ Фильтр по конкретной брони
         if ($booking_id) {
             $list_booking->where('id', $booking_id);
         }
@@ -823,7 +816,6 @@ class Booking extends BaseModel
         // 8️⃣ Ограничение по доступным сервисам
         $list_booking->whereIn('object_model', array_keys(get_bookable_services()));
 
-        // 9️⃣ Пагинация
         return $list_booking->paginate(10);
     }
 
