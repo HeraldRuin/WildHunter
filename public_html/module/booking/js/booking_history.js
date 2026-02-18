@@ -261,6 +261,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         console.error('Ошибка при загрузке приглашенных охотников:', error);
                     });
             },
+
             checkFinishCollectionButton(bookingId) {
 
                 // Проверяем, должен ли быть отключен кнопка "Завершить сбор"
@@ -270,30 +271,29 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (!finishBtn || !modal) return;
 
                 // Проверяем, закончен ли таймер
-                const timerEl = document.querySelector('.collection-timer[data-booking-id="' + bookingId + '"]');
-                if (!timerEl) {
-                    // Если таймера нет, разрешаем кнопку
-                    finishBtn.disabled = false;
-                    finishBtn.classList.remove('disabled');
-                    finishBtn.title = '';
-                    return;
-                }
+                // const timerEl = document.querySelector('.collection-timer[data-booking-id="' + bookingId + '"]');
+                // if (!timerEl) {
+                //     // Если таймера нет, разрешаем кнопку
+                //     finishBtn.disabled = false;
+                //     finishBtn.classList.remove('disabled');
+                //     finishBtn.title = '';
+                //     return;
+                // }
+                //
+                // const end = parseInt(timerEl.dataset.end, 10);
+                // if (!end) {
+                //     finishBtn.disabled = false;
+                //     finishBtn.classList.remove('disabled');
+                //     finishBtn.title = '';
+                //     return;
+                // }
 
-                const end = parseInt(timerEl.dataset.end, 10);
-                if (!end) {
-                    finishBtn.disabled = false;
-                    finishBtn.classList.remove('disabled');
-                    finishBtn.title = '';
-                    return;
-                }
+                // const now = Date.now();
+                // const diffMs = end - now;
+                // const isTimerFinished = diffMs <= 0;
 
-                const now = Date.now();
-                const diffMs = end - now;
-                const isTimerFinished = diffMs <= 0;
-
-                if (isTimerFinished) {
+                // if (isTimerFinished) {
                     // Таймер закончен - проверяем количество охотников
-                    const requiredHunters = parseInt(modal.dataset.huntersCount || '0', 10);
                     const animalMinHunters = parseInt(modal.dataset.animalMinHunters || '0', 10);
 
                     // Считаем приглашенных охотников (со статусом не declined)
@@ -312,18 +312,17 @@ document.addEventListener('DOMContentLoaded', function () {
                         finishBtn.disabled = true;
                         finishBtn.classList.add('disabled');
                        finishBtn.title = 'Таймер закончен, но не все охотники собраны. Необходимо собрать ' + animalMinHunters + ' охотников.';
-                    } else {
-                        // Если достаточно охотников - разрешаем кнопку
+                    }else {
                         finishBtn.disabled = false;
                         finishBtn.classList.remove('disabled');
                         finishBtn.title = '';
                     }
-                } else {
-                    // Таймер еще идет - разрешаем кнопку
-                    finishBtn.disabled = false;
-                    finishBtn.classList.remove('disabled');
-                    finishBtn.title = '';
-                }
+                // } else {
+                //     // Таймер еще идет - разрешаем кнопку
+                //     finishBtn.disabled = false;
+                //     finishBtn.classList.remove('disabled');
+                //     finishBtn.title = '';
+                // }
             },
             searchHunterDebounced() {
                 if (this.hunterSearchQuery.length < 4) {
@@ -1514,9 +1513,10 @@ document.addEventListener('DOMContentLoaded', function () {
                         // Пока таймер идет - кнопка "Завершить сбор" должна быть активна
                         const finishBtn = document.querySelector('.btn-finish-collection[data-booking-id="' + bookingId + '"]');
                         if (finishBtn) {
-                            finishBtn.disabled = false;
-                            finishBtn.classList.remove('disabled');
-                            finishBtn.title = '';
+
+                            // finishBtn.disabled = false;
+                            // finishBtn.classList.remove('disabled');
+                            // finishBtn.title = '';
                         }
                     }
                 });
