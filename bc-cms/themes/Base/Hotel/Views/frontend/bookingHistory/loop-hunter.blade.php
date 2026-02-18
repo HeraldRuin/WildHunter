@@ -172,7 +172,7 @@
                     {{'Сбор предоплаты'}}
                 @endif
                 <div class="text-muted mt-1" style="font-size: 0.9em;">
-                    Оплачено {{ $paidCount }}/{{ $totalHuntersNeeded }}
+                    Оплачено {{ $paidCount }}/{{ $acceptedCount }}
                 </div>
             </div>
 
