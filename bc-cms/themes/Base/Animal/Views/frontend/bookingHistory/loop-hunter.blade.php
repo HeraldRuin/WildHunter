@@ -113,9 +113,11 @@
         @endif
 
         @if(in_array($booking->status, [\Modules\Booking\Models\Booking::PREPAYMENT_COLLECTION, \Modules\Booking\Models\Booking::FINISHED_PREPAYMENT]))
-            <div class="">
+            <div>
                 @if($booking->status === \Modules\Booking\Models\Booking::FINISHED_PREPAYMENT)
-                    {{'Сбор предоплаты'}}
+                    <div class="mt-2">
+                        {{'Сбор предоплаты'}}
+                    </div>
                 @endif
                 <div class="text-muted mt-1" style="font-size: 0.9em;">
                     Оплачено {{ $paidCount }}/{{ $acceptedCount }}
