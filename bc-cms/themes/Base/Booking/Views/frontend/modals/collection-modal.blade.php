@@ -24,7 +24,7 @@
     }
 
     $invitedHunters = [];
-    if ($isInvited) {
+    if ($isInvited || in_array($booking->status, [\Modules\Booking\Models\Booking::PREPAYMENT_COLLECTION, \Modules\Booking\Models\Booking::FINISHED_PREPAYMENT])) {
         $invitations = $booking->getAllInvitations();
         foreach ($invitations as $invitation) {
             if ($invitation->hunter) {
@@ -66,18 +66,18 @@
                 <h5 class="modal-title">{{ __('Open collection for booking') }} #{{ $booking->id }}</h5>
             </div>
             <div class="modal-body">
-                @if($isInvited)
+                @if($isInvited || in_array($booking->status, [\Modules\Booking\Models\Booking::PREPAYMENT_COLLECTION, \Modules\Booking\Models\Booking::FINISHED_PREPAYMENT]))
                     {{-- Шаблон для приглашенного охотника: только просмотр списка приглашенных --}}
                     @if(in_array($booking->status, [\Modules\Booking\Models\Booking::PREPAYMENT_COLLECTION, \Modules\Booking\Models\Booking::FINISHED_PREPAYMENT]))
                         <div class="alert alert-success mb-4">
                             <strong>{{ __('Collection completed') }}</strong>
                         </div>
                     @endif
-{{--                    @if($booking->status === \Modules\Booking\Models\Booking::PREPAYMENT_COLLECTION)--}}
-{{--                        <div class="alert alert-success mb-4">--}}
-{{--                            <strong>{{ __('Prepayment completed') }}</strong>--}}
-{{--                        </div>--}}
-{{--                    @endif--}}
+                    @if($booking->status === \Modules\Booking\Models\Booking::START_COLLECTION)
+                        <div class="alert alert-success mb-4">
+                            <strong>{{ __('Open collection for hunting') }}</strong>
+                        </div>
+                    @endif
                     <div class="mb-4">
                         <h6 class="mb-3">Приглашенные охотники</h6>
                         @if(count($invitedHunters) > 0)
@@ -269,5 +269,6 @@
                 @endif
             </div>
         </div>
+
     </div>
 </div>

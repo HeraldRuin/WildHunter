@@ -106,14 +106,14 @@
             @endif
 
             @if($totalHuntersNeeded > 0)
-                <div class="text-muted mt-1" style="font-size: 0.9em;">
+                <div class="text-muted mt-3" style="font-size: 0.9em;">
                     Собранно {{ $acceptedCount }}/{{ $totalHuntersNeeded }}
                 </div>
             @endif
         @endif
 
         @if(in_array($booking->status, [\Modules\Booking\Models\Booking::PREPAYMENT_COLLECTION, \Modules\Booking\Models\Booking::FINISHED_PREPAYMENT]))
-            <div class="mt-3">
+            <div class="">
                 @if($booking->status === \Modules\Booking\Models\Booking::FINISHED_PREPAYMENT)
                     {{'Сбор предоплаты'}}
                 @endif
@@ -178,8 +178,7 @@
                     type="button"
                     class="btn btn-primary btn-sm mt-2"
                     data-bs-toggle="modal"
-                    data-bs-target="#collectionModal{{ $booking->id }}"
-                >
+                    @click="openCollectionAsHunter({{ $booking->id }})">
                     {{__("Open collection")}}
                 </button>
                 @endif
@@ -237,7 +236,6 @@
                         type="button"
                         class="btn btn-primary btn-sm mt-2"
                         data-bs-toggle="modal"
-                        data-bs-target="#collectionModal{{ $booking->id }}"
                         @click="openCollectionAsMaster({{ $booking->id }}, $event)">
                         {{__("Open collection")}}
                     </button>
