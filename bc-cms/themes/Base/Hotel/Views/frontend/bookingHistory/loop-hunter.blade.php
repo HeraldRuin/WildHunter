@@ -301,7 +301,7 @@
                 @endif
             @endif
 
-            @if($booking->is_master_hunter && $booking->status === \Modules\Booking\Models\Booking::PREPAYMENT_COLLECTION))
+            @if($booking->is_master_hunter && $booking->status === \Modules\Booking\Models\Booking::PREPAYMENT_COLLECTION)
                 <button
                     type="button"
                     class="btn btn-primary btn-sm mt-2"
@@ -323,7 +323,7 @@
                 </button>
             @endif
 
-                @if($booking->is_master_hunter && $booking->status === \Modules\Booking\Models\Booking::FINISHED_PREPAYMENT))
+                @if($booking->is_master_hunter && $booking->status === \Modules\Booking\Models\Booking::FINISHED_PREPAYMENT)
                 <button
                     type="button"
                     class="btn btn-primary btn-sm mt-2"

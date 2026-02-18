@@ -133,7 +133,6 @@
 
     <td class="price-cell">
         <div>{{ format_money($booking->amount_hunting) }}</div>
-
         <button
             type="button"
             class="btn btn-info btn-sm details-btn mt-2"
@@ -180,7 +179,7 @@
                     class="btn btn-primary btn-sm mt-2"
                     data-bs-toggle="modal"
                     data-bs-target="#collectionModal{{ $booking->id }}"
-                    @click="openCollectionAsHunter({{ $booking->id }})">
+                >
                     {{__("Open collection")}}
                 </button>
                 @endif
@@ -245,7 +244,7 @@
                 @endif
             @endif
 
-                @if($booking->is_master_hunter && $booking->status === \Modules\Booking\Models\Booking::PREPAYMENT_COLLECTION))
+                @if($booking->is_master_hunter && $booking->status === \Modules\Booking\Models\Booking::PREPAYMENT_COLLECTION)
                 <button
                     type="button"
                     class="btn btn-primary btn-sm mt-2"
@@ -265,7 +264,7 @@
                 </button>
             @endif
 
-            @if($booking->is_master_hunter && $booking->status === \Modules\Booking\Models\Booking::FINISHED_PREPAYMENT))
+            @if($booking->is_master_hunter && $booking->status === \Modules\Booking\Models\Booking::FINISHED_PREPAYMENT)
                 <button
                     type="button"
                     class="btn btn-primary btn-sm mt-2"
