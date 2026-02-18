@@ -16,7 +16,7 @@ return new class extends Migration
             $table->unsignedBigInteger('booking_hunter_id')->index();
             $table->unsignedBigInteger('hunter_id')->nullable()->index();
             $table->string('email')->nullable();
-            $table->boolean('invited')->default(true)->comment('Был ли охотник приглашен');
+            $table->boolean('invited')->default(false)->comment('Был ли охотник приглашен');
             $table->string('status', 50)->default('invited')->comment('invited, accepted, declined, removed');
             $table->timestamp('invited_at')->nullable();
             $table->timestamp('accepted_at')->nullable();
