@@ -794,14 +794,21 @@ class Booking extends BaseModel
         }
 
         if ($booking_status && $booking_status !== 'invitation') {
+
             if ($booking_status === \Modules\Booking\Models\Booking::PREPAYMENT_COLLECTION) {
-                $statusesToShow = [
+
+                $list_booking->whereIn('status', [
                     \Modules\Booking\Models\Booking::PREPAYMENT_COLLECTION,
                     \Modules\Booking\Models\Booking::FINISHED_PREPAYMENT,
-                ];
-                $list_booking->whereIn('status', $statusesToShow);
+                ]);
+
+            } else {
+
+                $list_booking->where('status', $booking_status);
+
             }
         }
+
 
         if ($service) {
             $list_booking->where('object_model', $service);
