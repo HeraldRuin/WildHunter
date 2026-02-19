@@ -10,7 +10,6 @@ return [
         'unpaid',
         'partial_payment',
         'collection',
-//        'finished_collection',
         'invitation',
         'prepayment_collection',
     ]

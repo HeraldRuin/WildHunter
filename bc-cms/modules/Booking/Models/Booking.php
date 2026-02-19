@@ -784,18 +784,23 @@ class Booking extends BaseModel
                         ->orWhereHas('bookingHunters', function ($h) use ($customer_id_or_name) {
                             $h->where('is_master', 1)
                                 ->where('invited_by', $customer_id_or_name);
-                        })
-                        ->orWhere('vendor_id', $customer_id_or_name);
+                        });
                 });
             }
 
         } else {
             // Для админа — фильтруем только "не сбор охотников"
-            $list_booking->whereNotIn('status', ['collection', 'finish_prepayment']);
+            $list_booking->whereNotIn('status', ['collection']);
         }
 
         if ($booking_status && $booking_status !== 'invitation') {
-            $list_booking->where('status', $booking_status);
+            if ($booking_status === \Modules\Booking\Models\Booking::PREPAYMENT_COLLECTION) {
+                $statusesToShow = [
+                    \Modules\Booking\Models\Booking::PREPAYMENT_COLLECTION,
+                    \Modules\Booking\Models\Booking::FINISHED_PREPAYMENT,
+                ];
+                $list_booking->whereIn('status', $statusesToShow);
+            }
         }
 
         if ($service) {
