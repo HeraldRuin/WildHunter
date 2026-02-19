@@ -1,7 +1,7 @@
 <div class="row">
-{{--    <div class="col-lg-3 col-md-12">--}}
-{{--        @include('Hotel::frontend.layouts.search.filter-search')--}}
-{{--    </div>--}}
+    <div class="col-lg-3 col-md-12">
+        @include('Hotel::frontend.layouts.search.filter-search')
+    </div>
     <div class="col-lg-9 col-md-12">
         <div class="bc-list-item">
             <div class="topbar-search">
