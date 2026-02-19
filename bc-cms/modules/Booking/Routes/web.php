@@ -54,6 +54,12 @@ Route::group(['prefix'=>config('booking.booking_route_prefix')],function(){
     //Предоплата
     Route::post('/{booking}/prepayment-paid', 'BookingController@storePrepayment');
 
+    // Койко-место
+    Route::post('/{booking}/places', 'BookingController@places');
+    Route::post('/{booking}/select-place', 'BookingController@selectPlace');
+    Route::post('/{booking}/cancel-select-place', 'BookingController@cancelSelectPlace');
+
+
     //ical
 	Route::get('/export-ical/{type}/{id}','BookingController@exportIcal')->name('booking.admin.export-ical');
     //inquiry
