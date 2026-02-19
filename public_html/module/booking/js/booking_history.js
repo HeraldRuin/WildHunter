@@ -123,13 +123,13 @@ document.addEventListener('DOMContentLoaded', function () {
                 // Получаем количество охотников из DOM элемента модального окна
                 const modal = document.getElementById('collectionModal' + bookingId);
                 if (!modal) return;
-                
+
                 // Очищаем историю отказавшихся при инициализации
                 this.declinedHunters = [];
-                
+
                 // Получаем количество из data-атрибута
                 const huntersCount = parseInt(modal.dataset.huntersCount || '0', 10);
-                
+
                 if (huntersCount > 0) {
                     // Инициализируем массив слотов
                     this.hunterSlots = Array.from({ length: huntersCount }, () => ({
@@ -144,12 +144,12 @@ document.addEventListener('DOMContentLoaded', function () {
                         emailMessage: '',
                         emailAddress: '' // Для хранения email, если охотник не выбран
                     }));
-                    
+
                     console.log('Инициализировано слотов:', this.hunterSlots.length);
-                    
+
                     // Загружаем уже приглашенных охотников
                     this.loadInvitedHunters(bookingId);
-                    
+
                     // Проверяем состояние кнопки "Завершить сбор" при инициализации
                     this.$nextTick(() => {
                         this.checkFinishCollectionButton(bookingId);
@@ -432,7 +432,7 @@ document.addEventListener('DOMContentLoaded', function () {
                                 this.$set(this.hunterSearchResults[index], 'invitation_status', 'pending');
                                 this.$set(this.hunterSearchResults[index], 'showEmailInput', false);
                             }
-                            
+
                             // Обновляем также в слотах охотников
                             this.hunterSlots.forEach(slot => {
                                 if (slot.hunter && slot.hunter.id === hunter.id) {
@@ -440,22 +440,22 @@ document.addEventListener('DOMContentLoaded', function () {
                                     this.$set(slot.hunter, 'invitation_status', 'pending');
                                 }
                             });
-                            
+
                             // Также обновляем переданный объект hunter
                             Object.assign(hunter, {
                                 invited: true,
                                 invitation_status: 'pending',
                                 showEmailInput: false
                             });
-                            
+
                             // Принудительно обновляем Vue для немедленного отображения
                             this.$forceUpdate();
-                            
+
                             // Проверяем состояние кнопки "Завершить сбор" после приглашения охотника
                             this.$nextTick(() => {
                                 this.checkFinishCollectionButton(bookingId);
                             });
-                            
+
                             if (typeof bookingCoreApp !== 'undefined' && bookingCoreApp.showAjaxMessage) {
                                 bookingCoreApp.showAjaxMessage(res);
                             } else if (res.message) {
@@ -480,7 +480,7 @@ document.addEventListener('DOMContentLoaded', function () {
             searchHunterForSlot(slotIndex, bookingId) {
                 const slot = this.hunterSlots[slotIndex];
                 if (!slot) return;
-                
+
                 if (slot.query.length < 3) {
                     slot.results = [];
                     slot.showResults = false;
@@ -497,13 +497,13 @@ document.addEventListener('DOMContentLoaded', function () {
                     }
                     return;
                 }
-                
+
                 clearTimeout(slot.debounceTimeout);
                 slot.debounceTimeout = setTimeout(() => {
                     slot.isSearching = true;
                     slot.showResults = true;
                     slot.noResults = false;
-                    
+
                     fetch(`/user/search-hunters?query=${encodeURIComponent(slot.query)}&booking_id=${bookingId}`)
                         .then(res => res.json())
                         .then(users => {
@@ -545,7 +545,7 @@ document.addEventListener('DOMContentLoaded', function () {
             selectHunterForSlot(slotIndex, hunter, bookingId) {
                 const slot = this.hunterSlots[slotIndex];
                 if (!slot) return;
-                
+
                 // Инициализируем флаги для охотника
                 if (typeof hunter.showEmailInput === 'undefined') {
                     hunter.showEmailInput = false;
@@ -553,7 +553,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (typeof hunter.emailMessage === 'undefined') {
                     hunter.emailMessage = '';
                 }
-                
+
                 slot.hunter = hunter;
                 slot.query = hunter.user_name || hunter.first_name + ' ' + hunter.last_name;
                 slot.showResults = false;
@@ -576,14 +576,14 @@ document.addEventListener('DOMContentLoaded', function () {
             toggleEmailInputForSlot(slotIndex) {
                 const slot = this.hunterSlots[slotIndex];
                 if (!slot) return;
-                
+
                 slot.showEmailInput = !slot.showEmailInput;
                 if (slot.showEmailInput) {
                     // При открытии поля ввода почты закрываем выпадающее окно результатов поиска
                     slot.showResults = false;
                     slot.results = [];
                     slot.noResults = false;
-                    
+
                     if (slot.hunter && !slot.emailAddress) {
                         // Если охотник выбран, используем его email по умолчанию
                         slot.emailAddress = slot.hunter.email || '';
@@ -614,11 +614,11 @@ document.addEventListener('DOMContentLoaded', function () {
             sendEmailForSlot(slotIndex, bookingId, event) {
                 const slot = this.hunterSlots[slotIndex];
                 if (!slot) return;
-                
+
                 // Определяем кому отправлять
                 let hunterId = null;
                 let emailAddress = slot.emailAddress || '';
-                
+
                 if (slot.hunter && slot.hunter.id) {
                     // Если охотник выбран, используем его ID и email
                     hunterId = slot.hunter.id;
@@ -628,13 +628,13 @@ document.addEventListener('DOMContentLoaded', function () {
                     alert('Необходимо выбрать охотника или указать email адрес');
                     return;
                 }
-                
+
                 const message = slot.emailMessage || '';
                 if (!message.trim()) {
                     alert('Введите текст сообщения');
                     return;
                 }
-                
+
                 if (hunterId) {
                     // Если охотник выбран, используем существующий метод sendHunterEmail
                     const hunter = slot.hunter;
@@ -647,7 +647,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     alert('Для отправки email необходимо выбрать охотника из системы. Если охотник не в системе, его нужно сначала добавить.');
                     return;
                 }
-                
+
                 // Закрываем поле ввода после успешной отправки (для hunterId будет закрыто в sendHunterEmail)
                 if (!hunterId) {
                     slot.showEmailInput = false;
@@ -658,23 +658,23 @@ document.addEventListener('DOMContentLoaded', function () {
             inviteByEmailForSlot(slotIndex, bookingId, event) {
                 const slot = this.hunterSlots[slotIndex];
                 if (!slot) return;
-                
+
                 const query = slot.query ? slot.query.trim() : '';
                 if (!query) {
                     alert('Введите email адрес охотника');
                     return;
                 }
-                
+
                 // Проверяем, является ли введенный текст email-адресом
                 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
                 if (!emailPattern.test(query)) {
                     alert('Введите корректный email адрес');
                     return;
                 }
-                
+
                 const bookingIdNum = parseInt(bookingId, 10);
                 if (!bookingIdNum) return;
-                
+
                 const btn = event && event.currentTarget ? event.currentTarget : null;
                 let originalHtml = null;
                 if (btn) {
@@ -685,7 +685,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         '<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>' +
                         '<span> ' + (btn.textContent.trim() || '...') + '</span>';
                 }
-                
+
                 const restoreButton = () => {
                     if (btn) {
                         btn.disabled = false;
@@ -695,7 +695,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         }
                     }
                 };
-                
+
                 // Отправляем приглашение по email (даже если пользователя нет в системе)
                 $.ajax({
                     url: `/booking/${bookingIdNum}/invite-hunter-by-email`,
@@ -765,7 +765,7 @@ document.addEventListener('DOMContentLoaded', function () {
             clearHunterSlot(slotIndex) {
                 const slot = this.hunterSlots[slotIndex];
                 if (!slot) return;
-                
+
                 slot.query = '';
                 slot.hunter = null;
                 slot.results = [];
@@ -1284,7 +1284,198 @@ document.addEventListener('DOMContentLoaded', function () {
 
                     this.$set(this.prepaymentPaidMap, bookingId, true);
                 });
+            },
+
+            loadBookingPlaces(bookingId, event) {
+                const bookingIdNum = parseInt(bookingId, 10);
+                const btn = event?.currentTarget ?? null;
+                let originalHtml = null;
+
+                if (btn) {
+                    originalHtml = btn.innerHTML;
+                    btn.disabled = true;
+                    btn.innerHTML = `
+            <span class="spinner-border spinner-border-sm me-1"></span>
+            <span>${btn.textContent.trim()}</span>
+        `;
+                }
+
+                const restoreButton = () => {
+                    if (btn) {
+                        btn.disabled = false;
+                        btn.innerHTML = originalHtml;
+                    }
+                };
+
+                $.post(`/booking/${bookingId}/places`)
+                    .done(res => {
+                        restoreButton();
+
+                        if (!res.status) {
+                            alert('Ошибка получения данных');
+                            return;
+                        }
+
+                        const places = res.places ?? {};
+
+                        const modalEl = document.getElementById('placeBookingModal' + bookingIdNum);
+                        if (!modalEl) return;
+
+                        const contentEl = modalEl.querySelector('#booking-places-content-' + bookingIdNum);
+                        if (!contentEl) return;
+
+                        contentEl.innerHTML = '';
+                        const self = this;
+
+                        // группируем комнаты по типу
+                        const roomsByType = {};
+                        res.rooms.forEach(room => {
+                            if (!roomsByType[room.title]) {
+                                roomsByType[room.title] = [];
+                            }
+                            roomsByType[room.title].push(room);
+                        });
+
+                        Object.keys(roomsByType).forEach(type => {
+                            const block = document.createElement('div');
+                            block.className = 'mb-3 p-2';
+
+                            const header = document.createElement('h4');
+                            header.textContent = type;
+                            header.style.textAlign = 'center';
+                            block.appendChild(header);
+
+                            const list = document.createElement('ul');
+                            list.style.listStyle = 'none';
+                            list.style.padding = '0';
+
+                            // 🔴 ВАЖНО: идём по каждой комнате отдельно
+                            roomsByType[type].forEach(room => {
+                                const roomId = room.room_id;
+
+                                for (let i = 0; i < room.total_guests_in_type; i++) {
+                                    const placeNumber = i + 1;
+                                    const placeData = places[roomId]?.[placeNumber]?.[0] ?? null;
+
+                                    const li = document.createElement('li');
+                                    li.className = 'guest-slot mb-2';
+                                    li.style.display = 'flex';
+                                    li.style.alignItems = 'center';
+                                    li.style.gap = '10px';
+                                    li.style.border = '1px solid #ccc';
+
+                                    // 1 место
+                                    const textDiv = document.createElement('div');
+                                    textDiv.textContent = `место ${placeNumber}`;
+                                    textDiv.className = 'text-muted';
+                                    textDiv.style.width = '70px';
+                                    textDiv.style.marginLeft = '10px';
+                                    li.appendChild(textDiv);
+
+                                    //  имя / свободно
+                                    const inputDiv = document.createElement('div');
+                                    inputDiv.style.flex = '1';
+
+                                    if (placeData?.is_reserved === true) {
+                                        const name  = placeData.user.name ?? '';
+                                        const firstName = placeData.user.first_name ?? '';
+                                        inputDiv.textContent = firstName + ' ' + name;
+                                        inputDiv.className = 'fw-semibold text-success';
+                                    } else {
+                                        inputDiv.textContent = 'свободно';
+                                        inputDiv.className = 'text-muted';
+                                    }
+
+                                    li.appendChild(inputDiv);
+
+                                    // 3 кнопка
+                                    const button = document.createElement('button');
+                                    button.type = 'button';
+                                    button.className = 'btn btn-sm';
+
+                                    if (placeData?.is_reserved === true) {
+                                        button.textContent = 'Отменить';
+                                        button.classList.add('btn-danger');
+                                        button.addEventListener('click', () => {
+                                            self.cancelSelectPlace(bookingId, placeData.id);
+                                        });
+                                    } else {
+                                        button.textContent = 'Выбрать';
+                                        button.classList.add('btn-primary');
+                                        button.addEventListener('click', () => {
+                                            self.selectPlace(bookingId, roomId, placeNumber);
+                                        });
+                                    }
+
+                                    li.appendChild(button);
+                                    list.appendChild(li);
+                                }
+                            });
+
+                            block.appendChild(list);
+                            contentEl.appendChild(block);
+                        });
+
+                        new bootstrap.Modal(modalEl).show();
+                    })
+                    .fail(() => {
+                        restoreButton();
+                        alert('Ошибка при запросе к серверу');
+                    });
+            },
+
+            selectPlace(bookingId, roomId, placeNumber) {
+                fetch(`/booking/${bookingId}/select-place`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                    },
+                    body: JSON.stringify({
+                        room_id: roomId,
+                        place_number: placeNumber
+                    })
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            alert('Место успешно выбрано!');
+                        } else {
+                            alert('Ошибка при выборе места: ' + data.message);
+                        }
+                    })
+                    .catch(error => {
+                        console.error(error);
+                        alert('Ошибка запроса к серверу');
+                    });
+            },
+
+            cancelSelectPlace(bookingId, placeId) {
+                fetch(`/booking/${bookingId}/cancel-select-place`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                    },
+                    body: JSON.stringify({
+                        place_id: placeId,
+                    })
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            alert('Место успешно выбрано!');
+                        } else {
+                            alert('Ошибка при выборе места: ' + data.message);
+                        }
+                    })
+                    .catch(error => {
+                        console.error(error);
+                        alert('Ошибка запроса к серверу');
+                    });
             }
+
+
         },
 
         mounted() {

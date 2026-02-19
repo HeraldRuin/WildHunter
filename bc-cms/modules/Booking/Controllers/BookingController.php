@@ -29,6 +29,7 @@ use Modules\Booking\Events\SetPaidAmountEvent;
 use Modules\Booking\Models\BookingHunter;
 use Modules\Booking\Models\BookingHunterInvitation;
 use Modules\Booking\Models\BookingPassenger;
+use Modules\Booking\Models\BookingRoomPlace;
 use Modules\Booking\Models\BookingService;
 use Modules\Hotel\Models\HotelAnimal;
 use Modules\User\Events\SendMailUserRegistered;
@@ -2096,5 +2097,67 @@ class BookingController extends \App\Http\Controllers\Controller
         $booking->save();
 
         return response()->json(['status' => 'ok']);
+    }
+    public function places(Booking $booking)
+    {
+        $rooms = $booking
+            ->roomsBooking()
+            ->with('room', 'booking:id,total_guests')
+            ->get()
+            ->map(function ($roomBooking) {
+                $booking = $roomBooking->booking;
+                $room = $roomBooking->room;
+
+                return [
+                    'booking_total_guests' => $booking->total_guests,
+                    'booking_room_id' => $roomBooking->id,
+                    'booking_number' => $roomBooking->number,
+                    'room_id'         => $room->id,
+                    'title'           => $room->title,
+                    'number'          => $room->number,
+                    'total_guests_in_type'   => $roomBooking->number * $room->number,
+                ];
+            });
+
+        $places = BookingRoomPlace::with('user:id,name,first_name,last_name')
+            ->where('booking_id', $booking->id)
+            ->get()
+            ->groupBy(['room_id', 'place_number']);
+
+        return $this->sendSuccess([
+            'rooms' => $rooms,
+            'places' => $places,
+        ]);
+    }
+
+    public function selectPlace(Request $request, $bookingId)
+    {
+        $roomId = $request->input('room_id');
+        $placeNumber = $request->input('place_number');
+
+        $exists = BookingRoomPlace::where([
+            'booking_id' => $bookingId,
+            'room_id' => $roomId,
+            'place_number' => $placeNumber
+        ])->exists();
+
+        if ($exists) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Место уже занято'
+            ]);
+        }
+
+        BookingRoomPlace::create([
+            'booking_id' => $bookingId,
+            'room_id' => $roomId,
+            'place_number' => $placeNumber,
+            'user_id' => auth()->id(),
+        ]);
+    }
+
+    public function cancelSelectPlace(Request $request, $bookingId)
+    {
+        BookingRoomPlace::where('booking_id', $bookingId)->where('id', $request->input('place_id'))->delete();
     }
 }
