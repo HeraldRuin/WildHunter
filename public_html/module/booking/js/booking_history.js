@@ -1294,10 +1294,8 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (btn) {
                     originalHtml = btn.innerHTML;
                     btn.disabled = true;
-                    btn.innerHTML = `
-            <span class="spinner-border spinner-border-sm me-1"></span>
-            <span>${btn.textContent.trim()}</span>
-        `;
+                    btn.innerHTML = ` 
+            <span>${btn.textContent.trim()}</span>`;
                 }
 
                 const restoreButton = () => {
@@ -1376,7 +1374,7 @@ document.addEventListener('DOMContentLoaded', function () {
                                     const inputDiv = document.createElement('div');
                                     inputDiv.style.flex = '1';
 
-                                    if (placeData?.is_reserved === true) {
+                                    if (placeData) {
                                         const name  = placeData.user.name ?? '';
                                         const firstName = placeData.user.first_name ?? '';
                                         inputDiv.textContent = firstName + ' ' + name;
@@ -1393,7 +1391,7 @@ document.addEventListener('DOMContentLoaded', function () {
                                     button.type = 'button';
                                     button.className = 'btn btn-sm';
 
-                                    if (placeData?.is_reserved === true) {
+                                    if (placeData) {
                                         button.textContent = 'Отменить';
                                         button.classList.add('btn-danger');
                                         button.addEventListener('click', () => {
@@ -1423,31 +1421,62 @@ document.addEventListener('DOMContentLoaded', function () {
                         alert('Ошибка при запросе к серверу');
                     });
             },
-
             selectPlace(bookingId, roomId, placeNumber) {
-                fetch(`/booking/${bookingId}/select-place`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                    },
-                    body: JSON.stringify({
+                const self = this;
+
+                $.ajax({
+                    url: `/booking/${bookingId}/select-place`,
+                    type: 'POST',
+                    dataType: 'json',
+                    data: {
+                        _token: $('meta[name="csrf-token"]').attr('content') || '',
                         room_id: roomId,
                         place_number: placeNumber
-                    })
-                })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.success) {
-                            alert('Место успешно выбрано!');
-                        } else {
-                            alert('Ошибка при выборе места: ' + data.message);
+                    },
+                    success: function (res) {
+
+                        if (!res.success) {
+                            bookingCoreApp.showAjaxMessage(res);
+                            return;
                         }
-                    })
-                    .catch(error => {
-                        console.error(error);
-                        alert('Ошибка запроса к серверу');
-                    });
+
+                        const modalEl = document.getElementById('placeBookingModal' + bookingId);
+                        if (!modalEl) return;
+
+                        const contentEl = modalEl.querySelector('#booking-places-content-' + bookingId);
+                        if (!contentEl) return;
+
+                        const liList = contentEl.querySelectorAll('.guest-slot');
+
+                        liList.forEach(li => {
+
+                            const placeLabel = li.querySelector('div.text-muted');
+                            const nameDiv   = li.children[1];
+                            const btn  = li.querySelector('button');
+
+                            if (!placeLabel) return;
+
+                            if (placeLabel.textContent.includes(`место ${placeNumber}`)) {
+
+                                nameDiv.textContent =
+                                    `${res.place.user.first_name} ${res.place.user.name ?? ''}`;
+                                nameDiv.className = 'fw-semibold text-success';
+
+                                btn.textContent = 'Отменить';
+                                btn.classList.remove('btn-primary');
+                                btn.classList.add('btn-danger');
+
+                                btn.onclick = function () {
+                                    self.cancelSelectPlace(bookingId, res.place.id);
+                                };
+                            }
+                        });
+
+                    },
+                    error: function () {
+                        alert('Ошибка при запросе к серверу');
+                    }
+                });
             },
 
             cancelSelectPlace(bookingId, placeId) {
@@ -1469,10 +1498,6 @@ document.addEventListener('DOMContentLoaded', function () {
                             alert('Ошибка при выборе места: ' + data.message);
                         }
                     })
-                    .catch(error => {
-                        console.error(error);
-                        alert('Ошибка запроса к серверу');
-                    });
             }
 
 

@@ -2130,34 +2130,37 @@ class BookingController extends \App\Http\Controllers\Controller
         ]);
     }
 
-    public function selectPlace(Request $request, $bookingId)
+    public function selectPlace(Request $request, $bookingId): JsonResponse
     {
         $roomId = $request->input('room_id');
         $placeNumber = $request->input('place_number');
 
-        $exists = BookingRoomPlace::where([
+        $userAlreadyHasPlace = BookingRoomPlace::where([
             'booking_id' => $bookingId,
-            'room_id' => $roomId,
-            'place_number' => $placeNumber
+            'user_id' => auth()->id()
         ])->exists();
 
-        if ($exists) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Место уже занято'
+        if ($userAlreadyHasPlace) {
+            return $this->sendError([
+                 __('Место уже за вами выбрано'),
             ]);
         }
 
-        BookingRoomPlace::create([
+        $place = BookingRoomPlace::create([
             'booking_id' => $bookingId,
             'room_id' => $roomId,
             'place_number' => $placeNumber,
             'user_id' => auth()->id(),
         ]);
+
+        return response()->json([
+            'success' => true,
+            'place' => ['user_id' => $place->user_id, 'place_number' => $place->place_number]
+        ]);
     }
 
     public function cancelSelectPlace(Request $request, $bookingId)
     {
-        BookingRoomPlace::where('booking_id', $bookingId)->where('id', $request->input('place_id'))->delete();
+        BookingRoomPlace::where('booking_id', $bookingId)->where('id', $request->input('place_id'))->where('user_id', auth()->id())->delete();
     }
 }
