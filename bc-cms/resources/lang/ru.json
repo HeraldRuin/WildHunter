@@ -4059,5 +4059,8 @@
     "Fines": "Штрафы",
     "Type Fines": "Тип штрафов",
     "Preparations": "Разделка",
-    "Type Preparations": "Тип разделки"
+    "Type Preparations": "Тип разделки",
+    "Seats are allocated": "Места распределены",
+    "Choosing a bed": "Выбор койко-места",
+    "The selected seat is already taken, try choosing a different one": "Выбранное место уже занято, попробуйте выбрать другое"
 }
