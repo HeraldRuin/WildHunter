@@ -4,6 +4,7 @@ namespace Modules\Booking\Controllers;
 
 use App\User;
 use Illuminate\Auth\Events\Registered;
+use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
@@ -2157,19 +2158,47 @@ class BookingController extends \App\Http\Controllers\Controller
     public function selectPlace(Request $request, $bookingId): JsonResponse
     {
         $roomId = $request->input('room_id');
-        $placeNumber = $request->input('place_number');
+        $selectedPlaceNumber = $request->input('place_number');
 
-        $place = BookingRoomPlace::create([
-            'booking_id' => $bookingId,
-            'room_id' => $roomId,
-            'place_number' => $placeNumber,
-            'user_id' => auth()->id(),
-        ]);
+        try {
+            $occupiedPlaceNumbers = BookingRoomPlace::where('booking_id', $bookingId)
+                ->where('room_id', $roomId)
+                ->pluck('place_number')
+                ->toArray();
 
-        return response()->json([
-            'success' => true,
-            'place' => ['user_id' => $place->user_id, 'place_number' => $place->place_number]
-        ]);
+            $finalPlaceNumber = $selectedPlaceNumber;
+            for ($i = 1; $i <= $selectedPlaceNumber; $i++) {
+                if (!in_array($i, $occupiedPlaceNumbers)) {
+                    $finalPlaceNumber = $i;
+                    break;
+                }
+            }
+
+            $place = BookingRoomPlace::create([
+                'booking_id'   => $bookingId,
+                'room_id'      => $roomId,
+                'place_number' => $finalPlaceNumber,
+                'user_id'      => auth()->id(),
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'current_user_id' => auth()->id(),
+                'place' => [
+                    'user_id' => $place->user_id,
+                    'place_number' => $place->place_number
+                ]
+            ]);
+
+        } catch (QueryException $e) {
+            if ($e->getCode() === '23000') {
+                return response()->json([
+                    'success' => false,
+                    'message' => __('The selected seat is already taken, try choosing a different one')
+                ], 409);
+            }
+            throw $e;
+        }
     }
 
     public function cancelSelectPlace(Request $request, $bookingId)
