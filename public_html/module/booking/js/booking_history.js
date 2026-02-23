@@ -1361,7 +1361,7 @@ document.addEventListener('DOMContentLoaded', function () {
                                     li.style.alignItems = 'center';
                                     li.style.gap = '10px';
                                     li.style.border = '1px solid #ccc';
-                                    li.style.minHeight = '38px';
+                                    li.style.minHeight = '30px';
 
                                     // 1 место
                                     const textDiv = document.createElement('div');
