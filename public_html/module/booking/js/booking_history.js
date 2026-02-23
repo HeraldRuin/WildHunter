@@ -1376,9 +1376,9 @@ document.addEventListener('DOMContentLoaded', function () {
                                     inputDiv.style.flex = '1';
 
                                     if (placeData) {
-                                        const name = placeData.user.name ?? '';
                                         const firstName = placeData.user.first_name ?? '';
-                                        inputDiv.textContent = firstName + ' ' + name;
+                                        const lastName = placeData.user.last_name ?? '';
+                                        inputDiv.textContent = lastName + ' ' + firstName;
                                         inputDiv.className = 'fw-semibold text-success';
                                     } else {
                                         inputDiv.textContent = 'свободно';
