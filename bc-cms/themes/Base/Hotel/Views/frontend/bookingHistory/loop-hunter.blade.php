@@ -272,7 +272,7 @@
                         type="button"
                         class="btn btn-primary btn-sm mt-2"
                         data-bs-toggle="modal"
-                        @click="loadBookingPlaces({{ $booking->id }}, $event)">
+                        @click="loadBookingPlaces({{ $booking }}, $event)">
                         {{__("Select bed place")}}
                     </button>
                 @endif
@@ -343,7 +343,7 @@
                     type="button"
                     class="btn btn-primary btn-sm mt-2"
                     data-bs-toggle="modal"
-                    @click="loadBookingPlaces({{ $booking->id }}, $event)">
+                    @click="loadBookingPlaces({{ $booking }}, $event)">
                     {{__("Select bed place")}}
                 </button>
             @endif

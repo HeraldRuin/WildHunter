@@ -55,6 +55,10 @@ class Booking extends BaseModel
     const PAID       = 'paid'; //
     const PARTIAL_PAYMENT       = 'partial_payment'; //
 
+    protected $fillable = [
+        'is_all_places_assigned',
+    ];
+
     protected $casts = [
         'commission' => 'array',
         'vendor_service_fee' => 'array',
