@@ -1790,7 +1790,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     const minutes = Math.floor(totalSeconds / 60);
                     const seconds = totalSeconds % 60;
 
-                    el.textContent = '[Койки: ' + minutes + ' мин ' + String(seconds).padStart(2, '0') + ' сек]';
+                    el.textContent = '[' + minutes + ' мин ' + String(seconds).padStart(2, '0') + ' сек]';
                 });
             };
 
