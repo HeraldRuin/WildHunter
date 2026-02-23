@@ -28,7 +28,7 @@ class Kernel extends ConsoleKernel
     {
         // $schedule->command('inspire')->hourly();
         $schedule->command(ScanUserPlanExpiredCommand::class)->daily()->withoutOverlapping();
-        $schedule->command(ProcessExpiredBedsTimers::class)->everyMinute();
+        $schedule->command('beds:process-expired')->everyMinute();
     }
 
     /**
