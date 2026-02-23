@@ -1378,7 +1378,7 @@ document.addEventListener('DOMContentLoaded', function () {
                                     if (placeData) {
                                         const firstName = placeData.user.first_name ?? '';
                                         const lastName = placeData.user.last_name ?? '';
-                                        inputDiv.textContent = lastName + ' ' + firstName;
+                                        inputDiv.textContent = firstName + ' ' + lastName;
                                         inputDiv.className = 'fw-semibold text-success';
                                     } else {
                                         inputDiv.textContent = 'свободно';
