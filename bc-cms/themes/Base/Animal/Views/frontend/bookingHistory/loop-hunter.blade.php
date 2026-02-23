@@ -112,6 +112,27 @@
             @endif
         @endif
 
+        @if($booking->status === \Modules\Booking\Models\Booking::FINISHED_PREPAYMENT)
+            @php
+                $endTimestamp = null;
+                try {
+                    $collectionEndAt = $booking->getMeta('beds_end_at');
+                    if ($collectionEndAt) {
+                        $endCarbon = \Carbon\Carbon::parse($collectionEndAt);
+                        $endTimestamp = $endCarbon->timestamp * 1000;
+                    }
+                } catch (\Exception $e) {
+                    $endTimestamp = null;
+                }
+            @endphp
+
+            @if($endTimestamp)
+                <div class="text-muted collection-timer" data-end="{{ $endTimestamp }}"
+                     data-booking-id="{{ $booking->id }}">[0 мин]
+                </div>
+            @endif
+        @endif
+
         @if(in_array($booking->status, [\Modules\Booking\Models\Booking::PREPAYMENT_COLLECTION, \Modules\Booking\Models\Booking::FINISHED_PREPAYMENT]))
             <div>
                 @if($booking->status === \Modules\Booking\Models\Booking::FINISHED_PREPAYMENT)

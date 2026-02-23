@@ -134,6 +134,10 @@
 
             {{$booking->statusNameForUser}}
 
+            @if($booking->status === \Modules\Booking\Models\Booking::FINISHED_PREPAYMENT && $booking->hotel && $booking->hotel->bed_timer_hours)
+                ({{$booking->hotel->bed_timer_hours}} {{ __('ч') }})
+            @endif
+
             @if($booking->status === \Modules\Booking\Models\Booking::START_COLLECTION && $booking->hotel && $booking->hotel->collection_timer_hours)
                 ({{$booking->hotel->collection_timer_hours}} {{ __('ч') }})
             @endif
@@ -162,6 +166,27 @@
             @if($totalHuntersNeeded > 0)
                 <div class="text-muted mt-3" style="font-size: 0.9em;">
                     Собранно {{ $acceptedCount }}/{{ $totalHuntersNeeded }}
+                </div>
+            @endif
+        @endif
+
+        @if($booking->status === \Modules\Booking\Models\Booking::FINISHED_PREPAYMENT)
+            @php
+                $endTimestamp = null;
+                try {
+                    $collectionEndAt = $booking->getMeta('beds_end_at');
+                    if ($collectionEndAt) {
+                        $endCarbon = \Carbon\Carbon::parse($collectionEndAt);
+                        $endTimestamp = $endCarbon->timestamp * 1000;
+                    }
+                } catch (\Exception $e) {
+                    $endTimestamp = null;
+                }
+            @endphp
+
+            @if($endTimestamp)
+                <div class="text-muted collection-timer" data-end="{{ $endTimestamp }}"
+                     data-booking-id="{{ $booking->id }}">[0 мин]
                 </div>
             @endif
         @endif
