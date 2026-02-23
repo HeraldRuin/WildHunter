@@ -174,9 +174,9 @@
             @php
                 $endTimestamp = null;
                 try {
-                    $collectionEndAt = $booking->getMeta('beds_end_at');
-                    if ($collectionEndAt) {
-                        $endCarbon = \Carbon\Carbon::parse($collectionEndAt);
+                    $bedsEndAt = $booking->getMeta('beds_end_at');
+                    if ($bedsEndAt) {
+                        $endCarbon = \Carbon\Carbon::parse($bedsEndAt);
                         $endTimestamp = $endCarbon->timestamp * 1000;
                     }
                 } catch (\Exception $e) {
@@ -185,7 +185,7 @@
             @endphp
 
             @if($endTimestamp)
-                <div class="text-muted collection-timer" data-end="{{ $endTimestamp }}"
+                <div class="text-muted beds-timer" data-end="{{ $endTimestamp }}"
                      data-booking-id="{{ $booking->id }}">[0 мин]
                 </div>
             @endif
@@ -272,7 +272,7 @@
                         type="button"
                         class="btn btn-primary btn-sm mt-2"
                         data-bs-toggle="modal"
-                        data-bs-target="#placeBookingModal{{ $booking->id }}">
+                        @click="loadBookingPlaces({{ $booking->id }}, $event)">
                         {{__("Select bed place")}}
                     </button>
                 @endif
