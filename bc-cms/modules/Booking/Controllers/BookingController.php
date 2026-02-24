@@ -2135,6 +2135,7 @@ class BookingController extends \App\Http\Controllers\Controller
         return response()->json([
             'id'           => $service->id,
             'count'        => $service->count,
+            'comment'        => $service->comment,
             'hunter_name'  => $hunter->name ?? '—',
             'created_at'   => $service->created_at,
             'updated_at'   => $service->updated_at,
