@@ -109,7 +109,9 @@ $(document).ready(function () {
 
             if (animal?.trophies?.length) {
                 animal.trophies.forEach(t => {
-                    $type.append(`<option value="${t.id}">${t.type}</option>`);
+                    $type.append(
+                        `<option value="${t.id}" data-price="${t.price}">${t.type}</option>`
+                    );
                 });
                 $type.prop('disabled', false);
             }
@@ -128,10 +130,13 @@ $(document).ready(function () {
         }
 
         $save.on('click', function () {
+            const selectedOption = $type.find('option:selected');
+            const price = selectedOption.data('price');
             $.post(`/booking/${bookingId}/trophies`, {
                 animal_id: $animal.val(),
                 type: $type.find('option:selected').text(),
                 count: $count.val(),
+                price: price,
                 _token: $('meta[name="csrf-token"]').attr('content')
             }).done(saved => {
                 $row.replaceWith(renderSavedTrophyRow(saved, bookingId));
@@ -157,8 +162,6 @@ $(document).ready(function () {
             success: () => row.remove()
         });
     });
-
-
 });
 
 // Штрафы

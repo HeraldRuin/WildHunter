@@ -1828,6 +1828,7 @@ class BookingController extends \App\Http\Controllers\Controller
         ]);
     }
 
+    //Трофеи
     public function getAnimalTrophyServices(): JsonResponse
     {
         $userHotelId = get_user_hotel_id();
@@ -1842,7 +1843,7 @@ class BookingController extends \App\Http\Controllers\Controller
                 'bc_animals.title as title',
                 'bha.status as animal_status'
             ])
-            ->with('trophies:id,animal_id,type')
+            ->with('trophies:id,animal_id,type,price')
             ->get();
 
         return response()->json($animals);
@@ -1855,6 +1856,7 @@ class BookingController extends \App\Http\Controllers\Controller
             'animal_id' => 'required|integer|exists:bc_animals,id',
             'type'      => 'required|string',
             'count'     => 'required|integer|min:1',
+            'price'     => 'string',
         ]);
 
         $service = BookingService::create([
@@ -1864,6 +1866,7 @@ class BookingController extends \App\Http\Controllers\Controller
             'service_id'   => null,
             'animal'       => $request->input('animal_id'),
             'count'        => $request->input('count'),
+            'price'        => $request->input('price'),
         ]);
 
         $animal = Animal::find($request->input('animal_id'));
@@ -2278,4 +2281,5 @@ class BookingController extends \App\Http\Controllers\Controller
     {
         BookingRoomPlace::where('booking_id', $bookingId)->where('id', $request->input('place_id'))->where('user_id', auth()->id())->delete();
     }
+
 }
