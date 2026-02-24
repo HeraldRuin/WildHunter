@@ -174,6 +174,9 @@
 {{-- Модальное окно для добавления услуг --}}
 @include('Animal::.frontend.bookingHistory.addServices.add-services-baseadmin')
 
+{{-- Модальное окно для калькуляции --}}
+@include('Booking::frontend.modals.calculating.calculating-baseAdmin-modal', ['booking' => $booking])
+
 <div class="modal fade" id="confirmBookingModal{{ $booking->id }}" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">

@@ -228,7 +228,7 @@
                         type="button"
                         class="btn btn-primary btn-sm mt-2"
                         data-bs-toggle="modal"
-                        data-bs-target="#calculatingBookingModal{{ $booking->id }}">
+                        @click="calculatingBookingModal({{ $booking }}, $event)">
                         {{__("Calculating")}}
                     </button>
                 @endif
@@ -300,7 +300,7 @@
                     type="button"
                     class="btn btn-primary btn-sm mt-2"
                     data-bs-toggle="modal"
-                    data-bs-target="#calculatingBookingModal{{ $booking->id }}">
+                    @click="calculatingBookingModal({{ $booking }}, $event)">
                     {{__("Calculating")}}
                 </button>
             @endif
@@ -322,6 +322,9 @@
 
 {{-- Модальное окно для койко место --}}
 @include('Booking::frontend.modals.place-modal', ['booking' => $booking])
+
+{{-- Модальное окно для калькуляции --}}
+@include('Booking::frontend.modals.calculating.calculating-hunter-modal', ['booking' => $booking])
 
 {{-- Отмена бронирования --}}
 <div class="modal fade" id="cancelBookingModal{{ $booking->id }}" tabindex="-1" aria-hidden="true">

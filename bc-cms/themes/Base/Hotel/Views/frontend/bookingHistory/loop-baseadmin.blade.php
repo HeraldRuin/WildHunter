@@ -202,7 +202,7 @@
             </button>
         @endif
 
-        @if($userRole === 'baseadmin' && in_array($booking->status, [\Modules\Booking\Models\Booking::CONFIRMED, \Modules\Booking\Models\Booking::PREPAYMENT_COLLECTION, \Modules\Booking\Models\Booking::START_COLLECTION, \Modules\Booking\Models\Booking::PROCESSING]))
+        @if($userRole === 'baseadmin' && in_array($booking->status, [\Modules\Booking\Models\Booking::CONFIRMED, \Modules\Booking\Models\Booking::PREPAYMENT_COLLECTION, \Modules\Booking\Models\Booking::START_COLLECTION, \Modules\Booking\Models\Booking::PROCESSING, \Modules\Booking\Models\Booking::FINISHED_PREPAYMENT]))
             <button
                 type="button"
                 class="btn btn-danger btn-sm mt-2"
@@ -212,7 +212,7 @@
             </button>
         @endif
 
-        @if($userRole === 'baseadmin' && in_array($booking->status, [\Modules\Booking\Models\Booking::PREPAYMENT_COLLECTION]))
+        @if($userRole === 'baseadmin' && in_array($booking->status, [\Modules\Booking\Models\Booking::PREPAYMENT_COLLECTION, \Modules\Booking\Models\Booking::FINISHED_PREPAYMENT]))
             <button
                 type="button"
                 class="btn btn-primary btn-sm mt-2"
@@ -222,7 +222,7 @@
             </button>
         @endif
 
-        @if($userRole === 'baseadmin' && in_array($booking->status, [\Modules\Booking\Models\Booking::PAID, \Modules\Booking\Models\Booking::COMPLETED, \Modules\Booking\Models\Booking::PREPAYMENT_COLLECTION]))
+        @if($userRole === 'baseadmin' && in_array($booking->status, [\Modules\Booking\Models\Booking::PAID, \Modules\Booking\Models\Booking::COMPLETED, \Modules\Booking\Models\Booking::PREPAYMENT_COLLECTION, \Modules\Booking\Models\Booking::FINISHED_PREPAYMENT]))
             <button
                 type="button"
                 class="btn btn-primary btn-sm mt-2"
@@ -236,6 +236,9 @@
 
 {{-- Модальное окно для добавления услуг --}}
 @include('Hotel::.frontend.bookingHistory.addServices.add-services-baseadmin')
+
+{{-- Модальное окно для калькуляции --}}
+@include('Booking::frontend.modals.calculating.calculating-baseAdmin-modal', ['booking' => $booking])
 
 <div class="modal fade" id="confirmBookingModal{{ $booking->id }}" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog">
