@@ -51,6 +51,11 @@ Route::group(['prefix'=>config('booking.booking_route_prefix')],function(){
     Route::post('/{booking}/addetional', 'BookingController@storeAddetional');
     Route::delete('/{booking}/addetional/{addetionalId}', 'BookingController@deleteAddetional');
 
+    Route::get('/{booking}/spending/users', 'BookingController@getUserSpendingServices');
+    Route::post('/{booking}/spending', 'BookingController@storeSpending');
+    Route::delete('/{booking}/spending/{spendingId}', 'BookingController@deleteSpending');
+
+
     //Предоплата
     Route::post('/{booking}/prepayment-paid', 'BookingController@storePrepayment');
 

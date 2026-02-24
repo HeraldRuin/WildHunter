@@ -47,6 +47,20 @@
     width: 535px;
 }
 
+/*Траты охотника*/
+.spending-row {
+    align-items: center;
+}
+.spending-hunter-col {
+    width: 360px;
+}
+.spending-count-col {
+    width: 320px;
+}
+.spending-comment-col {
+    width: 220px;
+}
+
 
 
 

@@ -81,7 +81,7 @@ $(document).ready(function () {
             </div>
 
             <div class="col-auto">
-                <input type="text" class="form-control form-control-sm trophy-count" placeholder="Количество" style="width: 230px;">
+                <input type="number" min="1" value="1" class="form-control form-control-sm trophy-count" placeholder="Количество" style="width: 230px;">
             </div>
 
             <div class="col-auto">
@@ -407,7 +407,7 @@ $(document).ready(function () {
                 </div>
 
                 <div class="col-auto" style="margin-left: 165px">
-                    <input type="text" class="form-control form-control-sm preparation-count" placeholder="Количество">
+                    <input type="number" min="1" value="1" class="form-control form-control-sm preparation-count" placeholder="Количество">
                 </div>
 
                 <div class="col-auto" style="margin-left: 110px">
@@ -525,7 +525,7 @@ $(document).ready(function () {
 
             <div class="col-auto" style="margin-right: 100px">
                 <input
-                    type="text"
+                   type="number" min="1" value="1"
                     class="form-control form-control-sm food-count"
                     placeholder="Количество" >
             </div>
@@ -589,9 +589,7 @@ $(document).ready(function () {
 
         addOthersHeader(list);
 
-        // Загружаем все доступные услуги
         loadOtherPrices(block, bookingId).done(() => {
-            // Загружаем уже сохраненные услуги
             loadSavedOthers(bookingId, list);
         });
     });
@@ -739,6 +737,147 @@ $(document).ready(function () {
         });
     });
 });
+
+// Траты охотников
+$(document).ready(function () {
+    $('[id^="bookingAddServiceModal"]').on('show.bs.modal', function () {
+        const bookingId = $(this).attr('id').replace('bookingAddServiceModal', '');
+        const block = $('#spending-block-' + bookingId);
+        block.data('bookingId', bookingId);
+        const spendingList = block.find('.spending-list');
+        spendingList.empty();
+
+        addSpendingHeader(spendingList);
+
+        loadSpendingUser(block, bookingId).done(() => {
+            loadSavedSpendings(bookingId, spendingList);
+        });
+    });
+
+    function addSpendingHeader(container) {
+        container.append(`
+        <div class="d-flex fw-bold mb-2 spending-header">
+            <span class="flex-fill">Кто платил</span>
+            <span class="flex-fill">Сумма</span>
+            <span class="flex-fill">Коммент</span>
+            <span style="width:40px"></span>
+        </div>
+    `);
+    }
+
+    function loadSpendingUser(block, bookingId) {
+        return $.get(`/booking/${bookingId}/spending/users`).done(res => {
+            block.data('hunters', res.hunters || []);
+        });
+    }
+
+    function loadSavedSpendings(bookingId, container) {
+        $.get(`/booking/${bookingId}/saved-services`, res => {
+            (res.spendings || []).forEach(spending => {
+                container.append(renderSavedSpendingRow(spending));
+            });
+        });
+    }
+
+    function renderSavedSpendingRow(spending) {
+        return $(`
+        <div class="spending-row border rounded p-2 mb-2 d-flex align-items-center"
+             data-id="${spending.id}">
+
+       <div class="spending-col spending-hunter-col">${spending.hunter_name || ''}</div>
+            <div class="spending-col spending-count-col">${spending.count}</div>
+            <div class="spending-col spending-comment-col">${spending.comment}</div>
+     
+            <button class="btn btn-sm btn-outline-danger remove-saved-spending">Удалить</button>
+        </div>
+    `);
+    }
+
+    $(document).on('click', '.add-spending-btn', function () {
+
+        const block = $(this).closest('.service-block');
+        const bookingId = block.data('bookingId');
+        const hunters = block.data('hunters') || [];
+
+        block.find('.spending-list')
+            .append(renderNewSpendingRow(hunters, bookingId));
+    });
+
+    function renderNewSpendingRow(hunters, bookingId) {
+
+        const $row = $(`
+        <div class="spending-row border rounded p-2 mb-2 d-flex align-items-center gap-2">
+
+            <div>
+                <select class="form-select form-select-sm hunter" style="width: 270px;">
+                    <option value="" disabled selected hidden>Выберите охотника</option>
+                </select>
+            </div>
+
+            <div class="col-auto">
+                <input type="number" min="1" value="1" class="form-control form-control-sm spending-count" placeholder="Сумма" style="width: 200px;">
+            </div>
+
+            <div class="col-auto">
+                <input type="text" class="form-control form-control-sm spending-comment" placeholder="Коммент" style="width: 340px;">
+            </div>
+
+            <div class="col-auto">
+                <button class="btn btn-sm btn-success save-spending" disabled>Сохранить</button>
+                <button class="btn btn-sm btn-outline-secondary cancel-new">Отмена</button>
+            </div>
+        </div>
+    `);
+
+        const $hunter = $row.find('.hunter');
+        const $count = $row.find('.spending-count');
+        const $comment = $row.find('.spending-comment');
+        const $save = $row.find('.save-spending');
+
+        hunters.forEach(h => {
+            $hunter.append(`<option value="${h.id}">${h.name}</option>`);
+        });
+
+        function check() {
+            const isFilled = $hunter.val() && $count.val().trim() !== '' && $comment.val().trim() !== '';
+            $save.prop('disabled', !isFilled);
+        }
+
+        $hunter.on('change', check);
+        $count.on('input', check);
+        $comment.on('input', check);
+
+        $save.on('click', function () {
+            $.post(`/booking/${bookingId}/spending`, {
+                hunter_id: $hunter.val(),
+                count: $count.val(),
+                comment: $comment.val(),
+                _token: $('meta[name="csrf-token"]').attr('content')
+            }).done(saved => {
+                $row.replaceWith(renderSavedSpendingRow(saved, bookingId));
+            });
+        });
+
+        $row.find('.cancel-new').on('click', () => $row.remove());
+
+        return $row;
+    }
+
+    $(document).on('click', '.remove-saved-spending', function () {
+
+        const row = $(this).closest('.spending-row');
+        const spendingId = row.data('id');
+        const bookingId = row.closest('.service-block').data('bookingId');
+
+        $.ajax({
+            url: `/booking/${bookingId}/spending/${spendingId}`,
+            type: 'DELETE',
+            data: {_token: $('meta[name="csrf-token"]').attr('content')},
+            success: () => row.remove()
+        });
+    });
+});
+
 
 
 

@@ -50,6 +50,21 @@
 
                     <div class="others-list"></div>
                 </div>
+
+                <!-- Траты охотников -->
+                <div class="service-block mb-3 p-3 border rounded bg-light shadow-sm"
+                     id="spending-block-{{ $booking->id }}">
+
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <h6>Траты охотников:</h6>
+                        <button type="button"
+                                class="btn btn-sm btn-outline-primary add-spending-btn"
+                                data-booking="{{ $booking->id }}">+
+                        </button>
+                    </div>
+
+                    <div class="spending-list"></div>
+                </div>
             </div>
         </div>
     </div>

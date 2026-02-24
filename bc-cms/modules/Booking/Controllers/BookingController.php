@@ -1800,12 +1800,31 @@ class BookingController extends \App\Http\Controllers\Controller
             ])
             ->get();
 
+        $spendings = BookingService::query()
+        ->where('bc_booking_services.booking_id', $booking->id)
+        ->where('bc_booking_services.service_type', 'spending')
+        ->leftJoin('users', 'users.id', '=', 'bc_booking_services.hunter_id')
+        ->select([
+            'bc_booking_services.id',
+            'bc_booking_services.booking_id',
+            'bc_booking_services.service_type',
+            'bc_booking_services.count',
+            'bc_booking_services.comment',
+            'bc_booking_services.type',
+            'users.id as hunter_id',
+            'users.name as hunter_name',
+            'bc_booking_services.created_at',
+            'bc_booking_services.updated_at',
+        ])
+        ->get();
+
         return response()->json([
             'trophies' => $trophies,
             'penalties' => $penalties,
             'preparations' => $preparations,
             'foods' => $services->where('service_type', 'food')->values(),
             'addetionals' => $services->where('service_type', 'addetional')->values(),
+            'spendings' => $spendings,
         ]);
     }
 
@@ -2079,6 +2098,59 @@ class BookingController extends \App\Http\Controllers\Controller
 
         return response()->json(['status' => 'ok']);
     }
+
+    // Траты охотника
+    public function getUserSpendingServices(Booking $booking): JsonResponse
+    {
+        $booking->load('bookingHunter.invitations');
+        $hunterIds = $booking->bookingHunter?->invitations?->pluck('hunter_id')->unique();
+
+        $hunters = User::query()
+            ->whereIn('id', $hunterIds)
+            ->select(['id', 'name'])
+            ->get();
+
+        return response()->json([
+            'hunters'  => $hunters,
+        ]);
+    }
+    public function storeSpending(Request $request, Booking $booking): JsonResponse
+    {
+        $request->validate([
+            'count'      => 'required|integer',
+            'hunter_id'     => 'required|integer',
+            'comment'     => 'required|string',
+        ]);
+
+        $service = BookingService::create([
+            'booking_id'   => $booking->id,
+            'service_type' => 'spending',
+            'count'       => $request->input('count'),
+            'comment'       => $request->input('comment'),
+            'service_id'   => null,
+            'hunter_id'   => $request->input('hunter_id'),
+        ]);
+        $hunter = User::where('id', $service->hunter_id)->first();
+
+        return response()->json([
+            'id'           => $service->id,
+            'count'        => $service->count,
+            'hunter_name'  => $hunter->name ?? '—',
+            'created_at'   => $service->created_at,
+            'updated_at'   => $service->updated_at,
+        ]);
+    }
+    public function deleteSpending(Booking $booking, $serviceId): JsonResponse
+    {
+        $service = BookingService::where('id', $serviceId)
+            ->where('booking_id', $booking->id)
+            ->firstOrFail();
+
+        $service->delete();
+
+        return response()->json(['status' => 'ok']);
+    }
+
     public function storePrepayment(Booking $booking): JsonResponse
     {
         $masterBookingHunter = BookingHunter::where('booking_id', $booking->id)
