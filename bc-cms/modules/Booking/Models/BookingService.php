@@ -16,6 +16,7 @@ class BookingService extends Model
         'animal',
         'type',
         'count',
+        'comment',
     ];
 
     /**
