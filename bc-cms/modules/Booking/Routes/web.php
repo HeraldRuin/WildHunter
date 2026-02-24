@@ -74,6 +74,9 @@ Route::group(['prefix'=>config('booking.booking_route_prefix')],function(){
     Route::get('/modal/{booking}','BookingController@modal')->name('booking.modal');
 
     Route::post('/storeNoteBooking','BookingController@storeNoteBooking');
+
+    //Калькуляция
+    Route::get('/{booking}/calculating', 'BookingController@getCalculating');
 });
 
 
