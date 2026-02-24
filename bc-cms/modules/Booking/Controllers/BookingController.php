@@ -1066,7 +1066,6 @@ class BookingController extends \App\Http\Controllers\Controller
             return $this->sendError(__("You don't have access."))->setStatusCode(403);
         }
 
-        // Проверяем, что бронь в режиме сбора
         if ($booking->status !== Booking::START_COLLECTION) {
             return $this->sendError(__('Сбор охотников не начат или уже завершён'))->setStatusCode(422);
         }
@@ -1076,29 +1075,18 @@ class BookingController extends \App\Http\Controllers\Controller
         $allInvitations = $booking->getAllInvitations();
 
         // Сначала проверяем, что НЕТ приглашений, которые ещё не подтверждены
-        // (например, со статусом pending или любым другим, кроме accepted / declined / removed)
         $notConfirmedInvitations = $allInvitations->filter(function ($invitation) {
             return !in_array($invitation->status, ['accepted', 'declined', 'removed']);
         });
 
-        if ($notConfirmedInvitations->count() > 0) {
-            return $this->sendError(
-                __('Не все приглашённые участники подтвердили приглашение. Дождитесь ответа всех участников или удалите неподтвердившихся.')
-            )->setStatusCode(422);
-        }
+        $confirmedInvitations = $allInvitations->filter(function ($invitation) {
+            return $invitation->status === 'accepted';
+        });
 
-        // Фильтруем приглашения: учитываем все статусы, кроме 'declined' и 'removed'.
-        // Это соответствует логике метода isInvited() - приглашенные охотники считаются участниками
-        // до тех пор, пока они не отклонят приглашение
         $acceptedInvitations = $allInvitations->filter(function ($invitation) {
             return !in_array($invitation->status, ['declined', 'removed']);
         });
 
-        // Считаем только приглашенных охотников (без создателя брони)
-        // Минимальное количество охотников относится только к приглашенным, а не к создателю
-        $invitedHuntersCount = $acceptedInvitations->count();
-
-        // Загружаем модель заново из базы данных, чтобы получить актуальные данные
         $booking = Booking::find($booking->id);
 
         $animalName = '';
@@ -1144,14 +1132,18 @@ class BookingController extends \App\Http\Controllers\Controller
             }
         }
 
-        // Проверяем, что собрано достаточное количество приглашенных охотников
-        // Минимальное количество относится только к приглашенным охотникам, создатель не учитывается
-        if ($invitedHuntersCount < $requiredHunters) {
+        if ($acceptedInvitations->count() < $requiredHunters) {
             $message = __('Минимальное кол-во охотников для :animal :count', [
                 'animal' => $animalName ?: __('животного'),
                 'count' => $requiredHunters
             ]);
             return $this->sendError($message)->setStatusCode(422);
+        }
+
+        if ($confirmedInvitations->count() < $requiredHunters) {
+            return $this->sendError(
+                __('Не все приглашённые участники подтвердили приглашение. Дождитесь ответа всех участников или удалите неподтвердившихся.')
+            )->setStatusCode(422);
         }
 
         $booking->status = Booking::PREPAYMENT_COLLECTION;
@@ -2209,4 +2201,61 @@ class BookingController extends \App\Http\Controllers\Controller
         BookingRoomPlace::where('booking_id', $bookingId)->where('id', $request->input('place_id'))->where('user_id', auth()->id())->delete();
     }
 
+    //Калькуляция
+    public function getCalculating(Booking $booking)
+    {
+
+        $services = BookingService::where('booking_id', $booking->id)->get();
+        $grouped = $services->groupBy('service_type');
+
+        $trophies = [];
+        $penalty = [];
+        $extraServices = [];
+
+        // Доп. услуги (питание)
+        if ($grouped->has('food')) {
+            $extraServices[] = [
+                'name' => 'Питание',
+                'total_cost' => $grouped['food']->sum('total_cost'),
+                'my_cost' => $grouped['food']->sum('my_cost'),
+            ];
+        }
+
+        // Трофеи
+        if ($grouped->has('trophy')) {
+
+            foreach ($grouped['trophy'] as $trophy) {
+
+                $trophies[] = [
+                    'name' => $trophy->type. ' ' . 'x' . ' ' . $trophy->count . 'шт',
+                    'total_cost' => $trophy->price,
+                    'my_cost' => 34,
+                ];
+            }
+        }
+
+        return response()->json([
+            'status' => true,
+            'items' => [
+                [
+                    'name' => 'Проживание, 3 суток',
+                    'total_cost' => 200000,
+                    'my_cost' => 6000,
+                ],
+                [
+                    'name' => 'Организация охоты',
+                    'total_cost' => 50000,
+                    'my_cost' => 5000,
+                ],
+            ],
+            'trophies' => $trophies,
+            'extra_services' => $extraServices,
+            'prepayment' => 200000,
+            'my_prepayment' => 20000,
+            'total_base' => 350000,
+            'my_total_base' => 29000,
+            'total_hunters' => 35000,
+            'my_total_hunters' => 2500,
+        ]);
+    }
 }

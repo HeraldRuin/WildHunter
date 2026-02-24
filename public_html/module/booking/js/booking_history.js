@@ -1117,6 +1117,8 @@ document.addEventListener('DOMContentLoaded', function () {
             finishCollection(event, bookingId) {
                 var me = this;
                 var bookingIdNum = parseInt(bookingId, 10);
+                // const modal = document.getElementById('collectionModal' + bookingId);
+                // const animalMinHunters = parseInt(modal.dataset.animalMinHunters || '0', 10);
 
                 // Перед отправкой запроса дополнительно проверяем, что все участники подтвердили приглашение
                 // На клиенте считаем неподтверждёнными всех с invitation_status, отличным от 'accepted'
@@ -1129,11 +1131,17 @@ document.addEventListener('DOMContentLoaded', function () {
                                 slot.hunter.invitation_status &&
                                 slot.hunter.invitation_status !== 'accepted';
                         });
-
-                        if (hasNotAccepted) {
-                            alert('Нельзя завершить сбор: не все участники подтвердили приглашение.');
-                            return;
-                        }
+                        // let invitedCount = 0;
+                        // invitedCount = this.hunterSlots.filter(slot =>
+                        //     slot.hunter &&
+                        //     slot.hunter.invited &&
+                        //     slot.hunter.invitation_status === 'accepted'
+                        // ).length;
+                        //
+                        // if (invitedCount < animalMinHunters) {
+                        //     alert('Нельзя завершить сбор: не все участники подтвердили приглашение.');
+                        //     return;
+                        // }
                     }
                 } catch (e) {
                     console.warn('finishCollection: не удалось выполнить предварительную проверку статусов приглашений', e);
@@ -1515,9 +1523,131 @@ document.addEventListener('DOMContentLoaded', function () {
                             alert('Ошибка при выборе места: ' + data.message);
                         }
                     })
-            }
+            },
+
+            calculatingBookingModal(booking, event) {
+                const bookingIdNum = parseInt(booking.id, 10);
+                const btn = event?.currentTarget ?? null;
+                let originalHtml = null;
+
+                if (btn) {
+                    originalHtml = btn.innerHTML;
+                    btn.disabled = true;
+                    btn.innerHTML = ` 
+            <span>${btn.textContent.trim()}</span>`;
+                }
+
+                const restoreButton = () => {
+                    if (btn) {
+                        btn.disabled = false;
+                        btn.innerHTML = originalHtml;
+                    }
+                };
+
+                $.get(`/booking/${booking.id}/calculating`)
+                    .done(res => {
+                        restoreButton();
+
+                        if (!res.status) {
+                            alert('Ошибка получения данных');
+                            return;
+                        }
+
+                        const places = res.places ?? {};
+
+                        const modalEl = document.getElementById('calculatingBookingModal' + bookingIdNum);
+                        if (!modalEl) return;
+
+                        const contentEl = modalEl.querySelector('#calculating-content-' + bookingIdNum);
+                        if (!contentEl) return;
+
+                        // Формируем HTML таблицы
+                        let html = `<table class="table table-bordered">
+    <thead>
+        <tr>
+            <th>Услуги</th>
+            <th>Всего расходы</th>
+            <th>Мои расходы</th>
+        </tr>
+    </thead>
+    <tbody>`;
+
+                        html += `<tr"><td colspan="3"></td></tr>`;
+                        (res.items || []).forEach(item => {
+                            html += `
+    <tr>
+        <td>${item.name}</td>
+        <td>${item.total_cost ?? 0}</td>
+        <td>${item.my_cost ?? 0}</td>
+    </tr>`;
+                        });
+
+// === Блок "Трофеи" ===
+                        html += `<tr class="table-secondary"><td colspan="3"><strong>Трофеи</strong></td></tr>`;
+// допустим пока пусто, можно добавить пример
+                        (res.trophies || []).forEach(item => {
+                            html += `
+    <tr>
+        <td>${item.name}</td>
+        <td>${item.total_cost ?? 0}</td>
+        <td>${item.my_cost ?? 0}</td>
+    </tr>`;
+                        });
+
+// === Блок "Штрафы" ===
+                        html += `<tr class="table-secondary"><td colspan="3"><strong>Штрафы</strong></td></tr>`;
+                        (res.penalties || []).forEach(item => {
+                            html += `
+    <tr>
+        <td>${item.name}</td>
+        <td>${item.total_cost ?? 0}</td>
+        <td>${item.my_cost ?? 0}</td>
+    </tr>`;
+                        });
+
+// === Блок "Доп. услуги" ===
+                        html += `<tr class="table-secondary"><td colspan="3"><strong>Доп. услуги</strong></td></tr>`;
+                        (res.extra_services || []).forEach(item => {
+                            html += `
+    <tr>
+        <td>${item.name}</td>
+        <td>${item.total_cost ?? 0}</td>
+        <td>${item.my_cost ?? 0}</td>
+    </tr>`;
+                        });
+
+// === Блок "Расходы охотников" ===
+                        html += `<tr class="table-secondary"><td colspan="3"><strong>Расходы охотников</strong></td></tr>`;
+                        html += `
+<tr>
+    <td>Внесена предоплата</td>
+    <td>${res.prepayment ?? 0}</td>
+    <td>${res.my_prepayment ?? 0}</td>
+</tr>
+<tr>
+    <td>Итого базе</td>
+    <td>${res.total_base ?? 0}</td>
+    <td>${res.my_total_base ?? 0}</td>
+</tr>
+<tr>
+    <td>Итого охотникам</td>
+    <td>${res.total_hunters ?? 0}</td>
+    <td>${res.my_total_hunters ?? 0}</td>
+</tr>
+`;
+
+                        html += `</tbody></table>`;
+
+                        contentEl.innerHTML = html;
 
 
+                        new bootstrap.Modal(modalEl).show();
+                    })
+                    .fail(() => {
+                        restoreButton();
+                        alert('Ошибка при запросе к серверу');
+                    });
+            },
         },
 
         mounted() {
