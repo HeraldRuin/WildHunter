@@ -4,7 +4,6 @@ namespace Modules\Booking\Services;
 
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 use Modules\Booking\Models\Booking;
 
 class BookingTimerService
@@ -27,14 +26,7 @@ class BookingTimerService
 
         DB::transaction(function () use ($bookingId, $hours, $startAt, $endAt, $prefix) {
             // Удаляем старые значения этого таймера
-            DB::table('bc_booking_meta')
-                ->where('booking_id', $bookingId)
-                ->whereIn('name', [
-                    "{$prefix}_start_at",
-                    "{$prefix}_timer_hours",
-                    "{$prefix}_end_at"
-                ])
-                ->delete();
+            $this->clearTimer($bookingId, $prefix);
 
             // Вставляем новые
             DB::table('bc_booking_meta')->insert([
@@ -89,8 +81,7 @@ class BookingTimerService
             if (!$booking) {
                 continue;
             }
-
-            $this->clearBedsTimer($booking);
+//            $this->clearTimer($booking);
             $this->handleBooking($booking);
         }
     }
@@ -101,19 +92,16 @@ class BookingTimerService
         $this->allocatorBedsService->allocateBeds($booking);
     }
 
-    protected function clearBedsTimer(Booking $booking): void
+    protected function clearTimer($bookingId, $prefix): void
     {
-        DB::transaction(function () use ($booking) {
+        DB::transaction(function () use ($bookingId, $prefix) {
             DB::table('bc_booking_meta')
-                ->where('booking_id', $booking->id)
+                ->where('booking_id', $bookingId)
                 ->whereIn('name', [
-                    'beds_start_at',
-                    'beds_timer_hours',
-                    'beds_end_at'
-                ])
-                ->delete();
-
-            //logger()->info('Beds timer cleared', ['booking_id' => $booking->id]);
+                    "{$prefix}_start_at",
+                    "{$prefix}_timer_hours",
+                    "{$prefix}_end_at"
+                ])->delete();
         });
     }
 }
