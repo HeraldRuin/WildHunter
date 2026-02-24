@@ -894,8 +894,6 @@ class BookingController extends \App\Http\Controllers\Controller
             return $this->sendError('Необходима авторизация')->setStatusCode(401);
         }
 
-        $oldStatus = $booking->status;
-        $wasAlreadyCollection = ($booking->status === Booking::START_COLLECTION);
         $timerHour = 24;
 
         if ($booking->hotel_id) {
@@ -911,79 +909,8 @@ class BookingController extends \App\Http\Controllers\Controller
             }
         }
 
-//        // ВАЖНО: ВСЕГДА удаляем ВСЕ старые записи таймера перед установкой нового
-//        // Используем прямой SQL для гарантированного удаления всех записей
-//        \Illuminate\Support\Facades\DB::table('bc_booking_meta')
-//            ->where('booking_id', $booking->id)
-//            ->whereIn('name', ['collection_end_at', 'collection_start_at', 'collection_timer_hours'])
-//            ->delete();
-//
-//        $booking->status = Booking::START_COLLECTION;
-//
-//        // Сохраняем время начала сбора и количество часов таймера
-//        // Это позволит делать обратный отсчет от установленного значения
-//        $now = \Carbon\Carbon::now();
-//        $collectionStartAtString = $now->toIso8601String();
-//
-//        // Сохраняем время начала сбора
-//        \Illuminate\Support\Facades\DB::table('bc_booking_meta')->insert([
-//            'booking_id' => $booking->id,
-//            'name' => 'collection_start_at',
-//            'val' => $collectionStartAtString,
-//            'created_at' => now(),
-//            'updated_at' => now(),
-//        ]);
-//
-//        // Сохраняем количество часов таймера
-//        \Illuminate\Support\Facades\DB::table('bc_booking_meta')->insert([
-//            'booking_id' => $booking->id,
-//            'name' => 'collection_timer_hours',
-//            'val' => (string)$timerHours,
-//            'created_at' => now(),
-//            'updated_at' => now(),
-//        ]);
-//
-//        // Также сохраняем время окончания для обратной совместимости
-//        $collectionEndAt = $now->copy()->addHours($timerHours);
-//        $collectionEndAtString = $collectionEndAt->toIso8601String();
-//
-//        \Illuminate\Support\Facades\DB::table('bc_booking_meta')->insert([
-//            'booking_id' => $booking->id,
-//            'name' => 'collection_end_at',
-//            'val' => $collectionEndAtString,
-//            'created_at' => now(),
-//            'updated_at' => now(),
-//        ]);
-//
-//        $booking->save();
-//
-//        // Финальная проверка: убеждаемся, что запись создана с правильным значением
-//        $finalCheck = \Illuminate\Support\Facades\DB::table('bc_booking_meta')
-//            ->where('booking_id', $booking->id)
-//            ->where('name', 'collection_end_at')
-//            ->first();
-//
-//        if (!$finalCheck || $finalCheck->val !== $collectionEndAtString) {
-//            \Log::error('startCollection: ОШИБКА - запись не создана или значение неправильное', [
-//                'booking_id' => $booking->id,
-//                'expected_value' => $collectionEndAtString,
-//                'actual_value' => $finalCheck ? $finalCheck->val : null,
-//            ]);
-//
-//            // Пытаемся создать запись еще раз
-//            \Illuminate\Support\Facades\DB::table('bc_booking_meta')
-//                ->where('booking_id', $booking->id)
-//                ->where('name', 'collection_end_at')
-//                ->delete();
-//
-//            \Illuminate\Support\Facades\DB::table('bc_booking_meta')->insert([
-//                'booking_id' => $booking->id,
-//                'name' => 'collection_end_at',
-//                'val' => $collectionEndAtString,
-//                'created_at' => now(),
-//                'updated_at' => now(),
-//            ]);
-//        }
+        $booking->status = Booking::START_COLLECTION;
+        $booking->save();
 
         $timerData = $this->bookingTimerService->startTimer($booking->id, $timerHour, 'collection');
 
