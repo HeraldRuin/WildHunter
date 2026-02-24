@@ -842,8 +842,20 @@ class Booking extends BaseModel
         $list_booking->where('hotel_id', $hotel_id);
 
         if (!empty($booking_status)) {
-            $list_booking->where('status', $booking_status);
+            if ($booking_status === \Modules\Booking\Models\Booking::PREPAYMENT_COLLECTION) {
+
+                $list_booking->whereIn('status', [
+                    \Modules\Booking\Models\Booking::PREPAYMENT_COLLECTION,
+                    \Modules\Booking\Models\Booking::FINISHED_PREPAYMENT,
+                ]);
+
+            } else {
+
+                $list_booking->where('status', $booking_status);
+
+            }
         }
+
 
         if (!empty($booking_id)) {
             $list_booking->where("id", $booking_id);
