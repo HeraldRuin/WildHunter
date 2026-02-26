@@ -2,10 +2,13 @@
 
 namespace Modules\Animals\Models;
 
+use App\Traits\HasHotelAnimalPrice;
 use Illuminate\Database\Eloquent\Model;
 
 class AnimalPreparation extends Model
 {
+    use HasHotelAnimalPrice;
+
     protected $table = 'bc_animal_preparations';
 
     protected $fillable = [
