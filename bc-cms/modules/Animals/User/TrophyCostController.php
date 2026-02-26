@@ -1,6 +1,7 @@
 <?php
 namespace Modules\Animals\User;
 
+use App\Traits\HasHotelAnimalPrice;
 use Illuminate\Http\Request;
 use Modules\Animals\Models\Animal;
 use Modules\Animals\Models\AnimalFine;
@@ -39,12 +40,7 @@ class TrophyCostController extends FrontendController
             ->join('bc_hotel_animals as bha', function ($join) use ($userHotelId) {
                 $join->on('bha.animal_id', '=', 'bc_animals.id')
                     ->where('bha.hotel_id', '=', $userHotelId);
-            })
-            ->select([
-                'bc_animals.*',
-                'bha.status as animal_status'
-            ])
-            ->with('trophies');
+            })->select(['bc_animals.*','bha.status as animal_status']);
 
         if($request->query('s')){
             $list_animals->where('bc_animals.title', 'like', '%'.$request->query('s').'%');
@@ -163,7 +159,6 @@ class TrophyCostController extends FrontendController
         $price = $request->input('price');
         $userHotelId = get_user_hotel_id();
 
-        // Проверяем, что трофей принадлежит животному, связанному с отелем админа
         $trophy = AnimalTrophy::where('id', $trophyId)
             ->whereHas('animal', function($query) use ($userHotelId) {
                 $query->whereHas('hotels', function($q) use ($userHotelId) {
@@ -179,9 +174,8 @@ class TrophyCostController extends FrontendController
             ], 404);
         }
 
-        $trophy->update([
-            'price' => !empty($price) ? $price : null,
-        ]);
+        $trophy->setHotelPrice(get_user_hotel_id(), $price);
+        $trophy->priceForHotel(get_user_hotel_id());
 
         return $this->sendSuccess([
             'message' => __("Saved Success")
@@ -193,7 +187,7 @@ class TrophyCostController extends FrontendController
         $this->checkPermission('animal_create_hunting');
 
         $request->validate([
-            'fine_id' => 'required|exists:bc_animal_trophies,id',
+            'fine_id' => 'required|exists:bc_animal_fines,id',
             'price' => 'nullable|numeric|min:0',
         ]);
 
@@ -206,8 +200,7 @@ class TrophyCostController extends FrontendController
                 $query->whereHas('hotels', function($q) use ($userHotelId) {
                     $q->where('hotel_id', $userHotelId);
                 });
-            })
-            ->first();
+            })->first();
 
         if (!$fine) {
             return response()->json([
@@ -216,9 +209,8 @@ class TrophyCostController extends FrontendController
             ], 404);
         }
 
-        $fine->update([
-            'price' => !empty($price) ? $price : null,
-        ]);
+        $fine->setHotelPrice(get_user_hotel_id(), $price);
+        $fine->priceForHotel(get_user_hotel_id());
 
         return $this->sendSuccess([
             'message' => __("Saved Success")
@@ -230,7 +222,7 @@ class TrophyCostController extends FrontendController
         $this->checkPermission('animal_create_hunting');
 
         $request->validate([
-            'preparation_id' => 'required|exists:bc_animal_trophies,id',
+            'preparation_id' => 'required|exists:bc_animal_preparations,id',
             'price' => 'nullable|numeric|min:0',
         ]);
 
@@ -253,9 +245,8 @@ class TrophyCostController extends FrontendController
             ], 404);
         }
 
-        $preparation->update([
-            'price' => !empty($price) ? $price : null,
-        ]);
+        $preparation->setHotelPrice(get_user_hotel_id(), $price);
+        $preparation->priceForHotel(get_user_hotel_id());
 
         return $this->sendSuccess([
             'message' => __("Saved Success")
