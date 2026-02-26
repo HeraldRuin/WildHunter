@@ -1215,6 +1215,47 @@ function get_user_hotel_id() {
 
     return null;
 }
+function get_hotel_id_from_booking($booking): int
+{
+    if ($booking) {
+        $hotel = $booking->hotel;
+    }
+
+    return $hotel?->id;
+}
+
+function pluralDays(int $days): string
+{
+    $days = abs($days);
+
+    $mod100 = $days % 100;
+    $mod10  = $days % 10;
+
+    if ($mod100 >= 11 && $mod100 <= 19) {
+        return $days . ' дней';
+    }
+
+    return match ($mod10) {
+        1       => $days . ' день',
+        2,3,4   => $days . ' дня',
+        default => $days . ' дней',
+    };
+}
+function pluralSutki(int $count): string
+{
+    $count = abs($count);
+
+    if ($count === 1) {
+        return '1 сутки';
+    }
+
+    return $count . ' суток';
+}
+function clean_decimal($value): string
+{
+    $value = (float)$value;
+    return rtrim(rtrim(sprintf('%.2f', $value), '0'), '.');
+}
 
 
 
