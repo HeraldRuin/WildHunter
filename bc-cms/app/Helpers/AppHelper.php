@@ -1224,7 +1224,7 @@ function get_hotel_id_from_booking($booking): int
     return $hotel?->id;
 }
 
-function pluralDays(int $days): string
+function plural_days(int $days): string
 {
     $days = abs($days);
 
@@ -1241,7 +1241,7 @@ function pluralDays(int $days): string
         default => $days . ' дней',
     };
 }
-function pluralSutki(int $count): string
+function plural_sutki(int $count): string
 {
     $count = abs($count);
 
