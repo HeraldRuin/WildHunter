@@ -7,13 +7,11 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Auth;
-use Kalnoy\Nestedset\NodeTrait;
 use Modules\Booking\Models\Bookable;
 use Modules\Booking\Models\Booking;
 use Modules\Booking\Events\BookingCreatedEvent;
 use Modules\Hotel\Models\Hotel;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
 
 class Animal extends Bookable
 {
@@ -108,14 +106,17 @@ class Animal extends Bookable
     {
         return $this->hasMany(AnimalPricePeriod::class);
     }
+    //Трофеи
     public function trophies(): HasMany
     {
         return $this->hasMany(AnimalTrophy::class);
     }
+    //Штрафы
     public function fines(): HasMany
     {
         return $this->hasMany(AnimalFine::class, 'animal_id', 'id');
     }
+    //Разделка
     public function preparations(): HasMany
     {
         return $this->hasMany(AnimalPreparation::class, 'animal_id', 'id');
