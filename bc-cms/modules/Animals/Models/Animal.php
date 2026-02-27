@@ -2,6 +2,7 @@
 
 namespace Modules\Animals\Models;
 
+use App\Traits\HasHotelAnimalPrice;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -15,13 +16,17 @@ use Illuminate\Http\Request;
 
 class Animal extends Bookable
 {
-    use SoftDeletes;
+    use SoftDeletes, HasHotelAnimalPrice;
 
     protected $bookingClass;
     public    $checkout_booking_detail_file       = 'Animal::frontend/booking/detail';
     public    $checkout_booking_detail_modal_file = 'Animal::frontend/booking/detail-modal';
 
     public    $email_new_booking_file             = 'Animals::emails.new_booking_detail';
+
+    const SERVICE_TROPHIES = 'trophies';
+    const SERVICE_FINES = 'fines';
+    const SERVICE_PREPARATIONS = 'preparations';
 
     public function __construct(array $attributes = [])
     {
@@ -120,6 +125,33 @@ class Animal extends Bookable
     public function preparations(): HasMany
     {
         return $this->hasMany(AnimalPreparation::class, 'animal_id', 'id');
+    }
+
+    public function scopeForHotelWithService($query, $hotelId, $relation)
+    {
+        return $query
+            ->join('bc_hotel_animals as bha', function ($join) use ($hotelId) {
+                $join->on('bha.animal_id', '=', 'bc_animals.id')
+                    ->where('bha.hotel_id', '=', $hotelId);
+            })
+            ->whereHas($relation, function ($q) use ($hotelId) {
+                $q->whereHas('hotelPrices', function ($q2) use ($hotelId) {
+                    $q2->where('hotel_id', $hotelId);
+                });
+            })
+            ->select([
+                'bc_animals.id',
+                'bc_animals.title as title',
+                'bha.status as animal_status'
+            ])
+            ->with([
+                $relation => function ($q) use ($hotelId) {
+                    $q->select('id', 'animal_id', 'type')
+                        ->whereHas('hotelPrices', function ($q2) use ($hotelId) {
+                            $q2->where('hotel_id', $hotelId);
+                        });
+                }
+            ]);
     }
 }
 
