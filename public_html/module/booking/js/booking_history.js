@@ -1633,7 +1633,12 @@ document.addEventListener('DOMContentLoaded', function () {
 
 // === Блок "Расходы охотников" ===
 
-                        html += `<tr class="table-secondary"><td colspan="3"><strong>Расходы охотников</strong></td></tr>`;
+                        html += `
+<tr class="table-secondary">
+    <td><strong>Расходы охотников</strong></td>
+    <td></td>
+    <td><strong style="color:red;">Я должен</strong></td>
+</tr>`;
                         (res.spendings || []).forEach(item => {
                             html += `
     <tr>
