@@ -2302,7 +2302,7 @@ class BookingController extends \App\Http\Controllers\Controller
                 $addetionals[] = [
                     'name' => $addetional->type,
                     'total_cost' => round($addetional->price),
-                    'my_cost' => round($addetional->price / (int)$paidCount),
+                    'my_cost' => round($addetional->price / max(1, (int)$paidCount)),
                 ];
             }
         }
@@ -2352,7 +2352,7 @@ class BookingController extends \App\Http\Controllers\Controller
 
         return response()->json([
             'status' => true,
-            'is_baseAdmin' => true,
+            'is_baseAdmin' => $isBaseAdmin,
             'items' => [
                 [
                     'name' => 'Проживание, ' . plural_sutki($booking->duration_days),
