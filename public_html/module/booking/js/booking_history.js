@@ -1564,7 +1564,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         // Формируем HTML таблицы
                         let html = `<table class="table table-bordered">
     <thead>
-        <tr>
+        <tr class="table-secondary">
             <th>Услуги</th>
             <th>Всего расходы</th>
             <th>Мои расходы</th>
@@ -1584,7 +1584,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
 // === Блок "Трофеи" ===
                         html += `<tr class="table-secondary"><td colspan="3"><strong>Трофеи</strong></td></tr>`;
-// допустим пока пусто, можно добавить пример
                         (res.trophies || []).forEach(item => {
                             html += `
     <tr>
@@ -1644,6 +1643,7 @@ document.addEventListener('DOMContentLoaded', function () {
     </tr>`;
                         });
 
+ // === Блок "Подытог" ===
                         html += `<tr"><td colspan="3"></td></tr>`;
                         (res.all_items || []).forEach(item => {
                             html += `
