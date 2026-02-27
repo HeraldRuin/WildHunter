@@ -1215,14 +1215,6 @@ function get_user_hotel_id() {
 
     return null;
 }
-function get_hotel_id_from_booking($booking): int
-{
-    if ($booking) {
-        $hotel = $booking->hotel;
-    }
-
-    return $hotel?->id;
-}
 
 function plural_days(int $days): string
 {
