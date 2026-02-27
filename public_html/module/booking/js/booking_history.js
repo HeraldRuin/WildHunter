@@ -1554,6 +1554,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         }
 
                         const places = res.places ?? {};
+                        const is_baseAdmin = res.is_baseAdmin ?? false;
 
                         const modalEl = document.getElementById('calculatingBookingModal' + bookingIdNum);
                         if (!modalEl) return;
@@ -1633,20 +1634,23 @@ document.addEventListener('DOMContentLoaded', function () {
 
 // === Блок "Расходы охотников" ===
 
-                        html += `
+                        if (!is_baseAdmin) {
+                            html += `
 <tr class="table-secondary">
     <td><strong>Расходы охотников</strong></td>
     <td></td>
     <td><strong style="color:red;">Я должен</strong></td>
 </tr>`;
-                        (res.spendings || []).forEach(item => {
-                            html += `
-    <tr>
-        <td>${item.name}</td>
-        <td>${item.total_cost ?? 0}</td>
-        <td>${item.my_cost ?? 0}</td>
-    </tr>`;
-                        });
+
+                            (res.spendings || []).forEach(item => {
+                                html += `
+<tr>
+    <td>${item.name}</td>
+    <td>${item.total_cost ?? 0}</td>
+    <td>${item.my_cost ?? 0}</td>
+</tr>`;
+                            });
+                        }
 
  // === Блок "Подытог" ===
                         html += `<tr"><td colspan="3"></td></tr>`;

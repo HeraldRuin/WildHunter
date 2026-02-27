@@ -227,7 +227,7 @@
                 type="button"
                 class="btn btn-primary btn-sm mt-2"
                 data-bs-toggle="modal"
-                data-bs-target="#calculatingBookingModal{{ $booking->id }}">
+                @click="calculatingBookingModal({{ $booking }}, $event)">
                 {{__("Calculating")}}
             </button>
         @endif

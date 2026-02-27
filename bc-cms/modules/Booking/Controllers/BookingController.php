@@ -2212,6 +2212,8 @@ class BookingController extends \App\Http\Controllers\Controller
     //Калькуляция
     public function getCalculating(Booking $booking)
     {
+        $user = Auth::user();
+        $isBaseAdmin = $user->hasRole('baseadmin');
         $masterBookingHunter = BookingHunter::where('booking_id', $booking->id)
             ->where('is_master', true)
             ->first();
@@ -2327,8 +2329,30 @@ class BookingController extends \App\Http\Controllers\Controller
             }
         }
 
+        $allItems = [
+            [
+                'name' => 'Внесена предоплата:',
+                'total_cost' => round($booking->total / (int)$paidCount),
+                'my_cost' => round(($booking->total / (int)$paidCount) / (int)$paidCount),
+            ],
+            [
+                'name' => 'Итог базе',
+                'total_cost' => clean_decimal($booking->amount_hunting),
+                'my_cost' => (int)$booking->amount_hunting / (int)$paidCount,
+            ],
+        ];
+
+        if (!$isBaseAdmin) {
+            $allItems[] = [
+                'name' => 'Итог охотникам',
+                'total_cost' => round($totalSpending),
+                'my_cost' => round($totalMyDebt),
+            ];
+        }
+
         return response()->json([
             'status' => true,
+            'is_baseAdmin' => true,
             'items' => [
                 [
                     'name' => 'Проживание, ' . plural_sutki($booking->duration_days),
@@ -2348,24 +2372,7 @@ class BookingController extends \App\Http\Controllers\Controller
             'preparation' => $preparations,
             'addetionals' => $addetionals,
             'spendings' => $spendings,
-
-            'all_items' => [
-                [
-                    'name' => 'Внесена предоплата:',
-                    'total_cost' => round($booking->total / (int)$paidCount),
-                    'my_cost' => round(($booking->total / (int)$paidCount) / (int)$paidCount),
-                ],
-                [
-                    'name' => 'Итог базе',
-                    'total_cost' => clean_decimal($booking->amount_hunting),
-                    'my_cost' => (int)$booking->amount_hunting / (int)$paidCount,
-                ],
-                [
-                    'name' => 'Итог охотникам',
-                    'total_cost' => round($totalSpending),
-                    'my_cost' => round($totalMyDebt),
-                ],
-            ],
+            'all_items' => $allItems,
         ]);
     }
 }
