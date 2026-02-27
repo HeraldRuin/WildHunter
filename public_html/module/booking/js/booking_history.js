@@ -1607,7 +1607,23 @@ document.addEventListener('DOMContentLoaded', function () {
 
 // === Блок "Доп. услуги" ===
                         html += `<tr class="table-secondary"><td colspan="3"><strong>Доп. услуги</strong></td></tr>`;
-                        (res.extra_services || []).forEach(item => {
+                        (res.meals || []).forEach(item => {
+                            html += `
+    <tr>
+        <td>${item.name}</td>
+        <td>${item.total_cost ?? 0}</td>
+        <td>${item.my_cost ?? 0}</td>
+    </tr>`;
+                        });
+                        (res.preparation || []).forEach(item => {
+                            html += `
+    <tr>
+        <td>${item.name}</td>
+        <td>${item.total_cost ?? 0}</td>
+        <td>${item.my_cost ?? 0}</td>
+    </tr>`;
+                        });
+                        (res.addetionals || []).forEach(item => {
                             html += `
     <tr>
         <td>${item.name}</td>
@@ -1617,24 +1633,41 @@ document.addEventListener('DOMContentLoaded', function () {
                         });
 
 // === Блок "Расходы охотников" ===
+
                         html += `<tr class="table-secondary"><td colspan="3"><strong>Расходы охотников</strong></td></tr>`;
-                        html += `
-<tr>
-    <td>Внесена предоплата</td>
-    <td>${res.prepayment ?? 0}</td>
-    <td>${res.my_prepayment ?? 0}</td>
-</tr>
-<tr>
-    <td>Итого базе</td>
-    <td>${res.total_base ?? 0}</td>
-    <td>${res.my_total_base ?? 0}</td>
-</tr>
-<tr>
-    <td>Итого охотникам</td>
-    <td>${res.total_hunters ?? 0}</td>
-    <td>${res.my_total_hunters ?? 0}</td>
-</tr>
-`;
+                        (res.spendings || []).forEach(item => {
+                            html += `
+    <tr>
+        <td>${item.name}</td>
+        <td>${item.total_cost ?? 0}</td>
+        <td>${item.my_cost ?? 0}</td>
+    </tr>`;
+                        });
+
+//                         html += `<tr class="table-secondary"><td colspan="3"><strong>Расходы охотников</strong></td></tr>`;
+//                         html += `
+//
+//     <tr>
+//         <td>${item.name}</td>
+//         <td>${item.total_cost ?? 0}</td>
+//         <td>${item.my_cost ?? 0}</td>
+//     </tr>
+// <tr>
+//     <td>Внесена предоплата</td>
+//     <td>${res.prepayment ?? 0}</td>
+//     <td>${res.my_prepayment ?? 0}</td>
+// </tr>
+// <tr>
+//     <td>Итого базе</td>
+//     <td>${res.total_base ?? 0}</td>
+//     <td>${res.my_total_base ?? 0}</td>
+// </tr>
+// <tr>
+//     <td>Итого охотникам</td>
+//     <td>${res.total_hunters ?? 0}</td>
+//     <td>${res.my_total_hunters ?? 0}</td>
+// </tr>
+// `;
 
                         html += `</tbody></table>`;
 
