@@ -15,20 +15,46 @@ class BookingTimerService
         $this->allocatorBedsService = $service;
     }
 
-    /**
-     * Запускает таймер и возвращает время начала и окончания
-     */
-    public function startTimer(int $bookingId, int $hours, string $prefix): array
+    public function getCollectionTimerHours(Booking $booking, string $type): int
+    {
+        $defaultTimer = 24;
+
+        if (!$booking->hotel_id) {
+            return $defaultTimer;
+        }
+
+        $hotel = $booking->hotel;
+
+        $timerFields = [
+            'collection' => 'collection_timer_hours',
+            'beds'    => 'bed_timer_hours',
+        ];
+
+        if (!isset($timerFields[$type])) {
+            return $defaultTimer;
+        }
+
+        $field = $timerFields[$type];
+        $timer = $hotel->{$field};
+
+        return ($timer !== null && $timer > 0)
+            ? (int) $timer
+            : $defaultTimer;
+    }
+
+    public function startTimer(int $bookingId, int $hours, string $prefix, array $clearPrefixes = []): array
     {
         $now = Carbon::now();
         $startAt = $now->toIso8601String();
         $endAt = $now->copy()->addHours($hours)->toIso8601String();
 
-        DB::transaction(function () use ($bookingId, $hours, $startAt, $endAt, $prefix) {
-            // Удаляем старые значения этого таймера
-            $this->clearTimer($bookingId, $prefix);
+        DB::transaction(function () use ($bookingId, $hours, $startAt, $endAt, $prefix, $clearPrefixes) {
 
-            // Вставляем новые
+            // Удаляем старые значения этого таймера или предыдущего
+            foreach ($clearPrefixes as $clearPrefix) {
+                $this->clearTimer($bookingId, $clearPrefix);
+            }
+
             DB::table('bc_booking_meta')->insert([
                 [
                     'booking_id' => $bookingId,
@@ -81,7 +107,7 @@ class BookingTimerService
             if (!$booking) {
                 continue;
             }
-//            $this->clearTimer($booking);
+
             $this->handleBooking($booking);
         }
     }
@@ -92,7 +118,7 @@ class BookingTimerService
         $this->allocatorBedsService->allocateBeds($booking);
     }
 
-    protected function clearTimer($bookingId, $prefix): void
+    public function clearTimer($bookingId, $prefix): void
     {
         DB::transaction(function () use ($bookingId, $prefix) {
             DB::table('bc_booking_meta')
