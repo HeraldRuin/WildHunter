@@ -2300,7 +2300,7 @@ class BookingController extends \App\Http\Controllers\Controller
                 $addetionals[] = [
                     'name' => $addetional->type,
                     'total_cost' => $addetional->price,
-                    'my_cost' => clean_decimal($addetional->price / (int)$paidCount),
+                    'my_cost' => round($addetional->price / (int)$paidCount),
                 ];
             }
         }
