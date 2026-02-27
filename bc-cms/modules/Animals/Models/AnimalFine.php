@@ -21,4 +21,8 @@ class AnimalFine extends Model
     {
         return $this->belongsTo(Animal::class, 'animal_id');
     }
+    public function hotelPrices()
+    {
+        return $this->morphMany(HotelAnimalPrice::class, 'priceable');
+    }
 }
