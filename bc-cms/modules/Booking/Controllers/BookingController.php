@@ -2241,7 +2241,7 @@ class BookingController extends \App\Http\Controllers\Controller
                 $trophies[] = [
                     'name' => $trophy->type. ' ' . 'x' . ' ' . $trophy->count . 'шт',
                     'total_cost' => clean_decimal((float)$trophy->price ),
-                    'my_cost' => clean_decimal((float)$trophy->price  / (int)$paidCount),
+                    'my_cost' => round($trophy->price / $paidCount),
                 ];
             }
         }
