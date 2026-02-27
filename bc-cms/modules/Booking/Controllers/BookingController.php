@@ -893,26 +893,12 @@ class BookingController extends \App\Http\Controllers\Controller
         if (!Auth::check()) {
             return $this->sendError('Необходима авторизация')->setStatusCode(401);
         }
-
-        $timerHour = 24;
-
-        if ($booking->hotel_id) {
-            $hotelData = Hotel::where('id', $booking->hotel_id)->first();
-
-            if ($hotelData) {
-                // Получаем таймер сбора
-                $timerHourCollect = $hotelData->collection_timer_hours ?? null;
-
-                if ($timerHourCollect !== null && $timerHourCollect > 0) {
-                    $timerHour = (int) $timerHourCollect;
-                }
-            }
-        }
+        $timerHour = $this->bookingTimerService->getCollectionTimerHours($booking, 'collection');
 
         $booking->status = Booking::START_COLLECTION;
         $booking->save();
 
-        $timerData = $this->bookingTimerService->startTimer($booking->id, $timerHour, 'collection');
+        $timerData = $this->bookingTimerService->startTimer($booking->id, $timerHour, 'collection', ['collection']);
 
         // ВСЕГДА не отправляем письмо инициатору при запуске сбора
         // Инициатор (create_user) уже автоматически является участником сбора
@@ -1146,16 +1132,12 @@ class BookingController extends \App\Http\Controllers\Controller
             )->setStatusCode(422);
         }
 
+        $timerHour = $this->bookingTimerService->getCollectionTimerHours($booking, 'beds');
+
         $booking->status = Booking::PREPAYMENT_COLLECTION;
-
-        // Полностью удаляем ВСЕ мета-данные таймера (сброс таймера)
-        // Используем прямой SQL для гарантированного удаления
-        $deletedCount = \Illuminate\Support\Facades\DB::table('bc_booking_meta')
-            ->where('booking_id', $booking->id)
-            ->whereIn('name', ['collection_end_at', 'collection_start_at', 'collection_timer_hours', 'collection_timer_started_at'])
-            ->delete();
-
         $booking->save();
+
+        $timerData = $this->bookingTimerService->startTimer($booking->id, $timerHour, 'beds', ['collection']);
 
         event(new BookingFinishEvent($booking));
 
@@ -1196,7 +1178,8 @@ class BookingController extends \App\Http\Controllers\Controller
 //        }
 
         return $this->sendSuccess([
-            'message' => __('Сбор охотников завершён.')
+            'message' => __('Сбор охотников завершён.'),
+            'place_end_at' => $timerData['end_at'],
         ]);
     }
 
@@ -1497,7 +1480,6 @@ class BookingController extends \App\Http\Controllers\Controller
             return $this->sendError('Необходима авторизация')->setStatusCode(401);
         }
 
-        $userId = Auth::id();
         $invitation = $booking->getCurrentUserInvitation();
 
         if (!$invitation) {
@@ -1748,22 +1730,9 @@ class BookingController extends \App\Http\Controllers\Controller
     }
 
     //Трофеи
-    public function getAnimalTrophyServices(): JsonResponse
+    public function getAnimalTrophyServices(Booking $booking): JsonResponse
     {
-        $userHotelId = get_user_hotel_id();
-
-        $animals = $this->animalClass::query()
-            ->join('bc_hotel_animals as bha', function ($join) use ($userHotelId) {
-                $join->on('bha.animal_id', '=', 'bc_animals.id')
-                    ->where('bha.hotel_id', '=', $userHotelId);
-            })
-            ->select([
-                'bc_animals.id',
-                'bc_animals.title as title',
-                'bha.status as animal_status'
-            ])
-            ->with('trophies:id,animal_id,type,price')
-            ->get();
+        $animals = Animal::forHotelWithService($booking->hotel_id, Animal::SERVICE_TROPHIES)->get();
 
         return response()->json($animals);
     }
@@ -1775,8 +1744,11 @@ class BookingController extends \App\Http\Controllers\Controller
             'animal_id' => 'required|integer|exists:bc_animals,id',
             'type'      => 'required|string',
             'count'     => 'required|integer|min:1',
-            'price'     => 'string',
+            'trophy_id'     => 'required|integer|exists:bc_animal_trophies,id',
         ]);
+
+        $trophy = AnimalTrophy::find($request->input('trophy_id'));
+        $price = $trophy->hotelPrices()->where('hotel_id', $booking->hotel_id)->first()?->price;
 
         $service = BookingService::create([
             'booking_id'   => $booking->id,
@@ -1785,7 +1757,7 @@ class BookingController extends \App\Http\Controllers\Controller
             'service_id'   => null,
             'animal'       => $request->input('animal_id'),
             'count'        => $request->input('count'),
-            'price'        => $request->input('price'),
+            'price'        => $price,
         ]);
 
         $animal = Animal::find($request->input('animal_id'));
@@ -1815,21 +1787,7 @@ class BookingController extends \App\Http\Controllers\Controller
     public function getAnimalPenaltyServices(Booking $booking): JsonResponse
     {
         $booking->load('bookingHunter.invitations');
-        $userHotelId = get_user_hotel_id();
-
-        $animals = $this->animalClass::query()
-            ->join('bc_hotel_animals as bha', function ($join) use ($userHotelId) {
-                $join->on('bha.animal_id', '=', 'bc_animals.id')
-                    ->where('bha.hotel_id', '=', $userHotelId);
-            })
-            ->select([
-                'bc_animals.id',
-                'bc_animals.title as title',
-                'bha.status as animal_status'
-            ])
-            ->with('fines:id,animal_id,type')
-            ->get();
-
+        $animals = Animal::forHotelWithService($booking->hotel_id, Animal::SERVICE_FINES)->get();
         $hunterIds = $booking->bookingHunter?->invitations?->pluck('hunter_id')->unique();
 
         $hunters = User::query()
@@ -1848,7 +1806,11 @@ class BookingController extends \App\Http\Controllers\Controller
             'animal_id' => 'required|integer|exists:bc_animals,id',
             'type'      => 'required|string',
             'hunter_id'     => 'required|integer',
+            'penalty_id'     => 'required|integer|exists:bc_animal_fines,id',
         ]);
+
+        $penalty = AnimalFine::find($request->input('penalty_id'));
+        $price = $penalty->hotelPrices()->where('hotel_id', $booking->hotel_id)->first()?->price;
 
         $service = BookingService::create([
             'booking_id'   => $booking->id,
@@ -1857,6 +1819,7 @@ class BookingController extends \App\Http\Controllers\Controller
             'service_id'   => null,
             'hunter_id'   => $request->input('hunter_id'),
             'animal'       => $request->input('animal_id'),
+            'price'        => $price,
         ]);
 
         $animal = Animal::find($request->input('animal_id'));
@@ -1885,32 +1848,22 @@ class BookingController extends \App\Http\Controllers\Controller
 
 
 // Разделка
-
     public function getAnimalPreparationServices(Booking $booking): JsonResponse
     {
-        $animals = $this->animalClass::query()
-            ->join('bc_hotel_animals as bha', function ($join) use ($booking) {
-                $join->on('bha.animal_id', '=', 'bc_animals.id')
-                    ->where('bha.hotel_id', '=', $booking->hotel_id);
-            })
-            ->select([
-                'bc_animals.id',
-                'bc_animals.title as title',
-                'bha.status as animal_status'
-            ])
-            ->with('fines:id,animal_id,type')
-            ->get();
+        $animals = Animal::forHotelWithService($booking->hotel_id, Animal::SERVICE_PREPARATIONS)->get();
 
-        return response()->json([
-            'animals'  => $animals,
-        ]);
+        return response()->json(['animals'  => $animals]);
     }
     public function storePreparation(Request $request, Booking $booking): JsonResponse
     {
         $request->validate([
             'animal_id' => 'required|integer|exists:bc_animals,id',
             'count'     => 'required|integer|min:1',
+            'preparation_id'     => 'required|integer|exists:bc_animal_preparations,id',
         ]);
+
+        $preparation = AnimalPreparation::find($request->input('preparation_id'));
+        $price = $preparation->hotelPrices()->where('hotel_id', $booking->hotel_id)->first()?->price;
 
         $service = BookingService::create([
             'booking_id'   => $booking->id,
@@ -1919,6 +1872,7 @@ class BookingController extends \App\Http\Controllers\Controller
             'service_id'   => null,
             'animal'       => $request->input('animal_id'),
             'count'        => $request->input('count'),
+            'price'        => $price,
         ]);
 
         $animal = Animal::find($request->input('animal_id'));
@@ -1949,9 +1903,25 @@ class BookingController extends \App\Http\Controllers\Controller
             'count'     => 'required|integer|min:1',
         ]);
 
+        $price = AddetionalPrice::where('type', 'food')
+            ->where('hotel_id', $booking->hotel_id)
+            ->value('price');
+
+        if (!$price) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Цена питания не найдена'
+            ], 400);
+        }
+
+        $count = (int) $request->input('count');
+        $totalCost = number_format($price * $count, 2, '.', '');
+
         $service = BookingService::create([
             'booking_id'   => $booking->id,
             'service_type' => 'food',
+            'type' => 'Питание',
+            'price'       => $totalCost,
             'count'        => $request->input('count'),
         ]);
 
@@ -1978,9 +1948,11 @@ class BookingController extends \App\Http\Controllers\Controller
     {
         $addetionals = AddetionalPrice::whereNull('type')->where('hotel_id', $booking->hotel_id)->get()
             ->map(fn ($addetional) => [
+                'id'   => $addetional->id,
                 'type'   => $addetional->type,
                 'name'   => $addetional->name,
                 'count'   => $addetional->count,
+                'price'   => $addetional->price,
             ])
             ->values()
             ->toArray();
@@ -1993,13 +1965,20 @@ class BookingController extends \App\Http\Controllers\Controller
     {
         $request->validate([
             'addetional'     => 'required|string|',
+            'addetional_id'     => 'required|integer|exists:bc_addetional_prices,id',
         ]);
+
+        $price = AddetionalPrice::where('id', $request->input('addetional_id'))->value('price');
+
+        $count = (int) $request->input('count');
+        $totalCost = number_format($price * $count, 2, '.', '');
 
         $service = BookingService::create([
             'booking_id'   => $booking->id,
             'service_type' => 'addetional',
             'type'       => $request->input('addetional'),
             'count'       => $request->input('count'),
+            'price'       => $totalCost,
         ]);
 
         return response()->json([
@@ -2039,7 +2018,7 @@ class BookingController extends \App\Http\Controllers\Controller
     public function storeSpending(Request $request, Booking $booking): JsonResponse
     {
         $request->validate([
-            'count'      => 'required|integer',
+            'price'      => 'required|integer',
             'hunter_id'     => 'required|integer',
             'comment'     => 'required|string',
         ]);
@@ -2047,7 +2026,7 @@ class BookingController extends \App\Http\Controllers\Controller
         $service = BookingService::create([
             'booking_id'   => $booking->id,
             'service_type' => 'spending',
-            'count'       => $request->input('count'),
+            'price'       => $request->input('price'),
             'comment'       => $request->input('comment'),
             'service_id'   => null,
             'hunter_id'   => $request->input('hunter_id'),
@@ -2056,7 +2035,7 @@ class BookingController extends \App\Http\Controllers\Controller
 
         return response()->json([
             'id'           => $service->id,
-            'count'        => $service->count,
+            'count'        => $service->price,
             'comment'        => $service->comment,
             'hunter_name'  => $hunter->name ?? '—',
             'created_at'   => $service->created_at,
@@ -2091,23 +2070,6 @@ class BookingController extends \App\Http\Controllers\Controller
 
         if ($paidCount === $acceptedInvitations->count()) {
             $booking->status = Booking::FINISHED_PREPAYMENT;
-
-            $timerHour = 24;
-
-        if ($booking->hotel_id) {
-            $hotelData = Hotel::where('id', $booking->hotel_id)->first();
-
-            if ($hotelData) {
-                // Получаем таймер койко-мест
-                $timerHoursPlace = $hotelData->bed_timer_hours ?? null;
-
-                if ($timerHoursPlace !== null && $timerHoursPlace > 0) {
-                    $timerHour = (int) $timerHoursPlace;
-                }
-            }
-        }
-
-            $timerData = $this->bookingTimerService->startTimer($booking->id, $timerHour, 'beds');
         }
 
         $booking->prepayment_paid = true;
@@ -2115,7 +2077,6 @@ class BookingController extends \App\Http\Controllers\Controller
 
         return $this->sendSuccess([
             'message' => __('The gathering of hunters has begun'),
-            'place_end_at' => $timerData['end_at'],
         ]);
     }
     public function places(Booking $booking)
@@ -2204,13 +2165,26 @@ class BookingController extends \App\Http\Controllers\Controller
     //Калькуляция
     public function getCalculating(Booking $booking)
     {
+        $masterBookingHunter = BookingHunter::where('booking_id', $booking->id)
+            ->where('is_master', true)
+            ->first();
 
+        BookingHunterInvitation::where('booking_hunter_id', $masterBookingHunter->id)
+            ->where('hunter_id', Auth::id())
+            ->update(['prepayment_paid' => true]);
+
+        $acceptedInvitations = $masterBookingHunter->invitations->where('status', 'accepted');
+
+        $paidCount = $acceptedInvitations->where('prepayment_paid', true)->count();
         $services = BookingService::where('booking_id', $booking->id)->get();
         $grouped = $services->groupBy('service_type');
 
         $trophies = [];
-        $penalty = [];
-        $extraServices = [];
+        $penalties = [];
+        $meals = [];
+        $preparations = [];
+        $spendings = [];
+        $addetionals = [];
 
         // Доп. услуги (питание)
         if ($grouped->has('food')) {
@@ -2229,7 +2203,77 @@ class BookingController extends \App\Http\Controllers\Controller
                 $trophies[] = [
                     'name' => $trophy->type. ' ' . 'x' . ' ' . $trophy->count . 'шт',
                     'total_cost' => $trophy->price,
-                    'my_cost' => 34,
+                    'my_cost' => (float)$trophy->price  / (int)$paidCount,
+                ];
+            }
+        }
+
+        // Штрафы
+        if ($grouped->has('penalty')) {
+
+            foreach ($grouped['penalty'] as $penalty) {
+
+                $penalties[] = [
+                    'name' => $penalty->type,
+                    'total_cost' => $penalty->price,
+                    'my_cost' => $penalty->price,
+                ];
+            }
+        }
+
+        // Питание
+        if ($grouped->has('food')) {
+
+            foreach ($grouped['food'] as $foods) {
+
+                $meals[] = [
+                    'name' => $foods->type,
+                    'total_cost' => round(
+                        (float) $foods->price *
+                        (int) $paidCount *
+                        (int) $booking->duration_days,
+                        2
+                    ),
+                    'my_cost' => clean_decimal((float)$foods->price * (int)$booking->duration_days),
+                ];
+            }
+        }
+
+        // Разделка
+        if ($grouped->has('preparation')) {
+
+            foreach ($grouped['preparation'] as $preparation) {
+
+                $preparations[] = [
+                    'name' => 'Разделка',
+                    'total_cost' => 12,
+                    'my_cost' => $preparation->price,
+                ];
+            }
+        }
+
+        // Доп услуги
+        if ($grouped->has('addetional')) {
+
+            foreach ($grouped['addetional'] as $addetional) {
+
+                $addetionals[] = [
+                    'name' => $addetional->type,
+                    'total_cost' => 12,
+                    'my_cost' => $addetional->price,
+                ];
+            }
+        }
+
+        // Трата охотников
+        if ($grouped->has('spending')) {
+
+            foreach ($grouped['spending'] as $spending) {
+
+                $spendings[] = [
+                    'name' => $spending->comment,
+                    'total_cost' => 12,
+                    'my_cost' => $spending->price,
                 ];
             }
         }
@@ -2238,24 +2282,26 @@ class BookingController extends \App\Http\Controllers\Controller
             'status' => true,
             'items' => [
                 [
-                    'name' => 'Проживание, 3 суток',
-                    'total_cost' => 200000,
-                    'my_cost' => 6000,
+                    'name' => 'Проживание, ' . plural_sutki($booking->duration_days),
+                    'total_cost' => clean_decimal($booking->total),
+                    'my_cost' => (6000 * (int)$booking->duration_days) / (int)$paidCount,
                 ],
                 [
                     'name' => 'Организация охоты',
-                    'total_cost' => 50000,
-                    'my_cost' => 5000,
+                    'total_cost' => clean_decimal($booking->amount_hunting),
+                    'my_cost' => (int)$booking->amount_hunting / (int)$paidCount,
                 ],
             ],
             'trophies' => $trophies,
-            'extra_services' => $extraServices,
-            'prepayment' => 200000,
-            'my_prepayment' => 20000,
-            'total_base' => 350000,
-            'my_total_base' => 29000,
-            'total_hunters' => 35000,
-            'my_total_hunters' => 2500,
+            'penalties' => $penalties,
+            'meals' => $meals,
+            'preparation' => $preparations,
+            'addetionals' => $addetionals,
+            'spendings' => $spendings,
+//            'total_base' => 350000,
+//            'my_total_base' => 29000,
+//            'total_hunters' => 35000,
+//            'my_total_hunters' => 2500,
         ]);
     }
 }
