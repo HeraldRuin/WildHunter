@@ -1654,7 +1654,7 @@ document.addEventListener('DOMContentLoaded', function () {
                             html += `
     <tr>
         <td>${item.name}</td>
-        <td>${item.total_paid ?? 0}</td>
+        <td>${item.total_cost ?? 0}</td>
         <td>${item.my_cost ?? 0}</td>
     </tr>`;
                         });

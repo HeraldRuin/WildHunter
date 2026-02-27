@@ -2306,6 +2306,8 @@ class BookingController extends \App\Http\Controllers\Controller
         }
 
         // Трата охотников
+        $totalMyDebt = 0;
+        $totalSpending = 0;
         if ($grouped->has('spending')) {
 
             foreach ($grouped['spending'] as $spending) {
@@ -2313,6 +2315,9 @@ class BookingController extends \App\Http\Controllers\Controller
                 $myCost = $spending->hunter_id === auth()->id()
                     ? 0
                     : round($spending->price / (int)$paidCount);
+
+                $totalMyDebt += $myCost;
+                $totalSpending += $spending->price;
 
                 $spendings[] = [
                     'name' => ($hunter->last_name ?? '—') . ' (' . ($spending->comment ?? '') . ')',
@@ -2328,7 +2333,8 @@ class BookingController extends \App\Http\Controllers\Controller
                 [
                     'name' => 'Проживание, ' . plural_sutki($booking->duration_days),
                     'total_cost' => round($booking->total),
-                    'my_cost' => (6000 * (int)$booking->duration_days) / (int)$paidCount,
+//                    'my_cost' => round($booking->roomsBooking->first()?->price ?? 0),
+                    'my_cost' => round($booking->total),
                 ],
                 [
                     'name' => 'Организация охоты',
@@ -2346,8 +2352,8 @@ class BookingController extends \App\Http\Controllers\Controller
             'all_items' => [
                 [
                     'name' => 'Внесена предоплата:',
-                    'total_paid' => 350000,
-                    'my_cost' => (6000 * (int)$booking->duration_days) / (int)$paidCount,
+                    'total_cost' => round($booking->total / (int)$paidCount),
+                    'my_cost' => round(($booking->total / (int)$paidCount) / (int)$paidCount),
                 ],
                 [
                     'name' => 'Итог базе',
@@ -2356,8 +2362,8 @@ class BookingController extends \App\Http\Controllers\Controller
                 ],
                 [
                     'name' => 'Итог охотникам',
-                    'total_cost' => clean_decimal($booking->amount_hunting),
-                    'my_cost' => (int)$booking->amount_hunting / (int)$paidCount,
+                    'total_cost' => round($totalSpending),
+                    'my_cost' => round($totalMyDebt),
                 ],
             ],
         ]);
