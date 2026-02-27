@@ -31,10 +31,9 @@ Route::group(['prefix'=>config('booking.booking_route_prefix')],function(){
     Route::get('/{booking}/saved-services', 'BookingController@getBookingServices');
     Route::post('/{booking}/save-services', 'BookingController@saveServices');
 
+    Route::get('/{booking}/trophies/animals', 'BookingController@getAnimalTrophyServices');
     Route::post('/{booking}/trophies', 'BookingController@storeTrophy');
-    Route::get('/trophies/animals', 'BookingController@getAnimalTrophyServices');
     Route::delete('/{booking}/trophy/{trophyId}', 'BookingController@deleteTrophy');
-    Route::get('/booking/{booking}/saved-penalties', 'BookingController@getBookingPenalties');
 
     Route::get('/{booking}/penalty/animals', 'BookingController@getAnimalPenaltyServices');
     Route::post('/{booking}/penalty', 'BookingController@storePenalty');
