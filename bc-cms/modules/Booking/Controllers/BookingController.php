@@ -1749,6 +1749,8 @@ class BookingController extends \App\Http\Controllers\Controller
 
         $trophy = AnimalTrophy::find($request->input('trophy_id'));
         $price = $trophy->hotelPrices()->where('hotel_id', $booking->hotel_id)->first()?->price;
+        $count = (int) $request->input('count');
+        $totalCost = number_format($price * $count, 2, '.', '');
 
         $service = BookingService::create([
             'booking_id'   => $booking->id,
@@ -1757,7 +1759,7 @@ class BookingController extends \App\Http\Controllers\Controller
             'service_id'   => null,
             'animal'       => $request->input('animal_id'),
             'count'        => $request->input('count'),
-            'price'        => $price,
+            'price'        => $totalCost,
         ]);
 
         $animal = Animal::find($request->input('animal_id'));
@@ -1812,12 +1814,34 @@ class BookingController extends \App\Http\Controllers\Controller
         $penalty = AnimalFine::find($request->input('penalty_id'));
         $price = $penalty->hotelPrices()->where('hotel_id', $booking->hotel_id)->first()?->price;
 
+//        $service = BookingService::where('booking_id', $booking->id)
+//            ->where('animal', $request->input('animal_id'))
+//            ->where('hunter_id', $request->input('hunter_id'))
+//            ->where('type', $request->input('type'))
+//            ->where('service_type', 'penalty')
+//            ->first();
+//
+//        if ($service) {
+//            $service->price = round($service->price + $price, 2);
+//            $service->save();
+//        } else {
+//            $service = BookingService::create([
+//                'booking_id'   => $booking->id,
+//                'service_type' => 'penalty',
+//                'type'         => $request->input('type'),
+//                'service_id'   => null,
+//                'hunter_id'    => $request->input('hunter_id'),
+//                'animal'       => $request->input('animal_id'),
+//                'price'        => $price,
+//            ]);
+//        }
+
         $service = BookingService::create([
             'booking_id'   => $booking->id,
             'service_type' => 'penalty',
             'type'         => $request->input('type'),
             'service_id'   => null,
-            'hunter_id'   => $request->input('hunter_id'),
+            'hunter_id'    => $request->input('hunter_id'),
             'animal'       => $request->input('animal_id'),
             'price'        => $price,
         ]);
@@ -1864,16 +1888,39 @@ class BookingController extends \App\Http\Controllers\Controller
 
         $preparation = AnimalPreparation::find($request->input('preparation_id'));
         $price = $preparation->hotelPrices()->where('hotel_id', $booking->hotel_id)->first()?->price;
+        $count = (int) $request->input('count');
+        $totalCost = number_format($price * $count, 2, '.', '');
 
-        $service = BookingService::create([
-            'booking_id'   => $booking->id,
-            'service_type' => 'preparation',
-            'type'         => $request->input('type'),
-            'service_id'   => null,
-            'animal'       => $request->input('animal_id'),
-            'count'        => $request->input('count'),
-            'price'        => $price,
-        ]);
+        $service = BookingService::where('booking_id', $booking->id)
+            ->where('service_type', 'preparation')
+            ->where('animal', $request->input('animal_id'))
+            ->first();
+
+        if ($service) {
+            $service->count += $count;
+            $service->price = round($service->price + (int) $totalCost, 2);
+            $service->save();
+        } else {
+            $service = BookingService::create([
+                'booking_id'   => $booking->id,
+                'service_type' => 'preparation',
+                'type'         => $request->input('type'),
+                'service_id'   => null,
+                'animal'       => $request->input('animal_id'),
+                'count'        => $count,
+                'price'        => $totalCost,
+            ]);
+        }
+
+//        $service = BookingService::create([
+//            'booking_id'   => $booking->id,
+//            'service_type' => 'preparation',
+//            'type'         => $request->input('type'),
+//            'service_id'   => null,
+//            'animal'       => $request->input('animal_id'),
+//            'count'        => $request->input('count'),
+//            'price'        => $totalCost,
+//        ]);
 
         $animal = Animal::find($request->input('animal_id'));
 
@@ -2186,15 +2233,6 @@ class BookingController extends \App\Http\Controllers\Controller
         $spendings = [];
         $addetionals = [];
 
-        // Доп. услуги (питание)
-        if ($grouped->has('food')) {
-            $extraServices[] = [
-                'name' => 'Питание',
-                'total_cost' => $grouped['food']->sum('total_cost'),
-                'my_cost' => $grouped['food']->sum('my_cost'),
-            ];
-        }
-
         // Трофеи
         if ($grouped->has('trophy')) {
 
@@ -2202,7 +2240,7 @@ class BookingController extends \App\Http\Controllers\Controller
 
                 $trophies[] = [
                     'name' => $trophy->type. ' ' . 'x' . ' ' . $trophy->count . 'шт',
-                    'total_cost' => $trophy->price,
+                    'total_cost' => clean_decimal((float)$trophy->price ),
                     'my_cost' => (float)$trophy->price  / (int)$paidCount,
                 ];
             }
@@ -2210,13 +2248,20 @@ class BookingController extends \App\Http\Controllers\Controller
 
         // Штрафы
         if ($grouped->has('penalty')) {
+            $groupedByAnimalType = $grouped['penalty']->groupBy(function ($item) {
+                return $item->animal_id . '|' . $item->type;
+            });
 
-            foreach ($grouped['penalty'] as $penalty) {
+            foreach ($groupedByAnimalType as $key => $items) {
+                $first = $items->first();
+                $totalCost = $items->sum('price');
+                $currentHunterId = auth()->id();
+                $myCost = $items->where('hunter_id', $currentHunterId)->sum('price');
 
                 $penalties[] = [
-                    'name' => $penalty->type,
-                    'total_cost' => $penalty->price,
-                    'my_cost' => $penalty->price,
+                    'name'       => $first->type,
+                    'total_cost' => clean_decimal($totalCost),
+                    'my_cost'    => clean_decimal($myCost),
                 ];
             }
         }
@@ -2225,16 +2270,11 @@ class BookingController extends \App\Http\Controllers\Controller
         if ($grouped->has('food')) {
 
             foreach ($grouped['food'] as $foods) {
-
+                $totalCost = round(clean_decimal((float)$foods->price * (int)$paidCount * (int)$booking->duration_days), 2);
                 $meals[] = [
                     'name' => $foods->type,
-                    'total_cost' => round(
-                        (float) $foods->price *
-                        (int) $paidCount *
-                        (int) $booking->duration_days,
-                        2
-                    ),
-                    'my_cost' => clean_decimal((float)$foods->price * (int)$booking->duration_days),
+                    'total_cost' => $totalCost,
+                    'my_cost' => clean_decimal($totalCost / (int)$paidCount),
                 ];
             }
         }
@@ -2246,8 +2286,8 @@ class BookingController extends \App\Http\Controllers\Controller
 
                 $preparations[] = [
                     'name' => 'Разделка',
-                    'total_cost' => 12,
-                    'my_cost' => $preparation->price,
+                    'total_cost' => $preparation->price,
+                    'my_cost' => clean_decimal($preparation->price / (int)$paidCount),
                 ];
             }
         }
@@ -2259,7 +2299,7 @@ class BookingController extends \App\Http\Controllers\Controller
 
                 $addetionals[] = [
                     'name' => $addetional->type,
-                    'total_cost' => 12,
+                    'total_cost' => $addetional->price,
                     'my_cost' => $addetional->price,
                 ];
             }
@@ -2269,11 +2309,15 @@ class BookingController extends \App\Http\Controllers\Controller
         if ($grouped->has('spending')) {
 
             foreach ($grouped['spending'] as $spending) {
+                $hunter = User::find($spending->hunter_id);
+                $myCost = $spending->hunter_id === auth()->id()
+                    ? 0
+                    : round(clean_decimal($spending->price / (int)$paidCount), 2);
 
                 $spendings[] = [
-                    'name' => $spending->comment,
-                    'total_cost' => 12,
-                    'my_cost' => $spending->price,
+                    'name' => ($hunter->last_name ?? '—') . ' (' . ($spending->comment ?? '') . ')',
+                    'total_cost' => $spending->price,
+                    'my_cost'    => $myCost,
                 ];
             }
         }
@@ -2298,10 +2342,24 @@ class BookingController extends \App\Http\Controllers\Controller
             'preparation' => $preparations,
             'addetionals' => $addetionals,
             'spendings' => $spendings,
-//            'total_base' => 350000,
-//            'my_total_base' => 29000,
-//            'total_hunters' => 35000,
-//            'my_total_hunters' => 2500,
+
+            'all_items' => [
+                [
+                    'name' => 'Внесена предоплата:',
+                    'total_paid' => 350000,
+                    'my_cost' => (6000 * (int)$booking->duration_days) / (int)$paidCount,
+                ],
+                [
+                    'name' => 'Итог базе',
+                    'total_cost' => clean_decimal($booking->amount_hunting),
+                    'my_cost' => (int)$booking->amount_hunting / (int)$paidCount,
+                ],
+                [
+                    'name' => 'Итог охотникам',
+                    'total_cost' => clean_decimal($booking->amount_hunting),
+                    'my_cost' => (int)$booking->amount_hunting / (int)$paidCount,
+                ],
+            ],
         ]);
     }
 }

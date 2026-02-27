@@ -1644,30 +1644,15 @@ document.addEventListener('DOMContentLoaded', function () {
     </tr>`;
                         });
 
-//                         html += `<tr class="table-secondary"><td colspan="3"><strong>Расходы охотников</strong></td></tr>`;
-//                         html += `
-//
-//     <tr>
-//         <td>${item.name}</td>
-//         <td>${item.total_cost ?? 0}</td>
-//         <td>${item.my_cost ?? 0}</td>
-//     </tr>
-// <tr>
-//     <td>Внесена предоплата</td>
-//     <td>${res.prepayment ?? 0}</td>
-//     <td>${res.my_prepayment ?? 0}</td>
-// </tr>
-// <tr>
-//     <td>Итого базе</td>
-//     <td>${res.total_base ?? 0}</td>
-//     <td>${res.my_total_base ?? 0}</td>
-// </tr>
-// <tr>
-//     <td>Итого охотникам</td>
-//     <td>${res.total_hunters ?? 0}</td>
-//     <td>${res.my_total_hunters ?? 0}</td>
-// </tr>
-// `;
+                        html += `<tr"><td colspan="3"></td></tr>`;
+                        (res.all_items || []).forEach(item => {
+                            html += `
+    <tr>
+        <td>${item.name}</td>
+        <td>${item.total_paid ?? 0}</td>
+        <td>${item.my_cost ?? 0}</td>
+    </tr>`;
+                        });
 
                         html += `</tbody></table>`;
 
