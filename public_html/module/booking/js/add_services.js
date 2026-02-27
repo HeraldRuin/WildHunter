@@ -10,7 +10,7 @@ $(document).ready(function () {
 
         addTrophyHeader(trophiesList);
 
-        loadTrophyAnimals(block).done(animals => {
+        loadTrophyAnimals(block, bookingId).done(animals => {
             loadSavedTrophies(bookingId, trophiesList);
         });
     });
@@ -26,8 +26,8 @@ $(document).ready(function () {
         `);
     }
 
-    function loadTrophyAnimals(block) {
-        return $.get('/booking/trophies/animals')
+    function loadTrophyAnimals(block, bookingId) {
+        return $.get(`/booking/${bookingId}/trophies/animals`)
             .done(animals => block.data('trophyAnimals', animals));
     }
 
@@ -110,7 +110,7 @@ $(document).ready(function () {
             if (animal?.trophies?.length) {
                 animal.trophies.forEach(t => {
                     $type.append(
-                        `<option value="${t.id}" data-price="${t.price}">${t.type}</option>`
+                        `<option value="${t.id}">${t.type}</option>`
                     );
                 });
                 $type.prop('disabled', false);
@@ -130,13 +130,12 @@ $(document).ready(function () {
         }
 
         $save.on('click', function () {
-            const selectedOption = $type.find('option:selected');
-            const price = selectedOption.data('price');
+            const trophyId = $type.val();
             $.post(`/booking/${bookingId}/trophies`, {
                 animal_id: $animal.val(),
                 type: $type.find('option:selected').text(),
                 count: $count.val(),
-                price: price,
+                trophy_id: trophyId,
                 _token: $('meta[name="csrf-token"]').attr('content')
             }).done(saved => {
                 $row.replaceWith(renderSavedTrophyRow(saved, bookingId));
@@ -291,7 +290,9 @@ $(document).ready(function () {
 
             if (animal?.fines?.length) {
                 animal.fines.forEach(f => {
-                    $type.append(`<option value="${f.id}">${f.type}</option>`);
+                    $type.append(
+                        `<option value="${f.id}" data-price="${f.price}">${f.type}</option>`
+                    );
                 });
                 $type.prop('disabled', false);
             }
@@ -303,10 +304,12 @@ $(document).ready(function () {
         $hunter.on('change', check);
 
         $save.on('click', function () {
+            const fineId = $type.val();
             $.post(`/booking/${bookingId}/penalty`, {
                 animal_id: $animal.val(),
                 type: $type.find('option:selected').text(),
                 hunter_id: $hunter.val(),
+                penalty_id: fineId,
                 _token: $('meta[name="csrf-token"]').attr('content')
             }).done(saved => {
                 $row.replaceWith(renderSavedPenaltyRow(saved, bookingId));
@@ -401,24 +404,24 @@ $(document).ready(function () {
     function renderNewPreparationRow(animals, bookingId) {
 
         const $row = $(`
-            <div class="preparation-row border rounded p-2 mb-2 d-flex align-items-center gap-2">
+        <div class="preparation-row border rounded p-2 mb-2 d-flex align-items-center gap-2">
 
-                <div>
-                    <select class="form-select form-select-sm preparation-animal" style="width: 270px;">
-                        <option value="" disabled selected hidden>Выберите животное</option>
-                    </select>
-                </div>
-
-                <div class="col-auto" style="margin-left: 165px">
-                    <input type="number" min="1" value="1" class="form-control form-control-sm preparation-count" placeholder="Количество">
-                </div>
-
-                <div class="col-auto" style="margin-left: 110px">
-                    <button class="btn btn-sm btn-success save-preparation" disabled>Сохранить</button>
-                    <button class="btn btn-sm btn-outline-secondary cancel-new">Отмена</button>
-                </div>
+            <div>
+                <select class="form-select form-select-sm preparation-animal" style="width: 270px;">
+                    <option value="" disabled selected hidden>Выберите животное</option>
+                </select>
             </div>
-        `);
+
+            <div class="col-auto" style="margin-left: 165px">
+                <input type="number" min="1" value="1" class="form-control form-control-sm preparation-count" placeholder="Количество">
+            </div>
+
+            <div class="col-auto" style="margin-left: 110px">
+                <button class="btn btn-sm btn-success save-preparation" disabled>Сохранить</button>
+                <button class="btn btn-sm btn-outline-secondary cancel-new">Отмена</button>
+            </div>
+        </div>
+    `);
 
         const $animal = $row.find('.preparation-animal');
         const $count = $row.find('.preparation-count');
@@ -434,8 +437,12 @@ $(document).ready(function () {
         $count.on('input', check);
 
         $save.on('click', function () {
+            const selectedAnimal = animals.find(a => a.id == $animal.val());
+            const preparationId = selectedAnimal.preparations.length > 0 ? selectedAnimal.preparations[0].id : null;
+
             $.post(`/booking/${bookingId}/preparation`, {
                 animal_id: $animal.val(),
+                preparation_id: preparationId,
                 count: $count.val(),
                 _token: $('meta[name="csrf-token"]').attr('content')
             }).done(saved => {
@@ -460,7 +467,6 @@ $(document).ready(function () {
             success: () => row.remove()
         });
     });
-
 });
 
 // Питание
@@ -548,6 +554,7 @@ $(document).ready(function () {
         }
 
         $count.on('input', check);
+        check();
 
         $save.on('click', function () {
             $.post(`/booking/${bookingId}/food`, {
@@ -674,7 +681,6 @@ $(document).ready(function () {
         const $countInput = $row.find('.other-count');
         const $save = $row.find('.save-other');
 
-        // Заполняем select
         prices.forEach(p => {
             $select.append(`
             <option value="${p.id}" data-max="${p.count ?? 1}">
@@ -683,7 +689,6 @@ $(document).ready(function () {
         `);
         });
 
-        // При выборе услуги
         $select.on('change', function () {
             const max = parseInt($(this).find('option:selected').data('max'), 10);
 
@@ -695,7 +700,6 @@ $(document).ready(function () {
             $save.prop('disabled', false);
         });
 
-        // Жёстко ограничиваем ввод
         $countInput.on('input', function () {
             const max = parseInt($(this).attr('max'), 10);
             let val = parseInt($(this).val(), 10);
@@ -709,10 +713,12 @@ $(document).ready(function () {
         // Сохранение
         $save.one('click', function () {
             const selected = $select.find('option:selected');
+            const addetionalId = selected.val();
             const count = parseInt($countInput.val(), 10);
 
             $.post(`/booking/${bookingId}/addetional`, {
                 addetional: selected.text(),
+                addetional_id: addetionalId,
                 count: count,
                 _token: $('meta[name="csrf-token"]').attr('content')
             }).done(saved => {
@@ -853,7 +859,7 @@ $(document).ready(function () {
         $save.on('click', function () {
             $.post(`/booking/${bookingId}/spending`, {
                 hunter_id: $hunter.val(),
-                count: $count.val(),
+                price: $count.val(),
                 comment: $comment.val(),
                 _token: $('meta[name="csrf-token"]').attr('content')
             }).done(saved => {
