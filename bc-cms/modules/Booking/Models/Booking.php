@@ -735,7 +735,7 @@ class Booking extends BaseModel
         $to = false,
         $booking_id = false
     ) {
-        //  Получаем ID броней, куда пользователя пригласили
+        //  Получаем ID броней, куда пользователя пригласили, но не те которые он отменил
         $invitedBookingIds = [];
         if ($customer_id_or_name) {
             $invitedBookingIds = DB::table('bc_booking_hunter_invitations as i')
@@ -744,7 +744,7 @@ class Booking extends BaseModel
                 ->where('i.invited', true)
                 ->whereNull('i.deleted_at')
                 ->whereNull('h.deleted_at')
-                ->whereNotIn('i.status', ['declined', 'removed'])
+                ->whereNotIn('i.status', ['declined'])
                 ->pluck('h.booking_id')
                 ->toArray();
         }
