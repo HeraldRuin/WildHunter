@@ -1227,11 +1227,6 @@ class Booking extends BaseModel
 
         return $days;
     }
-//    public function getDurationDaysAttribute(){
-//
-//        $days = max(1,floor((strtotime($this->end_date) - strtotime($this->start_date)) / DAY_IN_SECONDS) + 1 );
-//        return $days;
-//    }
 
     public function getDurationDaysAttribute()
     {

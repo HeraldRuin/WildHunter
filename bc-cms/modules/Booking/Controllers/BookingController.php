@@ -7,13 +7,11 @@ use Illuminate\Auth\Events\Registered;
 use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
-use Mockery\Exception;
 use Modules\Animals\Models\Animal;
 use Modules\Animals\Models\AnimalFine;
 use Modules\Animals\Models\AnimalPreparation;
@@ -33,8 +31,8 @@ use Modules\Booking\Models\BookingPassenger;
 use Modules\Booking\Models\BookingRoomPlace;
 use Modules\Booking\Models\BookingService;
 use Modules\Booking\Services\BookingTimerService;
-use Modules\Hotel\Models\Hotel;
 use Modules\Hotel\Models\HotelAnimal;
+use Modules\Hotel\Models\HotelRoomBooking;
 use Modules\User\Events\SendMailUserRegistered;
 use Modules\Booking\Emails\CollectionTimerFinishedEmail;
 use Illuminate\Http\Request;
@@ -2210,13 +2208,43 @@ class BookingController extends \App\Http\Controllers\Controller
     }
 
     //Калькуляция
-    public function getCalculating(Booking $booking)
+    public function getCalculating(Booking $booking): JsonResponse
     {
         $user = Auth::user();
         $isBaseAdmin = $user->hasRole('baseadmin');
         $masterBookingHunter = BookingHunter::where('booking_id', $booking->id)
             ->where('is_master', true)
             ->first();
+
+        $places = BookingRoomPlace::where('booking_id', $booking->id)->get();
+        $rooms = $places->groupBy('room_id');
+
+        $roomPrices = HotelRoomBooking::where('booking_id', $booking->id)
+            ->whereIn('room_id', $rooms->keys())
+            ->pluck('price', 'room_id');
+
+        $result = [];
+
+        foreach ($rooms as $roomId => $roomPlaces) {
+            $totalPlaces = $roomPlaces->count();
+            $myPlaces = $roomPlaces->where('user_id', $user->id)->count();
+
+            $roomPrice = $roomPrices[$roomId] ?? 0;
+            $roomPriceAllDay = $roomPrice * $booking->duration_days;
+
+            $pricePerPlace = $totalPlaces > 0 ? $roomPriceAllDay / $totalPlaces : 0;
+            $myCost = $pricePerPlace * $myPlaces;
+
+            $result[] = [
+                'room_id' => $roomId,
+                'total_places' => $totalPlaces,
+                'my_places' => $myPlaces,
+                'price_per_place' => round($pricePerPlace),
+                'my_cost' => round($myCost),
+            ];
+        }
+
+        $totalMyCost = array_sum(array_column($result, 'my_cost'));
 
         BookingHunterInvitation::where('booking_hunter_id', $masterBookingHunter->id)
             ->where('hunter_id', Auth::id())
@@ -2357,8 +2385,7 @@ class BookingController extends \App\Http\Controllers\Controller
                 [
                     'name' => 'Проживание, ' . plural_sutki($booking->duration_days),
                     'total_cost' => round($booking->total),
-//                    'my_cost' => round($booking->roomsBooking->first()?->price ?? 0),
-                    'my_cost' => round($booking->total),
+                    'my_cost' => $totalMyCost,
                 ],
                 [
                     'name' => 'Организация охоты',
