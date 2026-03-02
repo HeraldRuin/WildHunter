@@ -11,7 +11,7 @@
         <div class="row row-profile-width">
             <div class="col-md-6">
                 <div class="form-title">
-                    <strong>{{__("Personal Information")}}</strong>
+                    <strong>{{__("Personal Information")}}</strong> <span>ID: {{ $user->id }}</span>
                 </div>
                 <div class="form-group">
                     <label>{{__("Nik")}} <span class="text-danger">*</span></label>
