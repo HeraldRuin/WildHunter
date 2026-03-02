@@ -24,11 +24,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
             // Слоты для охотников (каждый слот имеет свой поиск)
             hunterSlots: [],
-
-            // История отказавшихся охотников
             declinedHunters: [],
 
-            // Переводы для кнопок
             inviteText: el.dataset.inviteText || 'Пригласить',
             invitedText: el.dataset.invitedText || 'Приглашен',
             acceptedText: el.dataset.acceptedText || 'Подтвержден',
@@ -120,18 +117,13 @@ document.addEventListener('DOMContentLoaded', function () {
                 }, 200);
             },
             initializeHunterSlots(bookingId) {
-                // Получаем количество охотников из DOM элемента модального окна
                 const modal = document.getElementById('collectionModal' + bookingId);
                 if (!modal) return;
 
-                // Очищаем историю отказавшихся при инициализации
                 this.declinedHunters = [];
-
-                // Получаем количество из data-атрибута
                 const huntersCount = parseInt(modal.dataset.huntersCount || '0', 10);
 
                 if (huntersCount > 0) {
-                    // Инициализируем массив слотов
                     this.hunterSlots = Array.from({length: huntersCount}, () => ({
                         query: '',
                         hunter: null,
@@ -142,59 +134,40 @@ document.addEventListener('DOMContentLoaded', function () {
                         debounceTimeout: null,
                         showEmailInput: false,
                         emailMessage: '',
-                        emailAddress: '' // Для хранения email, если охотник не выбран
+                        emailAddress: ''
                     }));
 
-                    console.log('Инициализировано слотов:', this.hunterSlots.length);
-
-                    // Загружаем уже приглашенных охотников
                     this.loadInvitedHunters(bookingId);
 
-                    // Проверяем состояние кнопки "Завершить сбор" при инициализации
                     this.$nextTick(() => {
                         this.checkFinishCollectionButton(bookingId);
                     });
                 } else {
-                    console.log('Количество охотников = 0, слоты не созданы');
                     this.hunterSlots = [];
                 }
             },
 
             loadInvitedHunters(bookingId) {
-                console.log('Загрузка приглашенных охотников для брони:', bookingId);
                 fetch(`/booking/${bookingId}/invited-hunters`)
                     .then(res => res.json())
                     .then(data => {
                         console.log('Ответ от сервера:', data);
-                        // sendSuccess возвращает данные напрямую, не в data.data
                         const allHunters = data.hunters || [];
-                        console.log('Найдено приглашенных охотников:', allHunters.length, allHunters);
-
-                        // Разделяем охотников на активных (не declined) и declined
                         const activeHunters = allHunters.filter(h => h.invitation_status !== 'declined');
                         const declinedHunters = allHunters.filter(h => h.invitation_status === 'declined');
-
-                        // Сохраняем declined охотников в отдельный массив для истории
                         this.$set(this, 'declinedHunters', declinedHunters);
 
                         if (data.status && activeHunters.length > 0) {
-                            console.log('Обработка', activeHunters.length, 'активных охотников');
-
-                            // Создаем новый массив слотов только для активных охотников (не declined)
                             const updatedSlots = this.hunterSlots.map((slot, index) => {
                                 if (index < activeHunters.length) {
                                     const hunter = activeHunters[index];
 
-                                    // Инициализируем флаги для охотника
                                     if (typeof hunter.showEmailInput === 'undefined') {
                                         hunter.showEmailInput = false;
                                     }
                                     if (typeof hunter.emailMessage === 'undefined') {
                                         hunter.emailMessage = '';
                                     }
-
-                                    // Формируем текст для поля ввода
-                                    // Для внешних охотников (без системы) используем email
                                     let queryText = '';
                                     if (hunter.is_external) {
                                         queryText = hunter.email || '';
@@ -202,25 +175,12 @@ document.addEventListener('DOMContentLoaded', function () {
                                         queryText = hunter.user_name || (hunter.first_name + ' ' + hunter.last_name).trim() || '';
                                     }
 
-                                    console.log(`Слот ${index} заполнен охотником:`, {
-                                        id: hunter.id,
-                                        name: hunter.first_name + ' ' + hunter.last_name,
-                                        user_name: hunter.user_name,
-                                        email: hunter.email,
-                                        is_external: hunter.is_external,
-                                        query: queryText,
-                                        invited: hunter.invited,
-                                        status: hunter.invitation_status
-                                    });
-
-                                    // Возвращаем обновленный слот
                                     return {
                                         ...slot,
                                         hunter: hunter,
                                         query: queryText
                                     };
                                 }
-                                // Если слот не заполнен активным охотником, очищаем его
                                 return {
                                     ...slot,
                                     hunter: null,
@@ -228,30 +188,18 @@ document.addEventListener('DOMContentLoaded', function () {
                                 };
                             });
 
-                            // Заменяем весь массив для реактивности Vue
                             this.$set(this, 'hunterSlots', updatedSlots);
-
-                            console.log('Массив hunterSlots обновлен:', this.hunterSlots.length, 'слотов');
-                            console.log('Отказавшиеся охотники:', declinedHunters.length);
-
-                            // Принудительно обновляем Vue для отображения
                             this.$nextTick(() => {
                                 this.$forceUpdate();
-                                console.log('Vue принудительно обновлен');
-                                // Проверяем состояние кнопки "Завершить сбор" после загрузки охотников
                                 this.checkFinishCollectionButton(bookingId);
                             });
                         } else {
-                            console.log('Нет активных охотников. Статус:', data.status, 'Active hunters:', activeHunters.length, 'Declined:', declinedHunters.length);
-                            // Очищаем все слоты, если нет активных охотников
                             const clearedSlots = this.hunterSlots.map(slot => ({
                                 ...slot,
                                 hunter: null,
                                 query: ''
                             }));
                             this.$set(this, 'hunterSlots', clearedSlots);
-
-                            // Даже если нет охотников, проверяем состояние кнопки
                             this.$nextTick(() => {
                                 this.checkFinishCollectionButton(bookingId);
                             });
@@ -481,22 +429,16 @@ document.addEventListener('DOMContentLoaded', function () {
                 const slot = this.hunterSlots[slotIndex];
                 if (!slot) return;
 
-                if (slot.query.length < 3) {
-                    slot.results = [];
-                    slot.showResults = false;
-                    slot.noResults = false;
-                    // Если поле очищено или запрос слишком короткий, очищаем выбранного охотника
-                    if (slot.query.length === 0 || slot.query.trim() === '') {
-                        slot.hunter = null;
-                        // И если при этом была открыта форма отправки письма — закрываем её
-                        if (slot.showEmailInput) {
-                            slot.showEmailInput = false;
-                            slot.emailAddress = '';
-                            slot.emailMessage = '';
-                        }
+                if (slot.query.length === 0 || slot.query.trim() === '') {
+                    slot.hunter = null;
+                    if (slot.showEmailInput) {
+                        slot.showEmailInput = false;
+                        slot.emailAddress = '';
+                        slot.emailMessage = '';
                     }
                     return;
                 }
+
 
                 clearTimeout(slot.debounceTimeout);
                 slot.debounceTimeout = setTimeout(() => {
@@ -516,7 +458,6 @@ document.addEventListener('DOMContentLoaded', function () {
                                 }
                             });
                             slot.results = users;
-                            // Если результатов нет и запрос длиной >= 3, показываем сообщение
                             slot.noResults = users.length === 0 && slot.query.length >= 3;
                         })
                         .finally(() => {
@@ -528,13 +469,11 @@ document.addEventListener('DOMContentLoaded', function () {
                 const slot = this.hunterSlots[slotIndex];
                 if (!slot) return;
 
-                // Если поле полностью очищено кнопкой "стереть" или вручную
                 if (!slot.query || slot.query.trim() === '') {
                     this.clearHunterSlot(slotIndex);
                     return;
                 }
 
-                // Если есть выбранный охотник, но текст в поле уже не совпадает с его именем — сбрасываем выбор
                 if (slot.hunter) {
                     const hunterName = slot.hunter.user_name || (slot.hunter.first_name + ' ' + slot.hunter.last_name).trim();
                     if (slot.query.trim() !== hunterName.trim()) {
@@ -546,7 +485,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 const slot = this.hunterSlots[slotIndex];
                 if (!slot) return;
 
-                // Инициализируем флаги для охотника
                 if (typeof hunter.showEmailInput === 'undefined') {
                     hunter.showEmailInput = false;
                 }
@@ -564,13 +502,9 @@ document.addEventListener('DOMContentLoaded', function () {
                 const slot = this.hunterSlots[slotIndex];
                 if (!slot || !slot.hunter || !slot.hunter.id) return;
 
-                // Мгновенно помечаем охотника как приглашённого в этом слоте,
-                // чтобы сразу заблокировать строку поиска, не дожидаясь перезагрузки
                 this.$set(slot.hunter, 'invited', true);
                 this.$set(slot.hunter, 'invitation_status', 'pending');
                 this.$forceUpdate();
-
-                // Для слота не передаём event, чтобы не ломать разметку кнопки через прямую манипуляцию innerHTML
                 this.inviteHunter(slot.hunter, bookingId, null);
             },
             toggleEmailInputForSlot(slotIndex) {
@@ -579,17 +513,13 @@ document.addEventListener('DOMContentLoaded', function () {
 
                 slot.showEmailInput = !slot.showEmailInput;
                 if (slot.showEmailInput) {
-                    // При открытии поля ввода почты закрываем выпадающее окно результатов поиска
                     slot.showResults = false;
                     slot.results = [];
                     slot.noResults = false;
 
                     if (slot.hunter && !slot.emailAddress) {
-                        // Если охотник выбран, используем его email по умолчанию
                         slot.emailAddress = slot.hunter.email || '';
                     } else if (!slot.hunter && !slot.emailAddress && slot.query) {
-                        // Если охотник не выбран, но в поиске введен email — подставляем его в поле,
-                        // только если это похоже на корректный email
                         const queryTrim = slot.query.trim();
                         const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
                         if (emailPattern.test(queryTrim)) {
@@ -597,7 +527,6 @@ document.addEventListener('DOMContentLoaded', function () {
                         }
                     }
                 } else {
-                    // При закрытии очищаем сообщение
                     slot.emailMessage = '';
                 }
             },
@@ -605,7 +534,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 const slot = this.hunterSlots[slotIndex];
                 if (!slot) return;
 
-                // Если email стёрт и охотник не выбран — закрываем форму отправки письма
                 if (!slot.hunter && (!slot.emailAddress || slot.emailAddress.trim() === '')) {
                     slot.showEmailInput = false;
                     slot.emailMessage = '';
@@ -615,16 +543,13 @@ document.addEventListener('DOMContentLoaded', function () {
                 const slot = this.hunterSlots[slotIndex];
                 if (!slot) return;
 
-                // Определяем кому отправлять
                 let hunterId = null;
                 let emailAddress = slot.emailAddress || '';
 
                 if (slot.hunter && slot.hunter.id) {
-                    // Если охотник выбран, используем его ID и email
                     hunterId = slot.hunter.id;
                     emailAddress = slot.hunter.email || emailAddress;
                 } else if (!emailAddress) {
-                    // Если нет охотника и нет email, показываем ошибку
                     alert('Необходимо выбрать охотника или указать email адрес');
                     return;
                 }
@@ -636,19 +561,14 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
 
                 if (hunterId) {
-                    // Если охотник выбран, используем существующий метод sendHunterEmail
+
                     const hunter = slot.hunter;
                     hunter.emailMessage = message;
                     this.sendHunterEmail(hunter, bookingId, event);
                 } else if (emailAddress) {
-                    // Если нет охотника, но есть email, отправляем напрямую
-                    // Пока используем существующий метод emailHunter, который требует hunter_id
-                    // В будущем можно создать отдельный метод для отправки по email
                     alert('Для отправки email необходимо выбрать охотника из системы. Если охотник не в системе, его нужно сначала добавить.');
                     return;
                 }
-
-                // Закрываем поле ввода после успешной отправки (для hunterId будет закрыто в sendHunterEmail)
                 if (!hunterId) {
                     slot.showEmailInput = false;
                     slot.emailMessage = '';
@@ -664,8 +584,6 @@ document.addEventListener('DOMContentLoaded', function () {
                     alert('Введите email адрес охотника');
                     return;
                 }
-
-                // Проверяем, является ли введенный текст email-адресом
                 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
                 if (!emailPattern.test(query)) {
                     alert('Введите корректный email адрес');
@@ -695,8 +613,6 @@ document.addEventListener('DOMContentLoaded', function () {
                         }
                     }
                 };
-
-                // Отправляем приглашение по email (даже если пользователя нет в системе)
                 $.ajax({
                     url: `/booking/${bookingIdNum}/invite-hunter-by-email`,
                     type: 'POST',

@@ -93,9 +93,9 @@
                                             </div>
                                             <div class="text-muted small mb-1">
                                                 @if($hunter['user_name'])
-                                                    (ник <strong>{{ $hunter['user_name'] }}</strong>)
+                                                    <strong>ID: {{$hunter['id']}}</strong> ( ник <strong>{{ $hunter['user_name'] }}</strong> )
                                                 @else
-                                                    (ник не задан)
+                                                    <strong>ID: {{ $hunter['id'] }}</strong> ( ник не задан )
                                                 @endif
                                             </div>
                                             <div class="text-muted small mb-2">{{ $hunter['email'] }}</div>
@@ -130,7 +130,7 @@
                                     <input
                                         type="text"
                                         class="form-control me-2"
-                                        :placeholder="'{{ __('Hunter nickname / last_name / email') }}'"
+                                        :placeholder="'{{ __('Hunter nickname / last_name / email / ID') }}'"
                                         v-model="hunterSlot.query"
                                         :disabled="hunterSlot.hunter && hunterSlot.hunter.invited"
                                         @input="searchHunterForSlot(index, {{ $booking->id }})"
@@ -157,10 +157,10 @@
                                                         <div>
                                                             <span class="text-muted small">
                                                                 <template v-if="hunter.user_name">
-                                                                    (ник <strong style="font-size: 14px;">@{{ hunter.user_name }}</strong>)
+                                                                    <strong>ID: @{{ hunter.id }}</strong> ( ник <strong style="font-size: 14px;">@{{ hunter.user_name }}</strong> )
                                                                 </template>
                                                                 <template v-else>
-                                                                    (ник не задан)
+                                                                    ID: @{{ hunter.id }} ( ник не задан )
                                                                 </template>
                                                             </span>
                                                             <span class="text-muted ms-2">@{{ hunter.first_name }} @{{ hunter.last_name }}</span>
@@ -226,7 +226,7 @@
                                             <strong>@{{ hunter.first_name }} @{{ hunter.last_name }}</strong>
                                         </div>
                                         <div class="text-muted small mb-1" v-if="hunter.user_name">
-                                            (ник <strong>@{{ hunter.user_name }}</strong>)
+                                            <strong>ID: @{{ hunter.id }}</strong> ( ник <strong>@{{ hunter.user_name }}</strong> )
                                         </div>
                                         <div class="text-muted small">@{{ hunter.email }}</div>
                                     </div>

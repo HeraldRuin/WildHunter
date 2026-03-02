@@ -2,6 +2,7 @@
 namespace Modules\User\Controllers;
 
 use Illuminate\Foundation\Auth\AuthenticatesUsers;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
@@ -352,20 +353,18 @@ class UserController extends FrontendController
         return response()->json($users);
     }
 
-    public function searchHunters(Request $request)
+    public function searchHunters(Request $request): JsonResponse
     {
         $query = trim($request->get('query'));
         $bookingId = (int) $request->get('booking_id');
 
-        if (mb_strlen($query) < 3) {
-            return response()->json([]);
-        }
         $users = User::query()
             ->where(function($q) use ($query) {
                 $q->where('user_name', 'LIKE', $query.'%')
                     ->orWhere('first_name', 'LIKE', $query.'%')
                     ->orWhere('last_name', 'LIKE', $query.'%')
-                    ->orWhere('email', 'LIKE', $query.'%');
+                    ->orWhere('email', 'LIKE', $query.'%')
+                    ->orWhere('id', 'LIKE', $query.'%');
             })
             ->limit(10)
             ->get(['id','user_name','first_name','last_name','email','phone']);
@@ -378,7 +377,7 @@ class UserController extends FrontendController
 
         // Если есть конкретная бронь — проверяем статус приглашений
         if ($bookingId) {
-            $invitations = \Modules\Booking\Models\BookingHunterInvitation::query()
+            $invitations = BookingHunterInvitation::query()
                 ->whereHas('bookingHunter', function ($q) use ($bookingId) {
                     $q->where('booking_id', $bookingId);
                 })
@@ -389,12 +388,10 @@ class UserController extends FrontendController
             foreach ($users as $user) {
                 $invitation = $invitations->firstWhere('hunter_id', $user->id);
                 if ($invitation) {
-                    // Если статус 'declined', то не считаем приглашённым
                     if ($invitation->status === 'declined') {
                         $user->invited = false;
                         $user->invitation_status = 'declined';
                     } else {
-                        // Для других статусов (pending, accepted) считаем приглашённым
                         $user->invited = true;
                         $user->invitation_status = $invitation->status;
                     }
