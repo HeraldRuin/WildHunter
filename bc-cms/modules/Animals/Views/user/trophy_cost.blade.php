@@ -178,10 +178,19 @@
         const allowedKeys = ['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab'];
 
         if (allowedKeys.includes(e.key)) return;
-        if (e.key >= '1' && e.key <= '9') return;
+
+        const value = this.value;
+
+        if (value.length === 0) {
+            if (e.key >= '1' && e.key <= '9') return;
+            e.preventDefault();
+            return;
+        }
+        if ((e.key >= '0' && e.key <= '9') || (e.key === '.' && !value.includes('.'))) return;
 
         e.preventDefault();
     });
+
     $(document).ready(function() {
         $('.save-trophy').on('click', function() {
             const $btn = $(this);
