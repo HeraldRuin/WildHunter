@@ -42,10 +42,17 @@
                     data-bs-trigger="click"
                     data-bs-html="true"
                     data-bs-placement="right"
+                    data-bs-custom-class="popover-width"
                     data-bs-content="
-                    {{ __(':count rooms', ['count' => $booking->hotelRoom->first()?->number ?? 0]) }}<br>
-                    {{ __(':type rooms', ['type' => $booking->hotelRoom->first()?->title ?? '—']) }}<br>
-                    {{ 7 }}/{{ $booking->hotelRoom->first()?->number ?? 0 }}">
+                    {{ __(':count rooms', ['count' => $booking->roomsBooking->count()]) }}<br>
+                     @foreach($booking->roomsBooking as $bookingRoom)
+                        {{ $bookingRoom->room?->title ?? '—' }},
+                        <span>вместимость = </span> {{ $bookingRoom->room?->adults ?? '—' }};
+                        <span>кол-во = </span> {{ $bookingRoom->number ?? '—' }};
+                        <span>цена = </span> {{ $bookingRoom->price ? round($bookingRoom->price) : '—' }} р/сут
+                        <br>
+                    @endforeach
+                    ">
                     Подробности
                 </button>
             </div>
