@@ -52,7 +52,7 @@
                                                     <input type="text"
                                                            name="trophy_costs[{{ $index }}][price]"
                                                            class="form-control trophy-price-input price-input"
-                                                           value="{{ $trophy->price }}"
+                                                           value="{{ $trophy->hotelPrices->first()?->price }}"
                                                            placeholder="{{__('Enter price')}}"
                                                            data-trophy-id="{{ $trophy->id }}">
                                                 </td>
@@ -98,7 +98,7 @@
                                                         <input type="text"
                                                                name="fines_costs[{{ $index }}][price]"
                                                                class="form-control fine-price-input price-input"
-                                                               value="{{ $fine->price }}"
+                                                               value="{{ $fine->hotelPrices->first()?->price }}"
                                                                placeholder="{{__('Enter price')}}"
                                                                data-trophy-id="{{ $fine->id }}">
                                                     </td>
@@ -143,7 +143,7 @@
                                                         <input type="text"
                                                                name="preparation_costs[{{ $index }}][price]"
                                                                class="form-control preparation-price-input price-input"
-                                                               value="{{ $preparation->price }}"
+                                                               value="{{ $preparation->hotelPrices->first()?->price }}"
                                                                placeholder="{{__('Enter price')}}"
                                                                data-trophy-id="{{ $preparation->id }}">
                                                     </td>
@@ -174,6 +174,14 @@
 
 @push('js')
 <script>
+    $(document).on('keydown', '.price-input', function (e) {
+        const allowedKeys = ['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab'];
+
+        if (allowedKeys.includes(e.key)) return;
+        if (e.key >= '1' && e.key <= '9') return;
+
+        e.preventDefault();
+    });
     $(document).ready(function() {
         $('.save-trophy').on('click', function() {
             const $btn = $(this);
