@@ -131,9 +131,9 @@ class UserController extends FrontendController
         ];
 
         if ($user->hasRole('baseadmin')){
-          return view('User::frontend.profile_base_admin', $data);
+          return view('User::frontend.profile.profile_base_admin', $data);
         }else {
-           return view('User::frontend.profile_hunter', $data);
+           return view('User::frontend.profile.profile_hunter', $data);
         }
     }
 
@@ -224,16 +224,6 @@ class UserController extends FrontendController
             $userRole = 'hunter';
             $bookings = $this->booking->getBookingHistory($request->input('status'), $authUser->id, false, false, false, $bookingId);
         }
-
-//        $allStatuses = config('booking.statuses');
-//
-//        if ($userRole === 'baseadmin') {
-//            $statuses = array_values(array_filter($allStatuses, function($status) {
-//                return $status !== 'collection';
-//            }));
-//        } else {
-//            $statuses = $allStatuses;
-//        }
 
         $data = array_merge($cabinetData, [
             'userRole' => $userRole,
