@@ -83,6 +83,10 @@
             @if($booking->status === \Modules\Booking\Models\Booking::START_COLLECTION && $booking->hotel && $booking->hotel->collection_timer_hours)
                 ({{$booking->hotel->collection_timer_hours}} {{ __('ч') }})
             @endif
+
+            @if($booking->status === \Modules\Booking\Models\Booking::PREPAYMENT_COLLECTION && $booking->hotel && $booking->hotel->bed_timer_hours)
+                ({{$booking->hotel->bed_timer_hours}} {{ __('ч') }})
+            @endif
         </div>
 
         @if($booking->status === \Modules\Booking\Models\Booking::START_COLLECTION)
@@ -112,7 +116,7 @@
             @endif
         @endif
 
-        @if($booking->status === \Modules\Booking\Models\Booking::FINISHED_PREPAYMENT)
+        @if($booking->status === \Modules\Booking\Models\Booking::PREPAYMENT_COLLECTION)
             @php
                 $endTimestamp = null;
                 try {
@@ -134,16 +138,9 @@
         @endif
 
         @if(in_array($booking->status, [\Modules\Booking\Models\Booking::PREPAYMENT_COLLECTION, \Modules\Booking\Models\Booking::FINISHED_PREPAYMENT]))
-            <div>
-                @if($booking->status === \Modules\Booking\Models\Booking::FINISHED_PREPAYMENT)
-                    <div class="mt-2">
-                        {{'Сбор предоплаты'}}
-                    </div>
-                @endif
                 <div class="text-muted mt-1" style="font-size: 0.9em;">
                     Оплачено {{ $paidCount }}/{{ $acceptedCount }}
                 </div>
-            </div>
 
             <div class="mt-3">
                 {{'Сбор завершен'}}

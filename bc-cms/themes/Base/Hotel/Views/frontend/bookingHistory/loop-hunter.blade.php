@@ -1,3 +1,8 @@
+@php
+    $room = $booking->hotelRoom->first();
+    $bookingRoom = $booking->roomsBooking->first();
+@endphp
+
 <tr data-booking-id="{{ $booking->id }}">
     <td class="booking-history-type">
         {{ $booking->service ? $booking->id : $booking->id }}
@@ -43,11 +48,18 @@
                     data-bs-trigger="click"
                     data-bs-html="true"
                     data-bs-placement="right"
+                    data-bs-custom-class="popover-width"
                     data-bs-content="
-                    {{ __(':count rooms', ['count' => $booking->hotelRoom->first()?->number ?? 0]) }}<br>
-                    {{ __(':type rooms', ['type' => $booking->hotelRoom->first()?->title ?? '—']) }}<br>
-                    {{ 7 }}/{{ $booking->hotelRoom->first()?->number ?? 0 }}">
-                    Подробности
+                    {{ __(':count rooms', ['count' => $booking->roomsBooking->count()]) }}<br>
+                     @foreach($booking->roomsBooking as $bookingRoom)
+                        {{ $bookingRoom->room?->title ?? '—' }},
+                        <span>вместимость = </span> {{ $bookingRoom->room?->adults ?? '—' }};
+                        <span>кол-во = </span> {{ $bookingRoom->number ?? '—' }};
+                        <span>цена = </span> {{ $bookingRoom->price ? round($bookingRoom->price) : '—' }} р/сут
+                        <br>
+                    @endforeach
+                    ">
+                Подробности
                 </button>
             </div>
         @endif
@@ -132,16 +144,16 @@
                 })->filter()->values();
             @endphp
 
-            {{$booking->statusNameForUser}}
+{{$booking->statusNameForUser}}
 
-            @if($booking->status === \Modules\Booking\Models\Booking::FINISHED_PREPAYMENT && $booking->hotel && $booking->hotel->bed_timer_hours)
-                ({{$booking->hotel->bed_timer_hours}} {{ __('ч') }})
-            @endif
+@if($booking->status === \Modules\Booking\Models\Booking::START_COLLECTION && $booking->hotel && $booking->hotel->collection_timer_hours)
+({{$booking->hotel->collection_timer_hours}} {{ __('ч') }})
+@endif
 
-            @if($booking->status === \Modules\Booking\Models\Booking::START_COLLECTION && $booking->hotel && $booking->hotel->collection_timer_hours)
-                ({{$booking->hotel->collection_timer_hours}} {{ __('ч') }})
-            @endif
-        </div>
+@if($booking->status === \Modules\Booking\Models\Booking::PREPAYMENT_COLLECTION && $booking->hotel && $booking->hotel->bed_timer_hours)
+({{$booking->hotel->bed_timer_hours}} {{ __('ч') }})
+@endif
+</div>
 
         @if($booking->status === \Modules\Booking\Models\Booking::START_COLLECTION)
             @php
@@ -170,19 +182,19 @@
             @endif
         @endif
 
-        @if($booking->status === \Modules\Booking\Models\Booking::FINISHED_PREPAYMENT)
-            @php
-                $endTimestamp = null;
-                try {
-                    $bedsEndAt = $booking->getMeta('beds_end_at');
-                    if ($bedsEndAt) {
-                        $endCarbon = \Carbon\Carbon::parse($bedsEndAt);
-                        $endTimestamp = $endCarbon->timestamp * 1000;
-                    }
-                } catch (\Exception $e) {
-                    $endTimestamp = null;
-                }
-            @endphp
+@if($booking->status === \Modules\Booking\Models\Booking::PREPAYMENT_COLLECTION)
+@php
+$endTimestamp = null;
+try {
+$bedsEndAt = $booking->getMeta('beds_end_at');
+if ($bedsEndAt) {
+    $endCarbon = \Carbon\Carbon::parse($bedsEndAt);
+    $endTimestamp = $endCarbon->timestamp * 1000;
+}
+} catch (\Exception $e) {
+$endTimestamp = null;
+}
+@endphp
 
             @if($endTimestamp)
                 <div class="text-muted beds-timer" data-end="{{ $endTimestamp }}"
@@ -191,17 +203,10 @@
             @endif
         @endif
 
-            @if(in_array($booking->status, [\Modules\Booking\Models\Booking::PREPAYMENT_COLLECTION, \Modules\Booking\Models\Booking::FINISHED_PREPAYMENT]))
-            <div>
-                @if($booking->status === \Modules\Booking\Models\Booking::FINISHED_PREPAYMENT)
-                    <div class="mt-2">
-                        {{'Сбор предоплаты'}}
-                    </div>
-                @endif
-                <div class="text-muted mt-1" style="font-size: 0.9em;">
-                    Оплачено {{ $paidCount }}/{{ $acceptedCount }}
-                </div>
-            </div>
+@if(in_array($booking->status, [\Modules\Booking\Models\Booking::PREPAYMENT_COLLECTION, \Modules\Booking\Models\Booking::FINISHED_PREPAYMENT]))
+<div class="text-muted mt-1" style="font-size: 0.9em;">
+Оплачено {{ $paidCount }}/{{ $acceptedCount }}
+</div>
 
             <div class="mt-3">
                 {{'Сбор завершен'}}
