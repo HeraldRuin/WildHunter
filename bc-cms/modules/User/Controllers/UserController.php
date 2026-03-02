@@ -338,15 +338,7 @@ class UserController extends FrontendController
     {
         $query = trim($request->get('query'));
 
-        if (mb_strlen($query) < 3) {
-            return response()->json([]);
-        }
-
-        $users = User::query()
-            ->where(function($q) use ($query) {
-                $q->where('user_name', 'LIKE', $query.'%')
-                    ->orWhere('first_name', 'LIKE', $query.'%');
-            })
+        $users = User::where('id', $query)
             ->select(['id', 'user_name', 'first_name'])
             ->get();
 
