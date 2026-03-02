@@ -40,18 +40,21 @@
 
 @push('js')
     <script>
-        $(document).on('input', '.price-input', function () {
-            console.log('INPUT WORKS', this.value);
-            let value = this.value;
+        $(document).on('keydown', '.price-input', function (e) {
+            const allowedKeys = ['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab'];
 
-            value = value.replace(/[^0-9.]/g, '');
+            if (allowedKeys.includes(e.key)) return;
 
-            const parts = value.split('.');
-            if (parts.length > 2) {
-                value = parts[0] + '.' + parts.slice(1).join('');
+            const value = this.value;
+
+            if (value.length === 0) {
+                if (e.key >= '1' && e.key <= '9') return;
+                e.preventDefault();
+                return;
             }
+            if ((e.key >= '0' && e.key <= '9') || (e.key === '.' && !value.includes('.'))) return;
 
-            this.value = value;
+            e.preventDefault();
         });
 
     </script>
