@@ -24,7 +24,7 @@
             </div>
         </div>
         <div class="dropdown-menu select-guests-dropdown" >
-            <div class="dropdown-item-row">
+            <div class="dropdown-item-row d-none">
                 <div class="label">{{__('Rooms')}}</div>
                 <div class="val">
                     <span class="btn-minus" data-input="room"><i class="icon ion-md-remove"></i></span>
