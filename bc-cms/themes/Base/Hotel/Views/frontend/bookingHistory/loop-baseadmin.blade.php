@@ -5,18 +5,16 @@
 
     <td class="a-hidden">{{display_date($booking->created_at)}}</td>
     <td>
+       <span
+                        class="cursor-pointer user-link"
+                        data-bs-trigger="hover"
+                        data-bs-html="true"
+                        data-bs-placement="right"
+                        data-bs-content="<strong>{{ $booking->creator?->first_name ?? '' }} {{ $booking->creator?->last_name ?? '' }}</strong><br>Email: {{ $booking->creator?->email ?? '' }}<br>Phone: {{ $booking->creator?->phone ?? '' }}"
+                        @click="{{ $userRole !== 'hunter' && $booking->creator ? "openUserModal({$booking->creator->id}, {$booking->id})" : '' }}">
+                {{ $booking->creator ? (!empty($booking->creator->user_name) ? $booking->creator->user_name : $booking->creator->first_name) : 'N/A' }}
+        </span>
         @if($booking->status === \Modules\Booking\Models\Booking::FINISHED_PREPAYMENT)
-{{--            <button--}}
-{{--                type="button"--}}
-{{--                class="btn btn-info btn-sm details-btn mt-2"--}}
-{{--                data-bs-toggle="popover"--}}
-{{--                data-bs-trigger="click"--}}
-{{--                data-bs-html="true"--}}
-{{--                data-bs-placement="right"--}}
-{{--                @click="{{ $userRole !== 'hunter' && $booking->creator ? "openUserModal({$booking->creator->id}, {$booking->id})" : '' }}">--}}
-{{--                {{ $booking->creator ? (!empty($booking->creator->user_name) ? $booking->creator->user_name : $booking->creator->first_name) : 'N/A' }}>--}}
-{{--                search--}}
-{{--            </button>--}}
             <button
                 type="button"
                 class="btn btn-info btn-sm details-btn mt-2"
