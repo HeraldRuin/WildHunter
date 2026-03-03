@@ -71,14 +71,15 @@ class HotelController extends Controller
 
             $hotelsCollection = $this->filterHotelsByAvailability($hotelsCollection, $start, $end);
 
-            $roomCount = (int) $request->input('room');
-            if ($roomCount > 0) {
-                $hotelsCollection = $this->filterHotelsByRoomCount($hotelsCollection, $roomCount, $start, $end);
-            }
+
+//            $roomCount = (int) $request->input('room');
+//            if ($roomCount > 0) {
+//                $hotelsCollection = $this->filterHotelsByRoomCount($hotelsCollection, $roomCount, $start, $end);
+//            }
 
             $guestCount = (int) $request->input('adults');
             if ($guestCount > 0) {
-                $hotelsCollection = $this->filterHotelsByGuestCountAndAvailability($hotelsCollection, $roomCount, $guestCount, $start, $end);
+               $hotelsCollection = $this->filterHotelsByGuestCountAndAvailability($hotelsCollection, $guestCount, $start, $end);
             }
         } else {
             $hotelsCollection = collect($this->hotelClass::query()->get());
@@ -158,27 +159,22 @@ class HotelController extends Controller
                 $period = CarbonPeriod::create($start, $end);
                 $isRoomAvailable = true;
 
-                // Загружаем кастомные даты через модель
                $customDates = $this->roomDateClass::query()
                    ->where('target_id', $room->id)
                    ->whereBetween('start_date', [$start->format('Y-m-d'), $end->format('Y-m-d')])
                    ->get()
                    ->keyBy(fn($row) => (new \Carbon\Carbon($row->start_date))->toDateString());
 
-
-                // Загружаем бронирования
                 $bookings = $room->getBookingsInRange($start, $end);
 
                 foreach ($period as $date) {
                     $dateKey = $date->format('Y-m-d');
 
-                    // Берём количество из кастомной даты (если есть), иначе базовое
                     $baseNumber = $room->number;
                     if (isset($customDates[$dateKey]) && $customDates[$dateKey]->number !== null) {
                         $baseNumber = (int)$customDates[$dateKey]->number;
                     }
 
-                    // Считаем занятость через брони
                     $occupied = 0;
                     foreach ($bookings as $booking) {
                         $bookingPeriod = periodDate($booking->start_date, Carbon::parse($booking->end_date)->subDay(), false);
@@ -237,78 +233,38 @@ class HotelController extends Controller
         });
     }
 
-    protected function filterHotelsByGuestCountAndAvailability($hotels, int $roomCount, int $guestCount, Carbon $start, Carbon $end)
+    protected function filterHotelsByGuestCountAndAvailability($hotels, int $guestCount, Carbon $start, Carbon $end)
     {
-        return $hotels->filter(function($hotel) use ($roomCount, $guestCount, $start, $end) {
-            $period = CarbonPeriod::create($start, $end);
+        $periodStart = $start->copy()->startOfDay();
+        $periodEnd = $end->copy()->subDay()->startOfDay();
+        $periodDates = [];
+        for ($date = $periodStart->copy(); $date <= $periodEnd; $date->addDay()) {
+            $periodDates[] = $date->format('Y-m-d');
+        }
 
-            $availableRooms = [];
+        return $hotels->filter(function($hotel) use ($guestCount, $periodDates) {
+            $totalCapacity = 0;
 
             foreach ($hotel->rooms as $room) {
-                $minAvailableInPeriod = PHP_INT_MAX;
-
-                $customDates = $this->roomDateClass::query()
+                $blockedDates = DB::table('bc_hotel_room_dates')
                     ->where('target_id', $room->id)
-                    ->whereBetween('start_date', [$start->format('Y-m-d'), $end->format('Y-m-d')])
-                    ->get()
-                    ->keyBy(fn($row) => (new \Carbon\Carbon($row->start_date))->toDateString());
+                    ->whereIn(DB::raw('DATE(start_date)'), $periodDates)
+                    ->where('active', 0)
+                    ->pluck(DB::raw('DATE(start_date)'))
+                    ->toArray();
 
-                $bookings = $room->getBookingsInRange($start, $end);
+                $availableDays = count($periodDates) - count($blockedDates);
 
-                foreach ($period as $date) {
-                    $dateKey = $date->format('Y-m-d');
-
-                    $baseNumber = $room->number;
-                    if (isset($customDates[$dateKey]) && $customDates[$dateKey]->number !== null) {
-                        $baseNumber = (int)$customDates[$dateKey]->number;
-                    }
-
-                    $occupied = 0;
-                    foreach ($bookings as $booking) {
-                        $bookingPeriod = periodDate($booking->start_date, Carbon::parse($booking->end_date)->subDay(), false);
-                        foreach ($bookingPeriod as $bDate) {
-                            if ($bDate->format('Y-m-d') === $dateKey) {
-                                $occupied += $booking->number;
-                            }
-                        }
-                    }
-
-                    $freeRooms = max($baseNumber - $occupied, 0);
-
-                    if ($freeRooms <= 0) {
-                        $minAvailableInPeriod = 0;
-                        break;
-                    }
-
-                    $minAvailableInPeriod = min($minAvailableInPeriod, $freeRooms);
+                if ($availableDays <= 0) {
+                    continue;
                 }
 
-                if ($minAvailableInPeriod > 0) {
-                    $availableRooms[] = [
-                        'adults'    => $room->adults,
-                        'available' => $minAvailableInPeriod
-                    ];
-                }
-            }
-            usort($availableRooms, fn($a, $b) => $b['adults'] <=> $a['adults']);
-
-            $totalCapacity = 0;
-            $roomsUsed = 0;
-
-            foreach ($availableRooms as $room) {
-                for ($i = 0; $i < $room['available']; $i++) {
-                    $totalCapacity += $room['adults'];
-                    $roomsUsed++;
-                    if ($roomsUsed >= $roomCount) break 2;
-                }
+                $totalCapacity += $room->adults * $room->number * $availableDays;
             }
 
             return $totalCapacity >= $guestCount;
         });
     }
-
-
-
 
     public function detail(Request $request, $slug)
     {

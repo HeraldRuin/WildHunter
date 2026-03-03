@@ -553,8 +553,8 @@ class AvailabilityController extends FrontendController{
             'end_date'=>'required'
         ]);
 
-        $room = $this->roomClass::find($request->input('target_id'));
         $target_id = $request->input('target_id');
+        $room = $this->roomClass::find($target_id);
 
         if(empty($room)){
             return $this->sendError(__('Room not found'));
@@ -567,9 +567,10 @@ class AvailabilityController extends FrontendController{
             }
         }
 
-        $dayOfWeek =$request->input("day_of_week_select",[]);
+        $dayOfWeek = $request->input("day_of_week_select",[]);
 
         $postData = $request->input();
+
         $period = periodDate($request->input('start_date'),$request->input('end_date'));
         foreach ($period as $dt){
             $date = $this->roomDateClass::where('start_date',$dt->format('Y-m-d'))->where('target_id',$target_id)->first();

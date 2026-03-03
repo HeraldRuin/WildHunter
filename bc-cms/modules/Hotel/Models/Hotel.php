@@ -1154,27 +1154,11 @@ class Hotel extends Bookable
         }
 
         if (!empty($request['start_date']) && !empty($request['end_date'])) {
-            $filters = [
-                'start_date' => $request['start_date'],
-                'end_date'   => $request['end_date'],
-            ];
+            $rangeStart = $request['start_date'];
+            $rangeEndForDays = date('Y-m-d', strtotime($request['end_date'] . ' -1 day'));
 
-            $rangeStart = $filters['start_date'];
-            $rangeEndForDays = date('Y-m-d', strtotime($filters['end_date'] . ' -1 day'));
-
-            if (!empty($request['adults'])) {
-                $filters['adults'] = (int)$request['adults'];
-            }
-            if (!empty($request['children'])) {
-                $filters['children'] = (int)$request['children'];
-            }
-            if (!empty($request['room'])) {
-                $filters['room'] = (int)$request['room'];
-            }
             $model_hotel->excludeBlockedForDates($rangeStart, $rangeEndForDays);
         }
-
-
 
         $model_hotel->groupBy("bc_hotels.id");
 
@@ -1201,18 +1185,17 @@ class Hotel extends Bookable
     /**
      * Исключает отели с заблокированными комнатами в диапазоне дат
      */
-    public function scopeExcludeBlockedForDates(Builder $query, string $rangeStart, string $rangeEndForDays): Builder {
-
-        $blockedHotelIds = DB::table('bc_hotel_room_dates as d')
-            ->join('bc_hotel_rooms as r', 'r.id', '=', 'd.target_id')
-            ->where('d.active', 0)
-            ->whereBetween(DB::raw('DATE(d.start_date)'), [
-                $rangeStart,
-                $rangeEndForDays
-            ])
+    public function scopeExcludeBlockedForDates(Builder $query, string $rangeStart, string $rangeEndForDays): Builder
+    {
+        $blockedHotelIds = DB::table('bc_hotel_rooms as r')
+            ->join('bc_hotel_room_dates as d', function ($join) use ($rangeStart, $rangeEndForDays) {
+                $join->on('d.target_id', '=', 'r.id')
+                    ->whereBetween(DB::raw('DATE(d.start_date)'), [$rangeStart, $rangeEndForDays]);
+            })
+            ->select('r.parent_id')
+            ->groupBy('r.parent_id')
+            ->havingRaw('SUM(d.active) = 0')
             ->pluck('r.parent_id')
-            ->unique()
-            ->values()
             ->all();
 
         if (!empty($blockedHotelIds)) {
@@ -1362,14 +1345,6 @@ class Hotel extends Bookable
     {
         return $this->hasMany(HotelRoom::class, 'parent_id', 'id');
     }
-//    public function hotelRoom()
-//    {
-//        return $this->hasMany(HotelRoom::class, 'parent_id', 'id');
-//    }
-//    public function bookings()
-//    {
-//        return $this->hasMany(\Modules\Booking\Models\Booking::class, 'hotel_id');
-//    }
 
     public function bookings()
     {
