@@ -82,9 +82,7 @@
                                 <th class="type-booking">{{__("Type Booking")}}</th>
                                 <th class="detail-booking">{{__("Detail Booking")}}</th>
                                 <th class="status-booking">{{__("Status Booking")}}</th>
-                                <th class="amount-booking">{{__("Amount Booking")}}</th>
                                 <th class="paid-booking">{{__("Paid Booking")}}</th>
-                                <th class="remnant-booking">{{__("Remnant Booking")}}</th>
                                 <th class="event-booking">{{__("Event Booking")}}</th>
                             @endif
                             </thead>

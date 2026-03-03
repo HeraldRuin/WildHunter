@@ -1,6 +1,11 @@
 @php
     $room = $booking->hotelRoom->first();
     $bookingRoom = $booking->roomsBooking->first();
+    $isInvited = $booking->isInvited();
+    $isCollectionStatus = in_array($booking->status, [\Modules\Booking\Models\Booking::START_COLLECTION, \Modules\Booking\Models\Booking::PREPAYMENT_COLLECTION,
+            \Modules\Booking\Models\Booking::FINISHED_PREPAYMENT, \Modules\Booking\Models\Booking::PAID, \Modules\Booking\Models\Booking::COMPLETED]);
+    $invitation = $booking->getCurrentUserInvitation();
+    $isInvitationAccepted = $invitation && $invitation->status === 'accepted';
 @endphp
 
 <tr data-booking-id="{{ $booking->id }}">
@@ -28,7 +33,7 @@
     <td class="type a-hidden">{{ $booking->typeText }}</td>
 
     <td class="a-hidden">
-        @if($booking->type === 'hotel')
+        @if($booking->type === 'hotel' && $userRole === 'hunter')
             <strong>Проживание:</strong>
             <div>
                 {{__("CheckIn")}} : {{display_date($booking->start_date)}} <br>
@@ -41,26 +46,6 @@
                 @endif
 
                 {{__(':total guest',['count'=>$booking->total_guests])}} <br>
-                <button
-                    type="button"
-                    class="btn btn-info btn-sm details-btn mt-2"
-                    data-bs-toggle="popover"
-                    data-bs-trigger="click"
-                    data-bs-html="true"
-                    data-bs-placement="right"
-                    data-bs-custom-class="popover-width"
-                    data-bs-content="
-                    {{ __(':count rooms', ['count' => $booking->roomsBooking->count()]) }}<br>
-                     @foreach($booking->roomsBooking as $bookingRoom)
-                        {{ $bookingRoom->room?->title ?? '—' }},
-                        <span>вместимость = </span> {{ $bookingRoom->room?->adults ?? '—' }};
-                        <span>кол-во = </span> {{ $bookingRoom->number ?? '—' }};
-                        <span>цена = </span> {{ $bookingRoom->price ? round($bookingRoom->price) : '—' }} р/сут
-                        <br>
-                    @endforeach
-                    ">
-                Подробности
-                </button>
             </div>
         @endif
         @if($booking->type === 'hotel_animal')
@@ -76,26 +61,6 @@
                 @endif
 
                 {{__(':total guest',['count'=>$booking->total_guests])}} <br>
-                <button
-                    type="button"
-                    class="btn btn-info btn-sm details-btn mt-2"
-                    data-bs-toggle="popover"
-                    data-bs-trigger="click"
-                    data-bs-html="true"
-                    data-bs-placement="right"
-                    data-bs-custom-class="popover-width"
-                    data-bs-content="
-                    {{ __(':count rooms', ['count' => $booking->roomsBooking->count()]) }}<br>
-                     @foreach($booking->roomsBooking as $bookingRoom)
-                        {{ $bookingRoom->room?->title ?? '—' }},
-                        <span>вместимость = </span> {{ $bookingRoom->room?->adults ?? '—' }};
-                        <span>кол-во = </span> {{ $bookingRoom->number ?? '—' }};
-                        <span>цена = </span> {{ $bookingRoom->price ? round($bookingRoom->price) : '—' }} р/сут
-                        <br>
-                    @endforeach
-                    ">
-                    Подробности
-                </button>
             </div>
             <strong>Охота:</strong>
             <div>
@@ -224,39 +189,35 @@ $endTimestamp = null;
         @endif
     </td>
 
-    <td class="price-cell">
-        @if($booking->type === 'hotel')
-            <div>{{ format_money($booking->total) }}</div>
+    <td>
+        @if($isInvited && $isCollectionStatus)
+            {{-- Для приглашенного охотника в статусе "сбор охотников" показываем кнопку в зависимости от статуса приглашения --}}
+
+            @if($isInvitationAccepted && in_array($booking->type, ['animal', 'hotel_animal']))
+                @if(!$booking->is_master_hunter && in_array($booking->status, [\Modules\Booking\Models\Booking::PAID, \Modules\Booking\Models\Booking::COMPLETED, \Modules\Booking\Models\Booking::FINISHED_PREPAYMENT]))
+                    <button
+                        type="button"
+                        class="btn btn-primary btn-sm mt-2"
+                        data-bs-toggle="modal"
+                        @click="calculatingBookingModal({{ $booking }}, $event)">
+                        {{__("Calculating")}}
+                    </button>
+                @endif
+            @endif
+
         @endif
-        @if($booking->type === 'hotel_animal')
-            <div>{{ format_money($booking->total + $booking->amount_hunting) }}</div>
+        @if($booking->is_master_hunter && in_array($booking->status, [\Modules\Booking\Models\Booking::PAID, \Modules\Booking\Models\Booking::COMPLETED, \Modules\Booking\Models\Booking::FINISHED_PREPAYMENT]))
+            <button
+                type="button"
+                class="btn btn-primary btn-sm mt-2"
+                data-bs-toggle="modal"
+                @click="calculatingBookingModal({{ $booking }}, $event)">
+                {{__("Calculating")}}
+            </button>
         @endif
-        <button
-            type="button"
-            class="btn btn-info btn-sm details-btn mt-2"
-            data-bs-toggle="popover"
-            data-bs-trigger="click"
-            data-bs-html="true"
-            data-bs-placement="right"
-            data-bs-content="
-            <strong>Start:</strong> {{ display_date($booking->start_date) }}<br>
-            <strong>End:</strong> {{ display_date($booking->end_date) }}<br>
-            <strong>Duration:</strong> {{ $booking->duration_days }} {{ __('days') }}">
-            Подробности
-        </button>
     </td>
 
-    <td>{{format_money($booking->paid)}}</td>
-    <td>{{format_money($booking->total - $booking->paid)}}</td>
     <td>
-        @php
-            $isInvited = $booking->isInvited();
-            $isCollectionStatus = in_array($booking->status, [\Modules\Booking\Models\Booking::START_COLLECTION, \Modules\Booking\Models\Booking::PREPAYMENT_COLLECTION,
-            \Modules\Booking\Models\Booking::FINISHED_PREPAYMENT, \Modules\Booking\Models\Booking::PAID, \Modules\Booking\Models\Booking::COMPLETED]);
-            $invitation = $booking->getCurrentUserInvitation();
-            $isInvitationAccepted = $invitation && $invitation->status === 'accepted';
-        @endphp
-
         @if($isInvited && $isCollectionStatus)
             {{-- Для приглашенного охотника в статусе "сбор охотников" показываем кнопку в зависимости от статуса приглашения --}}
             @if(!$isInvitationAccepted)
@@ -295,15 +256,6 @@ $endTimestamp = null;
                         data-bs-toggle="modal"
                         data-bs-target="#bookingPrepaymentModal{{ $booking->id }}">
                         {{__("Prepayment")}}
-                    </button>
-                @endif
-                @if(!$booking->is_master_hunter && in_array($booking->status, [\Modules\Booking\Models\Booking::PAID, \Modules\Booking\Models\Booking::COMPLETED, \Modules\Booking\Models\Booking::FINISHED_PREPAYMENT]))
-                    <button
-                        type="button"
-                        class="btn btn-primary btn-sm mt-2"
-                        data-bs-toggle="modal"
-                        @click="calculatingBookingModal({{ $booking }}, $event)">
-                        {{__("Calculating")}}
                     </button>
                 @endif
             @endif
@@ -370,15 +322,7 @@ $endTimestamp = null;
                 </button>
             @endif
 
-            @if($booking->is_master_hunter && in_array($booking->status, [\Modules\Booking\Models\Booking::PAID, \Modules\Booking\Models\Booking::COMPLETED, \Modules\Booking\Models\Booking::FINISHED_PREPAYMENT]))
-                <button
-                    type="button"
-                    class="btn btn-primary btn-sm mt-2"
-                    data-bs-toggle="modal"
-                    @click="calculatingBookingModal({{ $booking }}, $event)">
-                    {{__("Calculating")}}
-                </button>
-            @endif
+
         @endif
     </td>
 </tr>

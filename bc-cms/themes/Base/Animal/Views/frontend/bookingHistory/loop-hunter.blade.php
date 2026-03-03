@@ -1,3 +1,12 @@
+@php
+    $isInvited = $booking->isInvited();
+    $isCollectionStatus = in_array($booking->status, [\Modules\Booking\Models\Booking::START_COLLECTION, \Modules\Booking\Models\Booking::PREPAYMENT_COLLECTION,
+    \Modules\Booking\Models\Booking::FINISHED_PREPAYMENT, \Modules\Booking\Models\Booking::PAID, \Modules\Booking\Models\Booking::COMPLETED]);
+
+    $invitation = $booking->getCurrentUserInvitation();
+    $isInvitationAccepted = $invitation && $invitation->status === 'accepted';
+@endphp
+
 <tr data-booking-id="{{ $booking->id }}">
     <td class="booking-history-type">
         {{ $booking->service ? $booking->id : $booking->id }}
@@ -151,35 +160,35 @@
         @endif
     </td>
 
-    <td class="price-cell">
-        <div>{{ format_money($booking->amount_hunting) }}</div>
-        <button
-            type="button"
-            class="btn btn-info btn-sm details-btn mt-2"
-            data-bs-toggle="popover"
-            data-bs-trigger="click"
-            data-bs-html="true"
-            data-bs-placement="right"
-            data-bs-content="
-            <strong>Start:</strong> {{ display_date($booking->start_date) }}<br>
-            <strong>End:</strong> {{ display_date($booking->end_date) }}<br>
-            <strong>Duration:</strong> {{ $booking->duration_days }} {{ __('days') }}">
-            Подробности
-        </button>
+    <td>
+        @if($isInvited && $isCollectionStatus)
+            {{-- Для приглашенного охотника в статусе "сбор охотников" показываем кнопку в зависимости от статуса приглашения --}}
+
+            @if($isInvitationAccepted && in_array($booking->type, ['animal', 'hotel_animal']))
+                @if(!$booking->is_master_hunter && in_array($booking->status, [\Modules\Booking\Models\Booking::PAID, \Modules\Booking\Models\Booking::COMPLETED, \Modules\Booking\Models\Booking::FINISHED_PREPAYMENT]))
+                    <button
+                        type="button"
+                        class="btn btn-primary btn-sm mt-2"
+                        data-bs-toggle="modal"
+                        @click="calculatingBookingModal({{ $booking }}, $event)">
+                        {{__("Calculating")}}
+                    </button>
+                @endif
+            @endif
+
+        @endif
+        @if($booking->is_master_hunter && in_array($booking->status, [\Modules\Booking\Models\Booking::PAID, \Modules\Booking\Models\Booking::COMPLETED, \Modules\Booking\Models\Booking::FINISHED_PREPAYMENT]))
+            <button
+                type="button"
+                class="btn btn-primary btn-sm mt-2"
+                data-bs-toggle="modal"
+                @click="calculatingBookingModal({{ $booking }}, $event)">
+                {{__("Calculating")}}
+            </button>
+        @endif
     </td>
 
-    <td>{{format_money($booking->paid)}}</td>
-    <td>{{format_money($booking->total - $booking->paid)}}</td>
     <td>
-        @php
-            $isInvited = $booking->isInvited();
-            $isCollectionStatus = in_array($booking->status, [\Modules\Booking\Models\Booking::START_COLLECTION, \Modules\Booking\Models\Booking::PREPAYMENT_COLLECTION,
-            \Modules\Booking\Models\Booking::FINISHED_PREPAYMENT, \Modules\Booking\Models\Booking::PAID, \Modules\Booking\Models\Booking::COMPLETED]);
-
-            $invitation = $booking->getCurrentUserInvitation();
-            $isInvitationAccepted = $invitation && $invitation->status === 'accepted';
-        @endphp
-
         @if($isInvited && $isCollectionStatus)
             {{-- Для приглашенного охотника в статусе "сбор охотников" показываем кнопку в зависимости от статуса приглашения --}}
             @if(!$isInvitationAccepted)

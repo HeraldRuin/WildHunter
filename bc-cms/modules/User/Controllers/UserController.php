@@ -226,11 +226,25 @@ class UserController extends FrontendController
             $bookings = $this->booking->getBookingHistory($request->input('status'), $authUser->id, false, false, false, $bookingId);
         }
 
+        $allStatuses = config('booking.statuses');
+
+        if ($userRole === 'hunter') {
+            $excluded = [Booking::COMPLETED, Booking::PROCESSING, Booking::CONFIRMED,
+                Booking::CANCELLED, Booking::UNPAID, Booking::PAID, Booking::PARTIAL_PAYMENT,
+                Booking::START_COLLECTION, Booking::PREPAYMENT_COLLECTION];
+
+            $statuses = array_values(array_filter($allStatuses, function ($status) use ($excluded) {
+                return !in_array($status, $excluded);
+            }));
+        } else {
+            $statuses = $allStatuses;
+        }
+
         $data = array_merge($cabinetData, [
             'userRole' => $userRole,
             'bookings' => $bookings,
             'hotelSlug' => $authUser->hotels?->first()?->slug,
-            'statues'     => config('booking.statuses'),
+            'statues'     => $statuses,
             'bookingId' => $bookingId,
             'breadcrumbs' => [
                 [
