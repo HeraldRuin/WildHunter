@@ -46,6 +46,26 @@
                 @endif
 
                 {{__(':total guest',['count'=>$booking->total_guests])}} <br>
+                <button
+                    type="button"
+                    class="btn btn-info btn-sm details-btn mt-2"
+                    data-bs-toggle="popover"
+                    data-bs-trigger="click"
+                    data-bs-html="true"
+                    data-bs-placement="right"
+                    data-bs-custom-class="popover-width"
+                    data-bs-content="
+                    {{ __(':count rooms', ['count' => $booking->roomsBooking->count()]) }}<br>
+                     @foreach($booking->roomsBooking as $bookingRoom)
+                        {{ $bookingRoom->room?->title ?? '—' }},
+                        <span>вместимость = </span> {{ $bookingRoom->room?->adults ?? '—' }};
+                        <span>кол-во = </span> {{ $bookingRoom->number ?? '—' }};
+                        <span>цена = </span> {{ $bookingRoom->price ? round($bookingRoom->price) : '—' }} р/сут
+                        <br>
+                    @endforeach
+                    ">
+                    Подробности
+                </button>
             </div>
         @endif
         @if($booking->type === 'hotel_animal')
@@ -61,6 +81,26 @@
                 @endif
 
                 {{__(':total guest',['count'=>$booking->total_guests])}} <br>
+                <button
+                    type="button"
+                    class="btn btn-info btn-sm details-btn mt-2"
+                    data-bs-toggle="popover"
+                    data-bs-trigger="click"
+                    data-bs-html="true"
+                    data-bs-placement="right"
+                    data-bs-custom-class="popover-width"
+                    data-bs-content="
+                    {{ __(':count rooms', ['count' => $booking->roomsBooking->count()]) }}<br>
+                     @foreach($booking->roomsBooking as $bookingRoom)
+                        {{ $bookingRoom->room?->title ?? '—' }},
+                        <span>вместимость = </span> {{ $bookingRoom->room?->adults ?? '—' }};
+                        <span>кол-во = </span> {{ $bookingRoom->number ?? '—' }};
+                        <span>цена = </span> {{ $bookingRoom->price ? round($bookingRoom->price) : '—' }} р/сут
+                        <br>
+                    @endforeach
+                    ">
+                    Подробности
+                </button>
             </div>
             <strong>Охота:</strong>
             <div>
