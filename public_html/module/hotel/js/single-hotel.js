@@ -417,65 +417,111 @@
                 animalOptions.locale = _merge(daterangepickerLocale, animalOptions.locale);
             }
 
-
+// Верхний календарь: hotelStartDate
             this.$nextTick(() => {
-                $(this.$refs.hotelStartDate).daterangepicker(options).on('apply.daterangepicker', (ev, picker) => {
-                    if(picker.endDate.diff(picker.startDate,'day') <= 0){
-                        picker.endDate.add(1,'day');
-                    }
-                    this.start_date = picker.startDate.format('YYYY-MM-DD');
-                    this.end_date = picker.endDate.format('YYYY-MM-DD');
-                    this.start_date_html = picker.startDate.format(bookingCore.date_format) +
-                        ' <i class="fa fa-long-arrow-right" style="font-size: inherit"></i> ' +
-                        picker.endDate.format(bookingCore.date_format);
-
-                    // Ограничиваем календарь охоты датами проживания
-                    var animalPicker = $(this.$refs.animalStartDate).data('daterangepicker');
-                    if (animalPicker) {
-                        animalPicker.minDate = picker.startDate.clone();
-                        animalPicker.maxDate = picker.endDate.clone().subtract(1, 'day');
-                        // Если текущая выбранная дата охоты выходит за диапазон — сбрасываем
-                        if (this.start_date_animal) {
-                            var hunt = moment(this.start_date_animal, 'YYYY-MM-DD');
-                            if (hunt.isBefore(animalPicker.minDate) || hunt.isAfter(animalPicker.maxDate)) {
-                                this.start_date_animal = '';
-                                this.start_date_animal_html = bookingCoreApp && bookingCoreApp.i18n && bookingCoreApp.i18n.select_date
-                                    ? bookingCoreApp.i18n.select_date
-                                    : 'Выберите пожалуйста';
-                            }
+                $(this.$refs.hotelStartDate).daterangepicker(options)
+                    .on('apply.daterangepicker', (ev, picker) => {
+                        if(picker.endDate.diff(picker.startDate,'day') <= 0){
+                            picker.endDate.add(1,'day');
                         }
-                        // Переключаем календарь животных на месяц даты заезда
-                        // Устанавливаем дату начала календаря на дату заезда, чтобы при следующем открытии календарь показывал нужный месяц
-                        animalPicker.setStartDate(picker.startDate.clone());
-                        animalPicker.setEndDate(picker.startDate.clone());
-                    }
-                });
-            });
 
-            this.$nextTick(() => {
-                var animalPickerElement = $(this.$refs.animalStartDate);
-                var me = this;
-                
-                animalPickerElement.daterangepicker(animalOptions)
-                    .on('apply.daterangepicker',(ev, picker) => {
-                        this.start_date_animal = picker.startDate.format('YYYY-MM-DD');
-                        this.end_date_animal = this.start_date_animal;
-                        this.start_date_animal_html = picker.startDate.format(bookingCore.date_format);
-                    })
-                    .on('show.daterangepicker', function(ev, picker) {
-                        // При открытии календаря животных переключаем на месяц даты заезда, если она выбрана
-                        if (me.start_date) {
-                            var checkInDate = moment(me.start_date, 'YYYY-MM-DD');
-                            // Устанавливаем месяц календаря на месяц даты заезда
-                            picker.setStartDate(checkInDate.clone());
-                            picker.setEndDate(checkInDate.clone());
-                            // Обновляем календарь
-                            if (typeof picker.updateCalendars === 'function') {
-                                picker.updateCalendars();
+                        // Сохраняем даты проживания
+                        this.start_date = picker.startDate.format('YYYY-MM-DD');
+                        this.end_date = picker.endDate.format('YYYY-MM-DD');
+                        this.start_date_html = picker.startDate.format(bookingCore.date_format) +
+                            ' <i class="fa fa-long-arrow-right" style="font-size: inherit"></i> ' +
+                            picker.endDate.format(bookingCore.date_format);
+
+                        // Настраиваем календарь животных
+                        const animalPicker = $(this.$refs.animalStartDate).data('daterangepicker');
+                        if (animalPicker) {
+                            animalPicker.minDate = picker.startDate.clone();
+                            animalPicker.maxDate = picker.endDate.clone(); // последняя дата доступна
+                            const lastStayDay = picker.endDate.clone();
+
+                            // Сбрасываем дату охоты, если она вышла за диапазон
+                            if (this.start_date_animal) {
+                                const hunt = moment(this.start_date_animal, 'YYYY-MM-DD');
+                                if (hunt.isBefore(animalPicker.minDate) || hunt.isAfter(animalPicker.maxDate)) {
+                                    this.start_date_animal = '';
+                                    this.start_date_animal_html = bookingCoreApp?.i18n?.select_date || 'Выберите пожалуйста';
+                                }
                             }
+
+                            // Сбрасываем календарь на последний день проживания
+                            animalPicker.setStartDate(lastStayDay);
+                            animalPicker.setEndDate(lastStayDay);
                         }
                     });
-            })
+            });
+
+
+
+
+            this.$nextTick(() => {
+                const animalPickerElement = $(this.$refs.animalStartDate);
+                const me = this;
+
+                animalPickerElement.daterangepicker(animalOptions)
+                    .on('apply.daterangepicker', (ev, picker) => {
+                        // Сохраняем только конечную дату
+                        me.start_date_animal = picker.endDate.format('YYYY-MM-DD');
+                        me.end_date_animal = me.start_date_animal;
+                        me.start_date_animal_html = picker.endDate.format(bookingCore.date_format);
+                    })
+                    .on('show.daterangepicker', function(ev, picker) {
+                        if (!me.end_date) return;
+
+                        const startDay = moment(me.start_date, 'YYYY-MM-DD');
+                        const lastDay = moment(me.end_date, 'YYYY-MM-DD');
+
+                        // Устанавливаем minDate на первую дату диапазона, maxDate на последнюю
+                        picker.minDate = startDay.clone();
+                        picker.maxDate = lastDay.clone();
+
+                        // Используем isInvalidDate, чтобы блокировать все до последней даты
+                        picker.isInvalidDate = function(date) {
+                            return date.isBefore(lastDay, 'day');
+                        };
+
+                        // Сбрасываем диапазон на последний день
+                        picker.setStartDate(lastDay.clone());
+                        picker.setEndDate(lastDay.clone());
+
+                        // Обновляем инпут
+                        if (picker.element && picker.element[0]) {
+                            $(picker.element[0]).val(lastDay.format(bookingCore.date_format));
+                        }
+
+                        // Сбрасываем классы всех ячеек
+                        picker.container.find('td').removeClass('active in-range start-date end-date disabled off');
+
+                        // Проходим по ячейкам
+                        picker.container.find('td').each(function() {
+                            const cellDate = $(this).data('title'); // YYYY-MM-DD
+                            if (!cellDate) return;
+
+                            const cellMoment = moment(cellDate, 'YYYY-MM-DD');
+
+                            if (cellMoment.isBefore(lastDay, 'day') && cellMoment.isSameOrAfter(startDay, 'day')) {
+                                // Все предыдущие даты диапазона — заблокированы
+                                $(this).addClass('disabled off').removeClass('active start-date end-date');
+                            } else if (cellMoment.isSame(lastDay, 'day')) {
+                                // Последняя дата — доступная, чёрная, на ней скобочка
+                                $(this).removeClass('disabled off').addClass('active start-date end-date');
+                            } else {
+                                // Остальные — обычные
+                                $(this).removeClass('active start-date end-date disabled off');
+                            }
+                        });
+
+                        // Форсируем обновление календаря
+                        if (typeof picker.updateCalendars === 'function') {
+                            picker.updateCalendars();
+                        }
+                    });
+            });
+
 
             // Применяем параметры из URL после инициализации всех компонентов
             // Используем setTimeout для гарантии, что все компоненты (включая smart-search) загружены

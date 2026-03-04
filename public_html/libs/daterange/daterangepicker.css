@@ -386,3 +386,8 @@
     float: right; }
   .daterangepicker .drp-calendar.left {
     clear: none !important; } }
+
+/* Убираем красный квадрат и делаем цифру сегодняшнего дня черной */
+body .daterangepicker .drp-calendar .calendar-table tbody tr td.today {
+  color: #000 !important;
+}
