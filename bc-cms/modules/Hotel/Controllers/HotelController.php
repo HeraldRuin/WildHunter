@@ -236,30 +236,44 @@ class HotelController extends Controller
     protected function filterHotelsByGuestCountAndAvailability($hotels, int $guestCount, Carbon $start, Carbon $end)
     {
         $periodStart = $start->copy()->startOfDay();
-        $periodEnd = $end->copy()->subDay()->startOfDay();
+        $periodEnd   = $end->copy()->subDay()->startOfDay();
         $periodDates = [];
+
         for ($date = $periodStart->copy(); $date <= $periodEnd; $date->addDay()) {
             $periodDates[] = $date->format('Y-m-d');
         }
 
-        return $hotels->filter(function($hotel) use ($guestCount, $periodDates) {
+        return $hotels->filter(function ($hotel) use ($guestCount, $periodDates) {
+
             $totalCapacity = 0;
 
             foreach ($hotel->rooms as $room) {
-                $blockedDates = DB::table('bc_hotel_room_dates')
+                $roomDates = DB::table('bc_hotel_room_dates')
                     ->where('target_id', $room->id)
                     ->whereIn(DB::raw('DATE(start_date)'), $periodDates)
-                    ->where('active', 0)
-                    ->pluck(DB::raw('DATE(start_date)'))
-                    ->toArray();
+                    ->get()
+                    ->keyBy(function ($item) {
+                        return date('Y-m-d', strtotime($item->start_date));
+                    });
 
-                $availableDays = count($periodDates) - count($blockedDates);
+                foreach ($periodDates as $date) {
+                    if (isset($roomDates[$date])) {
 
-                if ($availableDays <= 0) {
-                    continue;
+                        if ((int)$roomDates[$date]->active === 0) {
+                            continue;
+                        }
+
+                        $number = (int)$roomDates[$date]->number;
+
+                    } else {
+                        $number = (int)$room->number;
+                    }
+
+                    if ($number <= 0) {
+                        continue;
+                    }
+                    $totalCapacity += $room->adults * $number;
                 }
-
-                $totalCapacity += $room->adults * $room->number * $availableDays;
             }
 
             return $totalCapacity >= $guestCount;
