@@ -303,53 +303,6 @@ class HotelController extends Controller
         });
     }
 
-//    protected function filterHotelsByGuestCountAndAvailability($hotels, int $guestCount, Carbon $start, Carbon $end)
-//    {
-//        $periodStart = $start->copy()->startOfDay();
-//        $periodEnd   = $end->copy()->subDay()->startOfDay();
-//        $periodDates = [];
-//
-//        for ($date = $periodStart->copy(); $date <= $periodEnd; $date->addDay()) {
-//            $periodDates[] = $date->format('Y-m-d');
-//        }
-//
-//        return $hotels->filter(function ($hotel) use ($guestCount, $periodDates) {
-//
-//            $totalCapacity = 0;
-//
-//            foreach ($hotel->rooms as $room) {
-//                $roomDates = DB::table('bc_hotel_room_dates')
-//                    ->where('target_id', $room->id)
-//                    ->whereIn(DB::raw('DATE(start_date)'), $periodDates)
-//                    ->get()
-//                    ->keyBy(function ($item) {
-//                        return date('Y-m-d', strtotime($item->start_date));
-//                    });
-//
-//                foreach ($periodDates as $date) {
-//                    if (isset($roomDates[$date])) {
-//
-//                        if ((int)$roomDates[$date]->active === 0) {
-//                            continue;
-//                        }
-//
-//                        $number = (int)$roomDates[$date]->number;
-//
-//                    } else {
-//                        $number = (int)$room->number;
-//                    }
-//
-//                    if ($number <= 0) {
-//                        continue;
-//                    }
-//                    $totalCapacity += $room->adults * $number;
-//                }
-//            }
-//
-//            return $totalCapacity >= $guestCount;
-//        });
-//    }
-
     public function detail(Request $request, $slug)
     {
         $row = $this->hotelClass::where('slug', $slug)->with(['location','translation','hasWishList'])->first();
