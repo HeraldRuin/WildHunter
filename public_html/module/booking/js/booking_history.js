@@ -754,7 +754,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 });
             },
             searchUserDebounced() {
-                if (this.userSearchQuery.length < 2) return;
+                if (this.userSearchQuery.length < 1) return;
 
                 clearTimeout(this.debounceTimeout);
 
@@ -763,7 +763,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 }, 300);
             },
             searchUsers() {
-                if (this.userSearchQuery.length < 2) {
+                if (this.userSearchQuery.length < 1) {
                     this.searchResults = [];
                     this.noResults = false;
                     return;
