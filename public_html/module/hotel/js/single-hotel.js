@@ -896,17 +896,16 @@
 
                 // Проверяем диапазон дат проживания ТОЛЬКО если выбраны даты проживания
                 // Если выбрано только животное (без номера) - проверку не делаем
-                if (this.start_date && this.end_date) {
-                    var stayStart = moment(this.start_date, 'YYYY-MM-DD');
-                    var stayEnd = moment(this.end_date, 'YYYY-MM-DD'); // дата выезда
-                    var huntDate = moment(this.start_date_animal, 'YYYY-MM-DD');
-
-                    // Дата охоты должна быть в интервале [заезд; выезд)
-                    if (huntDate.isBefore(stayStart) || !huntDate.isBefore(stayEnd)) {
-                        bookingCoreApp.showError('Дата охоты должна быть в пределах дат проживания');
-                        return;
-                    }
-                }
+                // if (this.start_date && this.end_date) {
+                //     var stayStart = moment(this.start_date, 'YYYY-MM-DD');
+                //     var stayEnd = moment(this.end_date, 'YYYY-MM-DD');
+                //     var huntDate = moment(this.start_date_animal, 'YYYY-MM-DD');
+                //
+                //     // if (!huntDate.isAfter(stayStart) || huntDate.isAfter(stayEnd)) {
+                //     //     bookingCoreApp.showError('Дата охоты должна быть в пределах дат проживания');
+                //     //     return false;
+                //     // }
+                // }
 
                 var me = this;
                 
@@ -1093,15 +1092,16 @@
                         return false;
                     }
                     // Если выбраны и номера, и животное - проверяем диапазон дат проживания
-                    if (this.start_date && this.end_date) {
-                        var stayStart = moment(this.start_date, 'YYYY-MM-DD');
-                        var stayEnd = moment(this.end_date, 'YYYY-MM-DD');
-                        var huntDate = moment(this.start_date_animal, 'YYYY-MM-DD');
-                        if (huntDate.isBefore(stayStart) || !huntDate.isBefore(stayEnd)) {
-                            bookingCoreApp.showError('Дата охоты должна быть в пределах дат проживания');
-                            return false;
-                        }
-                    }
+                    // if (this.start_date && this.end_date) {
+                    //     var stayStart = moment(this.start_date, 'YYYY-MM-DD');
+                    //     var stayEnd = moment(this.end_date, 'YYYY-MM-DD');
+                    //     var huntDate = moment(this.start_date_animal, 'YYYY-MM-DD');
+                    //
+                    //     if (!huntDate.isBetween(stayStart, stayEnd, 'day', '(]')) {
+                    //         bookingCoreApp.showError('Дата охоты должна быть в пределах дат проживания');
+                    //         return false;
+                    //     }
+                    // }
                 }
 
                 if (!options.skipValidate && !this.validate()) return false;
