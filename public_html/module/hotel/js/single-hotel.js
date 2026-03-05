@@ -416,8 +416,6 @@
                 options.locale = _merge(daterangepickerLocale, options.locale);
                 animalOptions.locale = _merge(daterangepickerLocale, animalOptions.locale);
             }
-
-// Верхний календарь: hotelStartDate
             this.$nextTick(() => {
                 $(this.$refs.hotelStartDate).daterangepicker(options)
                     .on('apply.daterangepicker', (ev, picker) => {
@@ -425,38 +423,32 @@
                             picker.endDate.add(1,'day');
                         }
 
-                        // Сохраняем даты проживания
                         this.start_date = picker.startDate.format('YYYY-MM-DD');
                         this.end_date = picker.endDate.format('YYYY-MM-DD');
                         this.start_date_html = picker.startDate.format(bookingCore.date_format) +
                             ' <i class="fa fa-long-arrow-right" style="font-size: inherit"></i> ' +
                             picker.endDate.format(bookingCore.date_format);
 
-                        // Настраиваем календарь животных
                         const animalPicker = $(this.$refs.animalStartDate).data('daterangepicker');
-                        if (animalPicker) {
-                            animalPicker.minDate = picker.startDate.clone();
-                            animalPicker.maxDate = picker.endDate.clone(); // последняя дата доступна
-                            const lastStayDay = picker.endDate.clone();
+                        if (!animalPicker) return;
 
-                            // Сбрасываем дату охоты, если она вышла за диапазон
-                            if (this.start_date_animal) {
-                                const hunt = moment(this.start_date_animal, 'YYYY-MM-DD');
-                                if (hunt.isBefore(animalPicker.minDate) || hunt.isAfter(animalPicker.maxDate)) {
-                                    this.start_date_animal = '';
-                                    this.start_date_animal_html = bookingCoreApp?.i18n?.select_date || 'Выберите пожалуйста';
-                                }
+                        animalPicker.minDate = picker.startDate.clone();
+                        animalPicker.maxDate = picker.endDate.clone().subtract(1, 'day');
+
+                        if (this.start_date_animal) {
+                            const hunt = moment(this.start_date_animal, 'YYYY-MM-DD');
+                            if (hunt.isBefore(animalPicker.minDate) || hunt.isAfter(animalPicker.maxDate)) {
+                                this.start_date_animal = '';
+                                this.start_date_animal_html = bookingCoreApp?.i18n?.select_date || 'Выберите пожалуйста';
                             }
-
-                            // Сбрасываем календарь на последний день проживания
-                            animalPicker.setStartDate(lastStayDay);
-                            animalPicker.setEndDate(lastStayDay);
                         }
+
+                        const viewDate = picker.startDate.clone();
+                        animalPicker.setStartDate(viewDate);
+                        animalPicker.setEndDate(viewDate);
+                        animalPicker.container.find('td').removeClass('active start-date end-date');
                     });
             });
-
-
-
 
             this.$nextTick(() => {
                 const animalPickerElement = $(this.$refs.animalStartDate);
@@ -464,64 +456,59 @@
 
                 animalPickerElement.daterangepicker(animalOptions)
                     .on('apply.daterangepicker', (ev, picker) => {
-                        // Сохраняем только конечную дату
                         me.start_date_animal = picker.endDate.format('YYYY-MM-DD');
                         me.end_date_animal = me.start_date_animal;
                         me.start_date_animal_html = picker.endDate.format(bookingCore.date_format);
                     })
                     .on('show.daterangepicker', function(ev, picker) {
-                        if (!me.end_date) return;
+                        if (!me.end_date || !me.start_date) return;
 
                         const startDay = moment(me.start_date, 'YYYY-MM-DD');
                         const lastDay = moment(me.end_date, 'YYYY-MM-DD');
+                        const today = moment().startOf('day');
 
-                        // Устанавливаем minDate на первую дату диапазона, maxDate на последнюю
                         picker.minDate = startDay.clone();
                         picker.maxDate = lastDay.clone();
 
-                        // Используем isInvalidDate, чтобы блокировать все до последней даты
                         picker.isInvalidDate = function(date) {
-                            return date.isBefore(lastDay, 'day');
+                            return date.isSame(startDay, 'day');
                         };
 
-                        // Сбрасываем диапазон на последний день
-                        picker.setStartDate(lastDay.clone());
-                        picker.setEndDate(lastDay.clone());
+                        picker.container.find('td').removeClass('active start-date end-date');
 
-                        // Обновляем инпут
-                        if (picker.element && picker.element[0]) {
-                            $(picker.element[0]).val(lastDay.format(bookingCore.date_format));
-                        }
-
-                        // Сбрасываем классы всех ячеек
-                        picker.container.find('td').removeClass('active in-range start-date end-date disabled off');
-
-                        // Проходим по ячейкам
                         picker.container.find('td').each(function() {
                             const cellDate = $(this).data('title'); // YYYY-MM-DD
                             if (!cellDate) return;
-
                             const cellMoment = moment(cellDate, 'YYYY-MM-DD');
 
-                            if (cellMoment.isBefore(lastDay, 'day') && cellMoment.isSameOrAfter(startDay, 'day')) {
-                                // Все предыдущие даты диапазона — заблокированы
-                                $(this).addClass('disabled off').removeClass('active start-date end-date');
-                            } else if (cellMoment.isSame(lastDay, 'day')) {
-                                // Последняя дата — доступная, чёрная, на ней скобочка
-                                $(this).removeClass('disabled off').addClass('active start-date end-date');
-                            } else {
-                                // Остальные — обычные
+                            if (cellMoment.isSame(startDay, 'day')) {
+                                $(this).addClass('disabled off').removeClass('active start-date end-date today');
+                            }
+
+                            else if (cellMoment.isAfter(startDay, 'day') && cellMoment.isBefore(lastDay, 'day')) {
+                                $(this).removeClass('disabled off active start-date end-date today');
+                            }
+
+                            else if (cellMoment.isSame(today, 'day')) {
                                 $(this).removeClass('active start-date end-date disabled off');
+                            }
+
+                            else {
+                                $(this).removeClass('active start-date end-date disabled off today');
                             }
                         });
 
-                        // Форсируем обновление календаря
+                        if (me.start_date_animal) {
+                            const selectedAnimalDate = moment(me.start_date_animal, 'YYYY-MM-DD');
+                            picker.setStartDate(selectedAnimalDate);
+                            picker.setEndDate(selectedAnimalDate);
+                        }
+
                         if (typeof picker.updateCalendars === 'function') {
                             picker.updateCalendars();
                         }
                     });
             });
-
 
             // Применяем параметры из URL после инициализации всех компонентов
             // Используем setTimeout для гарантии, что все компоненты (включая smart-search) загружены
