@@ -205,8 +205,8 @@ class AvailabilityController extends FrontendController{
             $stayEnd = Carbon::parse($end_date_hotel)->startOfDay();
             $huntDate = Carbon::parse($start_date)->startOfDay();
 
-            // Дата охоты должна быть >= даты заезда И < даты выезда
-            if ($huntDate->lt($stayStart) || $huntDate->gte($stayEnd)) {
+            // Дата охоты должна быть > даты заезда И <= даты выезда
+            if ($huntDate->lte($stayStart) || $huntDate->gt($stayEnd)) {
                 return $this->sendError('Дата охоты должна быть в пределах дат проживания');
             }
         }
