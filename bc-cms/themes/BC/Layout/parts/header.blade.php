@@ -167,7 +167,7 @@
 </div>
 
 <ul id="user-dropdown-menu" class="dropdown-menu dropdown-menu-user text-left" style="z-index: 9999; display:none;">
-    @if (is_vendor() || is_baseAdmin())
+    @if (is_baseAdmin())
         <li class="menu-hr"><a href="{{ route('vendor.dashboard') }}" class="menu-hr"><i
                     class="icon ion-md-analytics"></i>  {{ __('PERSONAL ACCOUNT') }} </a></li>
     @endif
