@@ -32,30 +32,30 @@
                     <hr>
                 </div>
             @endif
-{{--            <div class="col-md-6">--}}
-{{--                <div class="form-group">--}}
-{{--                    <label >{{__("First Name")}} <span class="required">*</span></label>--}}
-{{--                    <input type="text" placeholder="{{__("First Name")}}" class="form-control" value="{{$user->first_name ?? ''}}" name="first_name">--}}
-{{--                </div>--}}
-{{--            </div>--}}
-{{--            <div class="col-md-6">--}}
-{{--                <div class="form-group">--}}
-{{--                    <label >{{__("Last Name")}} <span class="required">*</span></label>--}}
-{{--                    <input type="text" placeholder="{{__("Last Name")}}" class="form-control" value="{{$user->last_name ?? ''}}" name="last_name">--}}
-{{--                </div>--}}
-{{--            </div>--}}
-{{--            <div class="col-md-6 field-email">--}}
-{{--                <div class="form-group">--}}
-{{--                    <label >{{__("Email")}} <span class="required">*</span></label>--}}
-{{--                    <input type="email" placeholder="{{__("email@domain.com")}}" class="form-control" value="{{$user->email ?? ''}}" name="email">--}}
-{{--                </div>--}}
-{{--            </div>--}}
-{{--            <div class="col-md-6">--}}
-{{--                <div class="form-group">--}}
-{{--                    <label >{{__("Phone")}} <span class="required">*</span></label>--}}
-{{--                    <input type="text" placeholder="{{__("Your Phone")}}" class="form-control" value="{{$user->phone ?? ''}}" name="phone">--}}
-{{--                </div>--}}
-{{--            </div>--}}
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label >{{__("First Name")}} <span class="required">*</span></label>
+                    <input type="text" placeholder="{{__("First Name")}}" class="form-control" value="{{$user->first_name ?? ''}}" name="first_name">
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label >{{__("Last Name")}} <span class="required">*</span></label>
+                    <input type="text" placeholder="{{__("Last Name")}}" class="form-control" value="{{$user->last_name ?? ''}}" name="last_name">
+                </div>
+            </div>
+            <div class="col-md-6 field-email">
+                <div class="form-group">
+                    <label >{{__("Email")}} <span class="required">*</span></label>
+                    <input type="email" placeholder="{{__("email@domain.com")}}" class="form-control" value="{{$user->email ?? ''}}" name="email">
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label >{{__("Phone")}} <span class="required">*</span></label>
+                    <input type="text" placeholder="{{__("Your Phone")}}" class="form-control" value="{{$user->phone ?? ''}}" name="phone">
+                </div>
+            </div>
             <div class="col-md-12">
                 <label >{{__("Special Requirements")}} </label>
                 <textarea name="customer_notes" cols="30" rows="6" class="form-control" placeholder="{{__('Special Requirements')}}"></textarea>
