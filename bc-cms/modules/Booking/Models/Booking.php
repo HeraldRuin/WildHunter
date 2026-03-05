@@ -745,6 +745,7 @@ class Booking extends BaseModel
                 ->whereNull('i.deleted_at')
                 ->whereNull('h.deleted_at')
                 ->whereNotIn('i.status', ['declined'])
+                ->where('h.invited_by', '!=', $customer_id_or_name)
                 ->pluck('h.booking_id')
                 ->toArray();
         }
