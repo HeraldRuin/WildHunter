@@ -2342,8 +2342,8 @@ class BookingController extends \App\Http\Controllers\Controller
         $allItems = [
             [
                 'name' => 'Внесена предоплата:',
-                'total_cost' => round($booking->total / (int)$paidCount),
-                'my_cost' => round(($booking->total / (int)$paidCount) / (int)$paidCount),
+                'total_cost' => round($booking->total),
+                'my_cost' => round(($booking->total / (int)$paidCount)),
             ],
             [
                 'name' => 'Итог базе',
