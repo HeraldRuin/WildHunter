@@ -97,8 +97,6 @@ class BookingController extends \App\Http\Controllers\Controller
         if ($res !== true) return $res;
 
         $booking = $this->bookingInst;
-        $prices = [];
-
         $trophyPrice = AnimalTrophy::where('animal_id', $booking->animal_id)
             ->get()
             ->map(fn($t) => $t->priceForHotel($booking->hotel_id))
@@ -658,6 +656,19 @@ class BookingController extends \App\Http\Controllers\Controller
             abort(404);
         }
 
+        $trophyPrice = AnimalTrophy::where('animal_id', $booking->animal_id)
+            ->get()
+            ->map(fn($t) => $t->priceForHotel($booking->hotel_id))
+            ->filter()
+            ->sort()
+            ->values();
+
+        $trophyPrice = match ($trophyPrice->count()) {
+            0 => null,
+            1 => round($trophyPrice[0]),
+            default => round($trophyPrice->first()) . ' - ' . round($trophyPrice->last()),
+        };
+
         $data = [
             'page_title' => __('Booking Details'),
             'booking'    => $booking,
@@ -666,7 +677,8 @@ class BookingController extends \App\Http\Controllers\Controller
             'user'       => auth()->user(),
             'ifAdminBase' => $ifAdminBase,
             'booking_type'  => $booking->type,
-            'all_total'  => $this->getAllPay($booking->total, $booking->amount_hunting)
+            'all_total'  => $this->getAllPay($booking->total, $booking->amount_hunting),
+            'trophyPrice' => $trophyPrice
         ];
         if ($booking->gateway) {
             $data['gateway'] = get_payment_gateway_obj($booking->gateway);
