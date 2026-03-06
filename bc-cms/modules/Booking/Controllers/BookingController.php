@@ -2252,7 +2252,7 @@ class BookingController extends \App\Http\Controllers\Controller
                 $animalName = optional(Animal::find($trophy->animal))->title ?? '';
 
                 $trophies[] = [
-                    'name' => $animalName . ' ' . $trophy->type. ' ' . 'x' . ' ' . $trophy->count . 'шт',
+                    'name' => $animalName . '  (' . $trophy->type. '  ' . 'x' . ' ' . $trophy->count . 'шт)',
                     'total_cost' => round((float)$trophy->price ),
                     'my_cost' => round($trophy->price / $paidCount),
                 ];
