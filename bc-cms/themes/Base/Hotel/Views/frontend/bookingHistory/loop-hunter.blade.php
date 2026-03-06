@@ -270,7 +270,7 @@ $endTimestamp = null;
                     {{__("Open invitation")}}
                 </button>
             @endif
-            @if($isInvitationAccepted && in_array($booking->type, ['animal', 'hotel_animal']))
+            @if($isInvitationAccepted && in_array($booking->type, ['animal', 'hotel_animal', 'hotel']))
                 @if(!$booking->is_master_hunter && in_array($booking->status, [\Modules\Booking\Models\Booking::PREPAYMENT_COLLECTION, \Modules\Booking\Models\Booking::FINISHED_PREPAYMENT, \Modules\Booking\Models\Booking::START_COLLECTION]))
                     <button
                         type="button"
@@ -310,7 +310,7 @@ $endTimestamp = null;
                 </button>
             @endif
 
-            @if($booking->is_master_hunter && $booking->type != 'hotel')
+            @if($booking->is_master_hunter)
                 @if(in_array($booking->status, [\Modules\Booking\Models\Booking::PREPAYMENT_COLLECTION, \Modules\Booking\Models\Booking::START_COLLECTION, \Modules\Booking\Models\Booking::FINISHED_PREPAYMENT]))
                     <button
                         type="button"
