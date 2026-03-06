@@ -56,12 +56,14 @@
                             {{$booking->amount_hunting}}
                         </div>
                     </li>
-                    <li>
-                        <div class="label">{{__('Trophy:')}}</div>
-                        <div class="val">
-                            {{$trophyPrice}}
-                        </div>
-                    </li>
+                    @if($trophyPrice !== null)
+                        <li>
+                            <div class="label">{{__('Trophy:')}}</div>
+                            <div class="val">
+                                {{$trophyPrice}}
+                            </div>
+                        </li>
+                    @endif
                 @endif
             </ul>
         </div>

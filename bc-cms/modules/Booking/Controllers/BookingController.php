@@ -101,15 +101,19 @@ class BookingController extends \App\Http\Controllers\Controller
 
         $trophies = AnimalTrophy::where('animal_id', $booking->animal_id)->get();
 
-        foreach ($trophies as $trophy) {
-            $prices[] = $trophy->priceForHotel($booking->hotel_id);
-        }
-        $count = count($prices);
+        $prices = $trophies->map(fn($t) => $t->priceForHotel($booking->hotel_id))
+            ->filter()
+            ->all();
 
-        if ($count === 1) {
+        if (empty($prices)) {
+            $result = null;
+        } elseif (count($prices) === 1) {
             $result = round($prices[0]);
         } else {
-            $result = round(min($prices)) . ' - ' . round(max($prices));
+            $result = [
+                'min' => round(min($prices)),
+                'max' => round(max($prices))
+            ];
         }
 
         $is_api = request()->segment(1) == 'api';
