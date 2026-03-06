@@ -97,11 +97,20 @@ class BookingController extends \App\Http\Controllers\Controller
         if ($res !== true) return $res;
 
         $booking = $this->bookingInst;
+        $prices = [];
 
-        //TODO закоментировал так как на время чтобы убрать оплату ставлю статус processing но тут тогда перекидывает на главную
-//        if (!in_array($booking->status, ['draft', 'unpaid'])) {
-//            return redirect('/');
-//        }
+        $trophies = AnimalTrophy::where('animal_id', $booking->animal_id)->get();
+
+        foreach ($trophies as $trophy) {
+            $prices[] = $trophy->priceForHotel($booking->hotel_id);
+        }
+        $count = count($prices);
+
+        if ($count === 1) {
+            $result = round($prices[0]);
+        } else {
+            $result = round(min($prices)) . ' - ' . round(max($prices));
+        }
 
         $is_api = request()->segment(1) == 'api';
 
@@ -114,7 +123,8 @@ class BookingController extends \App\Http\Controllers\Controller
             'user'       => auth()->user(),
             'is_api'     => $is_api,
             'booking_type'  => $booking->type,
-            'all_total'  => $this->getAllPay($booking->total, $booking->amount_hunting)
+            'all_total'  => $this->getAllPay($booking->total, $booking->amount_hunting),
+            'trophyPrice' => $result
         ];
         return view('Booking::frontend/checkout', $data);
     }
@@ -144,19 +154,11 @@ class BookingController extends \App\Http\Controllers\Controller
                 'redirect' => url('/')
             ];
         }
-        //TODO закоментировал так как на время чтобы убрать оплату ставлю статус processing но тут тогда перекидывает на главную
-//        if (!in_array($booking->status, ['draft', 'unpaid'])) {
-//            $data = [
-//                'error'    => true,
-//                'redirect' => url('/')
-//            ];
-//        }
         return response()->json($data, 200);
     }
 
     protected function validateDoCheckout()
     {
-
         $request = \request();
         if (!is_enable_guest_checkout() and !Auth::check()) {
             return $this->sendError(__("You have to login in to do this"))->setStatusCode(401);
@@ -227,10 +229,10 @@ class BookingController extends \App\Http\Controllers\Controller
 
         $messages = [];
         $rules = [
-            'first_name'      => 'required|string|max:255',
-            'last_name'       => 'required|string|max:255',
-            'email'           => 'required|string|email|max:255',
-            'phone'           => 'required|string|max:255',
+//            'first_name'      => 'required|string|max:255',
+//            'last_name'       => 'required|string|max:255',
+//            'email'           => 'required|string|email|max:255',
+//            'phone'           => 'required|string|max:255',
             'term_conditions' => 'required',
         ];
 
@@ -1812,28 +1814,6 @@ class BookingController extends \App\Http\Controllers\Controller
         $penalty = AnimalFine::find($request->input('penalty_id'));
         $price = $penalty->hotelPrices()->where('hotel_id', $booking->hotel_id)->first()?->price;
 
-//        $service = BookingService::where('booking_id', $booking->id)
-//            ->where('animal', $request->input('animal_id'))
-//            ->where('hunter_id', $request->input('hunter_id'))
-//            ->where('type', $request->input('type'))
-//            ->where('service_type', 'penalty')
-//            ->first();
-//
-//        if ($service) {
-//            $service->price = round($service->price + $price, 2);
-//            $service->save();
-//        } else {
-//            $service = BookingService::create([
-//                'booking_id'   => $booking->id,
-//                'service_type' => 'penalty',
-//                'type'         => $request->input('type'),
-//                'service_id'   => null,
-//                'hunter_id'    => $request->input('hunter_id'),
-//                'animal'       => $request->input('animal_id'),
-//                'price'        => $price,
-//            ]);
-//        }
-
         $service = BookingService::create([
             'booking_id'   => $booking->id,
             'service_type' => 'penalty',
@@ -1909,16 +1889,6 @@ class BookingController extends \App\Http\Controllers\Controller
                 'price'        => $totalCost,
             ]);
         }
-
-//        $service = BookingService::create([
-//            'booking_id'   => $booking->id,
-//            'service_type' => 'preparation',
-//            'type'         => $request->input('type'),
-//            'service_id'   => null,
-//            'animal'       => $request->input('animal_id'),
-//            'count'        => $request->input('count'),
-//            'price'        => $totalCost,
-//        ]);
 
         $animal = Animal::find($request->input('animal_id'));
 

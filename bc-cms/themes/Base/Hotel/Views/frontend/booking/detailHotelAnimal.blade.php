@@ -25,13 +25,6 @@
 
 					@endif
 				</div>
-				@php $vendor = $service->author; @endphp
-				@if($vendor->hasPermission('dashboard_vendor_access') and !$vendor->hasPermission('dashboard_access'))
-					<div class="mt-2">
-						<i class="icofont-info-circle"></i>
-						{{ __("Vendor") }}: <a href="{{route('user.profile',['id'=>$vendor->id])}}" target="_blank">{{$vendor->getDisplayName()}}</a>
-					</div>
-				@endif
 			</div>
 		</div>
 		<div class="review-section">
@@ -87,17 +80,6 @@
 							</div>
 						</li>
 					@endforeach
-						<li class="flex-wrap">
-
-								<div class="flex-grow-0 flex-shrink-0 w-100">
-									<p class="text-center">
-										<a data-toggle="modal" data-target="#detailBookingDate{{$booking->code}}" aria-expanded="false"
-										   aria-controls="detailBookingDate{{$booking->code}}">
-											{{__('Detail')}} <i class="icofont-list"></i>
-										</a>
-									</p>
-								</div>
-						</li>
 				@endif
 				@php $hunting = $booking->getJsonMeta('animal') @endphp
 
@@ -201,13 +183,6 @@ $dateDetail = $service->detailBookingEachDate($booking);
 
                     @endif
                 </div>
-                @php $vendor = $service->author; @endphp
-                @if($vendor->hasPermission('dashboard_vendor_access') and !$vendor->hasPermission('dashboard_access'))
-                    <div class="mt-2">
-                        <i class="icofont-info-circle"></i>
-                        {{ __("Vendor") }}: <a href="{{route('user.profile',['id'=>$vendor->id])}}" target="_blank">{{$vendor->getDisplayName()}}</a>
-                    </div>
-                @endif
             </div>
         </div>
         <div class="review-section">
@@ -232,42 +207,48 @@ $dateDetail = $service->detailBookingEachDate($booking);
                            {{$booking->amount_hunting}}
                         </div>
                     </li>
+                    <li>
+                        <div class="label">{{__('Trophy:')}}</div>
+                        <div class="val">
+                            {{$trophyPrice}}
+                        </div>
+                    </li>
                 @endif
             </ul>
         </div>
-        <div class="review-section total-review">
+{{--        <div class="review-section total-review">--}}
 
-            <ul class="review-list">
+{{--            <ul class="review-list">--}}
 
-                @php $hunting = $booking->getJsonMeta('animal') @endphp
+{{--                @php $hunting = $booking->getJsonMeta('animal') @endphp--}}
 
-                @if(!empty($hunting))
-                    <li>
-                        <div class="label-title"><strong>{{__("Hunting list:")}}</strong></div>
-                    </li>
-                    @foreach($hunting as $animal)
-                        <li>
-                            <div>{{ $animal }}</div>
-                        </li>
-                    @endforeach
+{{--                @if(!empty($hunting))--}}
+{{--                    <li>--}}
+{{--                        <div class="label-title"><strong>{{__("Hunting list:")}}</strong></div>--}}
+{{--                    </li>--}}
+{{--                    @foreach($hunting as $animal)--}}
+{{--                        <li>--}}
+{{--                            <div>{{ $animal }}</div>--}}
+{{--                        </li>--}}
+{{--                    @endforeach--}}
 
-                @endif
-                @php
-                    $list_all_fee = [];
-                    if(!empty($booking->buyer_fees)){
-                        $buyer_fees = json_decode($booking->buyer_fees , true);
-                        $list_all_fee = $buyer_fees;
-                    }
-                    if(!empty($vendor_service_fee = $booking->vendor_service_fee)){
-                        $list_all_fee = array_merge($list_all_fee , $vendor_service_fee);
-                    }
-                @endphp
+{{--                @endif--}}
+{{--                @php--}}
+{{--                    $list_all_fee = [];--}}
+{{--                    if(!empty($booking->buyer_fees)){--}}
+{{--                        $buyer_fees = json_decode($booking->buyer_fees , true);--}}
+{{--                        $list_all_fee = $buyer_fees;--}}
+{{--                    }--}}
+{{--                    if(!empty($vendor_service_fee = $booking->vendor_service_fee)){--}}
+{{--                        $list_all_fee = array_merge($list_all_fee , $vendor_service_fee);--}}
+{{--                    }--}}
+{{--                @endphp--}}
 
-                <li class="final-total d-block">
-                    <div class="d-flex justify-content-between">
-                        <div class="label">{{__("Total:")}}</div>
-                        <div class="val">{{format_money($all_total)}}</div>
-                    </div>
+{{--                <li class="final-total d-block">--}}
+{{--                    <div class="d-flex justify-content-between">--}}
+{{--                        <div class="label">{{__("Total:")}}</div>--}}
+{{--                        <div class="val">{{format_money($all_total)}}</div>--}}
+{{--                    </div>--}}
 {{--                    @if($booking->status !='draft')--}}
 {{--                        <div class="d-flex justify-content-between">--}}
 {{--                            <div class="label">{{__("Paid:")}}</div>--}}
@@ -280,10 +261,10 @@ $dateDetail = $service->detailBookingEachDate($booking);
 {{--                            </div>--}}
 {{--                        @endif--}}
 {{--                    @endif--}}
-                </li>
+{{--                </li>--}}
 {{--                @include ('Booking::frontend/booking/checkout-deposit-amount')--}}
-            </ul>
-        </div>
+{{--            </ul>--}}
+{{--        </div>--}}
     </div>
 </div>
 

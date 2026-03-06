@@ -56,34 +56,40 @@
                             {{$booking->amount_hunting}}
                         </div>
                     </li>
+                    <li>
+                        <div class="label">{{__('Trophy:')}}</div>
+                        <div class="val">
+                            {{$trophyPrice}}
+                        </div>
+                    </li>
                 @endif
             </ul>
         </div>
-        <div class="review-section total-review">
+{{--        <div class="review-section total-review">--}}
 
-            <ul class="review-list">
+{{--            <ul class="review-list">--}}
 {{--                @includeIf('Coupon::frontend/booking/checkout-coupon')--}}
-                <li class="final-total d-block">
-                    <div class="d-flex justify-content-between">
-                        <div class="label">{{__("Total:")}}</div>
-                        <div class="val">{{format_money($booking->amount_hunting)}}</div>
-                    </div>
-                    @if($booking->status !='draft')
-                        <div class="d-flex justify-content-between">
-                            <div class="label">{{__("Paid:")}}</div>
-                            <div class="val">{{format_money($booking->paid)}}</div>
-                        </div>
-                        @if($booking->paid < $booking->amount_hunting)
-                            <div class="d-flex justify-content-between">
-                                <div class="label">{{__("Remain:")}}</div>
-                                <div class="val">{{format_money($booking->amount_hunting - $booking->paid)}}</div>
-                            </div>
-                        @endif
-                    @endif
-                </li>
+{{--                <li class="final-total d-block">--}}
+{{--                    <div class="d-flex justify-content-between">--}}
+{{--                        <div class="label">{{__("Total:")}}</div>--}}
+{{--                        <div class="val">{{format_money($booking->amount_hunting)}}</div>--}}
+{{--                    </div>--}}
+{{--                    @if($booking->status !='draft')--}}
+{{--                        <div class="d-flex justify-content-between">--}}
+{{--                            <div class="label">{{__("Paid:")}}</div>--}}
+{{--                            <div class="val">{{format_money($booking->paid)}}</div>--}}
+{{--                        </div>--}}
+{{--                        @if($booking->paid < $booking->amount_hunting)--}}
+{{--                            <div class="d-flex justify-content-between">--}}
+{{--                                <div class="label">{{__("Remain:")}}</div>--}}
+{{--                                <div class="val">{{format_money($booking->amount_hunting - $booking->paid)}}</div>--}}
+{{--                            </div>--}}
+{{--                        @endif--}}
+{{--                    @endif--}}
+{{--                </li>--}}
 {{--                @include ('Booking::frontend/booking/checkout-deposit-amount')--}}
-            </ul>
-        </div>
+{{--            </ul>--}}
+{{--        </div>--}}
     </div>
 </div>
 
