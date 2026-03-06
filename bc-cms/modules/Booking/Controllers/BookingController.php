@@ -99,22 +99,18 @@ class BookingController extends \App\Http\Controllers\Controller
         $booking = $this->bookingInst;
         $prices = [];
 
-        $trophies = AnimalTrophy::where('animal_id', $booking->animal_id)->get();
-
-        $prices = $trophies->map(fn($t) => $t->priceForHotel($booking->hotel_id))
+        $trophyPrice = AnimalTrophy::where('animal_id', $booking->animal_id)
+            ->get()
+            ->map(fn($t) => $t->priceForHotel($booking->hotel_id))
             ->filter()
-            ->all();
+            ->sort()
+            ->values();
 
-        if (empty($prices)) {
-            $result = null;
-        } elseif (count($prices) === 1) {
-            $result = round($prices[0]);
-        } else {
-            $result = [
-                'min' => round(min($prices)),
-                'max' => round(max($prices))
-            ];
-        }
+        $trophyPrice = match ($trophyPrice->count()) {
+            0 => null,
+            1 => round($trophyPrice[0]),
+            default => round($trophyPrice->first()) . ' - ' . round($trophyPrice->last()),
+        };
 
         $is_api = request()->segment(1) == 'api';
 
@@ -128,7 +124,7 @@ class BookingController extends \App\Http\Controllers\Controller
             'is_api'     => $is_api,
             'booking_type'  => $booking->type,
             'all_total'  => $this->getAllPay($booking->total, $booking->amount_hunting),
-            'trophyPrice' => $result
+            'trophyPrice' => $trophyPrice
         ];
         return view('Booking::frontend/checkout', $data);
     }
