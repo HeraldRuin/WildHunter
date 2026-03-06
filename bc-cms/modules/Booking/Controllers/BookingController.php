@@ -2344,7 +2344,8 @@ class BookingController extends \App\Http\Controllers\Controller
         $penaltiesTotal     = array_sum(array_column($penalties, 'total_cost'));
         $addetionalsTotal   = array_sum(array_column($addetionals, 'total_cost'));
         $preparationTotal   = array_sum(array_column($preparations, 'total_cost'));
-        $baseTotal = round($booking->total + $booking->amount_hunting + $trophiesTotal + $penaltiesTotal + $addetionalsTotal + $preparationTotal);
+        $baseAmount = round($booking->total + $booking->amount_hunting + $trophiesTotal + $penaltiesTotal + $addetionalsTotal + $preparationTotal);
+        $baseTotal = $baseAmount - $booking->total;
         $baseMyCost = round($baseTotal / (int)$paidCount);
 
         $allItems = [
