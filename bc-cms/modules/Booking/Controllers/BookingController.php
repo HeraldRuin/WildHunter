@@ -2344,20 +2344,30 @@ class BookingController extends \App\Http\Controllers\Controller
         $penaltiesTotal     = array_sum(array_column($penalties, 'total_cost'));
         $addetionalsTotal   = array_sum(array_column($addetionals, 'total_cost'));
         $preparationTotal   = array_sum(array_column($preparations, 'total_cost'));
+
+        $trophiesMyTotal      = array_sum(array_column($trophies, 'my_cost'));
+        $penaltiesMyTotal     = array_sum(array_column($penalties, 'my_cost'));
+        $addetionalsMyTotal   = array_sum(array_column($addetionals, 'my_cost'));
+        $preparationMyTotal   = array_sum(array_column($preparations, 'my_cost'));
+
         $baseAmount = round($booking->total + $booking->amount_hunting + $trophiesTotal + $penaltiesTotal + $addetionalsTotal + $preparationTotal);
         $baseTotal = $baseAmount - $booking->total;
-        $baseMyCost = round($baseTotal / (int)$paidCount);
+        $huntingAmountPaid = ($booking->amount_hunting / $booking->total_hunting) * (int)$paidCount;
+        $huntingAmountMyPaid = round($huntingAmountPaid / (int)$paidCount);
+        $baseMyAmount = round($trophiesMyTotal + $penaltiesMyTotal + $addetionalsMyTotal + $preparationMyTotal);
+        $myPrepayment = round($booking->total / (int)$paidCount);
+        $baseMyTotalCost = round(($totalMyCost + $huntingAmountMyPaid + $baseMyAmount) - $myPrepayment);
 
         $allItems = [
             [
                 'name' => 'Внесена предоплата:',
                 'total_cost' => round($booking->total),
-                'my_cost' => round(($booking->total / (int)$paidCount)),
+                'my_cost' => $myPrepayment,
             ],
             [
                 'name' => 'Итог базе',
                 'total_cost' => $baseTotal,
-                'my_cost' => $baseMyCost,
+                'my_cost' => $baseMyTotalCost,
             ],
         ];
 
@@ -2368,8 +2378,6 @@ class BookingController extends \App\Http\Controllers\Controller
                 'my_cost' => round($totalMyDebt),
             ];
         }
-
-        $huntingAmountPaid = ($booking->amount_hunting / $booking->total_hunting) * (int)$paidCount;
 
         return response()->json([
             'status' => true,
@@ -2383,7 +2391,7 @@ class BookingController extends \App\Http\Controllers\Controller
                 [
                     'name' => 'Организация охоты',
                     'total_cost' => round($huntingAmountPaid),
-                    'my_cost' => round($huntingAmountPaid / (int)$paidCount),
+                    'my_cost' => $huntingAmountMyPaid,
                 ],
             ],
             'trophies' => $trophies,
