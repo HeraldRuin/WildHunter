@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('bc_hotels', function (Blueprint $table) {
-            $table->integer('collection_timer_hours')->nullable()->default(24);
+            $table->integer('collection_timer_hours')->nullable()->default(24)->after('max_hunts_per_day');
         });
     }
 

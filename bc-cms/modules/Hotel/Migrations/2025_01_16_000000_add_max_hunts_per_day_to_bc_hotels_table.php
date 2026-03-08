@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('bc_hotels', function (Blueprint $table) {
-            $table->integer('max_hunts_per_day')->default(0)->after('min_day_stays');
+            $table->integer('max_hunts_per_day')->default(0);
         });
     }
 
