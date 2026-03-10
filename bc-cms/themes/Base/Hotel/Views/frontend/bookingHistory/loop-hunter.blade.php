@@ -239,7 +239,7 @@ $endTimestamp = null;
                         type="button"
                         class="btn btn-primary btn-sm mt-2"
                         data-bs-toggle="modal"
-                        @click="calculatingBookingModal({{ $booking }}, $event)">
+                        @click="openCalculatingModal({{ $booking }}, $event)">
                         {{__("Calculating")}}
                     </button>
                 @endif
@@ -251,7 +251,7 @@ $endTimestamp = null;
                 type="button"
                 class="btn btn-primary btn-sm mt-2"
                 data-bs-toggle="modal"
-                @click="calculatingBookingModal({{ $booking }}, $event)">
+                @click="openCalculatingModal({{ $booking }}, $event)">
                 {{__("Calculating")}}
             </button>
         @endif
@@ -285,7 +285,7 @@ $endTimestamp = null;
                         type="button"
                         class="btn btn-primary btn-sm mt-2"
                         data-bs-toggle="modal"
-                        @click="loadBookingPlaces({{ $booking }}, $event)">
+                        @click="openBookingPlacesModal({{ $booking }}, $event)">
                         {{__("Select bed place")}}
                     </button>
                 @endif
@@ -347,7 +347,7 @@ $endTimestamp = null;
                     type="button"
                     class="btn btn-primary btn-sm mt-2"
                     data-bs-toggle="modal"
-                    @click="loadBookingPlaces({{ $booking }}, $event)">
+                    @click="openBookingPlacesModal({{ $booking }}, $event)">
                     {{__("Select bed place")}}
                 </button>
             @endif

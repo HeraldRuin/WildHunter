@@ -30,7 +30,9 @@ document.addEventListener('DOMContentLoaded', function () {
             invitedText: el.dataset.invitedText || 'Приглашен',
             acceptedText: el.dataset.acceptedText || 'Подтвержден',
             declinedText: el.dataset.declinedText || 'Отказался',
-            prepaymentPaidMap: {}
+            prepaymentPaidMap: {},
+
+            placesMap: {},
         },
         methods: {
             userPopoverContent(booking) {
@@ -1210,7 +1212,22 @@ document.addEventListener('DOMContentLoaded', function () {
                 });
             },
 
-            loadBookingPlaces(booking, event) {
+            // Открытие выбор койко-место
+            openBookingPlacesModal(booking, event) {
+                const bookingIdNum = parseInt(booking.id, 10);
+                const modalEl = document.getElementById('placeBookingModal' + bookingIdNum);
+                let modalInstance = bootstrap.Modal.getInstance(modalEl);
+
+                if (!modalInstance) {
+                    modalInstance = new bootstrap.Modal(modalEl);
+                }
+
+                modalInstance.show();
+                this.loadBookingPlaces(booking, event);
+            },
+
+            // Метод загрузки данных занятых мест
+            loadBookingPlaces(booking, event = null) {
                 const bookingIdNum = parseInt(booking.id, 10);
                 const btn = event?.currentTarget ?? null;
                 let originalHtml = null;
@@ -1218,8 +1235,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (btn) {
                     originalHtml = btn.innerHTML;
                     btn.disabled = true;
-                    btn.innerHTML = ` 
-            <span>${btn.textContent.trim()}</span>`;
+                    btn.innerHTML = `<span>${btn.textContent.trim()}</span>`;
                 }
 
                 const restoreButton = () => {
@@ -1229,16 +1245,19 @@ document.addEventListener('DOMContentLoaded', function () {
                     }
                 };
 
+                const self = this;
+
                 $.post(`/booking/${booking.id}/places`)
                     .done(res => {
                         restoreButton();
 
-                        if (!res.status) {
+                        if (!res.rooms || !res.places) {
                             alert('Ошибка получения данных');
                             return;
                         }
 
-                        const places = res.places ?? {};
+                        self.placesMap = res.places || {};
+                        self.currentUserId = res.current_user_id || null;
 
                         const modalEl = document.getElementById('placeBookingModal' + bookingIdNum);
                         if (!modalEl) return;
@@ -1247,230 +1266,178 @@ document.addEventListener('DOMContentLoaded', function () {
                         if (!contentEl) return;
 
                         contentEl.innerHTML = '';
-                        const self = this;
+                        self.renderBookingPlaces(booking, res.rooms, self.placesMap, contentEl);
 
-                        // группируем комнаты по типу
-                        const roomsByType = {};
-                        res.rooms.forEach(room => {
-                            if (!roomsByType[room.title]) {
-                                roomsByType[room.title] = [];
-                            }
-                            roomsByType[room.title].push(room);
-                        });
-
-                        Object.keys(roomsByType).forEach(type => {
-                            const block = document.createElement('div');
-                            block.className = 'mb-3 p-2';
-
-                            const header = document.createElement('h4');
-                            header.textContent = type;
-                            header.style.textAlign = 'center';
-                            block.appendChild(header);
-
-                            const list = document.createElement('ul');
-                            list.style.listStyle = 'none';
-                            list.style.padding = '0';
-
-                            // 🔴 ВАЖНО: идём по каждой комнате отдельно
-                            roomsByType[type].forEach(room => {
-                                const roomId = room.room_id;
-
-                                for (let i = 0; i < room.total_guests_in_type; i++) {
-                                    const placeNumber = i + 1;
-                                    const placeData = places[roomId]?.[placeNumber]?.[0] ?? null;
-
-                                    const li = document.createElement('li');
-                                    li.className = 'guest-slot mb-2';
-                                    li.style.display = 'flex';
-                                    li.style.alignItems = 'center';
-                                    li.style.gap = '10px';
-                                    li.style.border = '1px solid #ccc';
-                                    li.style.minHeight = '30px';
-
-                                    // 1 место
-                                    const textDiv = document.createElement('div');
-                                    textDiv.textContent = `место ${placeNumber}`;
-                                    textDiv.className = 'text-muted';
-                                    textDiv.style.width = '70px';
-                                    textDiv.style.marginLeft = '10px';
-                                    li.appendChild(textDiv);
-
-                                    //  имя / свободно
-                                    const inputDiv = document.createElement('div');
-                                    inputDiv.style.flex = '1';
-
-                                    if (placeData) {
-                                        const firstName = placeData.user.first_name ?? '';
-                                        const lastName = placeData.user.last_name ?? '';
-                                        inputDiv.textContent = firstName + ' ' + lastName;
-                                        inputDiv.className = 'fw-semibold text-success';
-                                    } else {
-                                        inputDiv.textContent = 'свободно';
-                                        inputDiv.className = 'text-muted';
-                                    }
-
-                                    li.appendChild(inputDiv);
-
-                                    // 3 кнопка
-                                    if (!booking.is_all_places_assigned) {
-                                        const button = document.createElement('button');
-                                        button.type = 'button';
-                                        button.className = 'btn btn-sm';
-
-                                        if (placeData) {
-                                            button.textContent = 'Отменить';
-                                            button.classList.add('btn-danger');
-                                            button.addEventListener('click', () => {
-                                                self.cancelSelectPlace(booking.id, placeData.id);
-                                            });
-                                        } else {
-                                            button.textContent = 'Выбрать';
-                                            button.classList.add('btn-primary');
-                                            button.addEventListener('click', () => {
-                                                self.selectPlace(booking.id, roomId, placeNumber);
-                                            });
-                                        }
-                                        li.appendChild(button);
-                                    }
-                                    list.appendChild(li);
-                                }
-                            });
-
-                            block.appendChild(list);
-                            contentEl.appendChild(block);
-                        });
-
-                        new bootstrap.Modal(modalEl).show();
                     })
                     .fail(() => {
                         restoreButton();
                         alert('Ошибка при запросе к серверу');
                     });
             },
-            selectPlace(bookingId, roomId, placeNumber) {
+
+            // Метод рендера комнат и мест
+            renderBookingPlaces(booking, rooms, placesMap, contentEl) {
                 const self = this;
 
-                $.ajax({
-                    url: `/booking/${bookingId}/select-place`,
-                    type: 'POST',
-                    dataType: 'json',
-                    data: {
-                        _token: $('meta[name="csrf-token"]').attr('content') || '',
-                        room_id: roomId,
-                        place_number: placeNumber
-                    },
-                    success: function (res) {
+                rooms.forEach(room => {
+                    const block = document.createElement('div');
+                    block.className = 'mb-2 p-3 border border-2 rounded shadow-sm';
 
-                        if (!res.success) {
-                            bookingCoreApp.showAjaxMessage(res);
-                            return;
-                        }
+                    const header = document.createElement('h5');
+                    header.textContent = room.title;
+                    header.style.textAlign = 'center';
+                    header.style.marginBottom = '15px';
+                    block.appendChild(header);
 
-                        const modalEl = document.getElementById('placeBookingModal' + bookingId);
-                        if (!modalEl) return;
+                    const roomId = room.room_id;
+                    const roomsCount = room.booking_number;
+                    const placesPerRoom = room.number;
 
-                        const contentEl = modalEl.querySelector('#booking-places-content-' + bookingId);
-                        if (!contentEl) return;
+                    for (let roomIndex = 1; roomIndex <= roomsCount; roomIndex++) {
+                        const roomHeader = document.createElement('h6');
+                        roomHeader.textContent = `${room.title} №${roomIndex}`;
+                        roomHeader.style.marginTop = '10px';
+                        roomHeader.style.marginBottom = '8px';
+                        block.appendChild(roomHeader);
 
-                        const liList = contentEl.querySelectorAll('.guest-slot');
+                        const list = document.createElement('ul');
+                        list.style.listStyle = 'none';
+                        list.style.padding = '0';
+                        list.style.marginBottom = '15px';
 
-                        liList.forEach(li => {
+                        for (let placeNumber = 1; placeNumber <= placesPerRoom; placeNumber++) {
+                            const placeData = placesMap[roomIndex]?.[roomId]?.[placeNumber]?.[0] ?? null;
 
-                            const placeLabel = li.querySelector('div.text-muted');
-                            const nameDiv = li.children[1];
-                            const btn = li.querySelector('button');
+                            const li = document.createElement('li');
+                            li.className = 'guest-slot d-flex align-items-center justify-content-between px-2 py-1 border rounded mb-2';
+                            li.style.minHeight = '35px';
+                            li.dataset.roomIndex = roomIndex;
 
-                            if (!placeLabel) return;
+                            // Левый текст: номер места
+                            const textDiv = document.createElement('div');
+                            textDiv.textContent = `место ${placeNumber}`;
+                            textDiv.className = 'text-muted fw-bold';
+                            li.appendChild(textDiv);
 
-                            if (placeLabel.textContent.includes(`место ${placeNumber}`)) {
+                            // Центр: имя пользователя или свободно
+                            const inputDiv = document.createElement('div');
+                            inputDiv.style.flex = '1';
+                            inputDiv.style.textAlign = 'center';
+                            if (placeData) {
+                                const firstName = placeData.user.first_name ?? '';
+                                const lastName = placeData.user.last_name ?? '';
+                                inputDiv.textContent = firstName + ' ' + lastName;
+                                inputDiv.className = 'fw-semibold text-success';
+                            } else {
+                                inputDiv.textContent = 'свободно';
+                                inputDiv.className = 'text-muted';
+                            }
+                            li.appendChild(inputDiv);
 
-                                nameDiv.textContent = `${res.place.user.first_name} ${res.place.user.name ?? ''}`;
-                                nameDiv.className = 'fw-semibold text-success';
+                            // Кнопка справа
+                            if (!booking.is_all_places_assigned) {
+                                const button = document.createElement('button');
+                                button.type = 'button';
+                                button.className = 'btn btn-sm';
 
-                                if (res.place.user_id === res.currentUserId) {
-                                    btn.textContent = 'Отменить';
-                                    btn.classList.remove('btn-primary');
-                                    btn.classList.add('btn-danger');
-
-                                    btn.disabled = false;
-                                    btn.onclick = function () {
-                                        self.cancelSelectPlace(bookingId, res.place.id);
-                                    };
+                                if (placeData) {
+                                    if (placeData.user_id === self.currentUserId) {
+                                        button.textContent = 'Вы выбрали';
+                                        button.classList.add('btn-success');
+                                        button.addEventListener('click', () => {
+                                            self.cancelSelectPlace(booking.id, placeData.id);
+                                        });
+                                    } else {
+                                        button.textContent = 'Отменить';
+                                        button.classList.add('btn-danger');
+                                        button.addEventListener('click', () => {
+                                            self.cancelSelectPlace(booking.id, placeData.id);
+                                        });
+                                    }
                                 } else {
-                                    btn.textContent = 'Отм';
-                                    btn.classList.remove('btn-primary');
-                                    btn.disabled = true;
+                                    button.textContent = 'Выбрать';
+                                    button.classList.add('btn-primary');
+                                    button.addEventListener('click', () => {
+                                        self.selectPlace(booking.id, roomId, placeNumber, roomIndex)
+                                            .then(() => {
+                                                self.loadBookingPlaces(booking);
+                                            });
+                                    });
                                 }
+
+                                li.appendChild(button);
                             }
 
-                        });
-
-                    },
-                    error: function (jqXHR, textStatus, errorThrown) {
-                        let res = {
-                            status: false,
-                            message: 'Ошибка при запросе к серверу'
-                        };
-
-                        if (jqXHR.responseJSON && jqXHR.responseJSON.message) {
-                            res.message = jqXHR.responseJSON.message;
+                            list.appendChild(li);
                         }
-                        bookingCoreApp.showAjaxMessage(res);
+
+                        block.appendChild(list);
                     }
+
+                    contentEl.appendChild(block);
                 });
             },
 
-            cancelSelectPlace(bookingId, placeId) {
-                fetch(`/booking/${bookingId}/cancel-select-place`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                    },
-                    body: JSON.stringify({
-                        place_id: placeId,
-                    })
+            selectPlace(bookingId, roomId, placeNumber, roomIndex) {
+                const self = this;
+
+                 return $.post(`/booking/${bookingId}/select-place`, {
+                    room_id: roomId,
+                    place_number: placeNumber,
+                    room_index: roomIndex
                 })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.success) {
-                            alert('Место успешно выбрано!');
-                        } else {
-                            alert('Ошибка при выборе места: ' + data.message);
-                        }
+                    .done(function() {
+                        const booking = { id: bookingId };
+                        self.loadBookingPlaces(booking);
                     })
+                    .fail(function() {
+                        alert('Ошибка выбора места');
+                    });
             },
 
-            calculatingBookingModal(booking, event) {
-                const bookingIdNum = parseInt(booking.id, 10);
-                const btn = event?.currentTarget ?? null;
-                let originalHtml = null;
+            cancelSelectPlace(bookingId, placeId) {
+                const self = this;
 
-                if (btn) {
-                    originalHtml = btn.innerHTML;
-                    btn.disabled = true;
-                    btn.innerHTML = ` 
-            <span>${btn.textContent.trim()}</span>`;
+                $.post(`/booking/${bookingId}/cancel-select-place`, {
+                    place_id: placeId
+                })
+                    .done(function() {
+                        const booking = { id: bookingId };
+                        self.loadBookingPlaces(booking);
+                    })
+                    .fail(function() {
+                        alert('Ошибка отмены места');
+                    });
+            },
+
+
+
+            openCalculatingModal(booking, event) {
+                const bookingIdNum = parseInt(booking.id, 10);
+                const modalEl = document.getElementById('calculatingBookingModal' + bookingIdNum);
+                let modalInstance = bootstrap.Modal.getInstance(modalEl);
+
+                if (!modalInstance) {
+                    modalInstance = new bootstrap.Modal(modalEl);
                 }
 
-                const restoreButton = () => {
-                    if (btn) {
-                        btn.disabled = false;
-                        btn.innerHTML = originalHtml;
-                    }
-                };
+                modalInstance.show();
+                this.loadCalculatingData(booking);
+            },
 
-                $.get(`/booking/${booking.id}/calculating`)
+            loadCalculatingData(booking) {
+                const bookingIdNum = parseInt(booking.id, 10);
+                const self = this;
+
+                return $.get(`/booking/${booking.id}/calculating`)
                     .done(res => {
-                        restoreButton();
-
                         if (!res.status) {
                             alert('Ошибка получения данных');
                             return;
                         }
 
-                        const places = res.places ?? {};
-                        const is_baseAdmin = res.is_baseAdmin ?? false;
+                        // Сохраняем данные для рендера
+                        self.calculatingData = res;
 
                         const modalEl = document.getElementById('calculatingBookingModal' + bookingIdNum);
                         if (!modalEl) return;
@@ -1478,119 +1445,262 @@ document.addEventListener('DOMContentLoaded', function () {
                         const contentEl = modalEl.querySelector('#calculating-content-' + bookingIdNum);
                         if (!contentEl) return;
 
-                        // Формируем HTML таблицы
-                        let html = `<table class="table table-bordered">
-    <thead>
-        <tr class="table-secondary">
-            <th>Услуги</th>
-            <th>Всего расходы</th>
-            <th>Мои расходы</th>
-        </tr>
-    </thead>
-    <tbody>`;
+                        // Вызываем рендер
+                        self.renderCalculatingData(booking, contentEl, res);
+                    })
+                    .fail(() => {
+                        alert('Ошибка при запросе к серверу');
+                    });
+            },
 
-                        html += `<tr"><td colspan="3"></td></tr>`;
-                        (res.items || []).forEach(item => {
-                            html += `
-    <tr>
-        <td>${item.name}</td>
-        <td>${item.total_cost ?? 0}</td>
-        <td>${item.my_cost ?? 0}</td>
-    </tr>`;
-                        });
 
-// === Блок "Трофеи" ===
-                        html += `<tr class="table-secondary"><td colspan="3"><strong>Трофеи</strong></td></tr>`;
-                        (res.trophies || []).forEach(item => {
-                            html += `
-    <tr>
-        <td>${item.name}</td>
-        <td>${item.total_cost ?? 0}</td>
-        <td>${item.my_cost ?? 0}</td>
-    </tr>`;
-                        });
+            renderCalculatingData(booking, contentEl, res) {
+                const places = res.places ?? {};
+                const is_baseAdmin = res.is_baseAdmin ?? false;
 
-// === Блок "Штрафы" ===
-                        html += `<tr class="table-secondary"><td colspan="3"><strong>Штрафы</strong></td></tr>`;
-                        (res.penalties || []).forEach(item => {
-                            html += `
-    <tr>
-        <td>${item.name}</td>
-        <td>${item.total_cost ?? 0}</td>
-        <td>${item.my_cost ?? 0}</td>
-    </tr>`;
-                        });
+                let html = `<table class="table table-bordered">
+<thead>
+    <tr class="table-secondary">
+        <th>Услуги</th>
+        <th>Всего расходы</th>
+        <th>Мои расходы</th>
+    </tr>
+</thead>
+<tbody>`;
 
-// === Блок "Доп. услуги" ===
-                        html += `<tr class="table-secondary"><td colspan="3"><strong>Доп. услуги</strong></td></tr>`;
-                        (res.meals || []).forEach(item => {
-                            html += `
-    <tr>
-        <td>${item.name}</td>
-        <td>${item.total_cost ?? 0}</td>
-        <td>${item.my_cost ?? 0}</td>
-    </tr>`;
-                        });
-                        (res.preparation || []).forEach(item => {
-                            html += `
-    <tr>
-        <td>${item.name}</td>
-        <td>${item.total_cost ?? 0}</td>
-        <td>${item.my_cost ?? 0}</td>
-    </tr>`;
-                        });
-                        (res.addetionals || []).forEach(item => {
-                            html += `
-    <tr>
-        <td>${item.name}</td>
-        <td>${item.total_cost ?? 0}</td>
-        <td>${item.my_cost ?? 0}</td>
-    </tr>`;
-                        });
+                // Пустая строка для разделения
+                html += `<tr><td colspan="3"></td></tr>`;
 
-// === Блок "Расходы охотников" ===
-
-                        if (!is_baseAdmin) {
-                            html += `
-<tr class="table-secondary">
-    <td><strong>Расходы охотников</strong></td>
-    <td></td>
-    <td><strong style="color:red;">Я должен</strong></td>
-</tr>`;
-
-                            (res.spendings || []).forEach(item => {
-                                html += `
+                // === Основные услуги ===
+                (res.items || []).forEach(item => {
+                    html += `
 <tr>
     <td>${item.name}</td>
     <td>${item.total_cost ?? 0}</td>
     <td>${item.my_cost ?? 0}</td>
 </tr>`;
-                            });
-                        }
+                });
 
- // === Блок "Подытог" ===
-                        html += `<tr"><td colspan="3"></td></tr>`;
-                        (res.all_items || []).forEach(item => {
-                            html += `
-    <tr>
-        <td>${item.name}</td>
-        <td>${item.total_cost ?? 0}</td>
-        <td>${item.my_cost ?? 0}</td>
-    </tr>`;
-                        });
+                // === Трофеи ===
+                html += `<tr class="table-secondary"><td colspan="3"><strong>Трофеи</strong></td></tr>`;
+                (res.trophies || []).forEach(item => {
+                    html += `
+<tr>
+    <td>${item.name}</td>
+    <td>${item.total_cost ?? 0}</td>
+    <td>${item.my_cost ?? 0}</td>
+</tr>`;
+                });
 
-                        html += `</tbody></table>`;
+                // === Штрафы ===
+                html += `<tr class="table-secondary"><td colspan="3"><strong>Штрафы</strong></td></tr>`;
+                (res.penalties || []).forEach(item => {
+                    html += `
+<tr>
+    <td>${item.name}</td>
+    <td>${item.total_cost ?? 0}</td>
+    <td>${item.my_cost ?? 0}</td>
+</tr>`;
+                });
 
-                        contentEl.innerHTML = html;
+                // === Дополнительные услуги ===
+                html += `<tr class="table-secondary"><td colspan="3"><strong>Доп. услуги</strong></td></tr>`;
+                (res.meals || []).concat(res.preparation || []).concat(res.addetionals || []).forEach(item => {
+                    html += `
+<tr>
+    <td>${item.name}</td>
+    <td>${item.total_cost ?? 0}</td>
+    <td>${item.my_cost ?? 0}</td>
+</tr>`;
+                });
 
-
-                        new bootstrap.Modal(modalEl).show();
-                    })
-                    .fail(() => {
-                        restoreButton();
-                        alert('Ошибка при запросе к серверу');
+                // === Расходы охотников ===
+                if (!is_baseAdmin) {
+                    html += `
+<tr class="table-secondary">
+    <td><strong>Расходы охотников</strong></td>
+    <td></td>
+    <td><strong style="color:red;">Я должен</strong></td>
+</tr>`;
+                    (res.spendings || []).forEach(item => {
+                        html += `
+<tr>
+    <td>${item.name}</td>
+    <td>${item.total_cost ?? 0}</td>
+    <td>${item.my_cost ?? 0}</td>
+</tr>`;
                     });
-            },
+                }
+
+                // === Подытог ===
+                html += `<tr><td colspan="3"></td></tr>`;
+                (res.all_items || []).forEach(item => {
+                    html += `
+<tr>
+    <td>${item.name}</td>
+    <td>${item.total_cost ?? 0}</td>
+    <td>${item.my_cost ?? 0}</td>
+</tr>`;
+                });
+
+                // Закрываем tbody и table
+                html += `</tbody></table>`;
+
+                // Вставляем в контент
+                contentEl.innerHTML = html;
+            }
+
+
+//             calculatingBookingModal(booking, event) {
+//                 const bookingIdNum = parseInt(booking.id, 10);
+//                 const btn = event?.currentTarget ?? null;
+//                 let originalHtml = null;
+//
+//                 if (btn) {
+//                     originalHtml = btn.innerHTML;
+//                     btn.disabled = true;
+//                     btn.innerHTML = `
+//                 <span>${btn.textContent.trim()}</span>`;
+//                 }
+//
+//                 const restoreButton = () => {
+//                     if (btn) {
+//                         btn.disabled = false;
+//                         btn.innerHTML = originalHtml;
+//                     }
+//                 };
+//
+//                 $.get(`/booking/${booking.id}/calculating`)
+//                     .done(res => {
+//                         restoreButton();
+//
+//                         if (!res.status) {
+//                             alert('Ошибка получения данных');
+//                             return;
+//                         }
+//
+//                         const places = res.places ?? {};
+//                         const is_baseAdmin = res.is_baseAdmin ?? false;
+//
+//                         const modalEl = document.getElementById('calculatingBookingModal' + bookingIdNum);
+//                         if (!modalEl) return;
+//
+//                         const contentEl = modalEl.querySelector('#calculating-content-' + bookingIdNum);
+//                         if (!contentEl) return;
+//
+//                         // Формируем HTML таблицы
+//                         let html = `<table class="table table-bordered">
+//     <thead>
+//         <tr class="table-secondary">
+//             <th>Услуги</th>
+//             <th>Всего расходы</th>
+//             <th>Мои расходы</th>
+//         </tr>
+//     </thead>
+//     <tbody>`;
+//
+//                         html += `<tr"><td colspan="3"></td></tr>`;
+//                         (res.items || []).forEach(item => {
+//                             html += `
+//     <tr>
+//         <td>${item.name}</td>
+//         <td>${item.total_cost ?? 0}</td>
+//         <td>${item.my_cost ?? 0}</td>
+//     </tr>`;
+//                         });
+//
+// // === Блок "Трофеи" ===
+//                         html += `<tr class="table-secondary"><td colspan="3"><strong>Трофеи</strong></td></tr>`;
+//                         (res.trophies || []).forEach(item => {
+//                             html += `
+//     <tr>
+//         <td>${item.name}</td>
+//         <td>${item.total_cost ?? 0}</td>
+//         <td>${item.my_cost ?? 0}</td>
+//     </tr>`;
+//                         });
+//
+// // === Блок "Штрафы" ===
+//                         html += `<tr class="table-secondary"><td colspan="3"><strong>Штрафы</strong></td></tr>`;
+//                         (res.penalties || []).forEach(item => {
+//                             html += `
+//     <tr>
+//         <td>${item.name}</td>
+//         <td>${item.total_cost ?? 0}</td>
+//         <td>${item.my_cost ?? 0}</td>
+//     </tr>`;
+//                         });
+//
+// // === Блок "Доп. услуги" ===
+//                         html += `<tr class="table-secondary"><td colspan="3"><strong>Доп. услуги</strong></td></tr>`;
+//                         (res.meals || []).forEach(item => {
+//                             html += `
+//     <tr>
+//         <td>${item.name}</td>
+//         <td>${item.total_cost ?? 0}</td>
+//         <td>${item.my_cost ?? 0}</td>
+//     </tr>`;
+//                         });
+//                         (res.preparation || []).forEach(item => {
+//                             html += `
+//     <tr>
+//         <td>${item.name}</td>
+//         <td>${item.total_cost ?? 0}</td>
+//         <td>${item.my_cost ?? 0}</td>
+//     </tr>`;
+//                         });
+//                         (res.addetionals || []).forEach(item => {
+//                             html += `
+//     <tr>
+//         <td>${item.name}</td>
+//         <td>${item.total_cost ?? 0}</td>
+//         <td>${item.my_cost ?? 0}</td>
+//     </tr>`;
+//                         });
+//
+// // === Блок "Расходы охотников" ===
+//
+//                         if (!is_baseAdmin) {
+//                             html += `
+// <tr class="table-secondary">
+//     <td><strong>Расходы охотников</strong></td>
+//     <td></td>
+//     <td><strong style="color:red;">Я должен</strong></td>
+// </tr>`;
+//
+//                             (res.spendings || []).forEach(item => {
+//                                 html += `
+// <tr>
+//     <td>${item.name}</td>
+//     <td>${item.total_cost ?? 0}</td>
+//     <td>${item.my_cost ?? 0}</td>
+// </tr>`;
+//                             });
+//                         }
+//
+//  // === Блок "Подытог" ===
+//                         html += `<tr"><td colspan="3"></td></tr>`;
+//                         (res.all_items || []).forEach(item => {
+//                             html += `
+//     <tr>
+//         <td>${item.name}</td>
+//         <td>${item.total_cost ?? 0}</td>
+//         <td>${item.my_cost ?? 0}</td>
+//     </tr>`;
+//                         });
+//
+//                         html += `</tbody></table>`;
+//
+//                         contentEl.innerHTML = html;
+//
+//
+//                         new bootstrap.Modal(modalEl).show();
+//                     })
+//                     .fail(() => {
+//                         restoreButton();
+//                         alert('Ошибка при запросе к серверу');
+//                     });
+//             },
         },
 
         mounted() {

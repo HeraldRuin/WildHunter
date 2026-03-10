@@ -2127,10 +2127,10 @@ class BookingController extends \App\Http\Controllers\Controller
                 ];
             });
 
-        $places = BookingRoomPlace::with('user:id,name,first_name,last_name')
+        $places = BookingRoomPlace::with('user:id,first_name,last_name')
             ->where('booking_id', $booking->id)
             ->get()
-            ->groupBy(['room_id', 'place_number']);
+            ->groupBy(['room_index', 'room_id', 'place_number']);
 
         return $this->sendSuccess([
             'rooms' => $rooms,
@@ -2138,40 +2138,86 @@ class BookingController extends \App\Http\Controllers\Controller
         ]);
     }
 
-    public function selectPlace(Request $request, $bookingId): JsonResponse
+    public function selectPlace(Request $request, Booking $booking): JsonResponse
     {
         $roomId = $request->input('room_id');
         $selectedPlaceNumber = $request->input('place_number');
+        $selectedRoomIndex = $request->input('room_index');
+        $booking = Booking::findOrFail($booking->id);
 
         try {
-            $occupiedPlaceNumbers = BookingRoomPlace::where('booking_id', $bookingId)
+            $occupiedPlaceNumbers = BookingRoomPlace::where('booking_id', $booking->id)
                 ->where('room_id', $roomId)
+                ->where('room_index', $selectedRoomIndex)
                 ->pluck('place_number')
                 ->toArray();
 
-            $finalPlaceNumber = $selectedPlaceNumber;
-            for ($i = 1; $i <= $selectedPlaceNumber; $i++) {
+            $totalPlaces = $booking->hotelRoom()
+                ->find($roomId)
+                ->number;
+
+            $finalPlaceNumber = null;
+            for ($i = 1; $i <= $totalPlaces; $i++) {
                 if (!in_array($i, $occupiedPlaceNumbers)) {
                     $finalPlaceNumber = $i;
                     break;
                 }
             }
 
-            $place = BookingRoomPlace::create([
-                'booking_id'   => $bookingId,
+            if (!$finalPlaceNumber) {
+                return response()->json([
+                    'success' => false,
+                    'message' => __('No free places available in this room')
+                ], 409);
+            }
+
+            BookingRoomPlace::create([
+                'booking_id'   => $booking->id,
+                'room_index'   => $selectedRoomIndex,
                 'room_id'      => $roomId,
                 'place_number' => $finalPlaceNumber,
                 'user_id'      => auth()->id(),
             ]);
 
+
+            $rooms = $booking
+                ->roomsBooking()
+                ->with('room', 'booking:id,total_guests')
+                ->get()
+                ->map(function ($roomBooking) {
+                    $booking = $roomBooking->booking;
+                    $room = $roomBooking->room;
+
+                    return [
+                        'booking_total_guests' => $booking->total_guests,
+                        'booking_room_id' => $roomBooking->id,
+                        'booking_number' => $roomBooking->number,
+                        'room_id'         => $room->id,
+                        'title'           => $room->title,
+                        'number'          => $room->number,
+                        'total_guests_in_type'   => $roomBooking->number * $room->number,
+                    ];
+                });
+
+            $places = BookingRoomPlace::with('user:id,first_name,last_name')
+                ->where('booking_id', $booking->id)
+                ->get()
+                ->groupBy(['room_index', 'room_id', 'place_number']);
+
+            \Log::info('selectPlace response', [
+                'current_user_id' => auth()->id(),
+                'rooms' => $rooms,
+                'places' => $places,
+            ]);
+
             return response()->json([
                 'success' => true,
                 'current_user_id' => auth()->id(),
-                'place' => [
-                    'user_id' => $place->user_id,
-                    'place_number' => $place->place_number
-                ]
+                'rooms' => $rooms,
+                'places' => $places,
             ]);
+
+
 
         } catch (QueryException $e) {
             if ($e->getCode() === '23000') {
