@@ -14,7 +14,7 @@
 
                             <input type="hidden" name="type" value="{{ \Modules\Settings\Models\CollectionTimerSettings::TYPE_PAID }}">
                             <div class="form-group">
-                                <label for="timer_hours">{{ __('Размер таймера (часы)') }} *</label>
+                                <label for="timer_hours">{{ __('Timer size (clock)') }} *</label>
                                 <input type="number"
                                        class="form-control"
                                        id="timer_hours"
@@ -22,11 +22,11 @@
                                        value="{{ old('timer_hours', $timer_hours) }}"
                                        min="1"
                                        required>
-                                <small class="form-text text-muted">{{ __('Установите размер таймера предоплаты в часах (например: 24)') }}</small>
+                                <small class="form-text text-muted">{{ __('Set the prepayment timer size in hours (for example: 24)') }}</small>
                             </div>
 
                             <div class="form-group">
-                                <button type="submit" class="btn btn-primary">{{ __('Сохранить') }}</button>
+                                <button type="submit" class="btn btn-primary">{{ __('Save') }}</button>
                             </div>
                         </form>
                     </div>

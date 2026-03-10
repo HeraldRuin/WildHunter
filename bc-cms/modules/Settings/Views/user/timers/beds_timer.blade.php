@@ -6,7 +6,7 @@
             <div class="col-md-12 timer-width">
                 <div class="panel">
                     <div class="panel-title">
-                        <strong>{{ __('Настройки таймера койко-мест') }}</strong>
+                        <strong>{{ __('Bed Timer Settings') }}</strong>
                     </div>
                     <div class="panel-body">
                         <form action="{{ route('settings.vendor.beds-timer.store') }}" method="POST">
@@ -14,7 +14,7 @@
 
                             <input type="hidden" name="type" value="{{ \Modules\Settings\Models\CollectionTimerSettings::TYPE_BEDS }}">
                             <div class="form-group">
-                                <label for="timer_hours">{{ __('Размер таймера (часы)') }} *</label>
+                                <label for="timer_hours">{{ __('Timer size (clock)') }} *</label>
                                 <input type="number"
                                        class="form-control"
                                        id="timer_hours"
@@ -22,11 +22,11 @@
                                        value="{{ old('timer_hours', $timer_hours) }}"
                                        min="1"
                                        required>
-                                <small class="form-text text-muted">{{ __('Установите размер таймера койко-мест в часах (например: 24)') }}</small>
+                                <small class="form-text text-muted">{{ __('Set the bed timer size in hours (for example: 24)') }}</small>
                             </div>
 
                             <div class="form-group">
-                                <button type="submit" class="btn btn-primary">{{ __('Сохранить') }}</button>
+                                <button type="submit" class="btn btn-primary">{{ __('Save') }}</button>
                             </div>
                         </form>
                     </div>
