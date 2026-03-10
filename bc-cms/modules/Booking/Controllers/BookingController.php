@@ -1055,12 +1055,8 @@ class BookingController extends \App\Http\Controllers\Controller
         $user = Auth::user();
         $isBaseAdmin = $user->hasRole('baseadmin') || $user->hasPermission('baseAdmin_dashboard_access');
 
-        // Только владелец брони, вендор или base-admin могут завершить сбор
-        if (
-            !$isBaseAdmin
-            && $booking->vendor_id !== $user->id
-            && $booking->create_user !== $user->id
-        ) {
+        // Только владелец брони, base-admin могут завершить сбор
+        if (!$isBaseAdmin && $booking->create_user !== $user->id) {
             return $this->sendError(__("You don't have access."))->setStatusCode(403);
         }
 
@@ -1068,11 +1064,8 @@ class BookingController extends \App\Http\Controllers\Controller
             return $this->sendError(__('Сбор охотников не начат или уже завершён'))->setStatusCode(422);
         }
 
-
-        // Получаем все приглашения
         $allInvitations = $booking->getAllInvitations();
 
-        // Сначала проверяем, что НЕТ приглашений, которые ещё не подтверждены
         $notConfirmedInvitations = $allInvitations->filter(function ($invitation) {
             return !in_array($invitation->status, ['accepted', 'declined', 'removed']);
         });
@@ -1104,13 +1097,11 @@ class BookingController extends \App\Http\Controllers\Controller
                     $requiredHunters = (int) $hotelAnimal->hunters_count;
                 }
 
-                // Если значение не найдено или равно 0, используем минимальное значение 1
                 if ($requiredHunters <= 0) {
                     $requiredHunters = 1;
                 }
             }
         } else {
-            // Если нет животного или отеля, используем старую логику
             if ($booking->type === 'hotel') {
                 $requiredHunters = (int) ($booking->total_guests ?? 0);
             } elseif ($booking->type === 'animal' || $booking->type === 'hotel_animal') {
@@ -1121,7 +1112,6 @@ class BookingController extends \App\Http\Controllers\Controller
                 $requiredHunters = 1;
             }
 
-            // Получаем название животного, если есть
             if ($booking->animal_id) {
                 $animal = Animal::find($booking->animal_id);
                 if ($animal) {
@@ -1144,12 +1134,12 @@ class BookingController extends \App\Http\Controllers\Controller
             )->setStatusCode(422);
         }
 
-        $timerHour = $this->bookingTimerService->getCollectionTimerHours($booking, 'beds');
+        $timerHour = $this->bookingTimerService->getCollectionTimerHours($booking, 'paid');
 
         $booking->status = Booking::PREPAYMENT_COLLECTION;
         $booking->save();
 
-        $timerData = $this->bookingTimerService->startTimer($booking->id, $timerHour, 'beds', ['collection']);
+        $timerData = $this->bookingTimerService->startTimer($booking->id, $timerHour, 'paid', ['collection']);
 
         event(new BookingFinishEvent($booking));
 
@@ -1191,7 +1181,7 @@ class BookingController extends \App\Http\Controllers\Controller
 
         return $this->sendSuccess([
             'message' => __('Сбор охотников завершён.'),
-            'place_end_at' => $timerData['end_at'],
+            'paid_end_at' => $timerData['end_at'],
         ]);
     }
 
@@ -2094,16 +2084,21 @@ class BookingController extends \App\Http\Controllers\Controller
             ->where('status', 'accepted');
 
         $paidCount = $acceptedInvitations->where('prepayment_paid', true)->count();
+        $timerHour = $this->bookingTimerService->getCollectionTimerHours($booking, 'beds');
 
         if ($paidCount === $acceptedInvitations->count()) {
-            $booking->status = Booking::FINISHED_PREPAYMENT;
+            $booking->status = Booking::BED_COLLECTION;
         }
 
+        $timerData = $this->bookingTimerService->startTimer($booking->id, $timerHour, 'beds', ['paid']);
+
         $booking->prepayment_paid = true;
+//        is_all_places_assigned
         $booking->save();
 
         return $this->sendSuccess([
             'message' => __('The gathering of hunters has begun'),
+            'beds_end_at' => $timerData['end_at'],
         ]);
     }
     public function places(Booking $booking)
@@ -2390,17 +2385,19 @@ class BookingController extends \App\Http\Controllers\Controller
         $penaltiesTotal     = array_sum(array_column($penalties, 'total_cost'));
         $addetionalsTotal   = array_sum(array_column($addetionals, 'total_cost'));
         $preparationTotal   = array_sum(array_column($preparations, 'total_cost'));
+        $mealsTotal   = array_sum(array_column($meals, 'total_cost'));
 
         $trophiesMyTotal      = array_sum(array_column($trophies, 'my_cost'));
         $penaltiesMyTotal     = array_sum(array_column($penalties, 'my_cost'));
         $addetionalsMyTotal   = array_sum(array_column($addetionals, 'my_cost'));
         $preparationMyTotal   = array_sum(array_column($preparations, 'my_cost'));
+        $mealsMyTotal   = array_sum(array_column($meals, 'my_cost'));
 
         $baseAmount = round($booking->total + $booking->amount_hunting + $trophiesTotal + $penaltiesTotal + $addetionalsTotal + $preparationTotal);
         $baseTotal = $baseAmount - $booking->total;
         $huntingAmountPaid = ($booking->amount_hunting / $booking->total_hunting) * (int)$paidCount;
         $huntingAmountMyPaid = round($huntingAmountPaid / (int)$paidCount);
-        $baseMyAmount = round($trophiesMyTotal + $penaltiesMyTotal + $addetionalsMyTotal + $preparationMyTotal);
+        $baseMyAmount = round($trophiesMyTotal + $penaltiesMyTotal + $addetionalsMyTotal + $preparationMyTotal + $mealsMyTotal);
         $myPrepayment = round($booking->total / (int)$paidCount);
         $baseMyTotalCost = round(($totalMyCost + $huntingAmountMyPaid + $baseMyAmount) - $myPrepayment);
 
