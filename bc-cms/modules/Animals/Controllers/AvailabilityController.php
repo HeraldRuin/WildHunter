@@ -249,9 +249,9 @@ class AvailabilityController extends FrontendController{
         $hotel = Hotel::find($hotel_id);
         $maxTotalHunts = (int) $hotel->max_hunts_per_day;
 
-        if ($animalBookedCount + 1 > $maxTotalHunts) {
-            return $this->sendError('На эту дату лимит охот на выбранное животное исчерпан');
-        }
+//        if ($animalBookedCount + 1 > $maxTotalHunts) {
+//            return $this->sendError('На эту дату лимит охот на выбранное животное исчерпан');
+//        }
         return $this->sendSuccess(['available' => true, 'price' => $period->price]);
     }
 }
