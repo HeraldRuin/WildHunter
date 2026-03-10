@@ -50,6 +50,11 @@ class ModuleProvider extends ModuleServiceProvider
                         'title'      => __("Time beds"),
                         'permission' => 'settings_view',
                     ],
+                    'timer_paid'=>[
+                        'url'        => route('settings.vendor.paid-timer'),
+                        'title'      => __("Time paid"),
+                        'permission' => 'settings_view',
+                    ],
                 ]
             ];
         }

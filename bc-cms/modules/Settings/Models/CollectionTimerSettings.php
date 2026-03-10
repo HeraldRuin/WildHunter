@@ -9,12 +9,14 @@ class CollectionTimerSettings
     const DEFAULT_TIMER_HOURS = 24;
     const TYPE_COLLECT = 'collect';
     const TYPE_BEDS    = 'beds';
+    const TYPE_PAID    = 'paid';
     const COLLECT_COLUMN = 'collection_timer_hours';
     const BEDS_COLUMN    = 'bed_timer_hours';
+    const PAID_COLUMN    = 'paid_timer_hours';
 
 
     /**
-     * Получить таймер сбора или койко-места в часах для отеля
+     * Получить таймер в часах для отеля
      *
      * @param int|null $hotelId
      * @return int
@@ -39,6 +41,7 @@ class CollectionTimerSettings
         $map = [
             self::TYPE_COLLECT => self::COLLECT_COLUMN,
             self::TYPE_BEDS    => self::BEDS_COLUMN,
+            self::TYPE_PAID    => self::PAID_COLUMN,
         ];
 
         if (!isset($map[$type])) {
@@ -51,7 +54,7 @@ class CollectionTimerSettings
     }
 
     /**
-     * Сохранить таймер сбора или койко-мест в часах для отеля
+     * Сохранить таймер часах для отеля
      *
      * @param int $hours
      * @param int|null $hotelId
@@ -76,6 +79,7 @@ class CollectionTimerSettings
         $map = [
             self::TYPE_COLLECT => self::COLLECT_COLUMN,
             self::TYPE_BEDS    => self::BEDS_COLUMN,
+            self::TYPE_PAID    => self::PAID_COLUMN,
         ];
 
         if (!isset($map[$type])) {
