@@ -730,6 +730,12 @@ function status_to_text($status)
         case "finish_prepayment":
             return __('Finish prepayment');
             break;
+        case "bed_collection":
+            return __('Bed collection');
+            break;
+        case "finish_bed_collection":
+            return __('Finish Bed collection');
+            break;
         case "fail":
         case "failed":
             return __('Failed');
