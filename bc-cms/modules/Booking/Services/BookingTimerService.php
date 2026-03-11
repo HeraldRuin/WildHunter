@@ -131,5 +131,19 @@ class BookingTimerService
                 ])->delete();
         });
     }
+
+    public function clearAllTimers(int $bookingId): void
+    {
+        DB::transaction(function () use ($bookingId) {
+            DB::table('bc_booking_meta')
+                ->where('booking_id', $bookingId)
+                ->where(function($query) {
+                    $query->where('name', 'like', '%_start_at')
+                        ->orWhere('name', 'like', '%_timer_hours')
+                        ->orWhere('name', 'like', '%_end_at');
+                })
+                ->delete();
+        });
+    }
 }
 
