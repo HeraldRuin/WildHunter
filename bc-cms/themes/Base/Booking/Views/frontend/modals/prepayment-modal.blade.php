@@ -23,7 +23,7 @@
                         :data-prepayment-paid="{{ $prepaymentPaid ? 'true' : 'false' }}"
                         @click="bookingPrepaymentPaid($event)">
                     <span v-if="prepaymentPaidMap[{{ $booking->id }}] || {{ $prepaymentPaid ? 'true' : 'false' }}">
-                        {{ __('Paid Booking') }}
+                        {{ __('Paid Booking Success') }}
                     </span>
                     <span v-else>
                         {{ __('Paid Prepayment') }}
