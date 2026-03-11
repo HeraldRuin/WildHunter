@@ -966,12 +966,7 @@ class BookingController extends \App\Http\Controllers\Controller
                 return $this->sendError(__('Нельзя отменить сбор: не собрано минимальное количество охотников.'))->setStatusCode(422);
             }
 
-            // Полностью удаляем ВСЕ мета-данные таймера (сброс таймера)
-            // Используем прямой SQL для гарантированного удаления
-            $deletedCount = \Illuminate\Support\Facades\DB::table('bc_booking_meta')
-                ->where('booking_id', $booking->id)
-                ->whereIn('name', ['collection_end_at', 'collection_start_at', 'collection_timer_hours', 'collection_timer_started_at'])
-                ->delete();
+            $this->bookingTimerService->clearAllTimers($booking->id);
 
             $booking->save();
 
@@ -1139,7 +1134,7 @@ class BookingController extends \App\Http\Controllers\Controller
         $booking->status = Booking::PREPAYMENT_COLLECTION;
         $booking->save();
 
-        $timerData = $this->bookingTimerService->startTimer($booking->id, $timerHour, 'paid', ['collection']);
+        $this->bookingTimerService->startTimer($booking->id, $timerHour, 'paid', ['collection']);
 
         event(new BookingFinishEvent($booking));
 
@@ -1181,7 +1176,6 @@ class BookingController extends \App\Http\Controllers\Controller
 
         return $this->sendSuccess([
             'message' => __('Сбор охотников завершён.'),
-            'paid_end_at' => $timerData['end_at'],
         ]);
     }
 
@@ -2090,7 +2084,7 @@ class BookingController extends \App\Http\Controllers\Controller
             $booking->status = Booking::BED_COLLECTION;
         }
 
-        $timerData = $this->bookingTimerService->startTimer($booking->id, $timerHour, 'beds', ['paid']);
+        $this->bookingTimerService->startTimer($booking->id, $timerHour, 'beds', ['paid']);
 
         $booking->prepayment_paid = true;
 //        is_all_places_assigned
@@ -2098,7 +2092,6 @@ class BookingController extends \App\Http\Controllers\Controller
 
         return $this->sendSuccess([
             'message' => __('The gathering of hunters has begun'),
-            'beds_end_at' => $timerData['end_at'],
         ]);
     }
     public function places(Booking $booking)
