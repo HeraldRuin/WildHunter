@@ -253,13 +253,13 @@
                         </div>
                     @endif
 
-            <div class="mt-3">
-                {{'Сбор завершен'}}
-                <div class="text-muted mt-1" style="font-size: 0.9em;">
-                    Собранно {{ $acceptedCount }}/{{ $totalHuntersNeeded }}
-                </div>
-            </div>
-        @endif
+                    <div class="mt-3">
+                        {{'Сбор завершен'}}
+                        <div class="text-muted mt-1" style="font-size: 0.9em;">
+                            Собранно {{ $acceptedCount }}/{{ $totalHuntersNeeded }}
+                        </div>
+                    </div>
+           @endif
     </td>
 
     <td>
