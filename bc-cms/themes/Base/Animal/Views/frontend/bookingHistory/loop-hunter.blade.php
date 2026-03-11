@@ -140,7 +140,7 @@
             @endphp
 
             @if($endTimestamp)
-                <div class="text-muted collection-timer" data-end="{{ $endTimestamp }}"
+                <div class="text-muted paid-timer" data-end="{{ $endTimestamp }}"
                      data-booking-id="{{ $booking->id }}">[0 мин]
                 </div>
             @endif
