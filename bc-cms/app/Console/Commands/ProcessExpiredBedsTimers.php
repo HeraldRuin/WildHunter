@@ -37,7 +37,7 @@ class ProcessExpiredBedsTimers extends Command
      */
     public function handle()
     {
-        //$this->timerService->processExpiredBeds();
+        $this->timerService->processExpiredBeds();
 
         return CommandAlias::SUCCESS;
     }

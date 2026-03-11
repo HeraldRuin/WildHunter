@@ -4,6 +4,7 @@ namespace Modules\Booking\Services;
 
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Modules\Booking\Models\Booking;
 
 class BookingTimerService
@@ -97,7 +98,7 @@ class BookingTimerService
                 $join->on('b.id', '=', 'm.booking_id')
                     ->where('m.name', '=', 'beds_end_at');
             })
-            ->where('b.status', Booking::FINISHED_PREPAYMENT)
+            ->where('b.status', Booking::BED_COLLECTION)
             ->where('m.val', '<', $now)
             ->select('b.id')
             ->get();
@@ -115,6 +116,7 @@ class BookingTimerService
 
     protected function handleBooking(Booking $booking): void
     {
+        Log::alert('да я запустился');
         // Распределения охотников
         $this->allocatorBedsService->allocateBeds($booking);
     }
