@@ -231,7 +231,7 @@ class UserController extends FrontendController
         if ($userRole === 'hunter') {
             $excluded = [Booking::COMPLETED, Booking::PROCESSING, Booking::CONFIRMED,
                 Booking::CANCELLED, Booking::UNPAID, Booking::PAID, Booking::PARTIAL_PAYMENT,
-                Booking::START_COLLECTION, Booking::PREPAYMENT_COLLECTION];
+                Booking::START_COLLECTION, Booking::PREPAYMENT_COLLECTION, Booking::BED_COLLECTION, Booking::FINISHED_BED];
 
             $statuses = array_values(array_filter($allStatuses, function ($status) use ($excluded) {
                 return !in_array($status, $excluded);
