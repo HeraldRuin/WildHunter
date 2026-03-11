@@ -93,6 +93,10 @@
                 ({{$booking->hotel->collection_timer_hours}} {{ __('ч') }})
             @endif
 
+            @if($booking->status === \Modules\Booking\Models\Booking::PREPAYMENT_COLLECTION && $booking->hotel && $booking->hotel->paid_timer_hours)
+                ({{$booking->hotel->paid_timer_hours}} {{ __('ч') }})
+            @endif
+
             @if($booking->status === \Modules\Booking\Models\Booking::PREPAYMENT_COLLECTION && $booking->hotel && $booking->hotel->bed_timer_hours)
                 ({{$booking->hotel->bed_timer_hours}} {{ __('ч') }})
             @endif
