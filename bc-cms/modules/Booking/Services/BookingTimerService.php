@@ -27,6 +27,7 @@ class BookingTimerService
 
         $timerFields = [
             'collection' => 'collection_timer_hours',
+            'paid'    => 'paid_timer_hours',
             'beds'    => 'bed_timer_hours',
         ];
 
