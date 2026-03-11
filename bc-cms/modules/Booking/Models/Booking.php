@@ -49,6 +49,9 @@ class Booking extends BaseModel
     const PREPAYMENT_COLLECTION = 'prepayment_collection';
     const FINISHED_PREPAYMENT = 'finish_prepayment';
 
+    const BED_COLLECTION = 'bed_collection';
+    const FINISHED_BED = 'finish_bed_collection';
+
     const CONFIRMED  = 'confirmed';
     const COMPLETED  = 'completed'; //
     const CANCELLED  = 'cancelled';
@@ -186,6 +189,7 @@ class Booking extends BaseModel
                 self::PAID,
                 self::CONFIRMED,
                 self::PROCESSING,
+                self::BED_COLLECTION,
                 self::FINISHED_PREPAYMENT => $this->status,
                 default => self::START_COLLECTION,
             };
@@ -805,6 +809,8 @@ class Booking extends BaseModel
                 $list_booking->whereIn('status', [
                     Booking::PREPAYMENT_COLLECTION,
                     Booking::FINISHED_PREPAYMENT,
+                    Booking::BED_COLLECTION,
+                    Booking::FINISHED_BED,
                 ]);
 
             } else {
