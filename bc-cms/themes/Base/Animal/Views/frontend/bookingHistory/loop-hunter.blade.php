@@ -146,6 +146,27 @@
             @endif
         @endif
 
+        @if($booking->status === \Modules\Booking\Models\Booking::BED_COLLECTION)
+            @php
+                $endTimestamp = null;
+                try {
+                    $bedsEndAt = $booking->getMeta('beds_end_at');
+                    if ($bedsEndAt) {
+                        $endCarbon = \Carbon\Carbon::parse($bedsEndAt);
+                        $endTimestamp = $endCarbon->timestamp * 1000;
+                    }
+                } catch (\Exception $e) {
+                    $endTimestamp = null;
+                }
+            @endphp
+
+            @if($endTimestamp)
+                <div class="text-muted beds-timer" data-end="{{ $endTimestamp }}"
+                     data-booking-id="{{ $booking->id }}">[0 мин]
+                </div>
+            @endif
+        @endif
+
         @if(in_array($booking->status, [\Modules\Booking\Models\Booking::PREPAYMENT_COLLECTION, \Modules\Booking\Models\Booking::FINISHED_PREPAYMENT]))
                 <div class="text-muted mt-1" style="font-size: 0.9em;">
                     Оплачено {{ $paidCount }}/{{ $acceptedCount }}

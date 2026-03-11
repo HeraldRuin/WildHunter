@@ -138,6 +138,13 @@
             @if($booking->status === \Modules\Booking\Models\Booking::START_COLLECTION && $booking->hotel && $booking->hotel->collection_timer_hours)
                 ({{$booking->hotel->collection_timer_hours}} {{ __('ч') }})
             @endif
+            @if($booking->status === \Modules\Booking\Models\Booking::PREPAYMENT_COLLECTION && $booking->hotel && $booking->hotel->paid_timer_hours)
+                ({{$booking->hotel->paid_timer_hours}} {{ __('ч') }})
+            @endif
+
+            @if($booking->status === \Modules\Booking\Models\Booking::BED_COLLECTION && $booking->hotel && $booking->hotel->bed_timer_hours)
+                ({{$booking->hotel->bed_timer_hours}} {{ __('ч') }})
+            @endif
         </div>
 
         @if($booking->status === \Modules\Booking\Models\Booking::START_COLLECTION)
@@ -162,6 +169,48 @@
             @if($totalHuntersNeeded > 0)
                 <div class="text-muted mt-1" style="font-size: 0.9em;">
                     Собранно {{ $acceptedCount }}/{{ $totalHuntersNeeded }}
+                </div>
+            @endif
+        @endif
+
+        @if($booking->status === \Modules\Booking\Models\Booking::PREPAYMENT_COLLECTION)
+            @php
+                $endTimestamp = null;
+                try {
+                    $bedsEndAt = $booking->getMeta('paid_end_at');
+                    if ($bedsEndAt) {
+                        $endCarbon = \Carbon\Carbon::parse($bedsEndAt);
+                        $endTimestamp = $endCarbon->timestamp * 1000;
+                    }
+                } catch (\Exception $e) {
+                    $endTimestamp = null;
+                }
+            @endphp
+
+            @if($endTimestamp)
+                <div class="text-muted paid-timer" data-end="{{ $endTimestamp }}"
+                     data-booking-id="{{ $booking->id }}">[0 мин]
+                </div>
+            @endif
+        @endif
+
+        @if($booking->status === \Modules\Booking\Models\Booking::BED_COLLECTION)
+            @php
+                $endTimestamp = null;
+                try {
+                    $bedsEndAt = $booking->getMeta('beds_end_at');
+                    if ($bedsEndAt) {
+                        $endCarbon = \Carbon\Carbon::parse($bedsEndAt);
+                        $endTimestamp = $endCarbon->timestamp * 1000;
+                    }
+                } catch (\Exception $e) {
+                    $endTimestamp = null;
+                }
+            @endphp
+
+            @if($endTimestamp)
+                <div class="text-muted beds-timer" data-end="{{ $endTimestamp }}"
+                     data-booking-id="{{ $booking->id }}">[0 мин]
                 </div>
             @endif
         @endif
@@ -251,7 +300,7 @@
                 type="button"
                 class="btn btn-primary btn-sm mt-2"
                 data-bs-toggle="modal"
-                @click="calculatingBookingModal({{ $booking }}, $event)">
+                @click="openCalculatingModal({{ $booking }}, $event)">
                 {{__("Calculating")}}
             </button>
         @endif

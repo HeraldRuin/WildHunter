@@ -93,6 +93,48 @@
             @endif
         @endif
 
+        @if($booking->status === \Modules\Booking\Models\Booking::PREPAYMENT_COLLECTION)
+            @php
+                $endTimestamp = null;
+                try {
+                    $bedsEndAt = $booking->getMeta('paid_end_at');
+                    if ($bedsEndAt) {
+                        $endCarbon = \Carbon\Carbon::parse($bedsEndAt);
+                        $endTimestamp = $endCarbon->timestamp * 1000;
+                    }
+                } catch (\Exception $e) {
+                    $endTimestamp = null;
+                }
+            @endphp
+
+            @if($endTimestamp)
+                <div class="text-muted paid-timer" data-end="{{ $endTimestamp }}"
+                     data-booking-id="{{ $booking->id }}">[0 мин]
+                </div>
+            @endif
+        @endif
+
+        @if($booking->status === \Modules\Booking\Models\Booking::BED_COLLECTION)
+            @php
+                $endTimestamp = null;
+                try {
+                    $bedsEndAt = $booking->getMeta('beds_end_at');
+                    if ($bedsEndAt) {
+                        $endCarbon = \Carbon\Carbon::parse($bedsEndAt);
+                        $endTimestamp = $endCarbon->timestamp * 1000;
+                    }
+                } catch (\Exception $e) {
+                    $endTimestamp = null;
+                }
+            @endphp
+
+            @if($endTimestamp)
+                <div class="text-muted beds-timer" data-end="{{ $endTimestamp }}"
+                     data-booking-id="{{ $booking->id }}">[0 мин]
+                </div>
+            @endif
+        @endif
+
         @if(in_array($booking->status, [\Modules\Booking\Models\Booking::PREPAYMENT_COLLECTION, \Modules\Booking\Models\Booking::FINISHED_PREPAYMENT]))
             <div class="mt-3">
                 @if($booking->status === \Modules\Booking\Models\Booking::FINISHED_PREPAYMENT)
@@ -175,7 +217,7 @@
                 type="button"
                 class="btn btn-primary btn-sm mt-2"
                 data-bs-toggle="modal"
-                @click="calculatingBookingModal({{ $booking }}, $event)">
+                @click="openCalculatingModal({{ $booking }}, $event)">
                 {{__("Calculating")}}
             </button>
         @endif
