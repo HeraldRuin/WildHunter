@@ -854,6 +854,8 @@ class Booking extends BaseModel
                 $list_booking->whereIn('status', [
                     \Modules\Booking\Models\Booking::PREPAYMENT_COLLECTION,
                     \Modules\Booking\Models\Booking::FINISHED_PREPAYMENT,
+                    \Modules\Booking\Models\Booking::BED_COLLECTION,
+                    \Modules\Booking\Models\Booking::FINISHED_BED,
                 ]);
 
             } else {
