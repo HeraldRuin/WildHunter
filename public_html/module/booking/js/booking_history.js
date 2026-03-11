@@ -1549,158 +1549,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 // Вставляем в контент
                 contentEl.innerHTML = html;
             }
-
-
-//             calculatingBookingModal(booking, event) {
-//                 const bookingIdNum = parseInt(booking.id, 10);
-//                 const btn = event?.currentTarget ?? null;
-//                 let originalHtml = null;
-//
-//                 if (btn) {
-//                     originalHtml = btn.innerHTML;
-//                     btn.disabled = true;
-//                     btn.innerHTML = `
-//                 <span>${btn.textContent.trim()}</span>`;
-//                 }
-//
-//                 const restoreButton = () => {
-//                     if (btn) {
-//                         btn.disabled = false;
-//                         btn.innerHTML = originalHtml;
-//                     }
-//                 };
-//
-//                 $.get(`/booking/${booking.id}/calculating`)
-//                     .done(res => {
-//                         restoreButton();
-//
-//                         if (!res.status) {
-//                             alert('Ошибка получения данных');
-//                             return;
-//                         }
-//
-//                         const places = res.places ?? {};
-//                         const is_baseAdmin = res.is_baseAdmin ?? false;
-//
-//                         const modalEl = document.getElementById('calculatingBookingModal' + bookingIdNum);
-//                         if (!modalEl) return;
-//
-//                         const contentEl = modalEl.querySelector('#calculating-content-' + bookingIdNum);
-//                         if (!contentEl) return;
-//
-//                         // Формируем HTML таблицы
-//                         let html = `<table class="table table-bordered">
-//     <thead>
-//         <tr class="table-secondary">
-//             <th>Услуги</th>
-//             <th>Всего расходы</th>
-//             <th>Мои расходы</th>
-//         </tr>
-//     </thead>
-//     <tbody>`;
-//
-//                         html += `<tr"><td colspan="3"></td></tr>`;
-//                         (res.items || []).forEach(item => {
-//                             html += `
-//     <tr>
-//         <td>${item.name}</td>
-//         <td>${item.total_cost ?? 0}</td>
-//         <td>${item.my_cost ?? 0}</td>
-//     </tr>`;
-//                         });
-//
-// // === Блок "Трофеи" ===
-//                         html += `<tr class="table-secondary"><td colspan="3"><strong>Трофеи</strong></td></tr>`;
-//                         (res.trophies || []).forEach(item => {
-//                             html += `
-//     <tr>
-//         <td>${item.name}</td>
-//         <td>${item.total_cost ?? 0}</td>
-//         <td>${item.my_cost ?? 0}</td>
-//     </tr>`;
-//                         });
-//
-// // === Блок "Штрафы" ===
-//                         html += `<tr class="table-secondary"><td colspan="3"><strong>Штрафы</strong></td></tr>`;
-//                         (res.penalties || []).forEach(item => {
-//                             html += `
-//     <tr>
-//         <td>${item.name}</td>
-//         <td>${item.total_cost ?? 0}</td>
-//         <td>${item.my_cost ?? 0}</td>
-//     </tr>`;
-//                         });
-//
-// // === Блок "Доп. услуги" ===
-//                         html += `<tr class="table-secondary"><td colspan="3"><strong>Доп. услуги</strong></td></tr>`;
-//                         (res.meals || []).forEach(item => {
-//                             html += `
-//     <tr>
-//         <td>${item.name}</td>
-//         <td>${item.total_cost ?? 0}</td>
-//         <td>${item.my_cost ?? 0}</td>
-//     </tr>`;
-//                         });
-//                         (res.preparation || []).forEach(item => {
-//                             html += `
-//     <tr>
-//         <td>${item.name}</td>
-//         <td>${item.total_cost ?? 0}</td>
-//         <td>${item.my_cost ?? 0}</td>
-//     </tr>`;
-//                         });
-//                         (res.addetionals || []).forEach(item => {
-//                             html += `
-//     <tr>
-//         <td>${item.name}</td>
-//         <td>${item.total_cost ?? 0}</td>
-//         <td>${item.my_cost ?? 0}</td>
-//     </tr>`;
-//                         });
-//
-// // === Блок "Расходы охотников" ===
-//
-//                         if (!is_baseAdmin) {
-//                             html += `
-// <tr class="table-secondary">
-//     <td><strong>Расходы охотников</strong></td>
-//     <td></td>
-//     <td><strong style="color:red;">Я должен</strong></td>
-// </tr>`;
-//
-//                             (res.spendings || []).forEach(item => {
-//                                 html += `
-// <tr>
-//     <td>${item.name}</td>
-//     <td>${item.total_cost ?? 0}</td>
-//     <td>${item.my_cost ?? 0}</td>
-// </tr>`;
-//                             });
-//                         }
-//
-//  // === Блок "Подытог" ===
-//                         html += `<tr"><td colspan="3"></td></tr>`;
-//                         (res.all_items || []).forEach(item => {
-//                             html += `
-//     <tr>
-//         <td>${item.name}</td>
-//         <td>${item.total_cost ?? 0}</td>
-//         <td>${item.my_cost ?? 0}</td>
-//     </tr>`;
-//                         });
-//
-//                         html += `</tbody></table>`;
-//
-//                         contentEl.innerHTML = html;
-//
-//
-//                         new bootstrap.Modal(modalEl).show();
-//                     })
-//                     .fail(() => {
-//                         restoreButton();
-//                         alert('Ошибка при запросе к серверу');
-//                     });
-//             },
         },
 
         mounted() {
@@ -1954,6 +1802,29 @@ document.addEventListener('DOMContentLoaded', function () {
                 });
             };
 
+            const updatePaidTimers = () => {
+                const nodes = document.querySelectorAll('.paid-timer[data-end]');
+                const now = Date.now();
+
+                nodes.forEach(el => {
+                    const end = parseInt(el.dataset.end, 10);
+                    if (!end) return;
+
+                    let diffMs = end - now;
+
+                    if (diffMs <= 0) {
+                        el.textContent = '[0 мин 00 сек]';
+                        return;
+                    }
+
+                    const totalSeconds = Math.floor(diffMs / 1000);
+                    const minutes = Math.floor(totalSeconds / 60);
+                    const seconds = totalSeconds % 60;
+
+                    el.textContent = '[' + minutes + ' мин ' + String(seconds).padStart(2, '0') + ' сек]';
+                });
+            };
+
             const updateBedsTimers = () => {
                 const nodes = document.querySelectorAll('.beds-timer[data-end]');
                 const now = Date.now();
@@ -1978,12 +1849,8 @@ document.addEventListener('DOMContentLoaded', function () {
             };
 
             // Обновляем таймер каждую секунду, чтобы он работал "в реальном времени"
-            updateCollectionTimers();
-            updateBedsTimers();
-            setInterval(() => {
-                updateCollectionTimers();
-                updateBedsTimers();
-            }, 1000);
+            updateCollectionTimers(); updatePaidTimers(); updateBedsTimers();
+            setInterval(() => {updateCollectionTimers(); updatePaidTimers(); updateBedsTimers()}, 1000);
 
             //Кнопка оплата или оплачено в модальном окне предоплата
             document.querySelectorAll('.btn-prepayment').forEach(btn => {
