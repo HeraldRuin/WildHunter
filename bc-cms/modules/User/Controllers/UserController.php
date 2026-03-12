@@ -227,18 +227,27 @@ class UserController extends FrontendController
         }
 
         $allStatuses = config('booking.statuses');
+        $excludedByRole = [
+            'hunter' => [
+                Booking::COMPLETED,
+                Booking::PROCESSING,
+                Booking::CONFIRMED,
+                Booking::CANCELLED,
+                Booking::UNPAID,
+                Booking::PAID,
+                Booking::PARTIAL_PAYMENT,
+                Booking::START_COLLECTION,
+                Booking::PREPAYMENT_COLLECTION,
+                Booking::BED_COLLECTION,
+                Booking::FINISHED_BED
+            ],
+            'baseadmin' => [
+                Booking::BED_COLLECTION,
+                Booking::FINISHED_BED
+            ]
+        ];
 
-        if ($userRole === 'hunter') {
-            $excluded = [Booking::COMPLETED, Booking::PROCESSING, Booking::CONFIRMED,
-                Booking::CANCELLED, Booking::UNPAID, Booking::PAID, Booking::PARTIAL_PAYMENT,
-                Booking::START_COLLECTION, Booking::PREPAYMENT_COLLECTION, Booking::BED_COLLECTION, Booking::FINISHED_BED];
-
-            $statuses = array_values(array_filter($allStatuses, function ($status) use ($excluded) {
-                return !in_array($status, $excluded);
-            }));
-        } else {
-            $statuses = $allStatuses;
-        }
+        $statuses = array_values(array_filter($allStatuses,fn($status) => !in_array($status, $excludedByRole[$userRole] ?? [])));
 
         $data = array_merge($cabinetData, [
             'userRole' => $userRole,
