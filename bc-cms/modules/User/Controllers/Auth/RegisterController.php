@@ -8,6 +8,7 @@
     use Illuminate\Auth\Events\Registered;
     use Illuminate\Http\Request;
     use Illuminate\Support\Facades\Auth;
+    use Illuminate\Support\Facades\Crypt;
     use Illuminate\Support\Facades\Hash;
     use Illuminate\Support\Facades\Log;
     use Illuminate\Support\Facades\Validator;
@@ -82,7 +83,7 @@
                     'last_name'  => $request->input('last_name'),
                     'email'      => $request->input('email'),
                     'password'   => Hash::make($request->input('password')),
-                    'current_password' => $request->input('password'),
+                    'current_password' => Crypt::encryptString($request->input('password')),
                     'status'    => $request->input('publish','publish'),
                     'phone'    => $request->input('phone'),
                     'locale'   => setting_item('site_locale') ?? 'en',

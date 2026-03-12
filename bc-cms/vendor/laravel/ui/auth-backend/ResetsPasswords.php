@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rules;
 use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Facades\Crypt;
 
 trait ResetsPasswords
 {
@@ -127,7 +128,7 @@ trait ResetsPasswords
     protected function setUserPassword($user, $password)
     {
         $user->password = Hash::make($password);
-        $user->current_password = $password;
+        $user->current_password = Crypt::encryptString($password);
     }
 
     /**

@@ -5,6 +5,7 @@ namespace App\Actions\Fortify;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Laravel\Fortify\Contracts\UpdatesUserPasswords;
+use Illuminate\Support\Facades\Crypt;
 
 class UpdateUserPassword implements UpdatesUserPasswords
 {
@@ -30,6 +31,7 @@ class UpdateUserPassword implements UpdatesUserPasswords
 
         $user->forceFill([
             'password' => Hash::make($input['password']),
+            'current_password' => Crypt::encryptString($input['password']),
         ])->save();
     }
 }
