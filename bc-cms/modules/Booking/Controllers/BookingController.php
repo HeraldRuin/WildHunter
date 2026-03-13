@@ -1129,13 +1129,15 @@ class BookingController extends \App\Http\Controllers\Controller
             )->setStatusCode(422);
         }
 
-        $timerHour = $this->bookingTimerService->getCollectionTimerHours($booking, 'paid');
+        if ($booking->type === 'animal') {
+            $booking->status = Booking::FINISHED_COLLECTION;
+        } else {
+            $timerHour = $this->bookingTimerService->getCollectionTimerHours($booking, 'paid');
+            $booking->status = Booking::PREPAYMENT_COLLECTION;
+            $this->bookingTimerService->startTimer($booking->id, $timerHour, 'paid', ['collection']);
+        }
 
-        $booking->status = Booking::PREPAYMENT_COLLECTION;
         $booking->save();
-
-        $this->bookingTimerService->startTimer($booking->id, $timerHour, 'paid', ['collection']);
-
         event(new BookingFinishEvent($booking));
 
         // Находим "собирающего" охотника и отправляем ему письмо о завершении таймера
