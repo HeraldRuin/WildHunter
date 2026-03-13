@@ -2399,8 +2399,8 @@ class BookingController extends \App\Http\Controllers\Controller
         $allItems = [
             [
                 'name' => 'Внесена предоплата:',
-                'total_cost' => round($booking->total),
-                'my_cost' => $myPrepayment,
+                'total_cost' => $booking->type === Booking::BookingTypeAnimal ? 0 : round($booking->total),
+                'my_cost' => $booking->type === Booking::BookingTypeAnimal ? 0 : $myPrepayment,
             ],
             [
                 'name' => 'Итог базе',

@@ -58,6 +58,9 @@ class Booking extends BaseModel
     const PAID       = 'paid'; //
     const PARTIAL_PAYMENT       = 'partial_payment'; //
 
+    //Типы бронирования
+    const BookingTypeAnimal = 'animal';
+
     protected $fillable = [
         'is_all_places_assigned',
     ];
