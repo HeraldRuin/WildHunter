@@ -264,10 +264,8 @@
 
     <td>
         @if($isInvited && $isCollectionStatus)
-            {{-- Для приглашенного охотника в статусе "сбор охотников" показываем кнопку в зависимости от статуса приглашения --}}
-
-            @if($isInvitationAccepted && in_array($booking->type, ['animal', 'hotel_animal']))
-                @if(!$booking->is_master_hunter && in_array($booking->status, [\Modules\Booking\Models\Booking::PAID, \Modules\Booking\Models\Booking::COMPLETED, \Modules\Booking\Models\Booking::FINISHED_PREPAYMENT]))
+            @if($isInvitationAccepted && in_array($booking->type, ['animal', 'hotel_animal', 'hotel']))
+                @if(!$booking->is_master_hunter && in_array($booking->status, [\Modules\Booking\Models\Booking::PAID, \Modules\Booking\Models\Booking::COMPLETED, \Modules\Booking\Models\Booking::FINISHED_PREPAYMENT, \Modules\Booking\Models\Booking::BED_COLLECTION, \Modules\Booking\Models\Booking::FINISHED_BED]))
                     <button
                         type="button"
                         class="btn btn-primary btn-sm mt-2"
@@ -277,9 +275,9 @@
                     </button>
                 @endif
             @endif
-
         @endif
-        @if($booking->is_master_hunter && in_array($booking->status, [\Modules\Booking\Models\Booking::PAID, \Modules\Booking\Models\Booking::COMPLETED, \Modules\Booking\Models\Booking::FINISHED_PREPAYMENT]))
+
+        @if($booking->is_master_hunter && in_array($booking->status, [\Modules\Booking\Models\Booking::PAID, \Modules\Booking\Models\Booking::COMPLETED, \Modules\Booking\Models\Booking::FINISHED_PREPAYMENT, \Modules\Booking\Models\Booking::BED_COLLECTION, \Modules\Booking\Models\Booking::FINISHED_BED]))
             <button
                 type="button"
                 class="btn btn-primary btn-sm mt-2"
@@ -292,7 +290,6 @@
 
     <td>
         @if($isInvited && $isCollectionStatus)
-            {{-- Для приглашенного охотника в статусе "сбор охотников" показываем кнопку в зависимости от статуса приглашения --}}
             @if(!$isInvitationAccepted)
                 <button
                     type="button"
@@ -304,7 +301,7 @@
                 </button>
             @endif
             @if($isInvitationAccepted && in_array($booking->type, ['animal', 'hotel_animal', 'hotel']))
-                @if(!$booking->is_master_hunter && in_array($booking->status, [\Modules\Booking\Models\Booking::PREPAYMENT_COLLECTION, \Modules\Booking\Models\Booking::FINISHED_PREPAYMENT, \Modules\Booking\Models\Booking::START_COLLECTION]))
+                @if(!$booking->is_master_hunter && in_array($booking->status, [\Modules\Booking\Models\Booking::PREPAYMENT_COLLECTION, \Modules\Booking\Models\Booking::FINISHED_PREPAYMENT, \Modules\Booking\Models\Booking::START_COLLECTION, \Modules\Booking\Models\Booking::BED_COLLECTION, \Modules\Booking\Models\Booking::FINISHED_BED]))
                     <button
                         type="button"
                         class="btn btn-primary btn-sm mt-2"
@@ -313,7 +310,7 @@
                         {{__("Open collection")}}
                     </button>
                 @endif
-                @if(!$booking->is_master_hunter && $booking->status ===  \Modules\Booking\Models\Booking::FINISHED_PREPAYMENT)
+                @if(!$booking->is_master_hunter && in_array($booking->status,  [\Modules\Booking\Models\Booking::FINISHED_PREPAYMENT, \Modules\Booking\Models\Booking::BED_COLLECTION, \Modules\Booking\Models\Booking::FINISHED_BED]))
                     <button
                         type="button"
                         class="btn btn-primary btn-sm mt-2"
@@ -344,7 +341,7 @@
             @endif
 
             @if($booking->is_master_hunter)
-                @if(in_array($booking->status, [\Modules\Booking\Models\Booking::PREPAYMENT_COLLECTION, \Modules\Booking\Models\Booking::START_COLLECTION, \Modules\Booking\Models\Booking::FINISHED_PREPAYMENT]))
+                @if(in_array($booking->status, [\Modules\Booking\Models\Booking::PREPAYMENT_COLLECTION, \Modules\Booking\Models\Booking::START_COLLECTION, \Modules\Booking\Models\Booking::FINISHED_PREPAYMENT, \Modules\Booking\Models\Booking::BED_COLLECTION, \Modules\Booking\Models\Booking::FINISHED_BED]))
                     <button
                         type="button"
                         class="btn btn-primary btn-sm mt-2"
@@ -375,8 +372,8 @@
                 </button>
             @endif
 
-            @if($booking->is_master_hunter && $booking->status ===  \Modules\Booking\Models\Booking::FINISHED_PREPAYMENT)
-                <button
+            @if($booking->is_master_hunter && in_array($booking->status, [\Modules\Booking\Models\Booking::FINISHED_PREPAYMENT, \Modules\Booking\Models\Booking::BED_COLLECTION, \Modules\Booking\Models\Booking::FINISHED_BED]))
+                    <button
                     type="button"
                     class="btn btn-primary btn-sm mt-2"
                     data-bs-toggle="modal"
