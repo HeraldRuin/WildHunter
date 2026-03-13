@@ -63,7 +63,12 @@
     <div class="modal-dialog modal-xl">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">{{ __('Open collection for booking') }} #{{ $booking->id }}</h5>
+                @if($booking->status === \Modules\Booking\Models\Booking::START_COLLECTION)
+                    <h5 class="modal-title">{{ __('Open collection for booking') }} #{{ $booking->id }}</h5>
+                @endif
+                    @if(in_array($booking->status, [\Modules\Booking\Models\Booking::FINISHED_COLLECTION, \Modules\Booking\Models\Booking::PREPAYMENT_COLLECTION, \Modules\Booking\Models\Booking::FINISHED_PREPAYMENT, \Modules\Booking\Models\Booking::BED_COLLECTION, \Modules\Booking\Models\Booking::FINISHED_BED]))
+                        <h5 class="modal-title">{{ __('Collection for booking') }} #{{ $booking->id }}</h5>
+                    @endif
             </div>
             <div class="modal-body">
                 @if($isInvited || in_array($booking->status, [\Modules\Booking\Models\Booking::FINISHED_COLLECTION, \Modules\Booking\Models\Booking::PREPAYMENT_COLLECTION, \Modules\Booking\Models\Booking::FINISHED_PREPAYMENT, \Modules\Booking\Models\Booking::BED_COLLECTION, \Modules\Booking\Models\Booking::FINISHED_BED]))
@@ -108,10 +113,8 @@
                                             @endif
 
                                             {{-- Статус предоплаты --}}
-                                            @if($hunter['prepayment_paid'] && $booking->status !== \Modules\Booking\Models\Booking::FINISHED_COLLECTION)
-                                                <span class="badge">{{ __('Paid') }}</span>
-                                            @else
-                                                <span class="badge">{{ __('Awaiting prepayment') }}</span>
+                                            @if($booking->status !== \Modules\Booking\Models\Booking::FINISHED_COLLECTION)
+                                                <span class="badge">{{ $hunter['prepayment_paid'] ? __('Paid') : __('Awaiting prepayment') }}</span>
                                             @endif
                                         </div>
                                     </div>
