@@ -108,7 +108,7 @@
                                             @endif
 
                                             {{-- Статус предоплаты --}}
-                                            @if($hunter['prepayment_paid'] && $booking->status != \Modules\Booking\Models\Booking::FINISHED_COLLECTION)
+                                            @if($hunter['prepayment_paid'] && $booking->status !== \Modules\Booking\Models\Booking::FINISHED_COLLECTION)
                                                 <span class="badge">{{ __('Paid') }}</span>
                                             @else
                                                 <span class="badge">{{ __('Awaiting prepayment') }}</span>
