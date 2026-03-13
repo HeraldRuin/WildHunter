@@ -99,6 +99,7 @@ class BookingTimerService
                     ->where('m.name', '=', 'beds_end_at');
             })
             ->where('b.status', Booking::BED_COLLECTION)
+            ->where('b.is_all_places_assigned', false)
             ->where('m.val', '<', $now)
             ->select('b.id')
             ->get();
@@ -116,7 +117,6 @@ class BookingTimerService
 
     protected function handleBooking(Booking $booking): void
     {
-        Log::alert('да я запустился');
         // Распределения охотников
         $this->allocatorBedsService->allocateBeds($booking);
     }
