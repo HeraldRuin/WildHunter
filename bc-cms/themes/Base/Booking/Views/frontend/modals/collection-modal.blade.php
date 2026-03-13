@@ -24,7 +24,7 @@
     }
 
     $invitedHunters = [];
-    if ($isInvited || in_array($booking->status, [\Modules\Booking\Models\Booking::PREPAYMENT_COLLECTION, \Modules\Booking\Models\Booking::FINISHED_PREPAYMENT, \Modules\Booking\Models\Booking::BED_COLLECTION, \Modules\Booking\Models\Booking::FINISHED_BED])) {
+    if ($isInvited || in_array($booking->status, [\Modules\Booking\Models\Booking::FINISHED_COLLECTION, \Modules\Booking\Models\Booking::PREPAYMENT_COLLECTION, \Modules\Booking\Models\Booking::FINISHED_PREPAYMENT, \Modules\Booking\Models\Booking::BED_COLLECTION, \Modules\Booking\Models\Booking::FINISHED_BED])) {
         $invitations = $booking->getAllInvitations();
         foreach ($invitations as $invitation) {
             if ($invitation->hunter) {
@@ -66,9 +66,9 @@
                 <h5 class="modal-title">{{ __('Open collection for booking') }} #{{ $booking->id }}</h5>
             </div>
             <div class="modal-body">
-                @if($isInvited || in_array($booking->status, [\Modules\Booking\Models\Booking::PREPAYMENT_COLLECTION, \Modules\Booking\Models\Booking::FINISHED_PREPAYMENT, \Modules\Booking\Models\Booking::BED_COLLECTION, \Modules\Booking\Models\Booking::FINISHED_BED]))
+                @if($isInvited || in_array($booking->status, [\Modules\Booking\Models\Booking::FINISHED_COLLECTION, \Modules\Booking\Models\Booking::PREPAYMENT_COLLECTION, \Modules\Booking\Models\Booking::FINISHED_PREPAYMENT, \Modules\Booking\Models\Booking::BED_COLLECTION, \Modules\Booking\Models\Booking::FINISHED_BED]))
                     {{-- Шаблон для приглашенного охотника: только просмотр списка приглашенных --}}
-                    @if(in_array($booking->status, [\Modules\Booking\Models\Booking::PREPAYMENT_COLLECTION, \Modules\Booking\Models\Booking::FINISHED_PREPAYMENT, \Modules\Booking\Models\Booking::BED_COLLECTION, \Modules\Booking\Models\Booking::FINISHED_BED]))
+                    @if(in_array($booking->status, [\Modules\Booking\Models\Booking::FINISHED_COLLECTION, \Modules\Booking\Models\Booking::PREPAYMENT_COLLECTION, \Modules\Booking\Models\Booking::FINISHED_PREPAYMENT, \Modules\Booking\Models\Booking::BED_COLLECTION, \Modules\Booking\Models\Booking::FINISHED_BED]))
                         <div class="alert alert-success mb-4">
                             <strong>{{ __('Collection completed') }}</strong>
                         </div>
@@ -108,7 +108,7 @@
                                             @endif
 
                                             {{-- Статус предоплаты --}}
-                                            @if($hunter['prepayment_paid'])
+                                            @if($hunter['prepayment_paid'] && $booking->status != \Modules\Booking\Models\Booking::FINISHED_COLLECTION)
                                                 <span class="badge">{{ __('Paid') }}</span>
                                             @else
                                                 <span class="badge">{{ __('Awaiting prepayment') }}</span>
