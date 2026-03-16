@@ -248,7 +248,6 @@ class HotelController extends Controller
             $totalCapacity = 0;
 
             foreach ($hotel->rooms as $room) {
-
                 $roomDates = DB::table('bc_hotel_room_dates')
                     ->where('target_id', $room->id)
                     ->whereIn(DB::raw('DATE(start_date)'), $periodDates)
@@ -259,46 +258,31 @@ class HotelController extends Controller
 
                 $bookings = $room->getBookingsInRange($periodStart, $periodEnd);
 
+                $dailyAvailable = [];
+
                 foreach ($periodDates as $date) {
-
                     if (isset($roomDates[$date])) {
-
-                        if ((int)$roomDates[$date]->active === 0) {
-                            continue;
-                        }
-
-                        $number = (int)$roomDates[$date]->number;
-
+                        $number = (int)$roomDates[$date]->active ? (int)$roomDates[$date]->number : 0;
                     } else {
                         $number = (int)$room->number;
                     }
 
-                    if ($number <= 0) {
-                        continue;
-                    }
-
                     $occupied = 0;
-
                     foreach ($bookings as $booking) {
-
-                        $bookingStart = Carbon::parse($booking->start_date);
-                        $bookingEnd   = Carbon::parse($booking->end_date)->subDay();
-
-                        if ($date >= $bookingStart->format('Y-m-d') && $date <= $bookingEnd->format('Y-m-d')) {
+                        $bookingStart = Carbon::parse($booking->start_date)->format('Y-m-d');
+                        $bookingEnd   = Carbon::parse($booking->end_date)->subDay()->format('Y-m-d');
+                        if ($date >= $bookingStart && $date <= $bookingEnd) {
                             $occupied += $booking->number;
                         }
                     }
 
                     $freeRooms = max($number - $occupied, 0);
-
-                    if ($freeRooms <= 0) {
-                        continue;
-                    }
-
-                    $totalCapacity += $room->adults * $freeRooms;
+                    $dailyAvailable[] = $freeRooms;
                 }
-            }
 
+                $minRooms = !empty($dailyAvailable) ? min($dailyAvailable) : 0;
+                $totalCapacity += $minRooms * $room->adults;
+            }
             return $totalCapacity >= $guestCount;
         });
     }
