@@ -892,6 +892,18 @@ document.addEventListener('DOMContentLoaded', function () {
                     }
                 });
             },
+            copyBookingLink(link) {
+                navigator.clipboard.writeText(link)
+                    .then(() => {
+                        bookingCoreApp.showAjaxMessage({
+                            message: 'Ссылка скопирована',
+                            status: true
+                        });
+                    })
+                    .catch(err => {
+                        console.error('Ошибка копирования:', err);
+                    });
+            },
             startCollection(event, bookingId) {
                 var me = this;
                 var bookingIdNum = parseInt(bookingId, 10);
@@ -1410,8 +1422,6 @@ document.addEventListener('DOMContentLoaded', function () {
                     });
             },
 
-
-
             openCalculatingModal(booking, event) {
                 const bookingIdNum = parseInt(booking.id, 10);
                 const modalEl = document.getElementById('calculatingBookingModal' + bookingIdNum);
@@ -1436,7 +1446,6 @@ document.addEventListener('DOMContentLoaded', function () {
                             return;
                         }
 
-                        // Сохраняем данные для рендера
                         self.calculatingData = res;
 
                         const modalEl = document.getElementById('calculatingBookingModal' + bookingIdNum);
@@ -1445,7 +1454,6 @@ document.addEventListener('DOMContentLoaded', function () {
                         const contentEl = modalEl.querySelector('#calculating-content-' + bookingIdNum);
                         if (!contentEl) return;
 
-                        // Вызываем рендер
                         self.renderCalculatingData(booking, contentEl, res);
                     })
                     .fail(() => {

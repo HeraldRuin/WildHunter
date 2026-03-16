@@ -216,6 +216,17 @@ class UserController extends FrontendController
 
         $authUser = Auth::user();
         $bookingId = $request->input('booking_id');
+        $code = $request->input('code');
+
+        if ($code) {
+            $booking = Booking::where('code', $code)->first();
+
+            if (!$booking) {
+                abort(403);
+            }
+
+            $bookingId = $booking->id;
+        }
 
         if ($authUser->hasRole('baseadmin')){
             $userRole = 'baseadmin';
@@ -255,6 +266,7 @@ class UserController extends FrontendController
             'hotelSlug' => $authUser->hotels?->first()?->slug,
             'statues'     => $statuses,
             'bookingId' => $bookingId,
+            'bookingCode' => $code,
             'breadcrumbs' => [
                 [
                     'name'  => __('Booking History'),

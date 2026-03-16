@@ -65,6 +65,12 @@
             <div class="modal-header">
                 @if($booking->status === \Modules\Booking\Models\Booking::START_COLLECTION)
                     <h5 class="modal-title">{{ __('Open collection for booking') }} #{{ $booking->id }}</h5>
+                    <button
+                        type="button"
+                        class="btn btn-sm btn-outline-primary"
+                        @click="copyBookingLink('{{ $booking->invitation_url }}')">
+                        {{ __('Link for booking') }}
+                    </button>
                 @endif
                     @if(in_array($booking->status, [\Modules\Booking\Models\Booking::FINISHED_COLLECTION, \Modules\Booking\Models\Booking::PREPAYMENT_COLLECTION, \Modules\Booking\Models\Booking::FINISHED_PREPAYMENT, \Modules\Booking\Models\Booking::BED_COLLECTION, \Modules\Booking\Models\Booking::FINISHED_BED]))
                         <h5 class="modal-title">{{ __('Collection for booking') }} #{{ $booking->id }}</h5>

@@ -835,9 +835,9 @@ class Booking extends BaseModel
             ]);
         }
 
-        if ($booking_id) {
-            $list_booking->where('id', $booking_id);
-        }
+//        if ($booking_id) {
+//            $list_booking->where('id', $booking_id);
+//        }
 
         // 8️⃣ Ограничение по доступным сервисам
         $list_booking->whereIn('object_model', array_keys(get_bookable_services()));
@@ -1595,5 +1595,15 @@ class Booking extends BaseModel
             'hotel_animal' => __('HotelAnimalType'),
             default => ucfirst($this->type ?? ''),
         };
+    }
+    /**
+     * Ссылка для приглашения охотников
+     */
+    public function getInvitationUrlAttribute()
+    {
+        return route('user.booking_history', [
+            'status' => 'invitation',
+            'code' => $this->code
+        ]);
     }
 }

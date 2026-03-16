@@ -13,7 +13,7 @@
     @include('admin.message')
     <div class="booking-history-manager">
         <div class="tabbable">
-            @if(empty($bookingId))
+            @if(empty($bookingId && empty($bookingCode)))
             <ul class="nav nav-tabs ht-nav-tabs">
                 <?php $status_type = Request::query('status'); ?>
                 <li class="@if(empty($status_type)) active @endif">
@@ -33,7 +33,7 @@
             </ul>
             @endif
 
-            @if(!empty($bookingId))
+            @if(!empty($bookingId) && empty($bookingCode))
                 <div class="d-flex align-items-center justify-content-between mt-3 mb-3">
 {{--                    <span class="text-muted"><i class="fa fa-filter"></i> {{__("Showing filtered results for booking")}} #{{ $bookingId }}</span>--}}
                     <div style="margin-right: 180px;">
