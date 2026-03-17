@@ -55,79 +55,71 @@ class BookingBedAllocatorService
 
         $huntersWithoutPlace = [];
 
-        DB::transaction(function () use ($booking, $notSetBedHunterIds, &$huntersWithoutPlace) {
+        DB::transaction(function () use ($booking, &$notSetBedHunterIds, &$huntersWithoutPlace) {
 
-            $roomBookings = $booking->roomsBooking()->get();
-            $rooms = DB::table('bc_hotel_rooms')
-                ->whereIn('id', $roomBookings->pluck('room_id'))
-                ->lockForUpdate()
-                ->get()
-                ->keyBy('id');
+            $roomBookings = $booking->roomsBooking()->with('room')->get();
 
-            foreach ($notSetBedHunterIds as $hunterId) {
-                $assigned = false;
+            $roomsState = [];
 
-                // Этап 1: частично заполненные комнаты
-                foreach ($roomBookings as $roomBooking) {
-                    $roomId = $roomBooking->room_id;
-                    $capacity = $rooms[$roomId]->adults ?? 0;
+            foreach ($roomBookings as $roomBooking) {
+
+                $roomId = $roomBooking->room_id;
+                $capacity = $roomBooking->room->adults;
+
+                for ($index = 1; $index <= $roomBooking->number; $index++) {
 
                     $currentPlaces = DB::table('bc_booking_room_places')
                         ->where('booking_id', $booking->id)
                         ->where('room_id', $roomId)
-                        ->orderByDesc('place_number')
-                        ->lockForUpdate()
-                        ->get();
+                        ->where('room_index', $index)
+                        ->count();
 
-                    $currentCount = $currentPlaces->count();
+                    $roomsState[] = [
+                        'room_id' => $roomId,
+                        'room_index' => $index,
+                        'capacity' => $capacity,
+                        'current' => $currentPlaces
+                    ];
+                }
+            }
 
-                    if ($currentCount > 0 && $currentCount < $capacity) {
-                        $maxPlaceId = $currentPlaces->first()->place_number;
-                        DB::table('bc_booking_room_places')->insert([
-                            'booking_id'   => $booking->id,
-                            'room_id'      => $roomId,
-                            'place_number' => $maxPlaceId + 1,
-                            'user_id'      => $hunterId,
-                            'created_at'   => now(),
-                            'updated_at'   => now(),
-                        ]);
-                        $assigned = true;
+            while ($notSetBedHunterIds->isNotEmpty()) {
+
+                $placedSomeone = false;
+
+                foreach ($roomsState as &$room) {
+
+                    if ($notSetBedHunterIds->isEmpty()) {
                         break;
                     }
-                }
 
-                // Этап 2: полностью пустые комнаты, если ещё не назначено
-                if (!$assigned) {
-                    foreach ($roomBookings as $roomBooking) {
-                        $roomId = $roomBooking->room_id;
-                        $capacity = $rooms[$roomId]->adults ?? 0;
-
-                        $currentPlaces = DB::table('bc_booking_room_places')
-                            ->where('booking_id', $booking->id)
-                            ->where('room_id', $roomId)
-                            ->lockForUpdate()
-                            ->get();
-
-                        if ($currentPlaces->count() == 0) {
-                            // вставляем первое место
-                            DB::table('bc_booking_room_places')->insert([
-                                'booking_id'   => $booking->id,
-                                'room_id'      => $roomId,
-                                'place_number' => 1,
-                                'user_id'      => $hunterId,
-                                'created_at'   => now(),
-                                'updated_at'   => now(),
-                            ]);
-                            $assigned = true;
-                            break;
-                        }
+                    if ($room['current'] >= $room['capacity']) {
+                        continue;
                     }
+
+                    $hunterId = $notSetBedHunterIds->shift();
+
+                    DB::table('bc_booking_room_places')->insert([
+                        'booking_id' => $booking->id,
+                        'room_id' => $room['room_id'],
+                        'room_index' => $room['room_index'],
+                        'place_number' => $room['current'] + 1,
+                        'user_id' => $hunterId,
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ]);
+
+                    $room['current']++;
+                    $placedSomeone = true;
                 }
 
-                // Этап 3: если нигде не удалось разместить
-                if (!$assigned) {
-                    $huntersWithoutPlace[] = $hunterId;
+                if (!$placedSomeone) {
+                    break;
                 }
+            }
+
+            if ($notSetBedHunterIds->isNotEmpty()) {
+                $huntersWithoutPlace = $notSetBedHunterIds->toArray();
             }
         });
 
@@ -138,9 +130,7 @@ class BookingBedAllocatorService
             ]);
         }
 
-        $allAssigned = empty($huntersWithoutPlace);
-
-        if ($allAssigned) {
+        if (empty($huntersWithoutPlace)) {
             $booking->update(['is_all_places_assigned' => true]);
         }
     }
