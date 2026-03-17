@@ -2,7 +2,6 @@
  * Логика для работы с приглашениями охотников на сбор
  */
 
-// Получение переводов из data-атрибутов
 function getInvitationTranslations() {
     const el = document.getElementById('booking-history');
     
@@ -14,8 +13,6 @@ function getInvitationTranslations() {
             declined: 'Приглашение отклонено'
         };
     }
-    
-    // Используем getAttribute для надежности (data-атрибуты с дефисами)
     return {
         acceptConfirm: el.getAttribute('data-accept-confirm') || 'Вы уверены, что хотите принять это приглашение?',
         declineConfirm: el.getAttribute('data-decline-confirm') || 'Вы уверены, что хотите отказаться от этого приглашения?',
@@ -24,7 +21,6 @@ function getInvitationTranslations() {
     };
 }
 
-// Функция для открытия модального окна приглашения
 function openInvitationModal(bookingId) {
     if (typeof bootstrap === 'undefined') {
         console.error('Bootstrap не загружен');
@@ -39,7 +35,6 @@ function openInvitationModal(bookingId) {
     modal.show();
 }
 
-// Функция для принятия приглашения
 function acceptInvitation(bookingId) {
     if (typeof jQuery === 'undefined' || typeof $ === 'undefined') {
         alert('Ошибка: jQuery не загружен');
@@ -97,7 +92,6 @@ function acceptInvitation(bookingId) {
     });
 }
 
-// Функция для отклонения приглашения
 function declineInvitation(bookingId) {
     if (typeof jQuery === 'undefined' || typeof $ === 'undefined') {
         alert('Ошибка: jQuery не загружен');
@@ -155,8 +149,6 @@ function declineInvitation(bookingId) {
     });
 }
 
-// Явно добавляем функции в глобальную область видимости (window)
-// Это необходимо для доступа из onclick атрибутов в HTML
 window.openInvitationModal = openInvitationModal;
 window.acceptInvitation = acceptInvitation;
 window.declineInvitation = declineInvitation;
