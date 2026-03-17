@@ -11,6 +11,7 @@ use Illuminate\Validation\Rule;
 use Matrix\Exception;
 use Modules\Boat\Models\Boat;
 use Modules\Booking\Models\Booking;
+use Modules\Booking\Models\BookingHunter;
 use Modules\Booking\Models\BookingHunterInvitation;
 use Modules\Booking\Models\Enquiry;
 use Modules\Booking\Models\Service;
@@ -225,7 +226,22 @@ class UserController extends FrontendController
                 abort(403);
             }
 
-            $bookingId = $booking->id;
+
+
+            $masterBookingHunter = BookingHunter::where('booking_id', $booking->id)->where('is_master', true)->first();
+            if ($masterBookingHunter) {
+                $exists = BookingHunterInvitation::where('booking_hunter_id', $masterBookingHunter->id)
+                    ->where('hunter_id', $authUser->id)
+                    ->exists();
+
+                if (!$exists) {
+                    BookingHunterInvitation::create([
+                        'booking_hunter_id' => $masterBookingHunter->id,
+                        'hunter_id' => $authUser->id,
+                        'invited' => true
+                    ]);
+                }
+            }
         }
 
         if ($authUser->hasRole('baseadmin')){
