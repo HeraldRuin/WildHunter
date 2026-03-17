@@ -1,4 +1,3 @@
-{{-- Модальное окно для просмотра приглашения (похоже на collectionModal, но без поиска) --}}
 @php
     $invitation = $booking->getCurrentUserInvitation();
 @endphp
@@ -72,10 +71,8 @@
                                                 @endif
                                             </span>
                                             <span class="ml-2">
-                                                     @if($inv->prepayment_paid === 1)
-                                                    {{ __('Paid') }}
-                                                @else
-                                                    {{ __('Awaiting prepayment') }}
+                                                @if($inv->status != 'declined')
+                                                {{ $inv->prepayment_paid === 1 ? __('Paid') : __('Awaiting prepayment') }}
                                                 @endif
                                             </span>
                                         </div>
