@@ -60,6 +60,8 @@ class Booking extends BaseModel
 
     //Типы бронирования
     const BookingTypeAnimal = 'animal';
+    const BookingTypeHotelAnimal = 'hotel_animal';
+    const BookingTypeHotel = 'hotel';
 
     protected $fillable = [
         'is_all_places_assigned',
@@ -186,14 +188,16 @@ class Booking extends BaseModel
 
         if ($userId && $this->isInvited($userId)) {
             return match ($this->status) {
-                self::PREPAYMENT_COLLECTION,
                 self::CANCELLED,
-                self::COMPLETED,
-                self::PAID,
-                self::CONFIRMED,
                 self::PROCESSING,
+                self::CONFIRMED,
+                self::FINISHED_COLLECTION,
+                self::PREPAYMENT_COLLECTION,
+                self::FINISHED_PREPAYMENT,
                 self::BED_COLLECTION,
-                self::FINISHED_PREPAYMENT => $this->status,
+                self::FINISHED_BED,
+                self::PAID,
+                self::COMPLETED,=> $this->status,
                 default => self::START_COLLECTION,
             };
         }
@@ -789,10 +793,10 @@ class Booking extends BaseModel
                 // Обычные вкладки — мастера охоты
                 $list_booking->where(function ($q) use ($customer_id_or_name) {
 
-                    // 3.1 Создатель
+                    //Создатель
                     $q->where('create_user', $customer_id_or_name)
 
-                        // 3.2 Мастер
+                        //Мастер
                         ->orWhereHas('bookingHunters', function ($h) use ($customer_id_or_name) {
                             $h->where('is_master', 1)
                                 ->where('invited_by', $customer_id_or_name);
@@ -817,9 +821,7 @@ class Booking extends BaseModel
                 ]);
 
             } else {
-
                 $list_booking->where('status', $booking_status);
-
             }
         }
 
