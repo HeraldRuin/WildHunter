@@ -13,5 +13,6 @@ return [
         'invitation',
         'prepayment_collection',
         'bed_collection',
+        'finish_bed_collection',
     ]
 ];
