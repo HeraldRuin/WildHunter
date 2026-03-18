@@ -89,6 +89,33 @@ class Booking extends BaseModel
     }
 
     /**
+     * Получает мастера брони
+     */
+    public function getMasterHunter(): ?BookingHunter
+    {
+        return $this->bookingHunters()
+            ->where('is_master', true)
+            ->first();
+    }
+
+    /**
+     * Количество охотников, которые приняли приглашение и оплатили предоплату
+     */
+    public function countAcceptedAndPaidHunters(): int
+    {
+        $masterBookingHunter = $this->getMasterHunter();
+
+        if (!$masterBookingHunter) {
+            return 0;
+        }
+
+        return $masterBookingHunter->invitations
+            ->where('status', 'accepted')
+            ->where('prepayment_paid', true)
+            ->count();
+    }
+
+    /**
      * Проверяет, приглашен ли указанный пользователь на эту бронь
      */
     public function isInvited($userId = null)
@@ -125,7 +152,7 @@ class Booking extends BaseModel
      */
     public function getCurrentUserInvitation()
     {
-        $userId = \Illuminate\Support\Facades\Auth::id();
+        $userId = Auth::id();
 
         if (!$userId) {
             return null;
