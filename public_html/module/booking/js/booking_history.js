@@ -1476,7 +1476,6 @@ document.addEventListener('DOMContentLoaded', function () {
 </thead>
 <tbody>`;
 
-                // Пустая строка для разделения
                 html += `<tr><td colspan="3"></td></tr>`;
 
                 // === Основные услуги ===
@@ -1485,7 +1484,20 @@ document.addEventListener('DOMContentLoaded', function () {
 <tr>
     <td>${item.name}</td>
     <td>${item.total_cost ?? 0}</td>
-    <td>${item.my_cost ?? 0}</td>
+<td>
+    ${item.my_cost ?? 0}
+    ${item.has_tooltip
+                        ? `<span 
+                class="info-icon"
+                data-bs-toggle="popover"
+                data-bs-trigger="focus"
+                data-bs-placement="top"
+                data-bs-content="За человека в сутки"
+                tabindex="0"
+                style="color:red; cursor:pointer;"
+           >!</span>`
+                        : ''}
+</td>
 </tr>`;
                 });
 
@@ -1551,22 +1563,16 @@ document.addEventListener('DOMContentLoaded', function () {
 </tr>`;
                 });
 
-                // Закрываем tbody и table
                 html += `</tbody></table>`;
-
-                // Вставляем в контент
                 contentEl.innerHTML = html;
+                contentEl.querySelectorAll('[data-bs-toggle="popover"]').forEach(el => {
+                    new bootstrap.Popover(el);
+                });
             }
         },
 
         mounted() {
-            document.querySelectorAll('[data-bs-toggle="popover"]').forEach(el => {
-                new bootstrap.Popover(el);
-            });
-
-            // Добавляем обработчики событий для модальных окон сбора охотников
             const me = this;
-            // Используем делегирование событий для всех модальных окон
             document.addEventListener('shown.bs.modal', function (event) {
                 const modalEl = event.target;
                 if (modalEl && modalEl.id && modalEl.id.startsWith('collectionModal')) {
@@ -1594,7 +1600,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 console.log('[HunterInvitation] Подписка на канал для пользователя:', userId);
 
                 try {
-                    // Пытаемся подписаться на приватный канал
                     const channel = window.LaravelEcho.private(`user-channel-${userId}`);
 
                     channel.listen('.hunter.invited', (e) => {
@@ -1625,8 +1630,6 @@ document.addEventListener('DOMContentLoaded', function () {
             // Подписка на каналы бронирований для обновления счетчика в реальном времени
             if (window.LaravelEcho) {
                 const subscribedBookings = new Set();
-
-                // Функция для подписки на канал бронирования
                 const subscribeToBooking = (bookingId) => {
                     if (!bookingId || subscribedBookings.has(bookingId)) {
                         return;
@@ -1638,9 +1641,8 @@ document.addEventListener('DOMContentLoaded', function () {
                         const channel = window.LaravelEcho.private(`booking-${bookingId}`);
 
                         channel.listen('.hunter.invitation.accepted', (e) => {
-                            console.log('[HunterInvitationAccepted] Получено событие принятия приглашения:', e);
+                            // console.log('[HunterInvitationAccepted] Получено событие принятия приглашения:', e);
 
-                            // Находим строку таблицы с этим booking_id
                             const targetRow = document.querySelector(`tr[data-booking-id="${bookingId}"]`);
                             if (targetRow) {
                                 const statusCell = Array.from(targetRow.querySelectorAll('td')).find(td => {
@@ -1649,7 +1651,6 @@ document.addEventListener('DOMContentLoaded', function () {
                                 });
 
                                 if (statusCell) {
-                                    // Находим элемент со счетчиком
                                     const counterElement = statusCell.querySelector('.text-muted.mt-1');
                                     if (counterElement && e.accepted_count !== undefined && e.total_hunters_needed !== undefined) {
                                         counterElement.textContent = `Собранно ${e.accepted_count}/${e.total_hunters_needed}`;
@@ -1671,7 +1672,6 @@ document.addEventListener('DOMContentLoaded', function () {
                     }
                 };
 
-                // Находим все строки таблицы с data-booking-id
                 const bookingRows = document.querySelectorAll('tr[data-booking-id]');
                 bookingRows.forEach((row) => {
                     const bookingId = row.dataset.bookingId;
@@ -1689,7 +1689,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 });
             }
 
-            // Очистка полей поиска охотников при закрытии модалок сбора
             document.querySelectorAll('.modal[id^="collectionModal"]').forEach((modalEl) => {
                 // Проверяем, не добавлен ли уже обработчик
                 if (modalEl.dataset.handlerCleared) return;
@@ -1703,7 +1702,6 @@ document.addEventListener('DOMContentLoaded', function () {
             });
 
             const updateCollectionTimers = () => {
-                // Поддерживаем оба варианта: data-end (новый) и data-start (старый для обратной совместимости)
                 const nodesWithEnd = document.querySelectorAll('.collection-timer[data-end]');
                 const nodesWithStart = document.querySelectorAll('.collection-timer[data-start]');
                 const now = Date.now();
