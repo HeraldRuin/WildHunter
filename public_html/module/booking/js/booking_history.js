@@ -1338,7 +1338,10 @@ document.addEventListener('DOMContentLoaded', function () {
                             if (placeData) {
                                 const firstName = placeData.user.first_name ?? '';
                                 const lastName = placeData.user.last_name ?? '';
-                                inputDiv.textContent = firstName + ' ' + lastName;
+                                const username = placeData.user.user_name ?? '';
+                                inputDiv.textContent = (firstName || lastName)
+                                    ? `${firstName} ${lastName}`.trim()
+                                    : username;
                                 inputDiv.className = 'fw-semibold text-success';
                             } else {
                                 inputDiv.textContent = 'свободно';
@@ -1398,13 +1401,20 @@ document.addEventListener('DOMContentLoaded', function () {
                     place_number: placeNumber,
                     room_index: roomIndex
                 })
-                    .done(function() {
-                        const booking = { id: bookingId };
-                        self.loadBookingPlaces(booking);
-                    })
-                    .fail(function() {
-                        alert('Ошибка выбора места');
-                    });
+                     .done(function(res) {
+                         if (res.success) {
+                             const booking = { id: bookingId };
+                             self.loadBookingPlaces(booking);
+                         } else {
+                             bookingCoreApp.showAjaxMessage(res);
+                         }
+                     })
+                     .fail(function(xhr) {
+                         bookingCoreApp.showAjaxMessage({
+                             status: false,
+                             message: 'Ошибка выбора места'
+                         });
+                     });
             },
 
             cancelSelectPlace(bookingId, placeId) {

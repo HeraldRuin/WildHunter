@@ -2117,7 +2117,7 @@ class BookingController extends \App\Http\Controllers\Controller
                 ];
             });
 
-        $places = BookingRoomPlace::with('user:id,first_name,last_name')
+        $places = BookingRoomPlace::with('user:id,first_name,last_name,user_name')
             ->where('booking_id', $booking->id)
             ->get()
             ->groupBy(['room_index', 'room_id', 'place_number']);
@@ -2136,6 +2136,14 @@ class BookingController extends \App\Http\Controllers\Controller
         $booking = Booking::findOrFail($booking->id);
 
         try {
+            $alreadyHasPlace = BookingRoomPlace::where('booking_id', $booking->id)
+                ->where('user_id', auth()->id())
+                ->exists();
+
+            if ($alreadyHasPlace) {
+                return $this->sendError(__('You have already selected a place'));
+            }
+
             $occupiedPlaceNumbers = BookingRoomPlace::where('booking_id', $booking->id)
                 ->where('room_id', $roomId)
                 ->where('room_index', $selectedRoomIndex)
@@ -2189,16 +2197,10 @@ class BookingController extends \App\Http\Controllers\Controller
                     ];
                 });
 
-            $places = BookingRoomPlace::with('user:id,first_name,last_name')
+            $places = BookingRoomPlace::with('user:id,first_name,last_name,user_name')
                 ->where('booking_id', $booking->id)
                 ->get()
                 ->groupBy(['room_index', 'room_id', 'place_number']);
-
-            \Log::info('selectPlace response', [
-                'current_user_id' => auth()->id(),
-                'rooms' => $rooms,
-                'places' => $places,
-            ]);
 
             return response()->json([
                 'success' => true,

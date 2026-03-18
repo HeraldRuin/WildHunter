@@ -4002,7 +4002,7 @@
     "Clear filter and show all bookings": "Очистить фильтр и показать все брони",
     "Find by nickname or last name": "Найти по нику, фамилии или email",
     "Start typing nickname or last name": "Начните вводить ник, фамилию или email",
-    "Open collection for booking": "Открыть сбор для брони",
+    "Open collection for booking": "Открыт сбор для брони",
     "Open collection for hunting": "Открыт сбор для охотников",
     "Collection for booking": "Сбор для брони",
     "Link for booking": "Ссылка на сбор",
@@ -4076,5 +4076,6 @@
     "Type Preparations": "Тип разделки",
     "Seats are allocated": "Места распределены",
     "Choosing a bed": "Выбор койко-места",
-    "The selected seat is already taken, try choosing a different one": "Выбранное место уже занято, попробуйте выбрать другое"
+    "The selected seat is already taken, try choosing a different one": "Выбранное место уже занято, попробуйте выбрать другое",
+    "You have already selected a place": "Нельзя выбрать больше одного места"
 }
