@@ -2389,7 +2389,24 @@ class BookingController extends \App\Http\Controllers\Controller
         $mealsMyTotal   = array_sum(array_column($meals, 'my_cost'));
 
         $huntingAmountPaid = ($booking->amount_hunting / $booking->total_hunting) * (int)$paidCount;
-        $baseAmount = round($booking->total + round($huntingAmountPaid) + $trophiesTotal + $penaltiesTotal + $addetionalsTotal + $preparationTotal + $mealsTotal);
+        $baseAmount = $booking->type === Booking::BookingTypeAnimal
+            ? round(
+                round($huntingAmountPaid)
+                + $trophiesTotal
+                + $penaltiesTotal
+                + $addetionalsTotal
+                + $preparationTotal
+                + $mealsTotal
+            )
+            : round(
+                $booking->total
+                + round($huntingAmountPaid)
+                + $trophiesTotal
+                + $penaltiesTotal
+                + $addetionalsTotal
+                + $preparationTotal
+                + $mealsTotal
+            );
         $baseTotal = $baseAmount - $booking->total;
         $huntingAmountMyPaid = round($huntingAmountPaid / (int)$paidCount);
         $baseMyAmount = round($trophiesMyTotal + $penaltiesMyTotal + $addetionalsMyTotal + $preparationMyTotal + $mealsMyTotal);
@@ -2422,14 +2439,15 @@ class BookingController extends \App\Http\Controllers\Controller
             'is_baseAdmin' => $isBaseAdmin,
             'items' => [
                 [
-                    'name' => 'Проживание, ' . plural_sutki($booking->duration_days),
-                    'total_cost' => round($booking->total),
-                    'my_cost' => $totalMyCost,
+                    'name' => $booking->type === Booking::BookingTypeAnimal ? 'Проживание, ' . plural_sutki(0) : 'Проживание, ' . plural_sutki($booking->duration_days),
+                    'total_cost' => $booking->type === Booking::BookingTypeAnimal ? 0 : round($booking->total),
+                    'my_cost' => $booking->type === Booking::BookingTypeAnimal ? 0 : $totalMyCost,
                 ],
                 [
                     'name' => 'Организация охоты',
                     'total_cost' => round($huntingAmountPaid),
                     'my_cost' => $huntingAmountMyPaid,
+                    'has_tooltip' => true,
                 ],
             ],
             'trophies' => $trophies,
