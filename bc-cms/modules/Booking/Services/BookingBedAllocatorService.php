@@ -131,7 +131,10 @@ class BookingBedAllocatorService
         }
 
         if (empty($huntersWithoutPlace)) {
-            $booking->update(['is_all_places_assigned' => true]);
+            $booking->update([
+                'status' => Booking::FINISHED_BED,
+                'is_all_places_assigned' => true
+            ]);
         }
     }
 }
