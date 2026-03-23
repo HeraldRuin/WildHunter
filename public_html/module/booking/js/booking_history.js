@@ -5,6 +5,7 @@ document.addEventListener('DOMContentLoaded', function () {
     new Vue({
         el: '#booking-history',
         data: {
+            booking: [],
             searchResults: [],
             selectedUser: null,
             currentUserId: null,
@@ -21,10 +22,12 @@ document.addEventListener('DOMContentLoaded', function () {
             hunterNoResults: false,
             hunterDebounceTimeout: null,
             currentCollectionBookingId: null,
+            masterHunterId: null,
 
             // Слоты для охотников (каждый слот имеет свой поиск)
             hunterSlots: [],
             declinedHunters: [],
+            invitedHunters:[],
 
             inviteText: el.dataset.inviteText || 'Пригласить',
             invitedText: el.dataset.invitedText || 'Приглашен',
@@ -34,7 +37,28 @@ document.addEventListener('DOMContentLoaded', function () {
 
             placesMap: {},
         },
+        computed: {
+            allowedBookingStatuses() {
+                return [
+                    '{{ \Modules\Booking\Models\Booking::FINISHED_COLLECTION }}',
+                    '{{ \Modules\Booking\Models\Booking::PREPAYMENT_COLLECTION }}',
+                    '{{ \Modules\Booking\Models\Booking::FINISHED_PREPAYMENT }}',
+                    '{{ \Modules\Booking\Models\Booking::BED_COLLECTION }}',
+                    '{{ \Modules\Booking\Models\Booking::FINISHED_BED }}'
+                ];
+            }
+        },
         methods: {
+            formatTimer(diffMs) {
+                const totalSeconds = Math.floor(diffMs / 1000);
+                const minutes = Math.floor(totalSeconds / 60);
+                const seconds = totalSeconds % 60;
+
+                return `[${minutes} мин ${String(seconds).padStart(2, '0')} сек]`;
+            },
+            getPrepaymentStatus(hunter) {
+                // return hunter.prepayment_paid ? this.textPaid : this.textAwaiting;
+            },
             userPopoverContent(booking) {
                 return `<strong>${booking.creator.first_name} ${booking.creator.last_name}</strong><br>
                     Email: ${booking.creator.email}<br>
@@ -148,17 +172,25 @@ document.addEventListener('DOMContentLoaded', function () {
                     this.hunterSlots = [];
                 }
             },
+            getStatusBadge(hunter) {
+                switch (hunter.status) {
+                    case 'accepted': return { text: 'Приглашение принято', class: 'bg-success' }
+                    case 'pending':  return { text: 'Приглашен', class: 'bg-warning' }
+                    case 'declined': return { text: 'Приглашение отклонено', class: 'bg-danger' }
+                    default: return { text: '', class: '' }
+                }
+            },
 
             loadInvitedHunters(bookingId) {
-                fetch(`/booking/${bookingId}/invited-hunters`)
+                return fetch(`/booking/${bookingId}/invited-hunters`)
                     .then(res => res.json())
                     .then(data => {
-                        console.log('Ответ от сервера:', data);
                         const allHunters = data.hunters || [];
                         const activeHunters = allHunters.filter(h => h.invitation_status !== 'declined');
                         const declinedHunters = allHunters.filter(h => h.invitation_status === 'declined');
                         this.$set(this, 'declinedHunters', declinedHunters);
-
+                        this.invitedHunters = activeHunters
+                        this.booking = data.booking
                         if (data.status && activeHunters.length > 0) {
                             const updatedSlots = this.hunterSlots.map((slot, index) => {
                                 if (index < activeHunters.length) {
@@ -440,7 +472,6 @@ document.addEventListener('DOMContentLoaded', function () {
                     }
                     return;
                 }
-
 
                 clearTimeout(slot.debounceTimeout);
                 slot.debounceTimeout = setTimeout(() => {
@@ -1224,6 +1255,41 @@ document.addEventListener('DOMContentLoaded', function () {
                 });
             },
 
+            replaceHunter(hunterId, bookingId) {
+
+            },
+            removeHunter(hunterId, bookingId) {
+                bookingCoreApp.showConfirm({
+                    message: 'Удалить охотника?',
+                    callback: (result) => {
+                        if (!result) return;
+
+                        const self = this;
+
+                        $.ajax({
+                            url: `/booking/${bookingId}/remove/not_paid/hunter`,
+                            type: 'DELETE',
+                            dataType: 'json',
+                            data: {
+                                hunter_id: hunterId,
+                                _token: $('meta[name="csrf-token"]').attr('content') || ''
+                            },
+                            success: (res) => {
+                                if (res.status) {
+                                    bookingCoreApp.showAjaxMessage(res);
+                                    this.invitedHunters = this.invitedHunters.filter(h => h.id !== hunterId);
+                                } else {
+                                    bookingCoreApp.showError({ message: 'Ошибка удаления охотника' });
+                                }
+                            },
+                            error: function() {
+                                bookingCoreApp.showError({ message: 'Ошибка удаления охотника' });
+                            }
+                        });
+                    }
+                });
+            },
+
             // Открытие выбор койко-место
             openBookingPlacesModal(booking, event) {
                 const bookingIdNum = parseInt(booking.id, 10);
@@ -1587,9 +1653,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 const modalEl = event.target;
                 if (modalEl && modalEl.id && modalEl.id.startsWith('collectionModal')) {
                     const bookingId = modalEl.dataset.bookingId;
-                    console.log('Модальное окно collectionModal открыто, bookingId:', bookingId);
                     if (bookingId) {
-                        // Загружаем данные после открытия модального окна
                         setTimeout(() => {
                             me.initializeHunterSlots(parseInt(bookingId, 10));
                         }, 50);
@@ -1607,7 +1671,7 @@ document.addEventListener('DOMContentLoaded', function () {
             const userId = el ? el.dataset.userId : null;
 
             if (userId && window.LaravelEcho) {
-                console.log('[HunterInvitation] Подписка на канал для пользователя:', userId);
+                //console.log('[HunterInvitation] Подписка на канал для пользователя:', userId);
 
                 try {
                     const channel = window.LaravelEcho.private(`user-channel-${userId}`);
@@ -1624,17 +1688,17 @@ document.addEventListener('DOMContentLoaded', function () {
                     });
 
                     channel.subscribed(() => {
-                        console.log('[HunterInvitation] ✅ Успешно подписан на канал user-channel-' + userId);
+                        //console.log('[HunterInvitation] ✅ Успешно подписан на канал user-channel-' + userId);
                     });
 
                     channel.error((error) => {
-                        console.error('[HunterInvitation] ❌ Ошибка подписки на канал:', error);
+                        //console.error('[HunterInvitation] ❌ Ошибка подписки на канал:', error);
                     });
                 } catch (e) {
-                    console.error('[HunterInvitation] ❌ Исключение при подписке:', e);
+                    //console.error('[HunterInvitation] ❌ Исключение при подписке:', e);
                 }
             } else {
-                console.warn('[HunterInvitation] ⚠️ Не удалось подписаться. userId:', userId, 'LaravelEcho:', !!window.LaravelEcho, 'Element:', !!el);
+                //console.warn('[HunterInvitation] ⚠️ Не удалось подписаться. userId:', userId, 'LaravelEcho:', !!window.LaravelEcho, 'Element:', !!el);
             }
 
             // Подписка на каналы бронирований для обновления счетчика в реальном времени
@@ -1664,21 +1728,21 @@ document.addEventListener('DOMContentLoaded', function () {
                                     const counterElement = statusCell.querySelector('.text-muted.mt-1');
                                     if (counterElement && e.accepted_count !== undefined && e.total_hunters_needed !== undefined) {
                                         counterElement.textContent = `Собранно ${e.accepted_count}/${e.total_hunters_needed}`;
-                                        console.log('[HunterInvitationAccepted] Счетчик обновлен:', counterElement.textContent);
+                                        //console.log('[HunterInvitationAccepted] Счетчик обновлен:', counterElement.textContent);
                                     }
                                 }
                             }
                         });
 
                         channel.subscribed(() => {
-                            console.log(`[HunterInvitationAccepted] ✅ Успешно подписан на канал booking-${bookingId}`);
+                            //console.log(`[HunterInvitationAccepted] ✅ Успешно подписан на канал booking-${bookingId}`);
                         });
 
                         channel.error((error) => {
-                            console.error(`[HunterInvitationAccepted] ❌ Ошибка подписки на канал booking-${bookingId}:`, error);
+                            //console.error(`[HunterInvitationAccepted] ❌ Ошибка подписки на канал booking-${bookingId}:`, error);
                         });
                     } catch (e) {
-                        console.error(`[HunterInvitationAccepted] ❌ Исключение при подписке на booking-${bookingId}:`, e);
+                        //console.error(`[HunterInvitationAccepted] ❌ Исключение при подписке на booking-${bookingId}:`, e);
                     }
                 };
 
@@ -1755,29 +1819,12 @@ document.addEventListener('DOMContentLoaded', function () {
                                             slot.hunter.invitation_status !== 'declined'
                                         ).length;
                                     }
-
-                                    // Если не хватает охотников - блокируем кнопку
-                                    // if (invitedCount < requiredHunters) {
-                                    //     finishBtn.disabled = true;
-                                    //     finishBtn.classList.add('disabled');
-                                    //     finishBtn.title = 'Таймер закончен, но не все охотники собранны. Необходимо собрать ' + requiredHunters + ' охотников.';
-                                    // } else {
-                                    //     // Если достаточно охотников - разрешаем кнопку
-                                    //     finishBtn.disabled = false;
-                                    //     finishBtn.classList.remove('disabled');
-                                    //     finishBtn.title = '';
-                                    // }
                                 }
                             }
                         }
                         return;
                     }
-
-                    const totalSeconds = Math.floor(diffMs / 1000);
-                    const minutes = Math.floor(totalSeconds / 60);
-                    const seconds = totalSeconds % 60;
-
-                    el.textContent = '[' + minutes + ' мин ' + String(seconds).padStart(2, '0') + ' сек]';
+                    el.textContent = this.formatTimer(diffMs);
 
                     // Пока таймер тикает — кнопка продления должна быть неактивна
                     const bookingId = el.dataset.bookingId;
@@ -1809,12 +1856,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         el.textContent = '[0 мин 00 сек]';
                         return;
                     }
-
-                    const totalSeconds = Math.floor(diffMs / 1000);
-                    const minutes = Math.floor(totalSeconds / 60);
-                    const seconds = totalSeconds % 60;
-
-                    el.textContent = '[' + minutes + ' мин ' + String(seconds).padStart(2, '0') + ' сек]';
+                    el.textContent = this.formatTimer(diffMs);
                 });
             };
 
@@ -1829,16 +1871,91 @@ document.addEventListener('DOMContentLoaded', function () {
                     let diffMs = end - now;
 
                     if (diffMs <= 0) {
-                        el.textContent = '[0 мин 00 сек]';
+
+                        // el.textContent = '[0 мин 00 сек]';
+                        // return;
+                        // используем data-атрибуты
+                        // const textEnd = el.dataset.textEnd || '[0 мин 00 сек]';
+                        // const textClass = el.dataset.textClass || '';
+                        // el.textContent = textEnd;
+                        // if (textClass) el.classList.add(textClass);
+                        // return;
+                        // el.classList.add('text-danger');
+                        //
+                        // el.textContent = 'Not paid';       // твой текст
+                        const bookingId = el.dataset.bookingId;
+                        const sentBookings = new Set();
+                        handleBookingPaidTimerExpired(bookingId);
+
+                        if (!sentBookings.has(bookingId)) {
+                            sentBookings.add(bookingId);
+                            handleBookingPaidTimerExpired(bookingId);
+                        }
+
                         return;
                     }
-
-                    const totalSeconds = Math.floor(diffMs / 1000);
-                    const minutes = Math.floor(totalSeconds / 60);
-                    const seconds = totalSeconds % 60;
-
-                    el.textContent = '[' + minutes + ' мин ' + String(seconds).padStart(2, '0') + ' сек]';
+                    el.textContent = this.formatTimer(diffMs);
                 });
+            };
+            const handleBookingPaidTimerExpired = (bookingId) => {
+                $.ajax({
+                    url: `/booking/${bookingId}/check/prepayment-paid`,
+                    type: 'POST',
+                    dataType: 'json',
+                    data: {
+                        _token: $('meta[name="csrf-token"]').attr('content') || '',
+                        booking_id: bookingId
+                    },
+                    success: function (res) {
+
+
+                        if (res.status) {
+
+
+                            // if (typeof bookingCoreApp !== 'undefined' && bookingCoreApp.showAjaxMessage) {
+                            //     bookingCoreApp.showAjaxMessage(res);
+                            // } else if (res.message) {
+                            //     alert(res.message);
+                            // }
+
+                            // setTimeout(function () {
+                            //     window.location.reload();
+                            // }, 500);
+                        } else if (res.message) {
+                            // if (typeof bookingCoreApp !== 'undefined' && bookingCoreApp.showAjaxMessage) {
+                            //     bookingCoreApp.showAjaxMessage(res);
+                            // } else {
+                            //     alert(res.message);
+                            // }
+                        }
+                    },
+                    // error: function (e) {
+                    //     restoreButton();
+                    //
+                    //     if (e.status === 419) {
+                    //         alert('Сессия истекла, обновите страницу');
+                    //     } else if (e.responseJSON && e.responseJSON.message) {
+                    //         alert('Ошибка: ' + e.responseJSON.message);
+                    //     } else {
+                    //         alert('Произошла ошибка при отмене сбора охотников');
+                    //     }
+                    // }
+                });
+                // fetch('/booking/timer-expired', {
+                //     method: 'POST',
+                //     headers: {
+                //         'Content-Type': 'application/json',
+                //         'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                //     },
+                //     body: JSON.stringify({ booking_id: bookingId })
+                // })
+                //     .then(res => res.json())
+                //     .then(data => {
+                //         console.log('Booking updated:', data);
+                //     })
+                //     .catch(err => {
+                //         console.error('Error:', err);
+                //     });
             };
 
             const updateBedsTimers = () => {
@@ -1855,12 +1972,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         el.textContent = '[0 мин 00 сек]';
                         return;
                     }
-
-                    const totalSeconds = Math.floor(diffMs / 1000);
-                    const minutes = Math.floor(totalSeconds / 60);
-                    const seconds = totalSeconds % 60;
-
-                    el.textContent = '[' + minutes + ' мин ' + String(seconds).padStart(2, '0') + ' сек]';
+                    el.textContent = this.formatTimer(diffMs);
                 });
             };
 
@@ -1874,8 +1986,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 const isPaid = btn.dataset.prepaymentPaid === '1' || btn.dataset.prepaymentPaid === 'true';
                 this.$set(this.prepaymentPaidMap, bookingId, isPaid);
             });
-        }
-
+        },
     });
 
     $(document).on('click', '.btn-cancel-booking-confirm-vue', function (e) {
