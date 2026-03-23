@@ -1616,6 +1616,12 @@ class Booking extends BaseModel
             ->where('is_master', true)
             ->value('invited_by');
     }
+    public function masterHunterRowId(): ?int
+    {
+        return $this->bookingHunter()
+            ->where('is_master', true)
+            ->value('id');
+    }
 
     public function getMasterHunterIdAttribute(): ?int
     {
