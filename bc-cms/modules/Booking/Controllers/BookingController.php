@@ -2112,7 +2112,7 @@ class BookingController extends \App\Http\Controllers\Controller
 
     public function deleteNotPaidHunter(Request $request, Booking $booking): JsonResponse
     {
-        $invitation = BookingHunterInvitation::where('booking_hunter_id', $booking->masterHunterId())
+        $invitation = BookingHunterInvitation::where('booking_hunter_id', $booking->masterHunterRowId())
             ->where('hunter_id', $request->input('hunter_id'))
             ->first();
 
