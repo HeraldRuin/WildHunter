@@ -1401,30 +1401,44 @@ class BookingController extends \App\Http\Controllers\Controller
         $hunters = $invitations->map(function($invitation) {
             $hunter = $invitation->hunter;
 
+            $fullName = trim(($hunter->first_name ?? '') . ' ' . ($hunter->last_name ?? ''));
+
+            if (!$fullName) {
+                $fullName = $hunter->user_name ?: $hunter->email;
+            }
+
+            $isCurrentUser = $hunter->id == auth()->id();
+
             if ($hunter) {
                 return [
                     'id' => $hunter->id,
+                    'name' => $fullName,
                     'user_name' => $hunter->user_name,
                     'first_name' => $hunter->first_name,
                     'last_name' => $hunter->last_name,
                     'email' => $hunter->email,
                     'phone' => $hunter->phone,
                     'invited' => true,
+                    'is_self' => $isCurrentUser,
                     'invitation_status' => $invitation->status,
+                    'prepayment_paid' => (bool) ($invitation->prepayment_paid ?? false),
                 ];
             }
 
             if (!$hunter && $invitation->email) {
                 return [
                     'id' => null,
+                    'name' => $invitation->email,
                     'user_name' => null,
                     'first_name' => '',
                     'last_name' => '',
                     'email' => $invitation->email,
                     'phone' => null,
                     'invited' => true,
+                    'is_self' => $isCurrentUser,
                     'invitation_status' => $invitation->status,
                     'is_external' => true,
+                    'prepayment_paid' => (bool) ($invitation->prepayment_paid ?? false),
                 ];
             }
 
@@ -1433,6 +1447,7 @@ class BookingController extends \App\Http\Controllers\Controller
 
         return $this->sendSuccess([
             'hunters' => $hunters,
+            'booking' => $booking,
         ]);
     }
 
@@ -2071,16 +2086,11 @@ class BookingController extends \App\Http\Controllers\Controller
 
     public function storePrepayment(Booking $booking): JsonResponse
     {
-        $masterBookingHunter = BookingHunter::where('booking_id', $booking->id)
-            ->where('is_master', true)
-            ->first();
-
-        BookingHunterInvitation::where('booking_hunter_id', $masterBookingHunter->id)
+        BookingHunterInvitation::where('booking_hunter_id', $booking->masterHunterId())
             ->where('hunter_id', Auth::id())
             ->update(['prepayment_paid' => true]);
 
-        $acceptedInvitations = $masterBookingHunter->invitations
-            ->where('status', 'accepted');
+        $acceptedInvitations = $booking->acceptedInvitationsOfMaster();
 
         $paidCount = $acceptedInvitations->where('prepayment_paid', true)->count();
         $timerHour = $this->bookingTimerService->getCollectionTimerHours($booking, 'beds');
@@ -2097,6 +2107,30 @@ class BookingController extends \App\Http\Controllers\Controller
 
         return $this->sendSuccess([
             'message' => __('The gathering of hunters has begun'),
+        ]);
+    }
+
+    public function deleteNotPaidHunter(Request $request, Booking $booking): JsonResponse
+    {
+        $invitation = BookingHunterInvitation::where('booking_hunter_id', $booking->masterHunterId())
+            ->where('hunter_id', $request->input('hunter_id'))
+            ->first();
+
+        if ($invitation) {
+            $invitation->delete();
+        } else {
+            return $this->sendError(__('There is no such hunter among the invitees'));
+        }
+
+        return $this->sendSuccess([
+            'message' => __('Hunter successfully removed from this hunt'),
+        ]);
+    }
+
+    public function checkPrepayment(Booking $booking): void
+    {
+        Log::info('Timer finish', [
+            'bookingId' => $booking->id,
         ]);
     }
     public function places(Booking $booking)
