@@ -23,7 +23,12 @@ document.addEventListener('DOMContentLoaded', function () {
             hunterDebounceTimeout: null,
             currentCollectionBookingId: null,
             masterHunterId: null,
+
             hunterToReplace: null,
+            replaceQuery: '',
+            replaceResults: [],
+            isSearchingReplace: false,
+            showReplaceResults: false,
 
             // Слоты для охотников (каждый слот имеет свой поиск)
             hunterSlots: [],
@@ -174,7 +179,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
             },
             getStatusBadge(hunter) {
-                switch (hunter.status) {
+                switch (hunter.invitation_status) {
                     case 'accepted': return { text: 'Приглашение принято', class: 'bg-success' }
                     case 'pending':  return { text: 'Приглашен', class: 'bg-warning' }
                     case 'declined': return { text: 'Приглашение отклонено', class: 'bg-danger' }
@@ -183,7 +188,7 @@ document.addEventListener('DOMContentLoaded', function () {
             },
 
             loadInvitedHunters(bookingId) {
-                return fetch(`/booking/${bookingId}/invited-hunters`)
+                fetch(`/booking/${bookingId}/invited-hunters`)
                     .then(res => res.json())
                     .then(data => {
                         const allHunters = data.hunters || [];
@@ -1258,6 +1263,33 @@ document.addEventListener('DOMContentLoaded', function () {
 
             replaceHunter(hunterId, bookingId) {
 
+            },
+            searchReplaceHunter(bookingId) {
+                if (!this.replaceQuery || this.replaceQuery.trim() === '') {
+                    this.replaceResults = [];
+                    return;
+                }
+
+                this.isSearchingReplace = true;
+                this.showReplaceResults = true;
+
+                clearTimeout(this.replaceDebounce);
+
+                this.replaceDebounce = setTimeout(() => {
+                    fetch(`/user/search-hunters?query=${encodeURIComponent(this.replaceQuery)}&booking_id=${bookingId}`)
+                        .then(res => res.json())
+                        .then(users => {
+                            users.forEach(u => {
+                                if (typeof u.invited === 'undefined') u.invited = false;
+                                if (typeof u.invitation_status === 'undefined') u.invitation_status = null;
+                            });
+
+                            this.replaceResults = users;
+                        })
+                        .finally(() => {
+                            this.isSearchingReplace = false;
+                        });
+                }, 300);
             },
             cancelReplace() {
                 this.hunterToReplace = null
