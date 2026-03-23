@@ -121,7 +121,7 @@
                                             @if($booking->type !== \Modules\Booking\Models\Booking::BookingTypeAnimal)
 
                                                 {{--                                                @if($hunter['status']  != 'declined' && in_array($booking->status, [\Modules\Booking\Models\Booking::FINISHED_COLLECTION, \Modules\Booking\Models\Booking::PREPAYMENT_COLLECTION, \Modules\Booking\Models\Booking::FINISHED_PREPAYMENT, \Modules\Booking\Models\Booking::BED_COLLECTION, \Modules\Booking\Models\Booking::FINISHED_BED]))--}}
-{{--                                                <span>@{{ hunter.prepayment_paid ? textPaid : textAwaiting }}</span>--}}
+                                                {{--                                                <span>@{{ hunter.prepayment_paid ? textPaid : textAwaiting }}</span>--}}
                                                 {{--                                                    <div v-if="hunter.status !== 'declined' && allowedBookingStatuses.includes(booking.status)">--}}
                                                 {{--                                                        <span>@{{ hunter.prepayment_paid ? __('Paid') : __('Awaiting prepayment') }}</span>--}}
                                                 {{--                                                    </div>--}}
@@ -160,31 +160,59 @@
                                         </div>
 
                                         @if($booking->status === \Modules\Booking\Models\Booking::PREPAYMENT_COLLECTION)
+                                            <div class="d-flex">
+                                                <div
+                                                    v-if="!hunter.prepayment_paid && hunter.id !== booking.master_hunter_id">
+                                                    <div v-if="hunterToReplace !== hunter.id">
+                                                        <button
+                                                            type="button"
+                                                            class="btn btn-sm btn-outline-primary"
+                                                            @click="hunterToReplace = hunter.id">
+                                                            Заменить
+                                                        </button>
 
-                                            <div v-if="!hunter.prepayment_paid && hunter.id !== booking.master_hunter_id" class="d-flex">
-                                                <button
-                                                    type="button"
-                                                    class="btn btn-sm btn-outline-primary"
-                                                    @click="replaceHunter( hunter.id, {{ $booking->id }})">
-                                                    Заменить
-                                                </button>
+                                                        <button
+                                                            type="button"
+                                                            class="btn btn-sm btn-outline-danger"
+                                                            @click="removeHunter(hunter.id, {{ $booking->id }})">
+                                                            Удалить
+                                                        </button>
+                                                    </div>
+                                                    <div v-else class="d-flex align-items-start mt-2">
+                                                        <input
+                                                            type="text"
+                                                            class="form-control me-2 mr-4"
+                                                            :placeholder="'{{ __('Ник / Фамилия / email / ID охотника') }}'"
 
-                                                <button
-                                                    type="button"
-                                                    class="btn btn-sm btn-outline-danger"
-                                                    @click="removeHunter( hunter.id, {{ $booking->id }})">
-                                                    Удалить
-                                                </button>
-                                            <div/>
+                                                            {{--                                                            :disabled="hunterSlot.hunter && hunterSlot.hunter.invited"--}}
+                                                            {{--                                                            @input="searchHunterForSlot(index, {{ $booking->id }})"--}}
+                                                            {{--                                                            @change="handleHunterInputChange(index)"--}}
+                                                            {{--                                                            @focus="hunterSlot.showResults = true"--}}
+                                                            @blur="setTimeout(() => { hunterSlot.showResults = false; }, 200)">
+
+                                                        <button
+                                                            class="btn btn-sm btn-success me-2 mr-2"
+                                                            @click="confirmReplace(hunter.id, {{ $booking->id }})">
+                                                            Сохранить
+                                                        </button>
+
+                                                        <button
+                                                            class="btn btn-sm btn-secondary"
+                                                            @click="cancelReplace">
+                                                            Отмена
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
                                         @endif
 
                                     </div>
                                 </div>
                             </div>
                         </div>
-                            <div v-else>
-                                <p class="text-muted">Охотники еще не приглашены</p>
-                            </div>
+                        <div v-else>
+                            <p class="text-muted">Охотники еще не приглашены</p>
+                        </div>
                         @else
                             {{-- Шаблон для владельца брони: полный функционал управления сбором --}}
                             @include('Booking::frontend.modals.hunter-collection-modal')
@@ -193,4 +221,5 @@
             </div>
         </div>
     </div>
+</div>
 </div>
