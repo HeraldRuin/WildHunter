@@ -35,4 +35,10 @@ class BookingHunter extends Model
     {
         return $this->hasMany(BookingHunterInvitation::class, 'booking_hunter_id');
     }
+    public function isMasterHunter($userId = null): bool
+    {
+        $userId = $userId ?? auth()->id();
+
+        return $this->invited_by === $userId;
+    }
 }
