@@ -23,6 +23,7 @@ document.addEventListener('DOMContentLoaded', function () {
             hunterDebounceTimeout: null,
             currentCollectionBookingId: null,
             masterHunterId: null,
+            hunterToReplace: null,
 
             // Слоты для охотников (каждый слот имеет свой поиск)
             hunterSlots: [],
@@ -1258,6 +1259,10 @@ document.addEventListener('DOMContentLoaded', function () {
             replaceHunter(hunterId, bookingId) {
 
             },
+            cancelReplace() {
+                this.hunterToReplace = null
+            },
+
             removeHunter(hunterId, bookingId) {
                 bookingCoreApp.showConfirm({
                     message: 'Удалить охотника?',
