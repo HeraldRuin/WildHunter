@@ -12,6 +12,8 @@
         $animalMinHunters = $booking->hotelAnimal()->hunters_count ?? 0;
     }
 
+    $masterHunter = $bookingHunter->invitedBy()->first();
+
     $currentUserId = auth()->id();
     $isInvited = false;
     if ($currentUserId) {
@@ -23,47 +25,51 @@
         }
     }
 
+
     $invitedHunters = [];
     if ($isInvited || in_array($booking->status, [\Modules\Booking\Models\Booking::FINISHED_COLLECTION, \Modules\Booking\Models\Booking::PREPAYMENT_COLLECTION, \Modules\Booking\Models\Booking::FINISHED_PREPAYMENT, \Modules\Booking\Models\Booking::BED_COLLECTION, \Modules\Booking\Models\Booking::FINISHED_BED])) {
-        $invitations = $booking->getAllInvitations();
-        foreach ($invitations as $invitation) {
-            if ($invitation->hunter) {
-                $isCurrentUser = $invitation->hunter->id == $currentUserId;
-                $invitedHunters[] = [
-                    'id' => $invitation->hunter->id,
-                    'name' => $invitation->hunter->first_name . ' ' . $invitation->hunter->last_name,
-                    'email' => $invitation->hunter->email,
-                    'user_name' => $invitation->hunter->user_name ?? null,
-                    'status' => $invitation->status,
-                    'invited_at' => $invitation->invited_at,
-                    'is_self' => $isCurrentUser,
-                    'prepayment_paid' => (bool) ($invitation->prepayment_paid ?? false),
-                ];
-            } elseif ($invitation->email) {
-                $invitedHunters[] = [
-                    'id' => null,
-                    'name' => $invitation->email,
-                    'email' => $invitation->email,
-                    'user_name' => null,
-                    'status' => $invitation->status,
-                    'invited_at' => $invitation->invited_at,
-                    'is_self' => false,
-                    'is_external' => true,
-                    'prepayment_paid' => (bool) ($invitation->prepayment_paid ?? false),
-                ];
-            }
-        }
+//        $invitations = $booking->getAllInvitations();
+//        foreach ($invitations as $invitation) {
+//            if ($invitation->hunter) {
+//                $isCurrentUser = $invitation->hunter->id == $currentUserId;
+//                $invitedHunters[] = [
+//                    'id' => $invitation->hunter->id,
+//                    'name' => $invitation->hunter->first_name . ' ' . $invitation->hunter->last_name,
+//                    'email' => $invitation->hunter->email,
+//                    'user_name' => $invitation->hunter->user_name ?? null,
+//                    'status' => $invitation->status,
+//                    'invited_at' => $invitation->invited_at,
+//                    'is_self' => $isCurrentUser,
+//                    'prepayment_paid' => (bool) ($invitation->prepayment_paid ?? false),
+//                ];
+//            } elseif ($invitation->email) {
+//                $invitedHunters[] = [
+//                    'id' => null,
+//                    'name' => $invitation->email,
+//                    'email' => $invitation->email,
+//                    'user_name' => null,
+//                    'status' => $invitation->status,
+//                    'invited_at' => $invitation->invited_at,
+//                    'is_self' => false,
+//                    'is_external' => true,
+//                    'prepayment_paid' => (bool) ($invitation->prepayment_paid ?? false),
+//                ];
+//            }
+//        }
     }
 @endphp
 
 <div class="modal fade" id="collectionModal{{ $booking->id }}" tabindex="-1" aria-hidden="true"
      data-hunters-count="{{ $huntersCount }}"
      data-animal-min-hunters="{{ $animalMinHunters }}"
+     data-master-hunter-id="{{ $booking->masterHunterId() }}"
+     data-text-paid="{{ __('Paid') }}"
+     data-text-awaiting="{{ __('Awaiting prepayment') }}"
      data-booking-id="{{ $booking->id }}">
     <div class="modal-dialog modal-xl">
         <div class="modal-content">
             <div class="modal-header">
-                @if($booking->status === \Modules\Booking\Models\Booking::START_COLLECTION)
+                @if($booking->status === \Modules\Booking\Models\Booking::START_COLLECTION && !$isInvited)
                     <h5 class="modal-title">{{ __('Open collection for booking') }} #{{ $booking->id }}</h5>
                     <button
                         type="button"
@@ -72,13 +78,12 @@
                         {{ __('Link for booking') }}
                     </button>
                 @endif
-                    @if(in_array($booking->status, [\Modules\Booking\Models\Booking::FINISHED_COLLECTION, \Modules\Booking\Models\Booking::PREPAYMENT_COLLECTION, \Modules\Booking\Models\Booking::FINISHED_PREPAYMENT, \Modules\Booking\Models\Booking::BED_COLLECTION, \Modules\Booking\Models\Booking::FINISHED_BED]))
-                        <h5 class="modal-title">{{ __('Collection for booking') }} #{{ $booking->id }}</h5>
-                    @endif
+                @if(in_array($booking->status, [\Modules\Booking\Models\Booking::FINISHED_COLLECTION, \Modules\Booking\Models\Booking::PREPAYMENT_COLLECTION, \Modules\Booking\Models\Booking::FINISHED_PREPAYMENT, \Modules\Booking\Models\Booking::BED_COLLECTION, \Modules\Booking\Models\Booking::FINISHED_BED]))
+                    <h5 class="modal-title">{{ __('Collection for booking') }} #{{ $booking->id }}</h5>
+                @endif
             </div>
             <div class="modal-body">
                 @if($isInvited || in_array($booking->status, [\Modules\Booking\Models\Booking::FINISHED_COLLECTION, \Modules\Booking\Models\Booking::PREPAYMENT_COLLECTION, \Modules\Booking\Models\Booking::FINISHED_PREPAYMENT, \Modules\Booking\Models\Booking::BED_COLLECTION, \Modules\Booking\Models\Booking::FINISHED_BED]))
-                    {{-- Шаблон для приглашенного охотника: только просмотр списка приглашенных --}}
                     @if(in_array($booking->status, [\Modules\Booking\Models\Booking::FINISHED_COLLECTION, \Modules\Booking\Models\Booking::PREPAYMENT_COLLECTION, \Modules\Booking\Models\Booking::FINISHED_PREPAYMENT, \Modules\Booking\Models\Booking::BED_COLLECTION, \Modules\Booking\Models\Booking::FINISHED_BED]))
                         <div class="alert alert-success mb-4">
                             <strong>{{ __('Collection completed') }}</strong>
@@ -91,191 +96,100 @@
                     @endif
                     <div class="mb-4">
                         <h6 class="mb-3">Приглашенные охотники</h6>
-                        @if(count($invitedHunters) > 0)
+                        <div v-if="invitedHunters.length > 0">
                             <div class="list-group">
-                                @foreach($invitedHunters as $hunter)
-                                    <div class="list-group-item">
+                                <div v-for="hunter in invitedHunters" :key="hunter.id">
+                                    <div class="d-flex justify-content-between align-items-start">
                                         <div class="flex-grow-1">
                                             <div class="d-flex align-items-center mb-2">
-                                                <strong>{{ $hunter['name'] }}</strong>
-                                                @if(isset($hunter['is_self']) && $hunter['is_self'])
-                                                    <span class="badge bg-secondary ml-3">Вы</span>
-                                                @endif
+                                                <strong>@{{ hunter.name }}</strong>
+                                                <span v-if="hunter.is_self" class="badge bg-secondary ml-3">Вы</span>
                                             </div>
                                             <div class="text-muted small mb-1">
-                                                @if($hunter['user_name'])
-                                                    <strong>ID: {{$hunter['id']}}</strong> ( ник <strong>{{ $hunter['user_name'] }}</strong> )
-                                                @else
-                                                    <strong>ID: {{ $hunter['id'] }}</strong> ( ник не задан )
-                                                @endif
+                                                <strong>
+                                                    ID: @{{ hunter.id }}
+                                                    ( ник @{{ hunter.user_name ? hunter.user_name : 'не задан' }} )
+                                                </strong>
                                             </div>
-                                            <div class="text-muted small mb-2">{{ $hunter['email'] }}</div>
-                                            @if($hunter['status'] === 'accepted')
-                                                <span class="badge bg-success">Приглашение принято</span>
-                                            @elseif($hunter['status'] === 'pending')
-                                                <span class="badge bg-warning">Приглашен</span>
-                                            @elseif($hunter['status'] === 'declined')
-                                                <span class="badge bg-danger">Приглашение отклонено</span>
-                                            @endif
+                                            <div class="text-muted small mb-2">@{{ hunter.email }}</div>
+                                            <span v-if="getStatusBadge(hunter).text"
+                                                  :class="['badge', getStatusBadge(hunter).class]">
+                                                @{{ getStatusBadge(hunter).text }}
+                                            </span>
 
                                             {{-- Статус предоплаты --}}
-                                            @if($booking->status !== \Modules\Booking\Models\Booking::FINISHED_COLLECTION)
-                                                <span class="badge">{{ $hunter['prepayment_paid'] ? __('Paid') : __('Awaiting prepayment') }}</span>
+                                            @if($booking->type !== \Modules\Booking\Models\Booking::BookingTypeAnimal)
+
+                                                {{--                                                @if($hunter['status']  != 'declined' && in_array($booking->status, [\Modules\Booking\Models\Booking::FINISHED_COLLECTION, \Modules\Booking\Models\Booking::PREPAYMENT_COLLECTION, \Modules\Booking\Models\Booking::FINISHED_PREPAYMENT, \Modules\Booking\Models\Booking::BED_COLLECTION, \Modules\Booking\Models\Booking::FINISHED_BED]))--}}
+{{--                                                <span>@{{ hunter.prepayment_paid ? textPaid : textAwaiting }}</span>--}}
+                                                {{--                                                    <div v-if="hunter.status !== 'declined' && allowedBookingStatuses.includes(booking.status)">--}}
+                                                {{--                                                        <span>@{{ hunter.prepayment_paid ? __('Paid') : __('Awaiting prepayment') }}</span>--}}
+                                                {{--                                                    </div>--}}
+
+                                                {{--                                                    @if($endTimestamp)--}}
+                                                {{--                                                        <span class="paid-timer" @class(['text-danger' => !$hunter['prepayment_paid']])>--}}
+                                                {{--                                                                {{ $hunter['prepayment_paid'] ? __('Paid') : __('Awaiting prepayment') }}--}}
+                                                {{--                                                            </span>--}}
+                                                {{--                                                    @else--}}
+                                                {{--                                                        <span>{{ $hunter['prepayment_paid'] ? __('Paid') : __('Awaiting prepayment') }}</span>--}}
+                                                {{--                                                    @endif--}}
+                                                {{--                                                    @if($booking->status === \Modules\Booking\Models\Booking::PREPAYMENT_COLLECTION)--}}
+                                                {{--                                                        @php--}}
+                                                {{--                                                            $endTimestamp = null;--}}
+                                                {{--                                                            try {--}}
+                                                {{--                                                                $bedsEndAt = $booking->getMeta('paid_end_at');--}}
+                                                {{--                                                                if ($bedsEndAt) {--}}
+                                                {{--                                                                    $endCarbon = \Carbon\Carbon::parse($bedsEndAt);--}}
+                                                {{--                                                                    $endTimestamp = $endCarbon->timestamp * 1000;--}}
+                                                {{--                                                                }--}}
+                                                {{--                                                            } catch (\Exception $e) {--}}
+                                                {{--                                                                $endTimestamp = null;--}}
+                                                {{--                                                            }--}}
+                                                {{--                                                        @endphp--}}
+
+                                                {{--                                                        @if($endTimestamp)--}}
+                                                {{--                                                            <span class="paid-timer" @class(['text-danger' => !$hunter['prepayment_paid']])>--}}
+                                                {{--                                                                {{ $hunter['prepayment_paid'] ? __('Paid') : __('Awaiting prepayment') }}--}}
+                                                {{--                                                            </span>--}}
+                                                {{--                                                        @else--}}
+                                                {{--                                                            <span>{{ $hunter['prepayment_paid'] ? __('Paid') : __('Awaiting prepayment') }}</span>--}}
+                                                {{--                                                        @endif--}}
+                                                {{--                                                    @endif--}}
+                                                {{--                                                @endif--}}
                                             @endif
                                         </div>
+
+                                        @if($booking->status === \Modules\Booking\Models\Booking::PREPAYMENT_COLLECTION)
+
+                                            <div v-if="hunter.prepayment_paid && hunter.id !== booking.master_hunter_id" class="d-flex">
+                                                <button
+                                                    type="button"
+                                                    class="btn btn-sm btn-outline-primary"
+                                                    @click="replaceHunter( hunter.id, {{ $booking->id }})">
+                                                    Заменить
+                                                </button>
+
+                                                <button
+                                                    type="button"
+                                                    class="btn btn-sm btn-outline-danger"
+                                                    @click="removeHunter( hunter.id, {{ $booking->id }})">
+                                                    Удалить
+                                                </button>
+                                            <div/>
+                                        @endif
+
                                     </div>
-                                @endforeach
+                                </div>
+                            </div>
+                        </div>
+                            <div v-else>
+                                <p class="text-muted">Охотники еще не приглашены</p>
                             </div>
                         @else
-                            <p class="text-muted">Охотники еще не приглашены</p>
+                            {{-- Шаблон для владельца брони: полный функционал управления сбором --}}
+                            @include('Booking::frontend.modals.hunter-collection-modal')
                         @endif
                     </div>
-                @else
-                    {{-- Шаблон для владельца брони: полный функционал управления сбором --}}
-                    <div class="mb-4">
-                        <div v-for="(hunterSlot, index) in hunterSlots" :key="index" class="position-relative mb-3">
-                            <div class="d-flex align-items-start">
-                                <div class="flex-grow-1 position-relative">
-                                    <input
-                                        type="text"
-                                        class="form-control me-2"
-                                        :placeholder="'{{ __('Hunter nickname / last_name / email / ID') }}'"
-                                        v-model="hunterSlot.query"
-                                        :disabled="hunterSlot.hunter && hunterSlot.hunter.invited"
-                                        @input="searchHunterForSlot(index, {{ $booking->id }})"
-                                        @change="handleHunterInputChange(index)"
-                                        @focus="hunterSlot.showResults = true"
-                                        @blur="setTimeout(() => { hunterSlot.showResults = false; }, 200)">
-                                    <!-- Результаты поиска для этого слота -->
-                                    <div v-if="hunterSlot.showResults"
-                                         class="position-absolute w-100 bg-white border rounded shadow-sm mt-1"
-                                         style="z-index: 1000; max-height: 300px; overflow-y: auto;">
-                                        <!-- Спиннер при поиске -->
-                                        <div v-if="hunterSlot.isSearching" class="p-2 text-muted text-center">
-                                            {{ __('Searching...') }}
-                                        </div>
-                                        <!-- Результаты -->
-                                        <div v-else-if="hunterSlot.results.length">
-                                            <div v-for="hunter in hunterSlot.results"
-                                                 :key="hunter.id"
-                                                 :class="['p-2 border-bottom', (hunter.invited && hunter.invitation_status !== 'declined') ? 'bg-light text-muted' : 'cursor-pointer hover-bg-light']"
-                                                 @click="!(hunter.invited && hunter.invitation_status !== 'declined') && selectHunterForSlot(index, hunter, {{ $booking->id }})"
-                                                 @mousedown.prevent>
-                                                <div class="d-flex align-items-center">
-                                                    <div class="flex-grow-1">
-                                                        <div>
-                                                            <span class="text-muted small">
-                                                                <template v-if="hunter.user_name">
-                                                                    <strong>ID: @{{ hunter.id }}</strong> ( ник <strong style="font-size: 14px;">@{{ hunter.user_name }}</strong> )
-                                                                </template>
-                                                                <template v-else>
-                                                                    ID: @{{ hunter.id }} ( ник не задан )
-                                                                </template>
-                                                            </span>
-                                                            <span class="text-muted ms-2">@{{ hunter.first_name }} @{{ hunter.last_name }}</span>
-                                                        </div>
-                                                        <div class="text-muted small">@{{ hunter.email }}</div>
-                                                        <div class="mt-1">
-                                                            <span v-if="hunter.invited && hunter.invitation_status !== 'declined'" class="badge bg-success">
-                                                                {{ __('Already invited') }}
-                                                            </span>
-                                                            <span v-else-if="hunter.invitation_status === 'declined'" class="badge bg-danger">
-                                                                {{ __('Invitation declined') }}
-                                                            </span>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div v-else-if="hunterSlot.noResults && !hunterSlot.isSearching" class="p-2 border-bottom">
-                                            <div class="text-muted small mb-2">
-                                                {{ __('Hunters not found') }}
-                                            </div>
-                                            <button
-                                                type="button"
-                                                class="btn btn-outline-primary btn-sm"
-                                                @click="inviteByEmailForSlot(index, {{ $booking->id }}, $event)">
-                                                <i class="fa fa-envelope me-1"></i>
-                                                {{ __('Send invitation by email') }}
-                                            </button>
-                                        </div>
-                                    </div>
-                                    <!-- Информация о выбранном охотнике (показываем только если текст в поле соответствует выбранному охотнику) -->
-                                    <div
-                                        v-if="hunterSlot.hunter && hunterSlot.query && ((hunterSlot.hunter.is_external && hunterSlot.query.trim() === hunterSlot.hunter.email) || (!hunterSlot.hunter.is_external && hunterSlot.query.trim() === ((hunterSlot.hunter.user_name || (hunterSlot.hunter.first_name + ' ' + hunterSlot.hunter.last_name)).trim())))"
-                                        class="mt-2">
-                                        <div class="d-flex align-items-center mb-1">
-                                            <span class="text-muted small">@{{ hunterSlot.hunter.email }}</span>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="d-flex align-items-start">
-                                    <button
-                                        v-if="hunterSlot.hunter && hunterSlot.query && ((hunterSlot.hunter.is_external && hunterSlot.query.trim() === hunterSlot.hunter.email) || (!hunterSlot.hunter.is_external && hunterSlot.query.trim() === ((hunterSlot.hunter.user_name || (hunterSlot.hunter.first_name + ' ' + hunterSlot.hunter.last_name)).trim())))"
-                                        type="button"
-                                        class="btn btn-sm me-2 ml-2"
-                                        :class="(hunterSlot.hunter && hunterSlot.hunter.invited && hunterSlot.hunter.invitation_status !== 'declined') ? 'btn-success' : 'btn-outline-primary'"
-                                        :disabled="!hunterSlot.hunter || (hunterSlot.hunter.invited && hunterSlot.hunter.invitation_status !== 'declined') || hunterSlot.hunter.is_external"
-                                        @click="inviteHunterForSlot(index, {{ $booking->id }}, $event)">
-                                        <span v-text="(hunterSlot.hunter && hunterSlot.hunter.invited && hunterSlot.hunter.invitation_status === 'accepted') ? acceptedText : ((hunterSlot.hunter && hunterSlot.hunter.invited && hunterSlot.hunter.invitation_status !== 'declined') ? invitedText : inviteText)"></span>
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    {{-- История отказавшихся охотников --}}
-                    <div v-if="declinedHunters && declinedHunters.length > 0" class="mt-4 mb-4">
-                        <h6 class="mb-3 text-muted">История приглашений (отказались)</h6>
-                        <div class="list-group">
-                            <div v-for="(hunter, index) in declinedHunters" :key="index" class="list-group-item">
-                                <div class="d-flex align-items-center">
-                                    <div class="flex-grow-1">
-                                        <div class="d-flex align-items-center mb-1">
-                                            <strong>@{{ hunter.first_name }} @{{ hunter.last_name }}</strong>
-                                        </div>
-                                        <div class="text-muted small mb-1" v-if="hunter.user_name">
-                                            <strong>ID: @{{ hunter.id }}</strong> ( ник <strong>@{{ hunter.user_name }}</strong> )
-                                        </div>
-                                        <div class="text-muted small">@{{ hunter.email }}</div>
-                                    </div>
-                                    <span class="badge bg-danger ms-2">{{ __('Declined') }}</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="mt-4 p-3 border rounded">
-                        <div class="d-flex justify-content-center gap-2 flex-wrap">
-                            <button
-                                type="button"
-                                class="btn btn-info mx-2 btn-extend-collection"
-                                data-booking-id="{{ $booking->id }}"
-                                disabled
-                                @click="startCollection($event, {{ $booking->id }})">
-                                {{ __('Extend collection') }}
-                            </button>
-                            <button
-                                type="button"
-                                class="btn btn-info"
-                                @click="cancelCollection($event, {{ $booking->id }})">
-                                {{ __('Cancel collection') }}
-                            </button>
-                            <button
-                                type="button"
-                                class="btn btn-info mx-2 btn-finish-collection"
-                                data-booking-id="{{ $booking->id }}"
-                                @click="finishCollection($event, {{ $booking->id }})">
-                                {{ __('Finish collection') }}
-                            </button>
-                            <button
-                                type="button"
-                                class="btn btn-info mx-2">
-                                {{ __('Opens collection') }}
-                            </button>
-                        </div>
-                    </div>
-                @endif
             </div>
         </div>
     </div>
