@@ -161,7 +161,7 @@
 
                                         @if($booking->status === \Modules\Booking\Models\Booking::PREPAYMENT_COLLECTION)
 
-                                            <div v-if="hunter.prepayment_paid && hunter.id !== booking.master_hunter_id" class="d-flex">
+                                            <div v-if="!hunter.prepayment_paid && hunter.id !== booking.master_hunter_id" class="d-flex">
                                                 <button
                                                     type="button"
                                                     class="btn btn-sm btn-outline-primary"
