@@ -18,6 +18,7 @@ use Modules\Animals\Models\Animal;
 use Modules\Booking\Emails\NewBookingEmail;
 use Modules\Booking\Emails\StatusUpdatedEmail;
 use Modules\Booking\Events\BookingUpdatedEvent;
+use Modules\Booking\Models\BookingHunter;
 use Modules\Booking\Traits\HasPassenger;
 use Modules\Coupon\Models\CouponBookings;
 use Modules\Hotel\Models\Hotel;
@@ -30,7 +31,6 @@ use App\User;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Modules\User\Models\Wallet\Transaction;
 use Modules\Booking\Models\BookingTimeSlots;
-use Modules\Booking\Models\BookingHunter;
 use Modules\Booking\Models\BookingHunterInvitation;
 
 class Booking extends BaseModel
@@ -76,7 +76,8 @@ class Booking extends BaseModel
         'draft','cancelled','unpaid'
     ];
 
-    protected $appends = ['is_master_hunter', 'is_invited'];
+    protected $appends = ['master_hunter_id','is_master_hunter', 'is_invited'];
+    private mixed $bookingHunter;
 
     public function getGatewayObjAttribute()
     {
@@ -1601,21 +1602,38 @@ class Booking extends BaseModel
     /**
      * Связь с BookingHunter
      */
-    public function bookingHunter()
+    public function bookingHunter(): HasOne
     {
         return $this->hasOne(BookingHunter::class, 'booking_id');
     }
-    public function invitationForUser(int $userId)
-    {
-        return optional($this->bookingHunter)
-            ->invitations
-            ->firstWhere('hunter_id', $userId);
-    }
-
     public function bookingHunters(): HasMany
     {
         return $this->hasMany(BookingHunter::class,'booking_id','id');
     }
+    public function masterHunterId(): ?int
+    {
+        return $this->bookingHunter()
+            ->where('is_master', true)
+            ->value('invited_by');
+    }
+
+    public function getMasterHunterIdAttribute(): ?int
+    {
+        return $this->masterHunterId();
+    }
+    public function acceptedInvitationsOfMaster()
+    {
+        return $this->bookingHunters()
+            ->where('is_master', true)
+            ->first()?->invitations()
+            ->where('status', BookingHunterInvitation::STATUS_ACCEPTED)
+            ->get() ?? collect();
+    }
+    public function invitationForUser(int $userId)
+    {
+        return optional($this->bookingHunter)->invitations->firstWhere('hunter_id', $userId);
+    }
+
     public function getTypeTextAttribute()
     {
         return match ($this->type) {
