@@ -908,13 +908,10 @@ class BookingController extends \App\Http\Controllers\Controller
         if (!Auth::check()) {
             return $this->sendError('Необходима авторизация')->setStatusCode(401);
         }
-        $timerHour = $this->bookingTimerService->getCollectionTimerHours($booking, 'collection');
 
-        $booking->status = Booking::START_COLLECTION;
-        $booking->save();
+        $this->startCollectionTimer($booking);
 
-        $timerData = $this->bookingTimerService->startTimer($booking->id, $timerHour, 'collection', ['collection']);
-
+        // TODO понять что это и для чего нужно
         // ВСЕГДА не отправляем письмо инициатору при запуске сбора
         // Инициатор (create_user) уже автоматически является участником сбора
         // и не должен получать письмо о смене статуса
@@ -924,7 +921,6 @@ class BookingController extends \App\Http\Controllers\Controller
 
         return $this->sendSuccess([
             'message' => __('The gathering of hunters has begun'),
-            'collection_end_at' => $timerData['end_at'],
         ]);
     }
 
@@ -1135,7 +1131,7 @@ class BookingController extends \App\Http\Controllers\Controller
         if ($booking->type === 'animal') {
             $booking->status = Booking::FINISHED_COLLECTION;
         } else {
-            $timerHour = $this->bookingTimerService->getCollectionTimerHours($booking, 'paid');
+            $timerHour = $this->bookingTimerService->getTimerHours($booking, 'paid');
             $booking->status = Booking::PREPAYMENT_COLLECTION;
             $this->bookingTimerService->startTimer($booking->id, $timerHour, 'paid', ['collection']);
         }
@@ -1422,6 +1418,8 @@ class BookingController extends \App\Http\Controllers\Controller
                     'is_self' => $isCurrentUser,
                     'invitation_status' => $invitation->status,
                     'prepayment_paid' => (bool) ($invitation->prepayment_paid ?? false),
+                    'prepayment_paid_status' => $invitation->prepayment_paid_status,
+                    'prepayment_badge' => $invitation->prepayment_badge,
                 ];
             }
 
@@ -1439,6 +1437,8 @@ class BookingController extends \App\Http\Controllers\Controller
                     'invitation_status' => $invitation->status,
                     'is_external' => true,
                     'prepayment_paid' => (bool) ($invitation->prepayment_paid ?? false),
+                    'prepayment_paid_status' => $invitation->prepayment_paid_status,
+                    'prepayment_badge' => $invitation->prepayment_badge,
                 ];
             }
 
@@ -2088,12 +2088,14 @@ class BookingController extends \App\Http\Controllers\Controller
     {
         BookingHunterInvitation::where('booking_hunter_id', $booking->masterHunterId())
             ->where('hunter_id', Auth::id())
-            ->update(['prepayment_paid' => true]);
+            ->update(['prepayment_paid' => true, 'prepayment_paid_status' => BookingHunterInvitation::PREPAYMENT_PAID]);
 
         $acceptedInvitations = $booking->acceptedInvitationsOfMaster();
 
-        $paidCount = $acceptedInvitations->where('prepayment_paid', true)->count();
-        $timerHour = $this->bookingTimerService->getCollectionTimerHours($booking, 'beds');
+        $paidCount = $acceptedInvitations->where('prepayment_paid', true)
+            ->where('prepayment_paid_status', BookingHunterInvitation::PREPAYMENT_PAID)->count();
+
+        $timerHour = $this->bookingTimerService->getTimerHours($booking, 'beds');
 
         if ($paidCount === $acceptedInvitations->count()) {
             $booking->status = Booking::BED_COLLECTION;
@@ -2112,12 +2114,11 @@ class BookingController extends \App\Http\Controllers\Controller
 
     public function deleteNotPaidHunter(Request $request, Booking $booking): JsonResponse
     {
-        $invitation = BookingHunterInvitation::where('booking_hunter_id', $booking->masterHunterRowId())
-            ->where('hunter_id', $request->input('hunter_id'))
-            ->first();
+        $invitation = BookingHunterInvitation::findInventedHunterForBooking($booking->masterHunterRowId(), $request->input('hunter_id'));
 
         if ($invitation) {
             $invitation->delete();
+            $this->checkPrepaymentAllPaid($booking);
         } else {
             return $this->sendError(__('There is no such hunter among the invitees'));
         }
@@ -2127,11 +2128,99 @@ class BookingController extends \App\Http\Controllers\Controller
         ]);
     }
 
+    public function replaceNotPaidHunter(Request $request, Booking $booking): JsonResponse
+    {
+        $hunterData = $request->input('hunter');
+        $duplicate = BookingHunterInvitation::findInventedHunterForBooking($booking->masterHunterRowId(), $hunterData['id']);
+
+        if ($duplicate) {
+            return $this->sendError(__('Такой охотник уже есть в списке этого бронирования'));
+        }
+
+        $invitation = BookingHunterInvitation::findInventedHunterForBooking($booking->masterHunterRowId(), $request->input('old_hunter_id'));
+
+        if ($invitation) {
+            $invitation->hunter_id = $hunterData['id'];
+            $invitation->email = !empty($hunterData['email']) ? $hunterData['email'] : null;
+            $invitation->save();
+            $this->checkPrepaymentAllPaid($booking, $invitation);
+        }
+
+        $fullName = trim(($hunterData['first_name'] ?? '') . ' ' . ($hunterData['last_name'] ?? ''));
+
+        if (!$fullName) {
+            $fullName = $hunterData['user_name'] ?? $hunterData['email'] ?? null;
+        }
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Охотник успешно заменён',
+            'hunter' => [
+                'id' => $hunterData['id'],
+                'email' => $invitation->email ?? null,
+                'name' => $fullName ?? null,
+                'user_name' => $hunterData['user_name'] ?? null,
+                'first_name' => $hunterData['first_name'] ?? null,
+                'last_name' => $hunterData['last_name'] ?? null,
+                'is_external' => $hunterData['is_external'] ?? false,
+                'prepayment_paid' => (bool) ($invitation->prepayment_paid ?? false),
+                'prepayment_paid_status' => $invitation->prepayment_paid_status,
+                'prepayment_badge' => $invitation->prepayment_badge,
+            ],
+        ]);
+    }
+
+    public function checkPrepaymentAllPaid($booking, $invitation = []): void
+    {
+        $unpaidHunters = $booking->unpaidInvitationsOfHunters();
+
+        if ($unpaidHunters->isEmpty()) {
+            $this->startBedTimer($booking);
+        }else {
+            $invitation->prepayment_paid_status = BookingHunterInvitation::PREPAYMENT_PENDING;
+            $invitation->save();
+            $this->startPaidTimer($booking);
+        }
+    }
+
+    public function startCollectionTimer($booking): void
+    {
+        $booking->status = Booking::START_COLLECTION;
+        $booking->save();
+
+        $timerHour = $this->bookingTimerService->getTimerHours($booking, 'collection');
+        $this->bookingTimerService->startTimer($booking->id, $timerHour, 'collection', ['collection', 'paid', 'beds']);
+    }
+    public function startBedTimer($booking): void
+    {
+        $booking->status = Booking::BED_COLLECTION;
+        $booking->save();
+
+        $timerHour = $this->bookingTimerService->getTimerHours($booking, 'beds');
+        $this->bookingTimerService->startTimer($booking->id, $timerHour, 'beds', ['paid']);
+    }
+    public function startPaidTimer($booking): void
+    {
+        $booking->status = Booking::PREPAYMENT_COLLECTION;
+        $booking->save();
+
+        $timerHour = $this->bookingTimerService->getTimerHours($booking, 'paid');
+        $this->bookingTimerService->startTimer($booking->id, $timerHour, 'paid', ['paid']);
+    }
+
     public function checkPrepayment(Booking $booking): void
     {
-        Log::info('Timer finish', [
-            'bookingId' => $booking->id,
-        ]);
+        $unpaidHunters = $booking->pendingInvitationsOfHunters();
+
+        if ($unpaidHunters->isNotEmpty()) {
+            $unpaidHunters->each(function (BookingHunterInvitation $invitation) {
+                $invitation->prepayment_paid_status = BookingHunterInvitation::PREPAYMENT_UNPAID;
+                $invitation->save();
+            });
+        } else {
+            // Все оплатили, таймер можно не трогать или остановить
+        }
+
     }
     public function places(Booking $booking)
     {
