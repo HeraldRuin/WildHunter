@@ -29,6 +29,7 @@ document.addEventListener('DOMContentLoaded', function () {
             replaceResults: [],
             isSearchingReplace: false,
             showReplaceResults: false,
+            selectedReplaceHunter: null,
 
             // Слоты для охотников (каждый слот имеет свой поиск)
             hunterSlots: [],
@@ -61,9 +62,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 const seconds = totalSeconds % 60;
 
                 return `[${minutes} мин ${String(seconds).padStart(2, '0')} сек]`;
-            },
-            getPrepaymentStatus(hunter) {
-                // return hunter.prepayment_paid ? this.textPaid : this.textAwaiting;
             },
             userPopoverContent(booking) {
                 return `<strong>${booking.creator.first_name} ${booking.creator.last_name}</strong><br>
@@ -180,13 +178,31 @@ document.addEventListener('DOMContentLoaded', function () {
             },
             getStatusBadge(hunter) {
                 switch (hunter.invitation_status) {
-                    case 'accepted': return { text: 'Приглашение принято', class: 'bg-success' }
-                    case 'pending':  return { text: 'Приглашен', class: 'bg-warning' }
-                    case 'declined': return { text: 'Приглашение отклонено', class: 'bg-danger' }
+                    case 'accepted': return { text: 'Приглашение принято', class: 'bg-secondary' }
+                    case 'pending':  return { text: 'Приглашен', class: 'bg-secondary' }
+                    case 'declined': return { text: 'Приглашение отклонено', class: 'bg-secondary' }
                     default: return { text: '', class: '' }
                 }
             },
+            getPayBadge(hunter) {
+                if (hunter.prepayment_paid === true || hunter.prepayment_paid === 1) {
+                    return {
+                        text: 'Оплачено',
+                        class: 'bg-success'
+                    }
+                }
 
+                if (hunter.prepayment_paid === false || hunter.prepayment_paid === 0) {
+                    return {
+                        text: 'Ожидается оплата',
+                        class: 'bg-warning'
+                    }
+                }
+                return {
+                    text: 'Не оплачено',
+                    class: 'bg-danger'
+                }
+            },
             loadInvitedHunters(bookingId) {
                 fetch(`/booking/${bookingId}/invited-hunters`)
                     .then(res => res.json())
@@ -325,7 +341,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 }, 300);
             },
             searchHunters() {
-                if (this.hunterSearchQuery.length < 4) {
+                if (this.hunterSearchQuery.length < 2) {
                     this.hunterSearchResults = [];
                     this.hunterNoResults = false;
                     return;
@@ -828,7 +844,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 // this.searchResults = [];
             },
             saveUserChange() {
-                var me = this;
+                const me = this;
                 $.ajax({
                     url: `/booking/${this.currentBookingId}/change-user`,
                     type: 'POST',
@@ -871,10 +887,10 @@ document.addEventListener('DOMContentLoaded', function () {
                 });
             },
             completeBooking(event, bookingId) {
-                var me = this;
-                var bookingIdNum = parseInt(bookingId, 10);
+                const me = this;
+                const bookingIdNum = parseInt(bookingId, 10);
 
-                var btn = event && event.currentTarget ? event.currentTarget : null;
+                const btn = event && event.currentTarget ? event.currentTarget : null;
                 if (!btn) {
                     return;
                 }
@@ -889,7 +905,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     '<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>' +
                     '<span> ' + (btn.textContent.trim() || '...') + '</span>';
 
-                var restoreButton = function () {
+                const restoreButton = function () {
                     btn.disabled = false;
                     btn.classList.remove('disabled');
                     if (btn.dataset.originalHtml) {
@@ -942,10 +958,10 @@ document.addEventListener('DOMContentLoaded', function () {
                     });
             },
             startCollection(event, bookingId) {
-                var me = this;
-                var bookingIdNum = parseInt(bookingId, 10);
+                const me = this;
+                const bookingIdNum = parseInt(bookingId, 10);
 
-                var btn = event && event.currentTarget ? event.currentTarget : null;
+                const btn = event && event.currentTarget ? event.currentTarget : null;
                 if (!btn) {
                     return;
                 }
@@ -960,7 +976,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     '<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>' +
                     '<span> ' + (btn.textContent.trim() || '...') + '</span>';
 
-                var restoreButton = function () {
+                const restoreButton = function () {
                     btn.disabled = false;
                     btn.classList.remove('disabled');
                     if (btn.dataset.originalHtml) {
@@ -1003,10 +1019,10 @@ document.addEventListener('DOMContentLoaded', function () {
                 });
             },
             cancelCollection(event, bookingId) {
-                var me = this;
-                var bookingIdNum = parseInt(bookingId, 10);
+                const me = this;
+                const bookingIdNum = parseInt(bookingId, 10);
 
-                var btn = event && event.currentTarget ? event.currentTarget : null;
+                const btn = event && event.currentTarget ? event.currentTarget : null;
                 if (!btn) {
                     return;
                 }
@@ -1021,7 +1037,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     '<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>' +
                     '<span> ' + (btn.textContent.trim() || '...') + '</span>';
 
-                var restoreButton = function () {
+                const restoreButton = function () {
                     btn.disabled = false;
                     btn.classList.remove('disabled');
                     if (btn.dataset.originalHtml) {
@@ -1040,7 +1056,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         restoreButton();
 
                         if (res.status) {
-                            var modal = bootstrap.Modal.getInstance(document.getElementById('collectionModal' + bookingIdNum));
+                            const modal = bootstrap.Modal.getInstance(document.getElementById('collectionModal' + bookingIdNum));
                             if (modal) {
                                 modal.hide();
                             }
@@ -1082,8 +1098,8 @@ document.addEventListener('DOMContentLoaded', function () {
                 });
             },
             finishCollection(event, bookingId) {
-                var me = this;
-                var bookingIdNum = parseInt(bookingId, 10);
+                const me = this;
+                const bookingIdNum = parseInt(bookingId, 10);
                 // const modal = document.getElementById('collectionModal' + bookingId);
                 // const animalMinHunters = parseInt(modal.dataset.animalMinHunters || '0', 10);
 
@@ -1092,7 +1108,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 // (сервер всё равно повторно проверит это условие для надёжности)
                 try {
                     if (me.hunterSlots && me.hunterSlots.length > 0) {
-                        var hasNotAccepted = me.hunterSlots.some(function (slot) {
+                        const hasNotAccepted = me.hunterSlots.some(function (slot) {
                             return slot.hunter &&
                                 slot.hunter.invited &&
                                 slot.hunter.invitation_status &&
@@ -1114,7 +1130,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     console.warn('finishCollection: не удалось выполнить предварительную проверку статусов приглашений', e);
                 }
 
-                var btn = event && event.currentTarget ? event.currentTarget : null;
+                const btn = event && event.currentTarget ? event.currentTarget : null;
                 if (!btn) {
                     return;
                 }
@@ -1129,7 +1145,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     '<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>' +
                     '<span> ' + (btn.textContent.trim() || '...') + '</span>';
 
-                var restoreButton = function () {
+                const restoreButton = function () {
                     btn.disabled = false;
                     btn.classList.remove('disabled');
                     if (btn.dataset.originalHtml) {
@@ -1174,10 +1190,10 @@ document.addEventListener('DOMContentLoaded', function () {
                 });
             },
             cancelBooking(event, bookingId) {
-                var me = this;
-                var bookingIdNum = parseInt(bookingId, 10);
+                const me = this;
+                const bookingIdNum = parseInt(bookingId, 10);
 
-                var btn = event && event.currentTarget ? event.currentTarget : null;
+                const btn = event && event.currentTarget ? event.currentTarget : null;
                 if (!btn) {
                     return;
                 }
@@ -1192,7 +1208,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     '<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>' +
                     '<span> ' + (btn.textContent.trim() || '...') + '</span>';
 
-                var restoreButton = function () {
+                const restoreButton = function () {
                     btn.disabled = false;
                     btn.classList.remove('disabled');
                     if (btn.dataset.originalHtml) {
@@ -1244,7 +1260,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 const bookingId = btn.dataset.bookingId;
                 if (!bookingId) return;
 
-                // Если уже нажато — ничего не делаем
                 if (this.prepaymentPaidMap[bookingId]) return;
 
                 fetch(`/booking/${bookingId}/prepayment-paid`, {
@@ -1259,10 +1274,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
                     this.$set(this.prepaymentPaidMap, bookingId, true);
                 });
-            },
-
-            replaceHunter(hunterId, bookingId) {
-
             },
             searchReplaceHunter(bookingId) {
                 if (!this.replaceQuery || this.replaceQuery.trim() === '') {
@@ -1291,10 +1302,68 @@ document.addEventListener('DOMContentLoaded', function () {
                         });
                 }, 300);
             },
-            cancelReplace() {
-                this.hunterToReplace = null
-            },
+            selectReplaceHunter(user) {
+                this.replaceQuery = user.user_name
+                    ? user.user_name
+                    : (user.first_name || user.last_name)
+                        ? `${user.first_name || ''} ${user.last_name || ''}`.trim()
+                        : user.email;
 
+                this.selectedReplaceHunter = user;
+                this.showReplaceResults = false;
+            },
+            async confirmReplace(oldHunterId, bookingId) {
+                if (!this.selectedReplaceHunter) {
+                    bookingCoreApp.showAjaxMessage({
+                        status: false,
+                        message: 'Выберите охотника из списка'
+                    });
+                    return;
+                }
+
+                $.ajax({
+                    url: `/booking/${bookingId}/replace-hunter`,
+                    type: 'POST',
+                    dataType: 'json',
+                    data: {
+                        old_hunter_id: oldHunterId,
+                        hunter: this.selectedReplaceHunter,
+                        _token: $('meta[name="csrf-token"]').attr('content') || ''
+                    },
+                    success: (res) => {
+                        if (res.status) {
+                            const newHunter = res.hunter;
+                            const index = this.invitedHunters.findIndex(h => h.id === oldHunterId);
+                            if (index !== -1) {
+                                this.$set(this.invitedHunters, index, newHunter);
+                            }
+                            const slotIndex = this.hunterSlots.findIndex(s => s.hunter && s.hunter.id === oldHunterId);
+                            if (slotIndex !== -1) {
+                                this.$set(this.hunterSlots, slotIndex, {
+                                    ...this.hunterSlots[slotIndex],
+                                    hunter: newHunter,
+                                    query: newHunter.user_name || (newHunter.first_name + ' ' + newHunter.last_name).trim() || newHunter.email
+                                });
+                            }
+                            this.clearReplace();
+                        } else {
+                            bookingCoreApp.showError(res.message);
+                        }
+                    },
+                    error: function(e) {
+                        console.error(e);
+                    }
+                });
+            },
+            cancelReplace() {
+                this.clearReplace()
+            },
+            clearReplace() {
+                this.hunterToReplace = false
+                this.showReplaceResults = false
+                this.replaceQuery = ''
+                this.replaceResults = []
+            },
             removeHunter(hunterId, bookingId) {
                 bookingCoreApp.showConfirm({
                     message: 'Удалить охотника?',
@@ -1686,6 +1755,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         mounted() {
             const me = this;
+
             document.addEventListener('shown.bs.modal', function (event) {
                 const modalEl = event.target;
                 if (modalEl && modalEl.id && modalEl.id.startsWith('collectionModal')) {
@@ -1694,6 +1764,17 @@ document.addEventListener('DOMContentLoaded', function () {
                         setTimeout(() => {
                             me.initializeHunterSlots(parseInt(bookingId, 10));
                         }, 50);
+                    }
+                }
+            });
+            document.addEventListener('hide.bs.modal', function (event) {
+                const modalEl = event.target;
+
+                if (modalEl && modalEl.id && modalEl.id.startsWith('collectionModal')) {
+                    const bookingId = modalEl.dataset.bookingId;
+
+                    if (bookingId) {
+                        window.location.reload();
                     }
                 }
             });
@@ -1717,7 +1798,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         console.log('[HunterInvitation] Получено событие приглашения:', e);
                         // Обновляем страницу истории бронирований
                         if (window.location.pathname.includes('booking-history')) {
-                            console.log('[HunterInvitation] Обновление страницы...');
+                            //console.log('[HunterInvitation] Обновление страницы...');
                             setTimeout(() => {
                                 location.reload();
                             }, 500);
@@ -1911,26 +1992,19 @@ document.addEventListener('DOMContentLoaded', function () {
 
                         // el.textContent = '[0 мин 00 сек]';
                         // return;
-                        // используем data-атрибуты
-                        // const textEnd = el.dataset.textEnd || '[0 мин 00 сек]';
-                        // const textClass = el.dataset.textClass || '';
-                        // el.textContent = textEnd;
-                        // if (textClass) el.classList.add(textClass);
-                        // return;
-                        // el.classList.add('text-danger');
-                        //
-                        // el.textContent = 'Not paid';       // твой текст
+
                         const bookingId = el.dataset.bookingId;
-                        const sentBookings = new Set();
+
+                        if (el.dataset.expired === '1') return;
+                        el.dataset.expired = '1';
+
                         handleBookingPaidTimerExpired(bookingId);
-
-                        if (!sentBookings.has(bookingId)) {
-                            sentBookings.add(bookingId);
-                            handleBookingPaidTimerExpired(bookingId);
-                        }
-
                         return;
                     }
+                    if (diffMs > 0 && el.dataset.expired) {
+                        delete el.dataset.expired;
+                    }
+
                     el.textContent = this.formatTimer(diffMs);
                 });
             };
@@ -1944,7 +2018,6 @@ document.addEventListener('DOMContentLoaded', function () {
                         booking_id: bookingId
                     },
                     success: function (res) {
-
 
                         if (res.status) {
 
@@ -1978,21 +2051,6 @@ document.addEventListener('DOMContentLoaded', function () {
                     //     }
                     // }
                 });
-                // fetch('/booking/timer-expired', {
-                //     method: 'POST',
-                //     headers: {
-                //         'Content-Type': 'application/json',
-                //         'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-                //     },
-                //     body: JSON.stringify({ booking_id: bookingId })
-                // })
-                //     .then(res => res.json())
-                //     .then(data => {
-                //         console.log('Booking updated:', data);
-                //     })
-                //     .catch(err => {
-                //         console.error('Error:', err);
-                //     });
             };
 
             const updateBedsTimers = () => {
