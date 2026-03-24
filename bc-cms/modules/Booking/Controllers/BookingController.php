@@ -1206,6 +1206,7 @@ class BookingController extends \App\Http\Controllers\Controller
                 'invited'         => true,
                 'status'          => 'pending',
                 'invited_at'      => now(),
+                'prepayment_paid_status'      => BookingHunterInvitation::PREPAYMENT_PENDING,
                 'invitation_token'=> $booking->code . '-' . $hunterId,
             ]
         );
