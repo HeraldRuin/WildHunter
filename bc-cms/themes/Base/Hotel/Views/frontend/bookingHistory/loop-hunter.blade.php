@@ -213,7 +213,7 @@
 
             @if($endTimestamp)
                 <div class="text-muted paid-timer" data-end="{{ $endTimestamp }}"
-                     data-booking-id="{{ $booking->id }}">[0 мин]
+                     data-booking-id="{{ $booking->id }}">[таймер завершен]
                 </div>
             @endif
         @endif
