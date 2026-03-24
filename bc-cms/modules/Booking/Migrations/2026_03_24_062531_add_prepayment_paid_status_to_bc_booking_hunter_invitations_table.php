@@ -12,7 +12,9 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('bc_booking_hunter_invitations', function (Blueprint $table) {
-            $table->string('prepayment_paid_status')->nullable()->after('prepayment_paid');
+            $table->enum('prepayment_paid_status', ['paid', 'pending', 'unpaid'])
+                ->default('pending')
+                ->after('prepayment_paid');
         });
     }
 
