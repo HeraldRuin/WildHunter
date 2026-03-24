@@ -16,7 +16,7 @@ class BookingTimerService
         $this->allocatorBedsService = $service;
     }
 
-    public function getCollectionTimerHours(Booking $booking, string $type): int
+    public function getTimerHours(Booking $booking, string $type): int
     {
         $defaultTimer = 24;
 
