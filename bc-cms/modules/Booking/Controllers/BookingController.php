@@ -1081,19 +1081,8 @@ class BookingController extends \App\Http\Controllers\Controller
         if ($booking->animal_id && $booking->hotel_id) {
             $animal = Animal::find($booking->animal_id);
             if ($animal) {
-                $animalName = $animal->title ?? '';
-
-                $hotelAnimal = Animal::where('id', $booking->animal_id)
-                    ->where('hotel_id', $booking->hotel_id)
-                    ->first();
-
-                if ($hotelAnimal && isset($hotelAnimal->hunters_count) && $hotelAnimal->hunters_count !== null) {
-                    $requiredHunters = (int) $hotelAnimal->hunters_count;
-                }
-
-                if ($requiredHunters <= 0) {
-                    $requiredHunters = 1;
-                }
+                $animalName = $booking->getAnimalName();
+                $requiredHunters = $booking->getRequiredHuntersCount();
             }
         } else {
             if ($booking->type === 'hotel') {
@@ -1109,7 +1098,7 @@ class BookingController extends \App\Http\Controllers\Controller
             if ($booking->animal_id) {
                 $animal = Animal::find($booking->animal_id);
                 if ($animal) {
-                    $animalName = $animal->title ?? '';
+                    $animalName = $booking->getAnimalName();
                 }
             }
         }

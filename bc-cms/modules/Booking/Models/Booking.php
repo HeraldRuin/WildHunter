@@ -1566,6 +1566,10 @@ class Booking extends BaseModel
     {
         return $this->belongsTo(Animal::class, 'animal_id');
     }
+    public function getAnimalName(): string
+    {
+        return $this->animal->title ?? '';
+    }
     public function hotel()
     {
         return $this->belongsTo(Hotel::class, 'hotel_id', 'id');
@@ -1575,6 +1579,12 @@ class Booking extends BaseModel
         return HotelAnimal::where('hotel_id', $this->hotel_id)
             ->where('animal_id', $this->animal_id)
             ->first();
+    }
+    public function getRequiredHuntersCount(): int
+    {
+        $count = $this->hotelAnimal()?->hunters_count ?? 1;
+
+        return $count > 0 ? (int) $count : 1;
     }
     public function hotelRooms()
     {
