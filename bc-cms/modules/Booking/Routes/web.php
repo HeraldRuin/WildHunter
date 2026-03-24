@@ -57,7 +57,8 @@ Route::group(['prefix'=>config('booking.booking_route_prefix')],function(){
 
     //Предоплата
     Route::post('/{booking}/prepayment-paid', 'BookingController@storePrepayment');
-
+    Route::post('/{booking}/check/prepayment-paid', 'BookingController@checkPrepayment');
+    Route::post('/{booking}/replace-hunter', 'BookingController@replaceNotPaidHunter');
     Route::delete('/{booking}/remove/not_paid/hunter', 'BookingController@deleteNotPaidHunter');
 
     // Койко-место
