@@ -2163,6 +2163,7 @@ class BookingController extends \App\Http\Controllers\Controller
                 'first_name' => $hunterData['first_name'] ?? null,
                 'last_name' => $hunterData['last_name'] ?? null,
                 'is_external' => $hunterData['is_external'] ?? false,
+                'invitation_status' => $hunterData['invitation_status'] ?? BookingHunterInvitation::STATUS_ACCEPTED,
                 'prepayment_paid' => (bool) ($invitation->prepayment_paid ?? false),
                 'prepayment_paid_status' => $invitation->prepayment_paid_status,
                 'prepayment_badge' => $invitation->prepayment_badge,
