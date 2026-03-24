@@ -186,7 +186,7 @@
 
             @if($endTimestamp)
                 <div class="text-muted collection-timer" data-end="{{ $endTimestamp }}"
-                     data-booking-id="{{ $booking->id }}">[0 мин]
+                     data-booking-id="{{ $booking->id }}">[0 мин 00 сек]
                 </div>
             @endif
 
@@ -213,7 +213,7 @@
 
             @if($endTimestamp)
                 <div class="text-muted paid-timer" data-end="{{ $endTimestamp }}"
-                     data-booking-id="{{ $booking->id }}">[]
+                     data-booking-id="{{ $booking->id }}">[0 мин 00 сек]
                 </div>
             @endif
         @endif
@@ -234,7 +234,7 @@
 
             @if($endTimestamp)
                 <div class="text-muted beds-timer" data-end="{{ $endTimestamp }}"
-                     data-booking-id="{{ $booking->id }}">[0 мин]
+                     data-booking-id="{{ $booking->id }}">[0 мин 00 сек]
                 </div>
             @endif
         @endif
