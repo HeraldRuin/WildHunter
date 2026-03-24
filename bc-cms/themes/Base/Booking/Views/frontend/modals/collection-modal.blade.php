@@ -102,11 +102,19 @@
                                     <div class="d-flex justify-content-between align-items-start">
                                         <div class="flex-grow-1">
                                             <div class="d-flex align-items-center mb-2">
+                                                <span v-if="hunter.is_self" class="badge bg-success mr-2">Вы</span>
                                                 <strong>@{{ hunter.name }}</strong>
-                                                <span v-if="hunter.is_self" class="badge bg-secondary ml-3">Вы</span>
-                                                <span v-if="hunter.invitation_status" :class="['badge', getStatusBadge(hunter).class]" class="ml-2">
+                                                <span v-if="hunter.invitation_status" :class="['badge', getStatusBadge(hunter).class]" class="ml-2 bg-secondary text-white">
                                                 @{{ getStatusBadge(hunter).text }}
                                             </span>
+                                                {{-- Статус предоплаты --}}
+                                                @if($booking->type !== \Modules\Booking\Models\Booking::BookingTypeAnimal && in_array($booking->status, [\Modules\Booking\Models\Booking::PREPAYMENT_COLLECTION, \Modules\Booking\Models\Booking::FINISHED_PREPAYMENT, \Modules\Booking\Models\Booking::BED_COLLECTION, \Modules\Booking\Models\Booking::FINISHED_BED]))
+                                                    <div v-if="hunter.status !== 'declined'">
+                                                        <span class="badge text-white ml-2" :class="hunter.prepayment_badge.class">
+                                                            @{{ hunter.prepayment_badge.text }}
+                                                        </span>
+                                                    </div>
+                                                @endif
                                             </div>
                                             <div class="text-muted small mb-1">
                                                 <strong>
@@ -115,49 +123,6 @@
                                                 </strong>
                                             </div>
                                             <div class="text-muted small mb-2">@{{ hunter.email }}</div>
-
-
-
-                                            {{-- Статус предоплаты --}}
-                                            @if($booking->type !== \Modules\Booking\Models\Booking::BookingTypeAnimal)
-
-{{--                                                                                                @if($hunter['status']  != 'declined' && in_array($booking->status, [\Modules\Booking\Models\Booking::FINISHED_COLLECTION, \Modules\Booking\Models\Booking::PREPAYMENT_COLLECTION, \Modules\Booking\Models\Booking::FINISHED_PREPAYMENT, \Modules\Booking\Models\Booking::BED_COLLECTION, \Modules\Booking\Models\Booking::FINISHED_BED]))--}}
-{{--                                                                                                <span>@{{ hunter.prepayment_paid ? textPaid : textAwaiting }}</span>--}}
-{{--                                                                                                    <div v-if="hunter.status !== 'declined' && allowedBookingStatuses.includes(booking.status)">--}}
-{{--                                                                                                        <span>@{{ hunter.prepayment_paid ? __('Paid') : __('Awaiting prepayment') }}</span>--}}
-{{--                                                                                                    </div>--}}
-
-{{--                                                                                                    @if($endTimestamp)--}}
-{{--                                                                                                        <span class="paid-timer" @class(['text-danger' => !$hunter['prepayment_paid']])>--}}
-{{--                                                                                                                {{ $hunter['prepayment_paid'] ? __('Paid') : __('Awaiting prepayment') }}--}}
-{{--                                                                                                            </span>--}}
-{{--                                                                                                    @else--}}
-{{--                                                                                                        <span>{{ $hunter['prepayment_paid'] ? __('Paid') : __('Awaiting prepayment') }}</span>--}}
-{{--                                                                                                    @endif--}}
-{{--                                                                                                    @if($booking->status === \Modules\Booking\Models\Booking::PREPAYMENT_COLLECTION)--}}
-{{--                                                                                                        @php--}}
-{{--                                                                                                            $endTimestamp = null;--}}
-{{--                                                                                                            try {--}}
-{{--                                                                                                                $bedsEndAt = $booking->getMeta('paid_end_at');--}}
-{{--                                                                                                                if ($bedsEndAt) {--}}
-{{--                                                                                                                    $endCarbon = \Carbon\Carbon::parse($bedsEndAt);--}}
-{{--                                                                                                                    $endTimestamp = $endCarbon->timestamp * 1000;--}}
-{{--                                                                                                                }--}}
-{{--                                                                                                            } catch (\Exception $e) {--}}
-{{--                                                                                                                $endTimestamp = null;--}}
-{{--                                                                                                            }--}}
-{{--                                                                                                        @endphp--}}
-
-{{--                                                                                                        @if($endTimestamp)--}}
-{{--                                                                                                            <span class="paid-timer" @class(['text-danger' => !$hunter['prepayment_paid']])>--}}
-{{--                                                                                                                {{ $hunter['prepayment_paid'] ? __('Paid') : __('Awaiting prepayment') }}--}}
-{{--                                                                                                            </span>--}}
-{{--                                                                                                        @else--}}
-{{--                                                                                                            <span>{{ $hunter['prepayment_paid'] ? __('Paid') : __('Awaiting prepayment') }}</span>--}}
-{{--                                                                                                        @endif--}}
-{{--                                                                                                    @endif--}}
-{{--                                                                                                @endif--}}
-                                            @endif
                                         </div>
 
                                         @if($booking->status === \Modules\Booking\Models\Booking::PREPAYMENT_COLLECTION)
@@ -179,10 +144,9 @@
                                                         </button>
                                                     </div>
                                                     <div v-else class="d-flex align-items-start mt-2">
-
-                                                            <input
+                                                        <input
                                                                 type="text"
-                                                                class="form-control me-2 mr-4"
+                                                                class="form-control me-2 mr-2"
                                                                 :placeholder="'{{ __('Ник / Фамилия / email / ID охотника') }}'"
                                                                 v-model="replaceQuery"
                                                                 @input="searchReplaceHunter({{ $booking->id }})"
@@ -190,7 +154,6 @@
                                                                 @blur="setTimeout(() => showReplaceResults = false, 200)">
                                                             <button
                                                                 class="btn btn-sm btn-success me-2 mr-2"
-{{--                                                                :disabled="hunterSlot.hunter && hunterSlot.hunter.invited"--}}
                                                                 @click="confirmReplace(hunter.id, {{ $booking->id }})">
                                                                 Сохранить
                                                             </button>
@@ -200,10 +163,11 @@
                                                                 @click="cancelReplace">
                                                                 Отмена
                                                             </button>
-                                                        <!-- 🔽 РЕЗУЛЬТАТЫ -->
+
+                                                        <!-- РЕЗУЛЬТАТЫ -->
                                                         <div v-if="showReplaceResults"
-                                                             class="position-absolute bg-white border w-100 mt-1"
-                                                             style="top: 100%; left: 0; z-index: 1000; max-height: 200px; overflow-y: auto;">
+                                                             class="position-absolute w-100 bg-white border mt-1"
+                                                             style="top: 100%; left: 0; z-index: 1000; max-height: 300px; overflow-y: auto;">
 
                                                             <div v-if="isSearchingReplace" class="p-2 text-muted">
                                                                 Поиск...
@@ -225,11 +189,9 @@
                                                                 Ничего не найдено
                                                             </div>
                                                         </div>
-                                                    </div>
-
+                                                </div>
                                             </div>
                                         @endif
-
                                     </div>
                                 </div>
                             </div>
