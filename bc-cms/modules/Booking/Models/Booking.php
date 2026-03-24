@@ -13,25 +13,20 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
-use Mockery\Exception;
 use Modules\Animals\Models\Animal;
 use Modules\Booking\Emails\NewBookingEmail;
 use Modules\Booking\Emails\StatusUpdatedEmail;
 use Modules\Booking\Events\BookingUpdatedEvent;
-use Modules\Booking\Models\BookingHunter;
 use Modules\Booking\Traits\HasPassenger;
 use Modules\Coupon\Models\CouponBookings;
 use Modules\Hotel\Models\Hotel;
 use Modules\Hotel\Models\HotelAnimal;
 use Modules\Hotel\Models\HotelRoom;
 use Modules\Hotel\Models\HotelRoomBooking;
-use Modules\Space\Models\Space;
-use Modules\Tour\Models\Tour;
 use App\User;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Modules\User\Models\Wallet\Transaction;
-use Modules\Booking\Models\BookingTimeSlots;
-use Modules\Booking\Models\BookingHunterInvitation;
+
 
 class Booking extends BaseModel
 {
@@ -53,10 +48,10 @@ class Booking extends BaseModel
     const FINISHED_BED = 'finish_bed_collection';
 
     const CONFIRMED  = 'confirmed';
-    const COMPLETED  = 'completed'; //
+    const COMPLETED  = 'completed';
     const CANCELLED  = 'cancelled';
-    const PAID       = 'paid'; //
-    const PARTIAL_PAYMENT       = 'partial_payment'; //
+    const PAID       = 'paid';
+    const PARTIAL_PAYMENT       = 'partial_payment';
 
     //Типы бронирования
     const BookingTypeAnimal = 'animal';
@@ -1634,6 +1629,37 @@ class Booking extends BaseModel
             ->first()?->invitations()
             ->where('status', BookingHunterInvitation::STATUS_ACCEPTED)
             ->get() ?? collect();
+    }
+    public function unpaidInvitationsOfHunters(): \Illuminate\Database\Eloquent\Collection|\Illuminate\Support\Collection
+    {
+        $masterId = $this->masterHunterRowId();
+
+        if (!$masterId) {
+            return collect();
+        }
+
+        return BookingHunterInvitation::query()
+            ->where('status', BookingHunterInvitation::STATUS_ACCEPTED)
+            ->where('booking_hunter_id', $masterId)
+            ->where('hunter_id', '<>', $masterId)
+            ->where('prepayment_paid', false)
+            ->where('prepayment_paid_status', BookingHunterInvitation::PREPAYMENT_UNPAID)
+            ->get();
+    }
+    public function pendingInvitationsOfHunters(): \Illuminate\Database\Eloquent\Collection|\Illuminate\Support\Collection
+    {
+        $masterId = $this->masterHunterRowId();
+
+        if (!$masterId) {
+            return collect();
+        }
+
+        return BookingHunterInvitation::query()
+            ->where('status', BookingHunterInvitation::STATUS_ACCEPTED)
+            ->where('booking_hunter_id', $masterId)
+            ->where('hunter_id', '<>', $masterId)
+            ->where('prepayment_paid_status', BookingHunterInvitation::PREPAYMENT_PENDING)
+            ->get();
     }
     public function invitationForUser(int $userId)
     {
