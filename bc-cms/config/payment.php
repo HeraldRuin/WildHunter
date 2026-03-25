@@ -6,5 +6,6 @@ return [
         'stripe'=>Modules\Booking\Gateways\StripeGateway::class,
         'payrexx'=>Modules\Booking\Gateways\PayrexxGateway::class,
         'paystack'=>Modules\Booking\Gateways\PaystackGateway::class,
+        'paykeeper' => Modules\Booking\Gateways\PaykeeperGateway::class,
     ],
 ];
