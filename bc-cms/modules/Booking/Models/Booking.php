@@ -429,7 +429,6 @@ class Booking extends BaseModel
             'booking_hunter_id' => $bookingHunter->id,
             'hunter_id' => $creatorId,
             'email' => $creator->email,
- //            'invited' => true,
             'status' => 'accepted',
             'invited_at' => now(),
             'accepted_at' => now(),
@@ -439,7 +438,6 @@ class Booking extends BaseModel
 
     public function markAsProcessing($payment, $service)
     {
-
         $this->status = static::PROCESSING;
         $this->save();
         event(new BookingUpdatedEvent($this));
@@ -463,7 +461,6 @@ class Booking extends BaseModel
         $this->tryRefundToWallet();
         $this->save();
         event(new BookingUpdatedEvent($this));
-
     }
 
     public function sendNewBookingEmails()
@@ -1653,7 +1650,10 @@ class Booking extends BaseModel
             ->where('booking_hunter_id', $masterId)
             ->where('hunter_id', '<>', $masterId)
             ->where('prepayment_paid', false)
-            ->where('prepayment_paid_status', BookingHunterInvitation::PREPAYMENT_UNPAID)
+            ->whereIn('prepayment_paid_status', [
+                BookingHunterInvitation::PREPAYMENT_UNPAID,
+                BookingHunterInvitation::PREPAYMENT_PENDING
+            ])
             ->get();
     }
     public function pendingInvitationsOfHunters(): \Illuminate\Database\Eloquent\Collection|\Illuminate\Support\Collection

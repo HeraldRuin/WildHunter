@@ -1206,7 +1206,6 @@ class BookingController extends \App\Http\Controllers\Controller
                 'invited'         => true,
                 'status'          => 'pending',
                 'invited_at'      => now(),
-                'prepayment_paid_status'      => BookingHunterInvitation::PREPAYMENT_PENDING,
                 'invitation_token'=> $booking->code . '-' . $hunterId,
             ]
         );
@@ -2155,8 +2154,8 @@ class BookingController extends \App\Http\Controllers\Controller
                 'is_external' => $hunterData['is_external'] ?? false,
                 'invitation_status' => $hunterData['invitation_status'] ?? BookingHunterInvitation::STATUS_ACCEPTED,
                 'prepayment_paid' => (bool) ($invitation->prepayment_paid ?? false),
-                'prepayment_paid_status' => $invitation->prepayment_paid_status,
-                'prepayment_badge' => $invitation->prepayment_badge,
+                'prepayment_paid_status' => $invitation? $invitation->prepayment_paid_status: null,
+                'prepayment_badge' => $invitation? $invitation->prepayment_badge: null,
             ],
         ]);
     }
