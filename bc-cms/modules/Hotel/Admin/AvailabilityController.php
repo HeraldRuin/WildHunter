@@ -7,7 +7,7 @@ use Modules\AdminController;
 
 class AvailabilityController extends \Modules\Hotel\Controllers\AvailabilityController
 {
-    protected $indexView = 'Hotel::admin.room.availability';
+    protected string $indexView = 'Hotel::admin.room.availability';
 
     public function __construct()
     {
@@ -16,7 +16,8 @@ class AvailabilityController extends \Modules\Hotel\Controllers\AvailabilityCont
         $this->middleware('dashboard');
     }
 
-    protected function hasHotelPermission($hotel_id = false){
+    protected function hasHotelPermission($hotel_id = false): bool
+    {
         if(empty($hotel_id)) return false;
 
         $hotel = $this->hotelClass::find($hotel_id);

@@ -4,6 +4,8 @@ namespace Modules\Hotel\Services;
 
 use Carbon\Carbon;
 use Modules\Booking\Models\Booking;
+use Modules\Hotel\DTO\RoomCalendarData;
+use Modules\Hotel\Models\HotelRoom;
 use Modules\Hotel\Models\HotelRoomDate;
 
 class RoomAvailabilityService
@@ -11,25 +13,29 @@ class RoomAvailabilityService
     /**
      * @var string
      */
+    protected string $roomClass;
+
+    /**
+     * @var string
+     */
     protected string $roomDateClass;
 
     public function __construct()
     {
+        $this->roomClass = HotelRoom::class;
         $this->roomDateClass = HotelRoomDate::class;
     }
 
-    public function getRoomCalendar($room, $request): array
+    public function getRoomCalendar($room, RoomCalendarData $data): array
     {
-        $is_single = $request->query('for_single');
-
         /** ----------------------------------------
          * 1. Загружаем кастомные даты
          * ---------------------------------------- */
         $rows = $this->roomDateClass::query()
             ->where('target_id', $room->id)
             ->whereBetween('start_date', [
-                date('Y-m-d 00:00:00', strtotime($request->query('start'))),
-                date('Y-m-d 23:59:59', strtotime($request->query('end')))
+                date('Y-m-d 00:00:00', strtotime($data->start)),
+                date('Y-m-d 23:59:59', strtotime($data->end))
             ])
             ->get()
             ->keyBy(fn ($row) => date('Y-m-d', strtotime($row->start_date)));
@@ -38,7 +44,7 @@ class RoomAvailabilityService
          * 2. Генерируем ВСЕ дни периода
          * ---------------------------------------- */
         $allDates = [];
-        $period = periodDate($request->input('start'), $request->input('end'), false);
+        $period = periodDate($data->start, $data->end, false);
 
         foreach ($period as $dt) {
             $dateKey = $dt->format('Y-m-d');
@@ -56,11 +62,7 @@ class RoomAvailabilityService
                 ],
             ];
 
-            $priceHtml = format_money($room->price);
-            if (!$is_single) {
-                $priceHtml = format_money_main($room->price);
-            }
-
+            $priceHtml = $data->forSingle ? format_money($room->price) : format_money_main($room->price);
             $allDates[$dateKey]['title'] = $priceHtml . ' x ' . $room->number;
         }
 
@@ -117,8 +119,8 @@ class RoomAvailabilityService
          * 4. Учитываем бронирования с учётом дня выезда
          * ---------------------------------------- */
         $bookings = $room->getBookingsInRange(
-            $request->query('start'),
-            $request->query('end')
+            $data->start,
+            $data->end
         );
 
         foreach ($bookings as $roomBooking) {
@@ -220,8 +222,89 @@ class RoomAvailabilityService
         return array_values($allDates);
     }
 
-    public function getSummaryCalendar($hotel_id, $request)
+    public function getSummaryCalendar($hotelId, RoomCalendarData $data): array
     {
+        $is_single = $data->forSingle ?? false;
 
+        // Получаем все номера данного отеля
+        $rooms = $this->roomClass::query()
+            ->where('parent_id', $hotelId)
+            ->get();
+
+        $allDates = [];
+
+        // Генерируем все даты периода
+        $period = periodDate($data->start, $data->end, false);
+
+        foreach ($period as $dt) {
+            $dateKey = $dt->format('Y-m-d');
+
+            // Изначально пустая запись для дня
+            $allDates[$dateKey] = [
+                'id' => uniqid(),
+                'start' => $dateKey,
+                'allDay' => true,
+                'price' => 0,
+                'number' => 0,
+                'active' => 1,
+                'extendedProps' => [
+                    'max_number' => 0,
+                    'price_changed' => false,
+                    'number_changed' => false,
+                ],
+                'title' => '',
+                'bookings' => [],
+                'bookings_html' => '',
+            ];
+        }
+
+        // Проходим по каждому номеру
+        foreach ($rooms as $room) {
+            // Загружаем кастомные даты для номера
+            $customDates = $this->roomDateClass::query()
+                ->where('target_id', $room->id)
+                ->whereBetween('start_date', [
+                    date('Y-m-d 00:00:00', strtotime($data->start)),
+                    date('Y-m-d 23:59:59', strtotime($data->end))
+                ])
+                ->get()
+                ->keyBy(fn($row) => date('Y-m-d', strtotime($row->start_date)));
+
+            foreach ($period as $dt) {
+                $dateKey = $dt->format('Y-m-d');
+                $day = &$allDates[$dateKey];
+
+                // Стандартные значения для номера
+                $price = $room->price;
+                $number = $room->number;
+                $active = 1;
+
+                // Проверяем кастомные даты
+                if (isset($customDates[$dateKey])) {
+                    $row = $customDates[$dateKey];
+                    $price = $row->price ?: $price;
+                    $number = $row->number !== null ? (int)$row->number : $number;
+                    $active = (int)$row->active;
+                }
+
+                // Суммируем числа по всем номерам
+                $day['number'] += $number;
+                $day['extendedProps']['max_number'] += $room->number;
+
+                // Для цены можно взять среднюю или первую, тут упрощенно просто первая
+                $day['price'] = $day['price'] ?: $price;
+
+                // Обновляем title
+                $priceHtml = $is_single ? format_money($day['price']) : format_money_main($day['price']);
+                $day['title'] = $priceHtml . ' x ' . $day['number'];
+            }
+            unset($day);
+        }
+
+        // Можно добавить сюда обработку бронирований для всех номеров аналогично
+        // как в getRoomCalendar, учитывая даты выезда и occupiedRooms
+        // (повторяющаяся логика — можно вынести позже)
+
+        return array_values($allDates);
     }
 }
