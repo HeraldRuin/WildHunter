@@ -343,21 +343,19 @@
                     formModal.show(form);
                 },
                 eventRender: function(info) {
+                    const isSummary = info.event.extendedProps.is_summary;
                     const bookingsHtml = info.event.extendedProps.bookings_html || '';
-                    const priceHtml = `<div class="fc-price-block">${info.event.title}</div>`;
 
-                    $(info.el).html(`
-        <div class="fc-day-custom">
-            <div class="fc-bookings">${bookingsHtml}</div>
-            ${priceHtml}
-        </div>
-    `);
+                    let html = `<div class="fc-day-custom">
+                    <div class="fc-bookings">${bookingsHtml}</div>`;
 
-                    // Сначала сбрасываем все стили блока
-                    $(info.el).find('.fc-price-block').css({
-                        backgroundColor: '',
-                        color: ''
-                    });
+                    if (!isSummary) {
+                        html += `<div class="fc-price-block">${info.event.title}</div>`;
+                    }
+
+                    html += `</div>`;
+
+                    $(info.el).html(html);
 
                     $(info.el).find('.booking-id').each(function() {
                         const idText = $(this).text().replace('Б', '');
@@ -376,24 +374,6 @@
                                 url += '&booking_id=' + bookingId;
                             }
                             window.open(url, '_blank');
-
-                            // Загружаем данные через AJAX и открываем новое модальное окно
-                            // $('#modalBookingId').text('Б' + idText);
-                            // $('#modalBookingBody').html('Загрузка...');
-                            //
-                            // $.ajax({
-                            //     url: '/booking/' + idText, // или ваш route('booking.show', idText)
-                            //     method: 'GET',
-                            //     success: function(response) {
-                            //         // response может быть HTML для модального окна
-                            //         $('#modalBookingBody').html(response);
-                            //     },
-                            //     error: function() {
-                            //         $('#modalBookingBody').html('Ошибка загрузки брони');
-                            //     }
-                            // });
-
-                            // $('#bc_modal_booking').modal('show');
                         });
                     });
 
