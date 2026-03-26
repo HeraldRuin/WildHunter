@@ -187,18 +187,7 @@ class RoomAvailabilityService
             $bookingHtml = '<div class="calendar-bookings">';
             foreach ($day['bookings'] as $b) {
                 $status = htmlspecialchars($b['status'] ?? '');
-                $code = htmlspecialchars($b['code'] ?? '');
                 $label = htmlspecialchars($b['statusName'] ?? '');
-
-                // Проверяем, день выезда ли это для этой брони
-                $isCheckout = false;
-                $bookingModel = Booking::find($b['id']);
-                if ($bookingModel) {
-                    $endDate = Carbon::parse($bookingModel->end_date)->format('Y-m-d');
-                    if ($endDate === $day['start']) {
-                        $isCheckout = true;
-                    }
-                }
 
                 $bookingHtml .= '<div class="booking-item booking-status-' . $status . '">'
                     . '<span class="booking-id" data-id="' . (int)$b['id'] . '" data-code="' . e($b['code']) . '">'
@@ -206,11 +195,11 @@ class RoomAvailabilityService
                     '</span>'
                     . '<span class="booking-status">' . $label . '</span>';
 
-                // Добавляем (Выезд) только рядом с этой бронью
+                // Проверяем, день выезда ли это для этой брони & Добавляем (Выезд) только рядом с этой бронью
+                $isCheckout = $this->isCheckoutDay($b['id'], $day['start']);
                 if ($isCheckout) {
                     $bookingHtml .= ' <span class="checkout-label">(В)</span>';
                 }
-
                 $bookingHtml .= '</div>';
             }
 
@@ -222,24 +211,19 @@ class RoomAvailabilityService
         return array_values($allDates);
     }
 
+
     public function getSummaryCalendar($hotelId, RoomCalendarData $data): array
     {
-        $is_single = $data->forSingle ?? false;
-
-        // Получаем все номера данного отеля
         $rooms = $this->roomClass::query()
             ->where('parent_id', $hotelId)
             ->get();
 
         $allDates = [];
-
-        // Генерируем все даты периода
         $period = periodDate($data->start, $data->end, false);
 
+        // Создаем базовые даты
         foreach ($period as $dt) {
             $dateKey = $dt->format('Y-m-d');
-
-            // Изначально пустая запись для дня
             $allDates[$dateKey] = [
                 'id' => uniqid(),
                 'start' => $dateKey,
@@ -251,6 +235,7 @@ class RoomAvailabilityService
                     'max_number' => 0,
                     'price_changed' => false,
                     'number_changed' => false,
+                    'is_summary' => true,
                 ],
                 'title' => '',
                 'bookings' => [],
@@ -258,9 +243,7 @@ class RoomAvailabilityService
             ];
         }
 
-        // Проходим по каждому номеру
         foreach ($rooms as $room) {
-            // Загружаем кастомные даты для номера
             $customDates = $this->roomDateClass::query()
                 ->where('target_id', $room->id)
                 ->whereBetween('start_date', [
@@ -274,12 +257,11 @@ class RoomAvailabilityService
                 $dateKey = $dt->format('Y-m-d');
                 $day = &$allDates[$dateKey];
 
-                // Стандартные значения для номера
+                // Стандартные значения
                 $price = $room->price;
                 $number = $room->number;
                 $active = 1;
 
-                // Проверяем кастомные даты
                 if (isset($customDates[$dateKey])) {
                     $row = $customDates[$dateKey];
                     $price = $row->price ?: $price;
@@ -287,24 +269,80 @@ class RoomAvailabilityService
                     $active = (int)$row->active;
                 }
 
-                // Суммируем числа по всем номерам
+                // Суммируем по всем номерам
                 $day['number'] += $number;
                 $day['extendedProps']['max_number'] += $room->number;
-
-                // Для цены можно взять среднюю или первую, тут упрощенно просто первая
                 $day['price'] = $day['price'] ?: $price;
 
-                // Обновляем title
-                $priceHtml = $is_single ? format_money($day['price']) : format_money_main($day['price']);
+                $priceHtml = $data->forSingle ? format_money($day['price']) : format_money_main($day['price']);
                 $day['title'] = $priceHtml . ' x ' . $day['number'];
+
+                // Добавляем брони по этому номеру
+                $roomBookings = $room->getBookingsInRange($data->start, $data->end);
+                foreach ($roomBookings as $rb) {
+                    $booking = Booking::find($rb->booking_id);
+                    if (!$booking) continue;
+
+                    $bookingStart = Carbon::parse($rb->start_date)->format('Y-m-d');
+                    $bookingEnd = Carbon::parse($rb->end_date)->format('Y-m-d');
+
+                    // Если текущая дата входит в период брони
+                    if ($dateKey >= $bookingStart && $dateKey <= $bookingEnd) {
+                        $day['bookings'][] = [
+                            'id' => $booking->id,
+                            'code' => $booking->code,
+                            'status' => $booking->status,
+                            'statusName' => $booking->statusName,
+                        ];
+                    }
+                }
+                unset($roomBookings);
             }
             unset($day);
         }
 
-        // Можно добавить сюда обработку бронирований для всех номеров аналогично
-        // как в getRoomCalendar, учитывая даты выезда и occupiedRooms
-        // (повторяющаяся логика — можно вынести позже)
+        // Генерим HTML для всех броней, аналогично getRoomCalendar
+        foreach ($allDates as &$day) {
+            if (empty($day['bookings'])) continue;
+
+            $bookingHtml = '<div class="calendar-bookings">';
+            foreach ($day['bookings'] as $b) {
+                $code = htmlspecialchars($b['code'] ?? '');
+
+                $bookingHtml .= '<div class="booking-item">'
+                    . '<span class="booking-id" data-id="' . (int)$b['id'] . '" data-code="' . $code . '">'
+                    . 'Б' . (int)$b['id'] .
+                    '</span>';
+
+                // Проверяем, день выезда ли это для этой брони & Добавляем (Выезд) только рядом с этой бронью
+                $isCheckout = $this->isCheckoutDay($b['id'], $day['start']);
+                if ($isCheckout) {
+                    $bookingHtml .= ' <span class="checkout-label">(В)</span>';
+                }
+
+                $bookingHtml .= '</div>';
+            }
+            $bookingHtml .= '</div>';
+            $day['bookings_html'] = $bookingHtml;
+        }
+        unset($day);
 
         return array_values($allDates);
+    }
+
+    /**
+     * Проверяет, является ли данный день днем выезда для брони
+     *
+     * @param int $bookingId
+     * @param string $date Y-m-d
+     * @return bool
+     */
+    protected function isCheckoutDay(int $bookingId, string $date): bool
+    {
+        $booking = Booking::find($bookingId);
+        if (!$booking) return false;
+
+        $endDate = Carbon::parse($booking->end_date)->format('Y-m-d');
+        return $endDate === $date;
     }
 }
