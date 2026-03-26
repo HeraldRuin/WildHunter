@@ -7,34 +7,46 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Modules\Booking\Models\Booking;
 use Modules\FrontendController;
+use Modules\Hotel\DTO\RoomCalendarData;
 use Modules\Hotel\Models\Hotel;
 use Modules\Hotel\Models\HotelRoom;
 use Modules\Hotel\Models\HotelRoomBooking;
 use Modules\Hotel\Models\HotelRoomDate;
 use Modules\Hotel\Requests\LoadDatesRequest;
+use Modules\Hotel\Requests\StoreRoomDateRequest;
 use Modules\Hotel\Services\AddDataInView;
 use Modules\Hotel\Services\RoomAvailabilityService;
 
 class AvailabilityController extends FrontendController{
-
-    protected $roomClass;
+    /**
+     * @var string
+     */
+    protected string $roomClass;
     /**
      * @var string
      */
     protected string $roomDateClass;
 
     /**
-     * @var Booking
+     * @var string
      */
-    protected $bookingClass;
-    protected $hotelClass;
+    protected string $bookingClass;
+    /**
+     * @var string
+     */
+    protected string $hotelClass;
     protected $currentHotel;
-    protected $roomBookingClass;
+    /**
+     * @var string
+     */
+    protected string $roomBookingClass;
 
     protected ?AddDataInView $cabinetService;
     protected RoomAvailabilityService $roomAvailabilityService;
-
-    protected $indexView = 'Hotel::frontend.user.availability';
+    /**
+     * @var string
+     */
+    protected string $indexView = 'Hotel::frontend.user.availability';
 
     public function __construct(AddDataInView $cabinetService, RoomAvailabilityService $roomAvailabilityService)
     {
@@ -71,13 +83,13 @@ class AvailabilityController extends FrontendController{
         return true;
     }
 
-    public function index(Request $request,$hotel_id)
+    public function index(Request $request, $hotelId)
     {
         $this->checkPermission('hotel_update');
         $user = $this->cabinetService->getViewUser();
         $viewAdminCabinet = $this->cabinetService->getCabinetData();
 
-        if(!$this->hasHotelPermission($hotel_id))
+        if(!$this->hasHotelPermission($hotelId))
         {
             abort(403);
         }
@@ -89,7 +101,7 @@ class AvailabilityController extends FrontendController{
         }
 
         $q->orderBy('id','desc');
-        $q->where('parent_id',$hotel_id);
+        $q->where('parent_id',$hotelId);
 
         $rows = $q->paginate(15);
 
@@ -109,8 +121,8 @@ class AvailabilityController extends FrontendController{
                 'url'  => route('hotel.vendor.index')
             ],
             [
-                'name' => __('Hotel::name',['name'=>$this->currentHotel->title]),
-                'url'  => route('hotel.vendor.edit',[$this->currentHotel->id])
+                'name' => __('Hotel::name',['name' => $this->currentHotel->title]),
+                'url'  => route('hotel.vendor.edit', [$this->currentHotel->id])
             ],
             [
                 'name'  => __('Availability'),
@@ -123,42 +135,36 @@ class AvailabilityController extends FrontendController{
         return view($this->indexView,compact('rows','breadcrumbs','current_month','page_title','request','hotel', 'user', 'viewAdminCabinet'));
     }
 
-    public function loadDates(LoadDatesRequest $request, $hotel_id): JsonResponse
+    public function loadDates(LoadDatesRequest $request, $hotelId): JsonResponse
     {
-        if (!$this->hasHotelPermission($hotel_id)) {
+        if (!$this->hasHotelPermission($hotelId)) {
             return $this->sendError(__("Hotel not found"));
         }
 
-        $id = $request->query('id');
-        $isSummary = $id === 'summary';
+        $dto = RoomCalendarData::fromRequest($request);
+        $isSummary = $dto->id === 'summary';
 
         if ($isSummary) {
-            $allDates = $this->roomAvailabilityService->getSummaryCalendar($hotel_id, $request);
+            $allDates = $this->roomAvailabilityService->getSummaryCalendar($hotelId, $dto);
         } else {
-            $room = $this->roomClass::find($id);
+            $room = $this->roomClass::find($dto->id);
             if (!$room) {
                 return $this->sendError(__('room not found'));
             }
 
-            $allDates = $this->roomAvailabilityService->getRoomCalendar($room, $request);
+            $allDates = $this->roomAvailabilityService->getRoomCalendar($room, $dto);
         }
 
         return response()->json(array_values($allDates));
     }
 
 
-    public function store(Request $request,$hotel_id)
+    public function store(StoreRoomDateRequest $request, $hotelId): JsonResponse
     {
-        if(!$this->hasHotelPermission($hotel_id))
+        if(!$this->hasHotelPermission($hotelId))
         {
             return $this->sendError(__("Hotel not found"));
         }
-
-        $request->validate([
-            'target_id'=>'required',
-            'start_date'=>'required',
-            'end_date'=>'required'
-        ]);
 
         $target_id = $request->input('target_id');
         $room = $this->roomClass::find($target_id);
