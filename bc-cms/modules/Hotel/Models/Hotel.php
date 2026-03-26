@@ -287,7 +287,7 @@ class Hotel extends Bookable
 //        }
 
         $booking = new $this->bookingClass();
-        $booking->status = 'draft';
+        $booking->status = Booking::PROCESSING;
         $booking->object_id = $request->input('service_id');
         $booking->object_model = $request->input('service_type');
         $booking->vendor_id = $this->author_id;
