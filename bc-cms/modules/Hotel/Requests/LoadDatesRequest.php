@@ -15,6 +15,7 @@ class LoadDatesRequest extends FormRequest
     {
         return [
             'id' => 'required|string',
+            'for_single' => 'nullable|boolean',
             'start' => 'required|date',
             'end' => 'required|date',
         ];
