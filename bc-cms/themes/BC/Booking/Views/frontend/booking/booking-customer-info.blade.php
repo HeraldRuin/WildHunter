@@ -6,7 +6,7 @@
     @endif
     <div class="booking-review-content">
             <div class="form-control" style="min-height:120px; background:#f8f9fa;">
-                {{ $booking->customer_notes ?? '—' }}
+                {{ $booking->customer_notes ?? '' }}
             </div>
     </div>
 </div>
