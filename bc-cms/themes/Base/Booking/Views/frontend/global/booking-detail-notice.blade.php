@@ -20,7 +20,7 @@ use Modules\Booking\Models\Booking;
             @else
                 <img src="{{url('images/ico_success.svg')}}" alt="Payment Success">
                 <div class="notice-success">
-                    <p class="line1"><span>{{$booking->first_name}},</span>
+                    <p class="line1">
                         {{__('your booking was submitted successfully!')}}
                     </p>
                     <p class="line2">{{__('Booking details has been sent to:')}} <span>{{$booking->email}}</span></p>
