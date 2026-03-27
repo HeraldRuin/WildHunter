@@ -205,7 +205,8 @@
                 method: 'POST',
                 data: {
                     _token: '{{ csrf_token() }}',
-                    trophy_id: trophyId,
+                    type: 'trophy',
+                    id: trophyId,
                     price: price
                 },
                 success: function(response) {
@@ -238,7 +239,8 @@
                 method: 'POST',
                 data: {
                     _token: '{{ csrf_token() }}',
-                    fine_id: fineId,
+                    type: 'fine',
+                    id: fineId,
                     price: price
                 },
                 success: function(response) {
@@ -271,7 +273,8 @@
                 method: 'POST',
                 data: {
                     _token: '{{ csrf_token() }}',
-                    preparation_id: preparationId,
+                    type: 'preparation',
+                    id: preparationId,
                     price: price
                 },
                 success: function(response) {
