@@ -3,6 +3,7 @@
 namespace Modules\Animals\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Modules\Animals\Models\Animal;
 
 class UpdateEntityRequest extends FormRequest
 {
@@ -20,13 +21,13 @@ class UpdateEntityRequest extends FormRequest
 
         // Динамически проверяем ID в зависимости от type
         switch ($this->input('type')) {
-            case 'preparation':
+            case Animal::SERVICE_PREPARATIONS:
                 $rules['id'] = 'required|exists:bc_animal_preparations,id';
                 break;
-            case 'trophy':
+            case Animal::SERVICE_TROPHIES:
                 $rules['id'] = 'required|exists:bc_animal_trophies,id';
                 break;
-            case 'fine':
+            case Animal::SERVICE_FINES:
                 $rules['id'] = 'required|exists:bc_animal_fines,id';
                 break;
         }

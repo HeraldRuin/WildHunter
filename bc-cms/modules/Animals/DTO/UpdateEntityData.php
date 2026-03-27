@@ -2,6 +2,7 @@
 
 namespace Modules\Animals\DTO;
 
+use Modules\Animals\Models\Animal;
 use Modules\Animals\Models\AnimalFine;
 use Modules\Animals\Models\AnimalPreparation;
 use Modules\Animals\Models\AnimalTrophy;
@@ -27,9 +28,9 @@ class UpdateEntityData
     private function resolveEntity(): void
     {
         $this->entity = match ($this->type) {
-            'preparation' => AnimalPreparation::findOrFail($this->id),
-            'trophy' => AnimalTrophy::findOrFail($this->id),
-            'fine' => AnimalFine::findOrFail($this->id),
+            Animal::SERVICE_PREPARATIONS => AnimalPreparation::findOrFail($this->id),
+            Animal::SERVICE_TROPHIES => AnimalTrophy::findOrFail($this->id),
+            Animal::SERVICE_FINES => AnimalFine::findOrFail($this->id),
             default => throw new \InvalidArgumentException("Unknown entity type: {$this->type}"),
         };
     }

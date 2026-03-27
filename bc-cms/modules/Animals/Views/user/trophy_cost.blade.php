@@ -196,7 +196,7 @@
                 method: 'POST',
                 data: {
                     _token: '{{ csrf_token() }}',
-                    type: 'trophy',
+                    type: {{ \Modules\Animals\Models\Animal::SERVICE_TROPHIES }},
                     id: trophyId,
                     price: price
                 },
@@ -230,7 +230,7 @@
                 method: 'POST',
                 data: {
                     _token: '{{ csrf_token() }}',
-                    type: 'fine',
+                    type: {{ \Modules\Animals\Models\Animal::SERVICE_FINES }},
                     id: fineId,
                     price: price
                 },
@@ -264,7 +264,7 @@
                 method: 'POST',
                 data: {
                     _token: '{{ csrf_token() }}',
-                    type: 'preparation',
+                    type: {{ \Modules\Animals\Models\Animal::SERVICE_PREPARATIONS }},
                     id: preparationId,
                     price: price
                 },
