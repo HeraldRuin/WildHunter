@@ -49,10 +49,11 @@
                                                     <strong>{{ $trophy->type }}</strong>
                                                 </td>
                                                 <td>
+                                                    @dump($trophy->hotelPrices($userHotelId)->first()?->price)
                                                     <input type="text"
                                                            name="trophy_costs[{{ $index }}][price]"
                                                            class="form-control trophy-price-input price-input"
-                                                           value="{{ $trophy->hotelPrices->first()?->price }}"
+                                                           value="{{$trophy->hotelPrices($userHotelId)->first()?->price ?? 0 }}"
                                                            placeholder="{{__('Enter price')}}"
                                                            data-trophy-id="{{ $trophy->id }}">
                                                 </td>
@@ -98,7 +99,7 @@
                                                         <input type="text"
                                                                name="fines_costs[{{ $index }}][price]"
                                                                class="form-control fine-price-input price-input"
-                                                               value="{{ $fine->hotelPrices->first()?->price }}"
+                                                               value="{{ $fine->hotelPrices($userHotelId)->first()?->price ?? 0  }}"
                                                                placeholder="{{__('Enter price')}}"
                                                                data-trophy-id="{{ $fine->id }}">
                                                     </td>
@@ -143,7 +144,7 @@
                                                         <input type="text"
                                                                name="preparation_costs[{{ $index }}][price]"
                                                                class="form-control preparation-price-input price-input"
-                                                               value="{{ $preparation->hotelPrices->first()?->price }}"
+                                                               value="{{ $preparation->hotelPrices($userHotelId)->first()?->price ?? 0 }}"
                                                                placeholder="{{__('Enter price')}}"
                                                                data-trophy-id="{{ $preparation->id }}">
                                                     </td>
