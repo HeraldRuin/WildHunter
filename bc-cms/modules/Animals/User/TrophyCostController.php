@@ -1,7 +1,8 @@
 <?php
 namespace Modules\Animals\User;
 
-use App\Traits\HasHotelAnimalPrice;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Modules\Animals\Models\Animal;
 use Modules\Animals\Models\AnimalFine;
@@ -11,8 +12,8 @@ use Modules\FrontendController;
 
 class TrophyCostController extends FrontendController
 {
-    protected $animalClass;
-    protected $animalTrophyClass;
+    protected Animal $animalClass;
+    protected AnimalTrophy $animalTrophyClass;
 
     public function __construct(Animal $animalClass, AnimalTrophy $animalTrophyClass)
     {
@@ -40,7 +41,19 @@ class TrophyCostController extends FrontendController
             ->join('bc_hotel_animals as bha', function ($join) use ($userHotelId) {
                 $join->on('bha.animal_id', '=', 'bc_animals.id')
                     ->where('bha.hotel_id', '=', $userHotelId);
-            })->select(['bc_animals.*','bha.status as animal_status']);
+            })
+            ->select([
+                'bc_animals.*',
+                'bha.status as animal_status'
+            ])
+            ->with([
+                'preparations' => function ($q) use ($userHotelId) {
+                    $q->select('id','animal_id','type')
+                        ->with(['hotelPrices' => function ($q2) use ($userHotelId) {
+                            $q2->where('hotel_id', $userHotelId);
+                        }]);
+                }
+            ]);
 
         if($request->query('s')){
             $list_animals->where('bc_animals.title', 'like', '%'.$request->query('s').'%');
@@ -61,10 +74,10 @@ class TrophyCostController extends FrontendController
         ];
         $page_title = __('Trophy Cost');
 
-        return view('Animals::user.trophy_cost', compact('rows', 'breadcrumbs', 'page_title', 'request'));
+        return view('Animals::user.trophy_cost', compact('rows', 'userHotelId', 'breadcrumbs', 'page_title', 'request'));
     }
 
-    public function store(Request $request)
+    public function store(Request $request): RedirectResponse
     {
         $this->checkPermission('animal_create_hunting');
 
@@ -99,7 +112,7 @@ class TrophyCostController extends FrontendController
         $request->validate([
             'animal_id' => 'required|exists:bc_animals,id',
             'fines_costs' => 'array',
-            'fines_costs.*.id' => 'required|exists:bc_animal_trophies,id',
+            'fines_costs.*.id' => 'required|exists:bc_animal_fines,id',
             'fines_costs.*.price' => 'nullable|numeric|min:0',
         ]);
 
@@ -126,7 +139,7 @@ class TrophyCostController extends FrontendController
         $request->validate([
             'animal_id' => 'required|exists:bc_animals,id',
             'preparation_costs' => 'array',
-            'preparation_costs.*.id' => 'required|exists:bc_animal_trophies,id',
+            'preparation_costs.*.id' => 'required|exists:bc_animal_preparations,id',
             'preparation_costs.*.price' => 'nullable|numeric|min:0',
         ]);
 
@@ -146,7 +159,7 @@ class TrophyCostController extends FrontendController
         return redirect()->back()->with('success', __('Preparation costs saved successfully'));
     }
 
-    public function updateTrophy(Request $request)
+    public function updateTrophy(Request $request): JsonResponse
     {
         $this->checkPermission('animal_create_hunting');
 
@@ -160,11 +173,7 @@ class TrophyCostController extends FrontendController
         $userHotelId = get_user_hotel_id();
 
         $trophy = AnimalTrophy::where('id', $trophyId)
-            ->whereHas('animal', function($query) use ($userHotelId) {
-                $query->whereHas('hotels', function($q) use ($userHotelId) {
-                    $q->where('hotel_id', $userHotelId);
-                });
-            })
+            ->forHotel($userHotelId)
             ->first();
 
         if (!$trophy) {
@@ -182,7 +191,7 @@ class TrophyCostController extends FrontendController
         ]);
     }
 
-    public function updateFine(Request $request)
+    public function updateFine(Request $request): JsonResponse
     {
         $this->checkPermission('animal_create_hunting');
 
@@ -196,11 +205,8 @@ class TrophyCostController extends FrontendController
         $userHotelId = get_user_hotel_id();
 
         $fine = AnimalFine::where('id', $fineId)
-            ->whereHas('animal', function($query) use ($userHotelId) {
-                $query->whereHas('hotels', function($q) use ($userHotelId) {
-                    $q->where('hotel_id', $userHotelId);
-                });
-            })->first();
+            ->forHotel($userHotelId)
+            ->first();
 
         if (!$fine) {
             return response()->json([
@@ -217,7 +223,7 @@ class TrophyCostController extends FrontendController
         ]);
     }
 
-    public function updatePreparation(Request $request)
+    public function updatePreparation(Request $request): JsonResponse
     {
         $this->checkPermission('animal_create_hunting');
 
@@ -231,11 +237,7 @@ class TrophyCostController extends FrontendController
         $userHotelId = get_user_hotel_id();
 
         $preparation = AnimalPreparation::where('id', $preparationId)
-            ->whereHas('animal', function($query) use ($userHotelId) {
-                $query->whereHas('hotels', function($q) use ($userHotelId) {
-                    $q->where('hotel_id', $userHotelId);
-                });
-            })
+            ->forHotel($userHotelId)
             ->first();
 
         if (!$preparation) {
