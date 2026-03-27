@@ -3,12 +3,9 @@ namespace Modules\Animals\User;
 
 use App\Http\Responses\NotFoundResponse;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Modules\Animals\DTO\UpdateEntityData;
 use Modules\Animals\Models\Animal;
-use Modules\Animals\Models\AnimalFine;
-use Modules\Animals\Models\AnimalPreparation;
 use Modules\Animals\Models\AnimalTrophy;
 use Modules\Animals\Requests\UpdateEntityRequest;
 use Modules\FrontendController;
@@ -78,88 +75,6 @@ class TrophyCostController extends FrontendController
         $page_title = __('Trophy Cost');
 
         return view('Animals::user.trophy_cost', compact('rows', 'userHotelId', 'breadcrumbs', 'page_title', 'request'));
-    }
-
-    public function store(Request $request): RedirectResponse
-    {
-        $this->checkPermission('animal_create_hunting');
-
-        $request->validate([
-            'animal_id' => 'required|exists:bc_animals,id',
-            'trophy_costs' => 'array',
-            'trophy_costs.*.id' => 'required|exists:bc_animal_trophies,id',
-            'trophy_costs.*.price' => 'nullable|numeric|min:0',
-        ]);
-
-        $animalId = $request->input('animal_id');
-        $trophyCosts = $request->input('trophy_costs', []);
-
-        // Обновляем только цены существующих трофеев (админ базы может только менять цену)
-        foreach ($trophyCosts as $trophyData) {
-            if (!empty($trophyData['id'])) {
-                AnimalTrophy::where('id', $trophyData['id'])
-                    ->where('animal_id', $animalId) // Дополнительная проверка безопасности
-                    ->update([
-                        'price' => !empty($trophyData['price']) ? $trophyData['price'] : null,
-                    ]);
-            }
-        }
-
-        return redirect()->back()->with('success', __('Trophy costs saved successfully'));
-    }
-
-    public function storeFines(Request $request)
-    {
-        $this->checkPermission('attendance_create');
-
-        $request->validate([
-            'animal_id' => 'required|exists:bc_animals,id',
-            'fines_costs' => 'array',
-            'fines_costs.*.id' => 'required|exists:bc_animal_fines,id',
-            'fines_costs.*.price' => 'nullable|numeric|min:0',
-        ]);
-
-        $animalId = $request->input('animal_id');
-        $finesCosts = $request->input('fines_costs', []);
-
-        foreach ($finesCosts as $finesData) {
-            if (!empty($finesData['id'])) {
-                AnimalFine::where('id', $finesData['id'])
-                    ->where('animal_id', $animalId)
-                    ->update([
-                        'price' => !empty($finesData['price']) ? $finesData['price'] : null,
-                    ]);
-            }
-        }
-
-        return redirect()->back()->with('success', __('Fines costs saved successfully'));
-    }
-
-    public function storePreparations(Request $request)
-    {
-        $this->checkPermission('attendance_create');
-
-        $request->validate([
-            'animal_id' => 'required|exists:bc_animals,id',
-            'preparation_costs' => 'array',
-            'preparation_costs.*.id' => 'required|exists:bc_animal_preparations,id',
-            'preparation_costs.*.price' => 'nullable|numeric|min:0',
-        ]);
-
-        $animalId = $request->input('animal_id');
-        $preparationCosts = $request->input('preparation_costs', []);
-
-        foreach ($preparationCosts as $preparationData) {
-            if (!empty($preparationData['id'])) {
-                AnimalPreparation::where('id', $preparationData['id'])
-                    ->where('animal_id', $animalId)
-                    ->update([
-                        'price' => !empty($preparationData['price']) ? $preparationData['price'] : null,
-                    ]);
-            }
-        }
-
-        return redirect()->back()->with('success', __('Preparation costs saved successfully'));
     }
 
     public function updateTrophy(UpdateEntityRequest $request): JsonResponse|NotFoundResponse
