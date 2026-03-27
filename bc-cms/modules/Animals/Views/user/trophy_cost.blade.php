@@ -28,8 +28,6 @@
                              id="animal-{{ $animal->id }}">
 
                             @if(!empty($animal->trophies) && $animal->trophies->count() > 0)
-                                <form method="POST" action="{{ route('animal.vendor.trophy_cost.store') }}" id="trophy-form-{{ $animal->id }}">
-                                    @csrf
                                     <input type="hidden" name="animal_id" value="{{ $animal->id }}">
 
                                     <table class="table table-bordered">
@@ -65,7 +63,6 @@
                                         @endforeach
                                         </tbody>
                                     </table>
-                                </form>
                             @else
                                 <div class="alert alert-info">
                                     {{__('No trophy types configured for this animal. Please contact super admin to add trophy classifications.')}}
@@ -74,8 +71,6 @@
 
 
                                 @if(!empty($animal->fines) && $animal->fines->count() > 0)
-                                    <form method="POST" action="{{ route('animal.vendor.fines.store') }}" id="fines-form-{{ $animal->id }}">
-                                        @csrf
                                         <input type="hidden" name="animal_id" value="{{ $animal->id }}">
 
                                         <table class="table table-bordered">
@@ -111,7 +106,6 @@
                                             @endforeach
                                             </tbody>
                                         </table>
-                                    </form>
                                 @else
                                     <div class="alert alert-info">
                                         {{__('No trophy fines configured for this animal. Please contact super admin to add fines classifications.')}}
@@ -119,8 +113,6 @@
                                 @endif
 
                                 @if(!empty($animal->preparations) && $animal->preparations->count() > 0)
-                                    <form method="POST" action="{{ route('animal.vendor.preparations.store') }}" id="preparation-form-{{ $animal->id }}">
-                                        @csrf
                                         <input type="hidden" name="animal_id" value="{{ $animal->id }}">
 
                                         <table class="table table-bordered">
@@ -156,7 +148,6 @@
                                             @endforeach
                                             </tbody>
                                         </table>
-                                    </form>
                                 @else
                                     <div class="alert alert-info">
                                         {{__('No trophy preparations configured for this animal. Please contact super admin to add preparations classifications.')}}
