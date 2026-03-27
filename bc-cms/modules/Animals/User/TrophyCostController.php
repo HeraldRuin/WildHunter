@@ -6,21 +6,18 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Modules\Animals\DTO\UpdateEntityData;
 use Modules\Animals\Models\Animal;
-use Modules\Animals\Models\AnimalTrophy;
 use Modules\Animals\Requests\UpdateEntityRequest;
 use Modules\FrontendController;
 
 class TrophyCostController extends FrontendController
 {
     protected Animal $animalClass;
-    protected AnimalTrophy $animalTrophyClass;
 
-    public function __construct(Animal $animalClass, AnimalTrophy $animalTrophyClass)
+    public function __construct(Animal $animalClass)
     {
         parent::__construct();
         $this->setActiveMenu(route('animal.vendor.trophy_cost'));
         $this->animalClass = $animalClass;
-        $this->animalTrophyClass = $animalTrophyClass;
     }
 
     public function callAction($method, $parameters)
@@ -37,23 +34,9 @@ class TrophyCostController extends FrontendController
         $this->checkPermission('animal_create_hunting');
         $userHotelId = get_user_hotel_id();
 
-        $list_animals = $this->animalClass::query()
-            ->join('bc_hotel_animals as bha', function ($join) use ($userHotelId) {
-                $join->on('bha.animal_id', '=', 'bc_animals.id')
-                    ->where('bha.hotel_id', '=', $userHotelId);
-            })
-            ->select([
-                'bc_animals.*',
-                'bha.status as animal_status'
-            ])
-            ->with([
-                'preparations' => function ($q) use ($userHotelId) {
-                    $q->select('id','animal_id','type')
-                        ->with(['hotelPrices' => function ($q2) use ($userHotelId) {
-                            $q2->where('hotel_id', $userHotelId);
-                        }]);
-                }
-            ]);
+        $list_animals = $this->animalClass
+            ->forHotel(get_user_hotel_id())
+            ->withPreparationsForHotel(get_user_hotel_id());
 
         if($request->query('s')){
             $list_animals->where('bc_animals.title', 'like', '%'.$request->query('s').'%');

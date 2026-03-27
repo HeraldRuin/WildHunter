@@ -18,11 +18,11 @@ class Animal extends Bookable
 {
     use SoftDeletes, HasHotelAnimalPrice;
 
-    protected $bookingClass;
-    public    $checkout_booking_detail_file       = 'Animal::frontend/booking/detail';
-    public    $checkout_booking_detail_modal_file = 'Animal::frontend/booking/detail-modal';
+    protected string $bookingClass;
+    public string $checkout_booking_detail_file       = 'Animal::frontend/booking/detail';
+    public  $checkout_booking_detail_modal_file = 'Animal::frontend/booking/detail-modal';
 
-    public    $email_new_booking_file             = 'Animals::emails.new_booking_detail';
+    public  $email_new_booking_file             = 'Animals::emails.new_booking_detail';
 
     const SERVICE_TROPHIES = 'trophies';
     const SERVICE_FINES = 'fines';
@@ -78,6 +78,25 @@ class Animal extends Bookable
             ]);
         }
         return $this->sendError(__("Can not check availability"));
+    }
+
+    public function scopeForHotel($query, int $hotelId)
+    {
+        return $query->join('bc_hotel_animals as bha', function ($join) use ($hotelId) {
+            $join->on('bha.animal_id', '=', 'bc_animals.id')
+                ->where('bha.hotel_id', '=', $hotelId);
+        })
+            ->select('bc_animals.*', 'bha.status as animal_status');
+    }
+
+    public function scopeWithPreparationsForHotel($query, int $hotelId)
+    {
+        return $query->with(['preparations' => function ($q) use ($hotelId) {
+            $q->select('id','animal_id','type')
+                ->with(['hotelPrices' => function ($q2) use ($hotelId) {
+                    $q2->where('hotel_id', $hotelId);
+                }]);
+        }]);
     }
 
     public static function getServiceIconFeatured()
