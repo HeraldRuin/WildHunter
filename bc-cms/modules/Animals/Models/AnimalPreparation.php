@@ -4,6 +4,8 @@ namespace Modules\Animals\Models;
 
 use App\Traits\HasHotelAnimalPrice;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 
 class AnimalPreparation extends Model
 {
@@ -17,12 +19,12 @@ class AnimalPreparation extends Model
         'price',
     ];
 
-    public function animal()
+    public function animal(): BelongsTo
     {
         return $this->belongsTo(Animal::class, 'animal_id');
     }
-    public function hotelPrices()
+    public function hotelPrices($hotelId): MorphMany
     {
-        return $this->morphMany(HotelAnimalPrice::class, 'priceable');
+        return $this->morphMany(HotelAnimalPrice::class, 'priceable')->where('hotel_id', $hotelId);;
     }
 }
