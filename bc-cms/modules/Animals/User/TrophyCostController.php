@@ -15,7 +15,6 @@ use Modules\FrontendController;
 
 class TrophyCostController extends FrontendController
 {
-    protected ?int $userHotelId;
     protected Animal $animalClass;
     protected AnimalTrophy $animalTrophyClass;
 
@@ -23,7 +22,6 @@ class TrophyCostController extends FrontendController
     {
         parent::__construct();
         $this->setActiveMenu(route('animal.vendor.trophy_cost'));
-        $this->userHotelId = get_user_hotel_id();
         $this->animalClass = $animalClass;
         $this->animalTrophyClass = $animalTrophyClass;
     }
@@ -171,7 +169,7 @@ class TrophyCostController extends FrontendController
         $data = new UpdateEntityData($request->validated());
         $entity = $data->getEntity();
 
-        $trophy = $entity->forHotel($this->userHotelId)->first();
+        $trophy = $entity->forHotel(get_user_hotel_id())->first();
 
         if (!$trophy) {
             return new NotFoundResponse(__('Trophy not found'));
@@ -192,7 +190,7 @@ class TrophyCostController extends FrontendController
         $data = new UpdateEntityData($request->validated());
         $entity = $data->getEntity();
 
-        $fine = $entity->forHotel($this->userHotelId)->first();
+        $fine = $entity->forHotel(get_user_hotel_id())->first();
 
         if (!$fine) {
             return new NotFoundResponse(__('Fine not found'));
@@ -213,7 +211,7 @@ class TrophyCostController extends FrontendController
         $data = new UpdateEntityData($request->validated());
         $entity = $data->getEntity();
 
-        $preparation = $entity->forHotel($this->userHotelId)->first();
+        $preparation = $entity->forHotel(get_user_hotel_id())->first();
 
         if (!$preparation) {
             return new NotFoundResponse(__('Preparation not found'));
