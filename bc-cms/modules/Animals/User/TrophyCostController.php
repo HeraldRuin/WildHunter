@@ -1,17 +1,21 @@
 <?php
 namespace Modules\Animals\User;
 
+use App\Http\Responses\NotFoundResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Modules\Animals\DTO\UpdateEntityData;
 use Modules\Animals\Models\Animal;
 use Modules\Animals\Models\AnimalFine;
 use Modules\Animals\Models\AnimalPreparation;
 use Modules\Animals\Models\AnimalTrophy;
+use Modules\Animals\Requests\UpdateEntityRequest;
 use Modules\FrontendController;
 
 class TrophyCostController extends FrontendController
 {
+    protected ?int $userHotelId;
     protected Animal $animalClass;
     protected AnimalTrophy $animalTrophyClass;
 
@@ -19,6 +23,7 @@ class TrophyCostController extends FrontendController
     {
         parent::__construct();
         $this->setActiveMenu(route('animal.vendor.trophy_cost'));
+        $this->userHotelId = get_user_hotel_id();
         $this->animalClass = $animalClass;
         $this->animalTrophyClass = $animalTrophyClass;
     }
@@ -159,31 +164,20 @@ class TrophyCostController extends FrontendController
         return redirect()->back()->with('success', __('Preparation costs saved successfully'));
     }
 
-    public function updateTrophy(Request $request): JsonResponse
+    public function updateTrophy(UpdateEntityRequest $request): JsonResponse|NotFoundResponse
     {
         $this->checkPermission('animal_create_hunting');
 
-        $request->validate([
-            'trophy_id' => 'required|exists:bc_animal_trophies,id',
-            'price' => 'nullable|numeric|min:0',
-        ]);
+        $data = new UpdateEntityData($request->validated());
+        $entity = $data->getEntity();
 
-        $trophyId = $request->input('trophy_id');
-        $price = $request->input('price');
-        $userHotelId = get_user_hotel_id();
-
-        $trophy = AnimalTrophy::where('id', $trophyId)
-            ->forHotel($userHotelId)
-            ->first();
+        $trophy = $entity->forHotel($this->userHotelId)->first();
 
         if (!$trophy) {
-            return response()->json([
-                'status' => false,
-                'message' => __('Trophy not found')
-            ], 404);
+            return new NotFoundResponse(__('Trophy not found'));
         }
 
-        $trophy->setHotelPrice(get_user_hotel_id(), $price);
+        $trophy->setHotelPrice(get_user_hotel_id(), $data->price);
         $trophy->priceForHotel(get_user_hotel_id());
 
         return $this->sendSuccess([
@@ -191,31 +185,20 @@ class TrophyCostController extends FrontendController
         ]);
     }
 
-    public function updateFine(Request $request): JsonResponse
+    public function updateFine(UpdateEntityRequest $request): JsonResponse|NotFoundResponse
     {
         $this->checkPermission('animal_create_hunting');
 
-        $request->validate([
-            'fine_id' => 'required|exists:bc_animal_fines,id',
-            'price' => 'nullable|numeric|min:0',
-        ]);
+        $data = new UpdateEntityData($request->validated());
+        $entity = $data->getEntity();
 
-        $fineId = $request->input('fine_id');
-        $price = $request->input('price');
-        $userHotelId = get_user_hotel_id();
-
-        $fine = AnimalFine::where('id', $fineId)
-            ->forHotel($userHotelId)
-            ->first();
+        $fine = $entity->forHotel($this->userHotelId)->first();
 
         if (!$fine) {
-            return response()->json([
-                'status' => false,
-                'message' => __('Fine not found')
-            ], 404);
+            return new NotFoundResponse(__('Fine not found'));
         }
 
-        $fine->setHotelPrice(get_user_hotel_id(), $price);
+        $fine->setHotelPrice(get_user_hotel_id(), $data->price);
         $fine->priceForHotel(get_user_hotel_id());
 
         return $this->sendSuccess([
@@ -223,31 +206,20 @@ class TrophyCostController extends FrontendController
         ]);
     }
 
-    public function updatePreparation(Request $request): JsonResponse
+    public function updatePreparation(UpdateEntityRequest $request): JsonResponse|NotFoundResponse
     {
         $this->checkPermission('animal_create_hunting');
 
-        $request->validate([
-            'preparation_id' => 'required|exists:bc_animal_preparations,id',
-            'price' => 'nullable|numeric|min:0',
-        ]);
+        $data = new UpdateEntityData($request->validated());
+        $entity = $data->getEntity();
 
-        $preparationId = $request->input('preparation_id');
-        $price = $request->input('price');
-        $userHotelId = get_user_hotel_id();
-
-        $preparation = AnimalPreparation::where('id', $preparationId)
-            ->forHotel($userHotelId)
-            ->first();
+        $preparation = $entity->forHotel($this->userHotelId)->first();
 
         if (!$preparation) {
-            return response()->json([
-                'status' => false,
-                'message' => __('Fine not found')
-            ], 404);
+            return new NotFoundResponse(__('Preparation not found'));
         }
 
-        $preparation->setHotelPrice(get_user_hotel_id(), $price);
+        $preparation->setHotelPrice(get_user_hotel_id(), $data->price);
         $preparation->priceForHotel(get_user_hotel_id());
 
         return $this->sendSuccess([
