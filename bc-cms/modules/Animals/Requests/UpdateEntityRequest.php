@@ -14,7 +14,7 @@ class UpdateEntityRequest extends FormRequest
     public function rules(): array
     {
         $rules = [
-            'type' => 'required|string|in:preparation,trophy,finest',
+            'type' => 'required|string|in:preparation,trophy,fine',
             'price' => 'nullable|numeric|min:0',
         ];
 
