@@ -39,7 +39,7 @@ class ModuleProvider extends ModuleServiceProvider
         PaymentGatewayManager::register('stripe', StripeCheckoutGateway::class);
         PaymentGatewayManager::register('paystack', PaystackGateway::class);
         PaymentGatewayManager::register('payrexx', PayrexxGateway::class);
-//        PaymentGatewayManager::register('paykeeper', PaykeeperGateway::class);
+        PaymentGatewayManager::register('paykeeper', PaykeeperGateway::class);
     }
 
     /**
