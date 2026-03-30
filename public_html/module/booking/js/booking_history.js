@@ -1031,12 +1031,6 @@ document.addEventListener('DOMContentLoaded', function () {
                     btn.dataset.originalHtml = btn.innerHTML;
                 }
 
-                btn.disabled = true;
-                btn.classList.add('disabled');
-                btn.innerHTML =
-                    '<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>' +
-                    '<span> ' + (btn.textContent.trim() || '...') + '</span>';
-
                 const restoreButton = function () {
                     btn.disabled = false;
                     btn.classList.remove('disabled');
@@ -1049,6 +1043,12 @@ document.addEventListener('DOMContentLoaded', function () {
                     message: 'Вы уверены, что хотите отменить сбор?',
                     callback: (result) => {
                         if (!result) return;
+
+                        btn.disabled = true;
+                        btn.classList.add('disabled');
+                        btn.innerHTML =
+                            '<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>' +
+                            '<span> ' + (btn.textContent.trim() || '...') + '</span>';
 
                         $.ajax({
                             url: `/booking/${bookingIdNum}/cancel-collection`,
