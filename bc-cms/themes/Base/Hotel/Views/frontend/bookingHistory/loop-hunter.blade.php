@@ -96,8 +96,7 @@
                         <span>кол-во = </span> {{ $bookingRoom->number ?? '—' }};
                         <span>цена = </span> {{ $bookingRoom->price ? round($bookingRoom->price) : '—' }} р/сут
                         <br>
-                    @endforeach
-                    ">
+                    @endforeach">
                     Подробности
                 </button>
             </div>
@@ -434,13 +433,3 @@
         </div>
     </div>
 </div>
-
-@push('js')
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            document.querySelectorAll('[data-bs-toggle="popover"]').forEach(el => {
-                new bootstrap.Popover(el);
-            });
-        });
-    </script>
-@endpush

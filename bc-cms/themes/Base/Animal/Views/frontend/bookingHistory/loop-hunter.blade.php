@@ -324,14 +324,3 @@
         </div>
     </div>
 </div>
-
-@push('js')
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            document.querySelectorAll('[data-bs-toggle="popover"]').forEach(el => {
-                new bootstrap.Popover(el);
-            });
-        });
-
-    </script>
-@endpush

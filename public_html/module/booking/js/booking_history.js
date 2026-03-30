@@ -1756,6 +1756,10 @@ document.addEventListener('DOMContentLoaded', function () {
         mounted() {
             const me = this;
 
+            document.querySelectorAll('[data-bs-toggle="popover"]').forEach(el => {
+                new bootstrap.Popover(el);
+            });
+
             document.addEventListener('shown.bs.modal', function (event) {
                 const modalEl = event.target;
                 if (modalEl && modalEl.id && modalEl.id.startsWith('collectionModal')) {
