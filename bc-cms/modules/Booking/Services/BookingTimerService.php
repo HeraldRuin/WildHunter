@@ -147,5 +147,30 @@ class BookingTimerService
                 ->delete();
         });
     }
+
+    public function startCollectionTimer($booking): void
+    {
+        $booking->status = Booking::START_COLLECTION;
+        $booking->save();
+
+        $timerHour = $this->getTimerHours($booking, 'collection');
+        $this->startTimer($booking->id, $timerHour, 'collection', ['collection', 'paid', 'beds']);
+    }
+    public function startBedTimer($booking): void
+    {
+        $booking->status = Booking::BED_COLLECTION;
+        $booking->save();
+
+        $timerHour = $this->getTimerHours($booking, 'beds');
+        $this->startTimer($booking->id, $timerHour, 'beds', ['paid']);
+    }
+    public function startPaidTimer($booking): void
+    {
+        $booking->status = Booking::PREPAYMENT_COLLECTION;
+        $booking->save();
+
+        $timerHour = $this->getTimerHours($booking, 'paid');
+        $this->startTimer($booking->id, $timerHour, 'paid', ['paid']);
+    }
 }
 
