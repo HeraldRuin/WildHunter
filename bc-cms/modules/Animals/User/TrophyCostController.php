@@ -35,8 +35,8 @@ class TrophyCostController extends FrontendController
         $userHotelId = get_user_hotel_id();
 
         $list_animals = $this->animalClass
-            ->forHotel(get_user_hotel_id())
-            ->withPreparationsForHotel(get_user_hotel_id());
+            ->forHotel($userHotelId)
+            ->withPreparationsForHotel($userHotelId);
 
         if($request->query('s')){
             $list_animals->where('bc_animals.title', 'like', '%'.$request->query('s').'%');
@@ -67,7 +67,7 @@ class TrophyCostController extends FrontendController
         $data = new UpdateEntityData($request->validated());
         $entity = $data->getEntity();
 
-        $trophy = $entity->forHotel(get_user_hotel_id())->first();
+        $trophy = $entity->forHotel(get_user_hotel_id())->where('id', $entity->id)->first();
 
         if (!$trophy) {
             return new NotFoundResponse(__('Trophy not found'));
