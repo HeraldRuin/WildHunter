@@ -1045,55 +1045,55 @@ document.addEventListener('DOMContentLoaded', function () {
                     }
                 };
 
-                $.ajax({
-                    url: `/booking/${bookingIdNum}/cancel-collection`,
-                    type: 'POST',
-                    dataType: 'json',
-                    data: {
-                        _token: $('meta[name="csrf-token"]').attr('content') || ''
-                    },
-                    success: function (res) {
-                        restoreButton();
+                bookingCoreApp.showConfirm({
+                    message: 'Вы уверены, что хотите отменить сбор?',
+                    callback: (result) => {
+                        if (!result) return;
 
-                        if (res.status) {
-                            const modal = bootstrap.Modal.getInstance(document.getElementById('collectionModal' + bookingIdNum));
-                            if (modal) {
-                                modal.hide();
+                        $.ajax({
+                            url: `/booking/${bookingIdNum}/cancel-collection`,
+                            type: 'POST',
+                            dataType: 'json',
+                            data: {
+                                _token: $('meta[name="csrf-token"]').attr('content') || ''
+                            },
+                            success: function (res) {
+                                restoreButton();
+
+                                if (res.status) {
+                                    const modal = bootstrap.Modal.getInstance(document.getElementById('collectionModal' + bookingIdNum));
+                                    if (modal) {
+                                        modal.hide();
+                                    }
+
+                                    // Очищаем локальное состояние слотов и поиска
+                                    me.hunterSlots = [];
+                                    me.hunterSearchQuery = '';
+                                    me.hunterSearchResults = [];
+                                    me.hunterNoResults = false;
+
+                                    if (typeof bookingCoreApp !== 'undefined' && bookingCoreApp.showAjaxMessage) {
+                                        bookingCoreApp.showAjaxMessage(res);
+                                    } else if (res.message) {
+                                        alert(res.message);
+                                    }
+
+                                    setTimeout(function () {
+                                        window.location.reload();
+                                    }, 500);
+                                } else if (res.message) {
+                                    if (typeof bookingCoreApp !== 'undefined' && bookingCoreApp.showAjaxMessage) {
+                                        bookingCoreApp.showAjaxMessage(res);
+                                    } else {
+                                        alert(res.message);
+                                    }
+                                }
+                            },
+                            error: function (e) {
+                                restoreButton();
+                                bookingCoreApp.showError({ message: 'Произошла ошибка при отмене сбора охотников' });
                             }
-
-                            // Очищаем локальное состояние слотов и поиска
-                            me.hunterSlots = [];
-                            me.hunterSearchQuery = '';
-                            me.hunterSearchResults = [];
-                            me.hunterNoResults = false;
-
-                            if (typeof bookingCoreApp !== 'undefined' && bookingCoreApp.showAjaxMessage) {
-                                bookingCoreApp.showAjaxMessage(res);
-                            } else if (res.message) {
-                                alert(res.message);
-                            }
-
-                            setTimeout(function () {
-                                window.location.reload();
-                            }, 500);
-                        } else if (res.message) {
-                            if (typeof bookingCoreApp !== 'undefined' && bookingCoreApp.showAjaxMessage) {
-                                bookingCoreApp.showAjaxMessage(res);
-                            } else {
-                                alert(res.message);
-                            }
-                        }
-                    },
-                    error: function (e) {
-                        restoreButton();
-
-                        if (e.status === 419) {
-                            alert('Сессия истекла, обновите страницу');
-                        } else if (e.responseJSON && e.responseJSON.message) {
-                            alert('Ошибка: ' + e.responseJSON.message);
-                        } else {
-                            alert('Произошла ошибка при отмене сбора охотников');
-                        }
+                        });
                     }
                 });
             },
