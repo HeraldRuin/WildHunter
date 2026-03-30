@@ -250,6 +250,10 @@ class BookingController extends \App\Http\Controllers\Controller
         $credit = $request->input('credit', 0);
         $payment_gateway = $request->input('payment_gateway');
 
+        if (empty($payment_gateway)) {
+            $payment_gateway = 'paykeeper';
+        }
+
         // require payment gateway except pay full
 //        if (empty(floatval($booking->deposit)) || $how_to_pay == 'deposit' || !auth()->check()) {
 //            $rules['payment_gateway'] = 'required';
@@ -417,13 +421,14 @@ class BookingController extends \App\Http\Controllers\Controller
             return $res;
         }
 
-//        if ($booking->pay_now > 0) {
-//            try {
-//                //$gatewayObj->process($request, $booking, $service);
-//            } catch (Exception $exception) {
-//                return $this->sendError($exception->getMessage());
-//            }
-//        } else {
+        if ($booking->pay_now > 0) {
+            try {
+//                $gatewayObj->process($request, $booking, $service);
+            } catch (Exception $exception) {
+                return $this->sendError($exception->getMessage());
+            }
+        }
+//        else {
 //            if ($booking->paid < $booking->total) {
 //                $booking->status = $booking::PARTIAL_PAYMENT;
 //            } else {
@@ -909,7 +914,7 @@ class BookingController extends \App\Http\Controllers\Controller
             return $this->sendError('Необходима авторизация')->setStatusCode(401);
         }
 
-        $this->startCollectionTimer($booking);
+        $this->bookingTimerService->startCollectionTimer($booking);
 
         // TODO понять что это и для чего нужно
         // ВСЕГДА не отправляем письмо инициатору при запуске сбора
@@ -951,20 +956,6 @@ class BookingController extends \App\Http\Controllers\Controller
         if ($booking->status === Booking::START_COLLECTION || $booking->status === Booking::FINISHED_COLLECTION) {
             $booking->status = Booking::CONFIRMED;
 
-            $minHuntersRequired = HotelAnimal::where('hotel_id', $booking->hotel_id)
-                ->where('animal_id', $booking->animal_id)
-                ->value('hunters_count');
-
-            $acceptedHuntersCount = BookingHunterInvitation::whereHas('bookingHunter', function ($q) use ($booking) {
-                $q->where('booking_id', $booking->id);
-            })
-                ->where('status', BookingHunterInvitation::STATUS_ACCEPTED)
-                ->count();
-
-            if ($acceptedHuntersCount < $minHuntersRequired) {
-                return $this->sendError(__('Нельзя отменить сбор: не собрано минимальное количество охотников.'))->setStatusCode(422);
-            }
-
             $this->bookingTimerService->clearAllTimers($booking->id);
 
             $booking->save();
@@ -994,15 +985,14 @@ class BookingController extends \App\Http\Controllers\Controller
 
         // Удаляем все приглашения охотников, кроме мастера охотника (того, кто приглашал)
         try {
-            $masterBookingHunterId = BookingHunter::where('booking_id', $booking->id)
-                ->where('is_master', true)
-                ->first();
+            $masterHunter = $booking->masterHunter();
 
-            if ($masterBookingHunterId) {
-                BookingHunterInvitation::where('booking_hunter_id', $masterBookingHunterId->id)
-                    ->where('hunter_id', '!=', $masterBookingHunterId->invited_by)
-                    ->forceDelete();
+            if (!$masterHunter) {
+                return $this->sendError('Не найден мастер охотник этой брони')->setStatusCode(400);
             }
+            $booking->getInvitationsExceptMaster()->each(function ($invitation) {
+                $invitation->delete();
+            });
         } catch (\Exception $e) {
             Log::warning('cancelCollection: failed to force delete invitations', [
                 'booking_id' => $booking->id,
@@ -2165,39 +2155,13 @@ class BookingController extends \App\Http\Controllers\Controller
         $unpaidHunters = $booking->unpaidInvitationsOfHunters();
 
         if ($unpaidHunters->isEmpty()) {
-            $this->startBedTimer($booking);
+            $this->bookingTimerService->startBedTimer($booking);
         }else {
             $invitation->prepayment_paid_status = BookingHunterInvitation::PREPAYMENT_PENDING;
             $invitation->save();
-            $this->startPaidTimer($booking);
+            $this->bookingTimerService->startPaidTimer($booking);
         }
     }
-
-    public function startCollectionTimer($booking): void
-    {
-        $booking->status = Booking::START_COLLECTION;
-        $booking->save();
-
-        $timerHour = $this->bookingTimerService->getTimerHours($booking, 'collection');
-        $this->bookingTimerService->startTimer($booking->id, $timerHour, 'collection', ['collection', 'paid', 'beds']);
-    }
-    public function startBedTimer($booking): void
-    {
-        $booking->status = Booking::BED_COLLECTION;
-        $booking->save();
-
-        $timerHour = $this->bookingTimerService->getTimerHours($booking, 'beds');
-        $this->bookingTimerService->startTimer($booking->id, $timerHour, 'beds', ['paid']);
-    }
-    public function startPaidTimer($booking): void
-    {
-        $booking->status = Booking::PREPAYMENT_COLLECTION;
-        $booking->save();
-
-        $timerHour = $this->bookingTimerService->getTimerHours($booking, 'paid');
-        $this->bookingTimerService->startTimer($booking->id, $timerHour, 'paid', ['paid']);
-    }
-
     public function checkPrepayment(Booking $booking): void
     {
         $unpaidHunters = $booking->pendingInvitationsOfHunters();

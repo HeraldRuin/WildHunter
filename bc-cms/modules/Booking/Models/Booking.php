@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -85,21 +86,11 @@ class Booking extends BaseModel
     }
 
     /**
-     * Получает мастера брони
-     */
-    public function getMasterHunter(): ?BookingHunter
-    {
-        return $this->bookingHunters()
-            ->where('is_master', true)
-            ->first();
-    }
-
-    /**
      * Количество охотников, которые приняли приглашение и оплатили предоплату
      */
     public function countAcceptedAndPaidHunters(): int
     {
-        $masterBookingHunter = $this->getMasterHunter();
+        $masterBookingHunter = $this->masterHunter();
 
         if (!$masterBookingHunter) {
             return 0;
@@ -164,20 +155,37 @@ class Booking extends BaseModel
             ->with(['bookingHunter', 'hunter'])
             ->first();
     }
-
+    public function invitationsQuery()
+    {
+        return BookingHunterInvitation::whereHas('bookingHunter', function ($q) {
+            $q->where('booking_id', $this->id);
+        })
+            ->with(['bookingHunter', 'hunter'])
+            ->orderBy('invited_at', 'desc');
+    }
     /**
      * Получает все приглашения охотников для этой брони
      */
     public function getAllInvitations()
     {
-        return BookingHunterInvitation::whereHas('bookingHunter', function($q) {
-            $q->where('booking_id', $this->id)
-                ->whereNull('deleted_at');
-        })
-            ->whereNull('deleted_at')
-            ->with(['bookingHunter', 'hunter'])
-            ->orderBy('invited_at', 'desc')
-            ->get();
+        return $this->invitationsQuery()->get();
+    }
+    /**
+     * Получает все приглашения охотников кроме мастера
+     */
+    public function getInvitationsExceptMaster()
+    {
+        $masterHunterId = $this->masterHunterId();
+
+        $collection = $this->getAllInvitations();
+
+        if (!$masterHunterId) {
+            return $collection;
+        }
+
+        return $collection->filter(function ($invitation) use ($masterHunterId) {
+            return $invitation->hunter_id != $masterHunterId;
+        })->values();
     }
     public function getIsMasterHunterAttribute(): bool
     {
@@ -1601,9 +1609,7 @@ class Booking extends BaseModel
         return $this->belongsTo(User::class, 'create_user');
     }
 
-    /**
-     * Связь с BookingHunter
-     */
+
     public function bookingHunter(): HasOne
     {
         return $this->hasOne(BookingHunter::class, 'booking_id');
@@ -1612,12 +1618,31 @@ class Booking extends BaseModel
     {
         return $this->hasMany(BookingHunter::class,'booking_id','id');
     }
+
+
+    /**
+     * Мастера брони
+     */
+    public function masterHunter(): ?BookingHunter
+    {
+        return $this->bookingHunter()
+            ->where('is_master', true)
+            ->first();
+    }
+
+    /**
+     * id Мастера брони
+     */
     public function masterHunterId(): ?int
     {
         return $this->bookingHunter()
             ->where('is_master', true)
             ->value('invited_by');
     }
+
+    /**
+     * id записи Мастера брони
+     */
     public function masterHunterRowId(): ?int
     {
         return $this->bookingHunter()

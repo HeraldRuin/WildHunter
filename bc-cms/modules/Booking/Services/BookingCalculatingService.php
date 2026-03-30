@@ -2,8 +2,6 @@
 
 namespace Modules\Booking\Services;
 
-
-
 use Modules\Animals\Models\Animal;
 use Modules\Booking\Models\Booking;
 use Modules\Booking\Models\BookingHunterInvitation;
@@ -17,7 +15,7 @@ class BookingCalculatingService
     public function calculate($booking, $user): array
     {
         $isBaseAdmin = $user->hasRole('baseadmin');
-        $masterBookingHunter = $booking->getMasterHunter();
+        $masterBookingHunter = $booking->masterHunter();
 
         // === Распределение по комнатам ===
         $places = BookingRoomPlace::where('booking_id', $booking->id)->get();
