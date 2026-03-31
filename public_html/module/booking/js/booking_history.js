@@ -271,41 +271,13 @@ document.addEventListener('DOMContentLoaded', function () {
             },
 
             checkFinishCollectionButton(bookingId) {
-
-                // Проверяем, должен ли быть отключен кнопка "Завершить сбор"
-                // Если таймер закончен и не хватает охотников - блокируем кнопку
                 const finishBtn = document.querySelector('.btn-finish-collection[data-booking-id="' + bookingId + '"]');
                 const modal = document.getElementById('collectionModal' + bookingId);
                 if (!finishBtn || !modal) return;
 
-                // Проверяем, закончен ли таймер
-                // const timerEl = document.querySelector('.collection-timer[data-booking-id="' + bookingId + '"]');
-                // if (!timerEl) {
-                //     // Если таймера нет, разрешаем кнопку
-                //     finishBtn.disabled = false;
-                //     finishBtn.classList.remove('disabled');
-                //     finishBtn.title = '';
-                //     return;
-                // }
-                //
-                // const end = parseInt(timerEl.dataset.end, 10);
-                // if (!end) {
-                //     finishBtn.disabled = false;
-                //     finishBtn.classList.remove('disabled');
-                //     finishBtn.title = '';
-                //     return;
-                // }
-
-                // const now = Date.now();
-                // const diffMs = end - now;
-                // const isTimerFinished = diffMs <= 0;
-
-                // if (isTimerFinished) {
-                // Таймер закончен - проверяем количество охотников
                 const animalMinHunters = parseInt(modal.dataset.animalMinHunters || '0', 10);
 
-                // Считаем приглашенных охотников (со статусом не declined)
-                // Учитываем как охотников из системы, так и внешних (по email)
+                // Считаем приглашенных охотников (со статусом не accepted)
                 let invitedCount = 0;
                 if (this.hunterSlots && this.hunterSlots.length > 0) {
                     invitedCount = this.hunterSlots.filter(slot =>
@@ -325,12 +297,6 @@ document.addEventListener('DOMContentLoaded', function () {
                     finishBtn.classList.remove('disabled');
                     finishBtn.title = '';
                 }
-                // } else {
-                //     // Таймер еще идет - разрешаем кнопку
-                //     finishBtn.disabled = false;
-                //     finishBtn.classList.remove('disabled');
-                //     finishBtn.title = '';
-                // }
             },
             searchHunterDebounced() {
                 if (this.hunterSearchQuery.length < 4) {
