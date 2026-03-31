@@ -1890,7 +1890,6 @@ document.addEventListener('DOMContentLoaded', function () {
             }
 
             document.querySelectorAll('.modal[id^="collectionModal"]').forEach((modalEl) => {
-                // Проверяем, не добавлен ли уже обработчик
                 if (modalEl.dataset.handlerCleared) return;
                 modalEl.dataset.handlerCleared = 'true';
 
@@ -1903,29 +1902,30 @@ document.addEventListener('DOMContentLoaded', function () {
 
             const updateCollectionTimers = () => {
                 const nodesWithEnd = document.querySelectorAll('.collection-timer[data-end]');
-                const nodesWithStart = document.querySelectorAll('.collection-timer[data-start]');
                 const now = Date.now();
                 window.collectionState = window.collectionState || {};
 
-                // Показываем реальный оставшийся таймер в формате "ММ мин SS сек"
                 nodesWithEnd.forEach(el => {
                     const end = parseInt(el.dataset.end, 10);
                     if (!end) return;
 
+                    const bookingId = el.dataset.bookingId;
+                    if (!bookingId) return;
+
                     let diffMs = end - now;
 
+                    const extendBtn = document.querySelector('.btn-extend-collection[data-booking-id="' + bookingId + '"]');
+                    const finishBtn = document.querySelector('.btn-finish-collection[data-booking-id="' + bookingId + '"]');
+
+                    // Таймер закончился
                     if (diffMs <= 0) {
-                        // Таймер закончился — разрешаем кнопку продления сбора (если есть)
-                        const bookingId = el.dataset.bookingId;
-                        if (bookingId) {
-                            const extendBtn = document.querySelector('.btn-extend-collection[data-booking-id="' + bookingId + '"]');
+
                             if (extendBtn) {
                                 extendBtn.disabled = false;
                                 extendBtn.classList.remove('disabled');
                             }
 
                             if (el.dataset.collectionExpired === '1') return;
-
                             el.dataset.collectionExpired = '1';
 
                             // Запрещаем приглашать охотников - нужно продлить сбор
@@ -1934,7 +1934,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
                             // Проверяем, достаточно ли охотников приглашено
                             // Если таймер закончен, но не все охотники собраны - блокируем кнопку "Завершить сбор"
-                            const finishBtn = document.querySelector('.btn-finish-collection[data-booking-id="' + bookingId + '"]');
                             if (finishBtn) {
                                 const vueEl = document.getElementById('booking-history');
                                 const modal = document.getElementById('collectionModal' + bookingId);
@@ -1954,48 +1953,21 @@ document.addEventListener('DOMContentLoaded', function () {
                                     }
                                 }
                             }
-                        }
                         return;
                     }
 
-                    if (diffMs > 0 && el.dataset.collectionExpired) {
+                    if (el.dataset.collectionExpired) {
                         delete el.dataset.collectionExpired;
-
-                        const bookingId = el.dataset.bookingId;
-                        if (bookingId && window.collectionState) {
-                            delete window.collectionState[String(bookingId)];
-                        }
+                        delete window.collectionState[String(bookingId)];
                     }
 
                     el.textContent = this.formatTimer(diffMs);
 
-                    // Пока таймер тикает — кнопка продления должна быть неактивна
-                    const bookingId = el.dataset.bookingId;
-                    if (bookingId) {
-                        const extendBtn = document.querySelector('.btn-extend-collection[data-booking-id="' + bookingId + '"]');
+                        // Пока таймер идет — кнопка продления должна быть неактивна
                         if (extendBtn) {
                             extendBtn.disabled = true;
                             extendBtn.classList.add('disabled');
                         }
-
-                        // Пока таймер идет - кнопка "Завершить сбор" должна быть активна
-                        const finishBtn = document.querySelector('.btn-finish-collection[data-booking-id="' + bookingId + '"]');
-                        if (finishBtn) {
-                        }
-                    }
-                });
-
-                // Старые таймеры с data-start (если ещё используются) просто считаем как прошедшее время
-                nodesWithStart.forEach(el => {
-                    const start = parseInt(el.dataset.start, 10);
-                    if (!start || start > now) return;
-
-                    let diffMs = now - start;
-                    if (diffMs <= 0) {
-                        el.textContent = '[0 мин 00 сек]';
-                        return;
-                    }
-                    el.textContent = this.formatTimer(diffMs);
                 });
             };
 
@@ -2007,19 +1979,19 @@ document.addEventListener('DOMContentLoaded', function () {
                     const end = parseInt(el.dataset.end, 10);
                     if (!end) return;
 
+                    const bookingId = el.dataset.bookingId;
+                    if (!bookingId) return;
+
                     let diffMs = end - now;
 
                     if (diffMs <= 0) {
-
-                        const bookingId = el.dataset.bookingId;
-
                         if (el.dataset.paidExpired === '1') return;
                         el.dataset.paidExpired = '1';
 
                         handleBookingPaidTimerExpired(bookingId);
                         return;
                     }
-                    if (diffMs > 0 && el.dataset.paidExpired) {
+                    if (el.dataset.paidExpired) {
                         delete el.dataset.paidExpired;
                     }
 
