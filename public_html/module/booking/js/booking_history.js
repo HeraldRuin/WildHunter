@@ -92,11 +92,11 @@ document.addEventListener('DOMContentLoaded', function () {
                 const me = this;
 
                 const btn = event?.currentTarget ?? null;
-                if (!btn) return;
+                if (!btn) return; bc_button_loading(btn, true);
 
                 $.post(`/booking/${bookingIdNum}/start-collection`)
                     .done(res => {
-                        bc_button_loading(btn, true);
+                        bc_button_loading(btn, false);
 
                         if (!res.status) {
                             bookingCoreApp.showAjaxMessage(res);
@@ -349,9 +349,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (!bookingIdNum) return;
 
                 const btn = event && event.currentTarget ? event.currentTarget : null;
-                if (!btn) return;
-
-                bc_button_loading(btn, true);
+                if (!btn) return; bc_button_loading(btn, true);
 
                 $.ajax({
                     url: `/booking/${bookingIdNum}/invite-hunter`,
@@ -362,6 +360,8 @@ document.addEventListener('DOMContentLoaded', function () {
                         _token: $('meta[name="csrf-token"]').attr('content') || ''
                     },
                     success: (res) => {
+                        bc_button_loading(btn, false);
+
                         if (res.status) {
                             // Находим объект в массиве и обновляем его напрямую
                             const index = this.hunterSearchResults.findIndex(h => h.id === hunter.id);
@@ -584,8 +584,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (!bookingIdNum) return;
 
                 const btn = event && event.currentTarget ? event.currentTarget : null;
-                if (!btn) return;
-                bc_button_loading(btn, true);
+                if (!btn) return; bc_button_loading(btn, true);
 
                 $.ajax({
                     url: `/booking/${bookingIdNum}/invite-hunter-by-email`,
@@ -596,6 +595,8 @@ document.addEventListener('DOMContentLoaded', function () {
                         _token: $('meta[name="csrf-token"]').attr('content') || ''
                     },
                     success: (res) => {
+                        bc_button_loading(btn, false);
+
                         if (res.status) {
                             const email = query.trim();
                             const hunterData = {
@@ -670,9 +671,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (!bookingIdNum) return;
 
                 const btn = event && event.currentTarget ? event.currentTarget : null;
-                if (!btn) return;
-
-                bc_button_loading(btn, true);
+                if (!btn) return; bc_button_loading(btn, true);
 
                 $.ajax({
                     url: `/booking/${bookingIdNum}/email-hunter`,
@@ -788,10 +787,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 const bookingIdNum = parseInt(bookingId, 10);
 
                 const btn = event && event.currentTarget ? event.currentTarget : null;
-                if (!btn) {
-                    return;
-                }
-                bc_button_loading(btn, true);
+                if (!btn) return; bc_button_loading(btn, true);
 
                 $.ajax({
                     url: `/booking/${bookingIdNum}/complete`,
@@ -801,7 +797,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         _token: $('meta[name="csrf-token"]').attr('content') || ''
                     },
                     success: function (res) {
-                        bc_button_loading(btn, true);
+                        bc_button_loading(btn, false);
 
                         if (res.status) {
                             bookingCoreApp.showAjaxMessage(res);
@@ -842,10 +838,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 const bookingIdNum = parseInt(bookingId, 10);
 
                 const btn = event && event.currentTarget ? event.currentTarget : null;
-                if (!btn) {
-                    return;
-                }
-                bc_button_loading(btn, true);
+                if (!btn) return; bc_button_loading(btn, true);
 
                 $.ajax({
                     url: `/booking/${bookingIdNum}/start-collection`,
@@ -886,9 +879,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 const bookingIdNum = parseInt(bookingId, 10);
 
                 const btn = event && event.currentTarget ? event.currentTarget : null;
-                if (!btn) {
-                    return;
-                }
+                if (!btn) return;
 
                 bookingCoreApp.showConfirm({
                     message: 'Вы уверены, что хотите отменить сбор?',
@@ -937,13 +928,9 @@ document.addEventListener('DOMContentLoaded', function () {
                 });
             },
             finishCollection(event, bookingId) {
-                const me = this;
                 const bookingIdNum = parseInt(bookingId, 10);
                 const btn = event && event.currentTarget ? event.currentTarget : null;
-
-                if (!btn) {
-                    return;
-                }
+                if (!btn) return;
 
                 bookingCoreApp.showConfirm({
                     message: 'Вы уверены, что хотите завершить сбор?',
@@ -991,11 +978,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 const bookingIdNum = parseInt(bookingId, 10);
 
                 const btn = event && event.currentTarget ? event.currentTarget : null;
-                if (!btn) {
-                    return;
-                }
-
-                bc_button_loading(btn, true);
+                if (!btn) return; bc_button_loading(btn, true);
 
                 $.ajax({
                     url: `/booking/${bookingIdNum}/cancel`,
