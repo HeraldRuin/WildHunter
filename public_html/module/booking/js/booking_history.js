@@ -92,27 +92,11 @@ document.addEventListener('DOMContentLoaded', function () {
                 const me = this;
 
                 const btn = event?.currentTarget ?? null;
-                let originalHtml = null;
-
-                if (btn) {
-                    originalHtml = btn.innerHTML;
-                    btn.disabled = true;
-                    btn.innerHTML = `
-                <span class="spinner-border spinner-border-sm me-1"></span>
-                <span>${btn.textContent.trim()}</span>
-            `;
-                }
-
-                const restoreButton = () => {
-                    if (btn) {
-                        btn.disabled = false;
-                        btn.innerHTML = originalHtml;
-                    }
-                };
+                if (!btn) return;
 
                 $.post(`/booking/${bookingIdNum}/start-collection`)
                     .done(res => {
-                        restoreButton();
+                        bc_button_loading(btn, true);
 
                         if (!res.status) {
                             bookingCoreApp.showAjaxMessage(res);
@@ -131,7 +115,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         }, 200);
                     })
                     .fail(() => {
-                        restoreButton();
+                        bc_button_loading(btn, false);
                         alert('Ошибка при запуске сбора');
                     });
             },
@@ -350,7 +334,6 @@ document.addEventListener('DOMContentLoaded', function () {
             inviteHunter(hunter, bookingId, event) {
                 if (!hunter || !hunter.id) return;
 
-                // Останавливаем распространение события
                 if (event) {
                     event.preventDefault();
                     event.stopPropagation();
@@ -365,27 +348,10 @@ document.addEventListener('DOMContentLoaded', function () {
                 const bookingIdNum = parseInt(bookingId, 10);
                 if (!bookingIdNum) return;
 
-                // Лёгкий спиннер на кнопке
                 const btn = event && event.currentTarget ? event.currentTarget : null;
-                let originalHtml = null;
-                if (btn) {
-                    originalHtml = btn.innerHTML;
-                    btn.disabled = true;
-                    btn.classList.add('disabled');
-                    btn.innerHTML =
-                        '<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>' +
-                        '<span> ' + (btn.textContent.trim() || '...') + '</span>';
-                }
+                if (!btn) return;
 
-                const restoreButton = () => {
-                    if (btn) {
-                        btn.disabled = false;
-                        btn.classList.remove('disabled');
-                        if (originalHtml) {
-                            btn.innerHTML = originalHtml;
-                        }
-                    }
-                };
+                bc_button_loading(btn, true);
 
                 $.ajax({
                     url: `/booking/${bookingIdNum}/invite-hunter`,
@@ -396,7 +362,6 @@ document.addEventListener('DOMContentLoaded', function () {
                         _token: $('meta[name="csrf-token"]').attr('content') || ''
                     },
                     success: (res) => {
-                        restoreButton();
                         if (res.status) {
                             // Находим объект в массиве и обновляем его напрямую
                             const index = this.hunterSearchResults.findIndex(h => h.id === hunter.id);
@@ -440,7 +405,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         }
                     },
                     error: function (e) {
-                        restoreButton();
+                        bc_button_loading(btn, false);
                         if (e.status === 419) {
                             alert('Сессия истекла, обновите страницу');
                         } else if (e.responseJSON && e.responseJSON.message) {
@@ -619,25 +584,9 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (!bookingIdNum) return;
 
                 const btn = event && event.currentTarget ? event.currentTarget : null;
-                let originalHtml = null;
-                if (btn) {
-                    originalHtml = btn.innerHTML;
-                    btn.disabled = true;
-                    btn.classList.add('disabled');
-                    btn.innerHTML =
-                        '<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>' +
-                        '<span> ' + (btn.textContent.trim() || '...') + '</span>';
-                }
+                if (!btn) return;
+                bc_button_loading(btn, true);
 
-                const restoreButton = () => {
-                    if (btn) {
-                        btn.disabled = false;
-                        btn.classList.remove('disabled');
-                        if (originalHtml) {
-                            btn.innerHTML = originalHtml;
-                        }
-                    }
-                };
                 $.ajax({
                     url: `/booking/${bookingIdNum}/invite-hunter-by-email`,
                     type: 'POST',
@@ -647,7 +596,6 @@ document.addEventListener('DOMContentLoaded', function () {
                         _token: $('meta[name="csrf-token"]').attr('content') || ''
                     },
                     success: (res) => {
-                        restoreButton();
                         if (res.status) {
                             const email = query.trim();
                             const hunterData = {
@@ -689,8 +637,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         }
                     },
                     error: (e) => {
-                        restoreButton();
-                        console.error('Ошибка при отправке приглашения по email:', e);
+                        bc_button_loading(btn, false);
                         if (e.status === 419) {
                             alert('Сессия истекла, обновите страницу');
                         } else if (e.responseJSON && e.responseJSON.message) {
@@ -723,25 +670,9 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (!bookingIdNum) return;
 
                 const btn = event && event.currentTarget ? event.currentTarget : null;
-                let originalHtml = null;
-                if (btn) {
-                    originalHtml = btn.innerHTML;
-                    btn.disabled = true;
-                    btn.classList.add('disabled');
-                    btn.innerHTML =
-                        '<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>' +
-                        '<span> ' + (btn.textContent.trim() || '...') + '</span>';
-                }
+                if (!btn) return;
 
-                const restoreButton = () => {
-                    if (btn) {
-                        btn.disabled = false;
-                        btn.classList.remove('disabled');
-                        if (originalHtml) {
-                            btn.innerHTML = originalHtml;
-                        }
-                    }
-                };
+                bc_button_loading(btn, true);
 
                 $.ajax({
                     url: `/booking/${bookingIdNum}/email-hunter`,
@@ -753,21 +684,17 @@ document.addEventListener('DOMContentLoaded', function () {
                         _token: $('meta[name="csrf-token"]').attr('content') || ''
                     },
                     success: function (res) {
-                        restoreButton();
+                        bc_button_loading(btn, false);
+
                         if (res.status) {
-                            if (typeof bookingCoreApp !== 'undefined' && bookingCoreApp.showAjaxMessage) {
-                                bookingCoreApp.showAjaxMessage(res);
-                            } else if (res.message) {
-                                alert(res.message);
-                            }
-                            // можно скрыть поле ввода после успешной отправки
+                            bookingCoreApp.showAjaxMessage(res);
                             hunter.showEmailInput = false;
                         } else if (res.message) {
                             alert(res.message);
                         }
                     },
                     error: function (e) {
-                        restoreButton();
+                        bc_button_loading(btn, false);
                         if (e.status === 419) {
                             alert('Сессия истекла, обновите страницу');
                         } else if (e.responseJSON && e.responseJSON.message) {
@@ -864,24 +791,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (!btn) {
                     return;
                 }
-
-                if (!btn.dataset.originalHtml) {
-                    btn.dataset.originalHtml = btn.innerHTML;
-                }
-
-                btn.disabled = true;
-                btn.classList.add('disabled');
-                btn.innerHTML =
-                    '<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>' +
-                    '<span> ' + (btn.textContent.trim() || '...') + '</span>';
-
-                const restoreButton = function () {
-                    btn.disabled = false;
-                    btn.classList.remove('disabled');
-                    if (btn.dataset.originalHtml) {
-                        btn.innerHTML = btn.dataset.originalHtml;
-                    }
-                };
+                bc_button_loading(btn, true);
 
                 $.ajax({
                     url: `/booking/${bookingIdNum}/complete`,
@@ -891,7 +801,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         _token: $('meta[name="csrf-token"]').attr('content') || ''
                     },
                     success: function (res) {
-                        restoreButton();
+                        bc_button_loading(btn, true);
 
                         if (res.status) {
                             bookingCoreApp.showAjaxMessage(res);
@@ -903,7 +813,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         }
                     },
                     error: function (e) {
-                        restoreButton();
+                        bc_button_loading(btn, false);
 
                         if (e.status === 419) {
                             alert('Сессия истекла, обновите страницу');
@@ -935,24 +845,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (!btn) {
                     return;
                 }
-
-                if (!btn.dataset.originalHtml) {
-                    btn.dataset.originalHtml = btn.innerHTML;
-                }
-
-                btn.disabled = true;
-                btn.classList.add('disabled');
-                btn.innerHTML =
-                    '<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>' +
-                    '<span> ' + (btn.textContent.trim() || '...') + '</span>';
-
-                const restoreButton = function () {
-                    btn.disabled = false;
-                    btn.classList.remove('disabled');
-                    if (btn.dataset.originalHtml) {
-                        btn.innerHTML = btn.dataset.originalHtml;
-                    }
-                };
+                bc_button_loading(btn, true);
 
                 $.ajax({
                     url: `/booking/${bookingIdNum}/start-collection`,
@@ -960,7 +853,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     dataType: 'json',
                     data: {},
                     success: function (res) {
-                        restoreButton();
+                        bc_button_loading(btn, false);
 
                         if (res.status) {
                             var modal = bootstrap.Modal.getInstance(document.getElementById('collectionModal' + bookingIdNum));
@@ -976,7 +869,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         }
                     },
                     error: function (e) {
-                        restoreButton();
+                        bc_button_loading(btn, false);
 
                         if (e.status === 419) {
                             alert('Сессия истекла, обновите страницу');
@@ -997,28 +890,10 @@ document.addEventListener('DOMContentLoaded', function () {
                     return;
                 }
 
-                if (!btn.dataset.originalHtml) {
-                    btn.dataset.originalHtml = btn.innerHTML;
-                }
-
-                const restoreButton = function () {
-                    btn.disabled = false;
-                    btn.classList.remove('disabled');
-                    if (btn.dataset.originalHtml) {
-                        btn.innerHTML = btn.dataset.originalHtml;
-                    }
-                };
-
                 bookingCoreApp.showConfirm({
                     message: 'Вы уверены, что хотите отменить сбор?',
                     callback: (result) => {
                         if (!result) return;
-
-                        btn.disabled = true;
-                        btn.classList.add('disabled');
-                        btn.innerHTML =
-                            '<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>' +
-                            '<span> ' + (btn.textContent.trim() || '...') + '</span>';
 
                         $.ajax({
                             url: `/booking/${bookingIdNum}/cancel-collection`,
@@ -1028,7 +903,7 @@ document.addEventListener('DOMContentLoaded', function () {
                                 _token: $('meta[name="csrf-token"]').attr('content') || ''
                             },
                             success: function (res) {
-                                restoreButton();
+                                bc_button_loading(btn, true);
 
                                 if (res.status) {
                                     const modal = bootstrap.Modal.getInstance(document.getElementById('collectionModal' + bookingIdNum));
@@ -1048,19 +923,13 @@ document.addEventListener('DOMContentLoaded', function () {
                                         alert(res.message);
                                     }
 
-                                    setTimeout(function () {
-                                        window.location.reload();
-                                    }, 500);
+                                    setTimeout(function () {window.location.reload()}, 500);
                                 } else if (res.message) {
-                                    if (typeof bookingCoreApp !== 'undefined' && bookingCoreApp.showAjaxMessage) {
-                                        bookingCoreApp.showAjaxMessage(res);
-                                    } else {
-                                        alert(res.message);
-                                    }
+                                    bookingCoreApp.showAjaxMessage(res);
                                 }
                             },
                             error: function (e) {
-                                restoreButton();
+                                bc_button_loading(btn, false);
                                 bookingCoreApp.showError({ message: 'Произошла ошибка при отмене сбора охотников' });
                             }
                         });
@@ -1076,28 +945,12 @@ document.addEventListener('DOMContentLoaded', function () {
                     return;
                 }
 
-                if (!btn.dataset.originalHtml) {
-                    btn.dataset.originalHtml = btn.innerHTML;
-                }
-
-                const restoreButton = function () {
-                    btn.disabled = false;
-                    btn.classList.remove('disabled');
-                    if (btn.dataset.originalHtml) {
-                        btn.innerHTML = btn.dataset.originalHtml;
-                    }
-                };
-
                 bookingCoreApp.showConfirm({
                     message: 'Вы уверены, что хотите завершить сбор?',
                     callback: (result) => {
                         if (!result) return;
 
-                        btn.disabled = true;
-                        btn.classList.add('disabled');
-                        btn.innerHTML =
-                            '<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>' +
-                            '<span> ' + (btn.textContent.trim() || '...') + '</span>';
+                        bc_button_loading(btn, true);
 
                         $.ajax({
                             url: `/booking/${bookingIdNum}/finish-collection`,
@@ -1107,23 +960,19 @@ document.addEventListener('DOMContentLoaded', function () {
                                 _token: $('meta[name="csrf-token"]').attr('content') || ''
                             },
                             success: function (res) {
-                                restoreButton();
-
                                 if (res.status) {
                                     var modal = bootstrap.Modal.getInstance(document.getElementById('collectionModal' + bookingIdNum));
                                     if (modal) {
                                         modal.hide();
                                     }
                                     bookingCoreApp.showAjaxMessage(res);
-                                    setTimeout(function () {
-                                        window.location.reload();
-                                    }, 500);
+                                    setTimeout(function () {window.location.reload()}, 500);
                                 } else if (res.message) {
                                     bookingCoreApp.showAjaxMessage(res);
                                 }
                             },
                             error: function (e) {
-                                restoreButton();
+                                bc_button_loading(btn, false);
 
                                 if (e.status === 419) {
                                     alert('Сессия истекла, обновите страницу');
@@ -1146,23 +995,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     return;
                 }
 
-                if (!btn.dataset.originalHtml) {
-                    btn.dataset.originalHtml = btn.innerHTML;
-                }
-
-                btn.disabled = true;
-                btn.classList.add('disabled');
-                btn.innerHTML =
-                    '<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>' +
-                    '<span> ' + (btn.textContent.trim() || '...') + '</span>';
-
-                const restoreButton = function () {
-                    btn.disabled = false;
-                    btn.classList.remove('disabled');
-                    if (btn.dataset.originalHtml) {
-                        btn.innerHTML = btn.dataset.originalHtml;
-                    }
-                };
+                bc_button_loading(btn, true);
 
                 $.ajax({
                     url: `/booking/${bookingIdNum}/cancel`,
@@ -1172,7 +1005,6 @@ document.addEventListener('DOMContentLoaded', function () {
                         _token: $('meta[name="csrf-token"]').attr('content') || ''
                     },
                     success: function (res) {
-                        restoreButton();
 
                         if (res.status) {
                             var modal = bootstrap.Modal.getInstance(document.getElementById('cancelBookingModal' + bookingIdNum));
@@ -1180,15 +1012,13 @@ document.addEventListener('DOMContentLoaded', function () {
                                 modal.hide();
                             }
                             bookingCoreApp.showAjaxMessage(res);
-                            setTimeout(function () {
-                                window.location.reload();
-                            }, 500);
+                            setTimeout(function () {window.location.reload()}, 500);
                         } else if (res.message) {
                             bookingCoreApp.showAjaxMessage(res);
                         }
                     },
                     error: function (e) {
-                        restoreButton();
+                        bc_button_loading(btn, false);
 
                         if (e.status === 419) {
                             alert('Сессия истекла, обновите страницу');
@@ -1201,7 +1031,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 });
             },
             bookingPrepaymentPaid(event) {
-
                 const btn = event.currentTarget;
                 if (!btn) return;
 
@@ -1362,26 +1191,15 @@ document.addEventListener('DOMContentLoaded', function () {
             loadBookingPlaces(booking, event = null) {
                 const bookingIdNum = parseInt(booking.id, 10);
                 const btn = event?.currentTarget ?? null;
-                let originalHtml = null;
+                if (!btn) return;
 
-                if (btn) {
-                    originalHtml = btn.innerHTML;
-                    btn.disabled = true;
-                    btn.innerHTML = `<span>${btn.textContent.trim()}</span>`;
-                }
-
-                const restoreButton = () => {
-                    if (btn) {
-                        btn.disabled = false;
-                        btn.innerHTML = originalHtml;
-                    }
-                };
+                bc_button_loading(btn, true);
 
                 const self = this;
 
                 $.post(`/booking/${booking.id}/places`)
                     .done(res => {
-                        restoreButton();
+                        bc_button_loading(btn, false);
 
                         if (!res.rooms || !res.places) {
                             alert('Ошибка получения данных');
@@ -1402,7 +1220,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
                     })
                     .fail(() => {
-                        restoreButton();
+                        bc_button_loading(btn, false);
                         alert('Ошибка при запросе к серверу');
                     });
             },
@@ -1974,7 +1792,6 @@ document.addEventListener('DOMContentLoaded', function () {
                         }
                     },
                     // error: function (e) {
-                    //     restoreButton();
                     //
                     //     if (e.status === 419) {
                     //         alert('Сессия истекла, обновите страницу');
@@ -2020,31 +1837,16 @@ document.addEventListener('DOMContentLoaded', function () {
 
     $(document).on('click', '.btn-cancel-booking-confirm-vue', function (e) {
         e.preventDefault();
-        var btn = $(this);
-        var bookingId = btn.data('booking-id');
+        const btn = $(this);
+        const el = btn[0];
+        const bookingId = btn.data('booking-id');
 
         if (!bookingId) {
-            console.error('Booking ID not found');
             return;
         }
 
-        var bookingIdNum = parseInt(bookingId, 10);
-
-        if (!btn.data('originalHtml')) {
-            btn.data('originalHtml', btn.html());
-        }
-
-        btn.prop('disabled', true).addClass('disabled').html(
-            '<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>' +
-            '<span> ' + (btn.text().trim() || '...') + '</span>'
-        );
-
-        var restoreButton = function () {
-            btn.prop('disabled', false).removeClass('disabled');
-            if (btn.data('originalHtml')) {
-                btn.html(btn.data('originalHtml'));
-            }
-        };
+        const bookingIdNum = parseInt(bookingId, 10);
+        bc_button_loading(el, true);
 
         $.ajax({
             url: `/booking/${bookingIdNum}/cancel`,
@@ -2054,21 +1856,17 @@ document.addEventListener('DOMContentLoaded', function () {
                 _token: $('meta[name="csrf-token"]').attr('content') || ''
             },
             success: function (res) {
-                restoreButton();
+                bc_button_loading(el, false);
 
                 if (res.status) {
                     var modal = bootstrap.Modal.getInstance(document.getElementById('cancelBookingModal' + bookingIdNum));
                     if (modal) {
                         modal.hide();
                     }
-                    if (typeof bookingCoreApp !== 'undefined' && bookingCoreApp.showAjaxMessage) {
-                        bookingCoreApp.showAjaxMessage(res);
-                    } else {
-                        alert(res.message || 'Бронь успешно отменена');
-                    }
-                    setTimeout(function () {
-                        window.location.reload();
-                    }, 500);
+
+                    bookingCoreApp.showAjaxMessage(res);
+
+                    setTimeout(function () {window.location.reload()}, 500);
                 } else if (res.message) {
                     if (typeof bookingCoreApp !== 'undefined' && bookingCoreApp.showAjaxMessage) {
                         bookingCoreApp.showAjaxMessage(res);
@@ -2078,7 +1876,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
             },
             error: function (e) {
-                restoreButton();
+                bc_button_loading(el, false);
 
                 if (e.status === 419) {
                     alert('Сессия истекла, обновите страницу');
