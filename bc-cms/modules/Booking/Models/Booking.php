@@ -797,6 +797,7 @@ class Booking extends BaseModel
                 'hotelRooms',
                 'bookingHunters:id,booking_id,invited_by,is_master,creator_role'
             ])
+            ->where('status', '!=', 'draft')
             ->select('*')
             ->selectRaw("
             CASE
@@ -877,7 +878,10 @@ class Booking extends BaseModel
 
     public static function getBookingHistoryForAdminBase($hotel_id, $booking_status = false, $booking_id = false)
     {
-        $list_booking = parent::query()->with(['animal', 'creator', 'hotel.translation', 'hotelRooms', 'bookingHunters:id,booking_id,invited_by,is_master'])->orderBy('id', 'desc');
+        $list_booking = parent::query()
+            ->with(['animal', 'creator', 'hotel.translation', 'hotelRooms', 'bookingHunters:id,booking_id,invited_by,is_master'])
+            ->where('status', '!=', 'draft')
+            ->orderBy('id', 'desc');
 
         $list_booking->where('hotel_id', $hotel_id);
 
