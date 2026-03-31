@@ -90,9 +90,8 @@ document.addEventListener('DOMContentLoaded', function () {
             openCollectionAsMaster(bookingId, event) {
                 const bookingIdNum = parseInt(bookingId, 10);
                 const me = this;
-
-                const btn = event?.currentTarget ?? null;
-                if (!btn) return; bc_button_loading(btn, true);
+                const btn = event?.currentTarget || null;
+                if (btn) bc_button_loading(btn, true);
 
                 $.post(`/booking/${bookingIdNum}/start-collection`)
                     .done(res => {
@@ -339,17 +338,14 @@ document.addEventListener('DOMContentLoaded', function () {
                     event.stopPropagation();
                 }
 
-                // КРИТИЧЕСКИ ВАЖНО: Гарантируем, что поле ввода сообщения закрыто ДО выполнения запроса
-                // Используем $set для явной реактивности Vue
                 this.$set(hunter, 'showEmailInput', false);
-                // Дополнительно устанавливаем напрямую для немедленного эффекта
                 hunter.showEmailInput = false;
 
                 const bookingIdNum = parseInt(bookingId, 10);
                 if (!bookingIdNum) return;
 
-                const btn = event && event.currentTarget ? event.currentTarget : null;
-                if (!btn) return; bc_button_loading(btn, true);
+                const btn = event?.currentTarget || null;
+                if (btn) bc_button_loading(btn, true);
 
                 $.ajax({
                     url: `/booking/${bookingIdNum}/invite-hunter`,
@@ -366,7 +362,6 @@ document.addEventListener('DOMContentLoaded', function () {
                             // Находим объект в массиве и обновляем его напрямую
                             const index = this.hunterSearchResults.findIndex(h => h.id === hunter.id);
                             if (index !== -1) {
-                                // Обновляем объект в массиве через $set для реактивности
                                 this.$set(this.hunterSearchResults[index], 'invited', true);
                                 this.$set(this.hunterSearchResults[index], 'invitation_status', 'pending');
                                 this.$set(this.hunterSearchResults[index], 'showEmailInput', false);
@@ -389,8 +384,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
                             // Принудительно обновляем Vue для немедленного отображения
                             this.$forceUpdate();
-
-                            // Проверяем состояние кнопки "Завершить сбор" после приглашения охотника
                             this.$nextTick(() => {
                                 this.checkFinishCollectionButton(bookingId);
                             });
@@ -583,8 +576,8 @@ document.addEventListener('DOMContentLoaded', function () {
                 const bookingIdNum = parseInt(bookingId, 10);
                 if (!bookingIdNum) return;
 
-                const btn = event && event.currentTarget ? event.currentTarget : null;
-                if (!btn) return; bc_button_loading(btn, true);
+                const btn = event?.currentTarget || null;
+                if (btn) bc_button_loading(btn, true);
 
                 $.ajax({
                     url: `/booking/${bookingIdNum}/invite-hunter-by-email`,
@@ -670,8 +663,8 @@ document.addEventListener('DOMContentLoaded', function () {
                 const bookingIdNum = parseInt(bookingId, 10);
                 if (!bookingIdNum) return;
 
-                const btn = event && event.currentTarget ? event.currentTarget : null;
-                if (!btn) return; bc_button_loading(btn, true);
+                const btn = event?.currentTarget || null;
+                if (btn) bc_button_loading(btn, true);
 
                 $.ajax({
                     url: `/booking/${bookingIdNum}/email-hunter`,
@@ -786,8 +779,8 @@ document.addEventListener('DOMContentLoaded', function () {
                 const me = this;
                 const bookingIdNum = parseInt(bookingId, 10);
 
-                const btn = event && event.currentTarget ? event.currentTarget : null;
-                if (!btn) return; bc_button_loading(btn, true);
+                const btn = event?.currentTarget || null;
+                if (btn) bc_button_loading(btn, true);
 
                 $.ajax({
                     url: `/booking/${bookingIdNum}/complete`,
@@ -834,11 +827,9 @@ document.addEventListener('DOMContentLoaded', function () {
                     });
             },
             startCollection(event, bookingId) {
-                const me = this;
                 const bookingIdNum = parseInt(bookingId, 10);
-
-                const btn = event && event.currentTarget ? event.currentTarget : null;
-                if (!btn) return; bc_button_loading(btn, true);
+                const btn = event?.currentTarget || null;
+                if (btn) bc_button_loading(btn, true);
 
                 $.ajax({
                     url: `/booking/${bookingIdNum}/start-collection`,
@@ -877,14 +868,13 @@ document.addEventListener('DOMContentLoaded', function () {
             cancelCollection(event, bookingId) {
                 const me = this;
                 const bookingIdNum = parseInt(bookingId, 10);
-
-                const btn = event && event.currentTarget ? event.currentTarget : null;
-                if (!btn) return;
+                const btn = event?.currentTarget || null;
 
                 bookingCoreApp.showConfirm({
                     message: 'Вы уверены, что хотите отменить сбор?',
                     callback: (result) => {
                         if (!result) return;
+                        if (btn) bc_button_loading(btn, true);
 
                         $.ajax({
                             url: `/booking/${bookingIdNum}/cancel-collection`,
@@ -894,8 +884,6 @@ document.addEventListener('DOMContentLoaded', function () {
                                 _token: $('meta[name="csrf-token"]').attr('content') || ''
                             },
                             success: function (res) {
-                                bc_button_loading(btn, true);
-
                                 if (res.status) {
                                     const modal = bootstrap.Modal.getInstance(document.getElementById('collectionModal' + bookingIdNum));
                                     if (modal) {
@@ -929,15 +917,13 @@ document.addEventListener('DOMContentLoaded', function () {
             },
             finishCollection(event, bookingId) {
                 const bookingIdNum = parseInt(bookingId, 10);
-                const btn = event && event.currentTarget ? event.currentTarget : null;
-                if (!btn) return;
+                const btn = event?.currentTarget || null;
 
                 bookingCoreApp.showConfirm({
                     message: 'Вы уверены, что хотите завершить сбор?',
                     callback: (result) => {
                         if (!result) return;
-
-                        bc_button_loading(btn, true);
+                        if (btn) bc_button_loading(btn, true);
 
                         $.ajax({
                             url: `/booking/${bookingIdNum}/finish-collection`,
@@ -974,11 +960,9 @@ document.addEventListener('DOMContentLoaded', function () {
                 });
             },
             cancelBooking(event, bookingId) {
-                const me = this;
                 const bookingIdNum = parseInt(bookingId, 10);
-
-                const btn = event && event.currentTarget ? event.currentTarget : null;
-                if (!btn) return; bc_button_loading(btn, true);
+                const btn = event?.currentTarget || null;
+                if (btn) bc_button_loading(btn, true);
 
                 $.ajax({
                     url: `/booking/${bookingIdNum}/cancel`,
@@ -988,7 +972,6 @@ document.addEventListener('DOMContentLoaded', function () {
                         _token: $('meta[name="csrf-token"]').attr('content') || ''
                     },
                     success: function (res) {
-
                         if (res.status) {
                             var modal = bootstrap.Modal.getInstance(document.getElementById('cancelBookingModal' + bookingIdNum));
                             if (modal) {
@@ -1173,10 +1156,8 @@ document.addEventListener('DOMContentLoaded', function () {
             // Метод загрузки данных занятых мест
             loadBookingPlaces(booking, event = null) {
                 const bookingIdNum = parseInt(booking.id, 10);
-                const btn = event?.currentTarget ?? null;
-                if (!btn) return;
-
-                bc_button_loading(btn, true);
+                const btn = event?.currentTarget || null;
+                if (btn) bc_button_loading(btn, true);
 
                 const self = this;
 
