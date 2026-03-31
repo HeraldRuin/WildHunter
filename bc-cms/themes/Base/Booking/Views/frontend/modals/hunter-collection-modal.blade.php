@@ -5,9 +5,9 @@
                 <input
                     type="text"
                     class="form-control me-2"
-                    :placeholder="'{{ __('Hunter nickname / last_name / email / ID') }}'"
+                    :placeholder="'{{ __('Ник / Фамилия / email / ID') }}'"
                     v-model="hunterSlot.query"
-                    :disabled="hunterSlot.hunter && hunterSlot.hunter.invited"
+                    :disabled="isCollectionTimerExpired({{ $booking->id }}) || (hunterSlot.hunter && hunterSlot.hunter.invited)"
                     @input="searchHunterForSlot(index, {{ $booking->id }})"
                     @change="handleHunterInputChange(index)"
                     @focus="hunterSlot.showResults = true"
@@ -96,7 +96,6 @@
     </div>
 </div>
 
-История отказавшихся охотников
 <div v-if="declinedHunters && declinedHunters.length > 0" class="mt-4 mb-4">
     <h6 class="mb-3 text-muted">История приглашений (отказались)</h6>
     <div class="list-group">
