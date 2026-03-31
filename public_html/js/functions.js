@@ -76,6 +76,30 @@ window.bc_handle_error_response = function (e) {
     }
 };
 
+window.bc_button_loading = function (btn, isLoading = true) {
+    if (!btn) return;
+
+    if (isLoading) {
+        btn.disabled = true;
+        btn.classList.add('disabled');
+
+        if (!btn.dataset.originalHtml) {
+            btn.dataset.originalHtml = btn.innerHTML;
+        }
+
+        btn.innerHTML =
+            '<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>' +
+            '<span> ' + (btn.textContent.trim() || '...') + '</span>';
+    } else {
+        btn.disabled = false;
+        btn.classList.remove('disabled');
+
+        if (btn.dataset.originalHtml) {
+            btn.innerHTML = btn.dataset.originalHtml;
+        }
+    }
+};
+
 // Form validation
 var forms = document.getElementsByClassName('needs-validation');
 // Loop over them and prevent submission
