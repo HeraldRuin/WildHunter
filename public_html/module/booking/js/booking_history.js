@@ -1104,37 +1104,8 @@ document.addEventListener('DOMContentLoaded', function () {
             finishCollection(event, bookingId) {
                 const me = this;
                 const bookingIdNum = parseInt(bookingId, 10);
-                // const modal = document.getElementById('collectionModal' + bookingId);
-                // const animalMinHunters = parseInt(modal.dataset.animalMinHunters || '0', 10);
-
-                // Перед отправкой запроса дополнительно проверяем, что все участники подтвердили приглашение
-                // На клиенте считаем неподтверждёнными всех с invitation_status, отличным от 'accepted'
-                // (сервер всё равно повторно проверит это условие для надёжности)
-                try {
-                    if (me.hunterSlots && me.hunterSlots.length > 0) {
-                        const hasNotAccepted = me.hunterSlots.some(function (slot) {
-                            return slot.hunter &&
-                                slot.hunter.invited &&
-                                slot.hunter.invitation_status &&
-                                slot.hunter.invitation_status !== 'accepted';
-                        });
-                        // let invitedCount = 0;
-                        // invitedCount = this.hunterSlots.filter(slot =>
-                        //     slot.hunter &&
-                        //     slot.hunter.invited &&
-                        //     slot.hunter.invitation_status === 'accepted'
-                        // ).length;
-                        //
-                        // if (invitedCount < animalMinHunters) {
-                        //     alert('Нельзя завершить сбор: не все участники подтвердили приглашение.');
-                        //     return;
-                        // }
-                    }
-                } catch (e) {
-                    console.warn('finishCollection: не удалось выполнить предварительную проверку статусов приглашений', e);
-                }
-
                 const btn = event && event.currentTarget ? event.currentTarget : null;
+
                 if (!btn) {
                     return;
                 }
@@ -1142,12 +1113,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (!btn.dataset.originalHtml) {
                     btn.dataset.originalHtml = btn.innerHTML;
                 }
-
-                btn.disabled = true;
-                btn.classList.add('disabled');
-                btn.innerHTML =
-                    '<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>' +
-                    '<span> ' + (btn.textContent.trim() || '...') + '</span>';
 
                 const restoreButton = function () {
                     btn.disabled = false;
@@ -1157,39 +1122,52 @@ document.addEventListener('DOMContentLoaded', function () {
                     }
                 };
 
-                $.ajax({
-                    url: `/booking/${bookingIdNum}/finish-collection`,
-                    type: 'POST',
-                    dataType: 'json',
-                    data: {
-                        _token: $('meta[name="csrf-token"]').attr('content') || ''
-                    },
-                    success: function (res) {
-                        restoreButton();
+                bookingCoreApp.showConfirm({
+                    message: 'Вы уверены, что хотите завершить сбор?',
+                    callback: (result) => {
+                        if (!result) return;
 
-                        if (res.status) {
-                            var modal = bootstrap.Modal.getInstance(document.getElementById('collectionModal' + bookingIdNum));
-                            if (modal) {
-                                modal.hide();
+                        btn.disabled = true;
+                        btn.classList.add('disabled');
+                        btn.innerHTML =
+                            '<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>' +
+                            '<span> ' + (btn.textContent.trim() || '...') + '</span>';
+
+                        $.ajax({
+                            url: `/booking/${bookingIdNum}/finish-collection`,
+                            type: 'POST',
+                            dataType: 'json',
+                            data: {
+                                _token: $('meta[name="csrf-token"]').attr('content') || ''
+                            },
+                            success: function (res) {
+                                restoreButton();
+
+                                if (res.status) {
+                                    var modal = bootstrap.Modal.getInstance(document.getElementById('collectionModal' + bookingIdNum));
+                                    if (modal) {
+                                        modal.hide();
+                                    }
+                                    bookingCoreApp.showAjaxMessage(res);
+                                    setTimeout(function () {
+                                        window.location.reload();
+                                    }, 500);
+                                } else if (res.message) {
+                                    bookingCoreApp.showAjaxMessage(res);
+                                }
+                            },
+                            error: function (e) {
+                                restoreButton();
+
+                                if (e.status === 419) {
+                                    alert('Сессия истекла, обновите страницу');
+                                } else if (e.responseJSON && e.responseJSON.message) {
+                                    bookingCoreApp.showAjaxMessage(e.responseJSON);
+                                } else {
+                                    alert('Произошла ошибка при завершении сбора охотников');
+                                }
                             }
-                            bookingCoreApp.showAjaxMessage(res);
-                            setTimeout(function () {
-                                window.location.reload();
-                            }, 500);
-                        } else if (res.message) {
-                            bookingCoreApp.showAjaxMessage(res);
-                        }
-                    },
-                    error: function (e) {
-                        restoreButton();
-
-                        if (e.status === 419) {
-                            alert('Сессия истекла, обновите страницу');
-                        } else if (e.responseJSON && e.responseJSON.message) {
-                            bookingCoreApp.showAjaxMessage(e.responseJSON);
-                        } else {
-                            alert('Произошла ошибка при завершении сбора охотников');
-                        }
+                        });
                     }
                 });
             },
