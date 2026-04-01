@@ -789,6 +789,37 @@ document.addEventListener('DOMContentLoaded', function () {
                     }
                 });
             },
+            openCancelBookingModal($bookingId, event) {
+                const btn = event?.currentTarget || null;
+
+                bookingCoreApp.showConfirm({
+                    message: 'Вы уверены, что хотите отменить бронь?',
+                    callback: (result) => {
+                        if (!result) return;
+                        if (btn) bc_button_loading(btn, true);
+
+                        $.ajax({
+                            url: `/booking/${$bookingId}/cancel`,
+                            type: 'POST',
+                            dataType: 'json',
+                            data: {
+                                _token: $('meta[name="csrf-token"]').attr('content') || ''
+                            },
+                            success: (res) => {
+                                if (res.status) {
+                                    if (btn) bc_button_loading(btn, false);
+                                    bookingCoreApp.showAjaxMessage(res);
+                                    setTimeout(function () {window.location.reload()}, 1000);
+                                }
+                            },
+                            error: function (e) {
+                                if (btn) bc_button_loading(btn, false);
+                                bookingCoreApp.showError({ message: 'Ошибка отмены брони' });
+                            }
+                        });
+                    }
+                });
+            },
             completeBooking(event, bookingId) {
                 const me = this;
                 const bookingIdNum = parseInt(bookingId, 10);
@@ -1788,57 +1819,57 @@ document.addEventListener('DOMContentLoaded', function () {
         },
     });
 
-    $(document).on('click', '.btn-cancel-booking-confirm-vue', function (e) {
-        e.preventDefault();
-        const btn = $(this);
-        const el = btn[0];
-        const bookingId = btn.data('booking-id');
-
-        if (!bookingId) {
-            return;
-        }
-
-        const bookingIdNum = parseInt(bookingId, 10);
-        bc_button_loading(el, true);
-
-        $.ajax({
-            url: `/booking/${bookingIdNum}/cancel`,
-            type: 'POST',
-            dataType: 'json',
-            data: {
-                _token: $('meta[name="csrf-token"]').attr('content') || ''
-            },
-            success: function (res) {
-                bc_button_loading(el, false);
-
-                if (res.status) {
-                    var modal = bootstrap.Modal.getInstance(document.getElementById('cancelBookingModal' + bookingIdNum));
-                    if (modal) {
-                        modal.hide();
-                    }
-
-                    bookingCoreApp.showAjaxMessage(res);
-
-                    setTimeout(function () {window.location.reload()}, 500);
-                } else if (res.message) {
-                    if (typeof bookingCoreApp !== 'undefined' && bookingCoreApp.showAjaxMessage) {
-                        bookingCoreApp.showAjaxMessage(res);
-                    } else {
-                        alert(res.message);
-                    }
-                }
-            },
-            error: function (e) {
-                bc_button_loading(el, false);
-
-                if (e.status === 419) {
-                    alert('Сессия истекла, обновите страницу');
-                } else if (e.responseJSON && e.responseJSON.message) {
-                    alert('Ошибка: ' + e.responseJSON.message);
-                } else {
-                    alert('Произошла ошибка при отмене бронирования');
-                }
-            }
-        });
-    });
+    // $(document).on('click', '.btn-cancel-booking-confirm-vue', function (e) {
+    //     e.preventDefault();
+    //     const btn = $(this);
+    //     const el = btn[0];
+    //     const bookingId = btn.data('booking-id');
+    //
+    //     if (!bookingId) {
+    //         return;
+    //     }
+    //
+    //     const bookingIdNum = parseInt(bookingId, 10);
+    //     bc_button_loading(el, true);
+    //
+    //     $.ajax({
+    //         url: `/booking/${bookingIdNum}/cancel`,
+    //         type: 'POST',
+    //         dataType: 'json',
+    //         data: {
+    //             _token: $('meta[name="csrf-token"]').attr('content') || ''
+    //         },
+    //         success: function (res) {
+    //             bc_button_loading(el, false);
+    //
+    //             if (res.status) {
+    //                 var modal = bootstrap.Modal.getInstance(document.getElementById('cancelBookingModal' + bookingIdNum));
+    //                 if (modal) {
+    //                     modal.hide();
+    //                 }
+    //
+    //                 bookingCoreApp.showAjaxMessage(res);
+    //
+    //                 setTimeout(function () {window.location.reload()}, 500);
+    //             } else if (res.message) {
+    //                 if (typeof bookingCoreApp !== 'undefined' && bookingCoreApp.showAjaxMessage) {
+    //                     bookingCoreApp.showAjaxMessage(res);
+    //                 } else {
+    //                     alert(res.message);
+    //                 }
+    //             }
+    //         },
+    //         error: function (e) {
+    //             bc_button_loading(el, false);
+    //
+    //             if (e.status === 419) {
+    //                 alert('Сессия истекла, обновите страницу');
+    //             } else if (e.responseJSON && e.responseJSON.message) {
+    //                 alert('Ошибка: ' + e.responseJSON.message);
+    //             } else {
+    //                 alert('Произошла ошибка при отмене бронирования');
+    //             }
+    //         }
+    //     });
+    // });
 });

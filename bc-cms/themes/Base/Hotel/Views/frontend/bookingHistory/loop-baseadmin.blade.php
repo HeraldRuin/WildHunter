@@ -278,7 +278,7 @@
                 type="button"
                 class="btn btn-success btn-sm mt-2"
                 data-bs-toggle="modal"
-                data-bs-target="#cancelBookingModal{{ $booking->id }}">
+                @click="openCancelBookingModal({{ $booking->id }}, $event)">
                 {{__("Complete booking")}}
             </button>
         @endif
@@ -288,7 +288,7 @@
                 type="button"
                 class="btn btn-danger btn-sm mt-2"
                 data-bs-toggle="modal"
-                data-bs-target="#cancelBookingModal{{ $booking->id }}">
+                @click="openCancelBookingModal({{ $booking->id }}, $event)">
                 {{__("Cancele booking")}}
             </button>
         @endif
@@ -323,24 +323,4 @@
 
 {{-- Модальное окно поиска заказчика --}}
 @include('User::frontend.modals.search-user-modal')
-
-<div class="modal fade" id="cancelBookingModal{{ $booking->id }}" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">{{__('Cancel booking')}} #{{ $booking->id }}</h5>
-            </div>
-            <div class="modal-body">
-                <p>{{__('Are you sure you want to cancel this booking?')}}</p>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary"
-                        data-bs-dismiss="modal">{{__('No, keep booking')}}</button>
-                <button type="button" class="btn btn-danger btn-cancel-booking-confirm-vue"
-                        data-booking-id="{{ $booking->id }}">{{__('Yes, cancel')}}</button>
-            </div>
-        </div>
-    </div>
-</div>
-
 
