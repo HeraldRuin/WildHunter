@@ -63,7 +63,3 @@ function declineInvitation(bookingId) {
         }
     });
 }
-
-window.openInvitationModal = openInvitationModal;
-window.acceptInvitation = acceptInvitation;
-window.declineInvitation = declineInvitation;
