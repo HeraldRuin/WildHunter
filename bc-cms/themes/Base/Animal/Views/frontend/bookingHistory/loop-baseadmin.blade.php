@@ -187,8 +187,11 @@
     <td>{{format_money($booking->total - $booking->paid)}}</td>
     <td>
         @if($userRole === 'baseadmin' && $booking->status === \Modules\Booking\Models\Booking::PROCESSING)
-            <button type="button" class="btn btn-success" data-bs-toggle="modal"
-                    data-bs-target="#confirmBookingModal{{ $booking->id }}">
+            <button
+                type="button"
+                class="btn btn-success"
+                data-bs-toggle="modal"
+                @click="openConfirmBookingModal({{ $booking->id }}, $event)">
                 {{ __("Booking apply") }}
             </button>
         @endif
@@ -243,25 +246,6 @@
 
 {{-- Модальное окно поиска заказчика --}}
 @include('User::frontend.modals.search-user-modal')
-
-<div class="modal fade" id="confirmBookingModal{{ $booking->id }}" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Подтверждение брони #{{ $booking->id }}</h5>
-
-            </div>
-            <div class="modal-body">
-                <p>Вы уверены, что хотите подтвердить эту бронь?</p>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
-                <button type="button" class="btn btn-success" @click="confirmBooking({{$booking->id}})">Подтвердить
-                </button>
-            </div>
-        </div>
-    </div>
-</div>
 
 <div class="modal fade" id="cancelBookingModal{{ $booking->id }}" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog">

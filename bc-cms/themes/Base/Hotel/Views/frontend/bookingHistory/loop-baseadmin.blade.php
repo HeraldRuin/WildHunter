@@ -6,13 +6,13 @@
     <td class="a-hidden">{{display_date($booking->created_at)}}</td>
     <td>
        <span
-                        class="cursor-pointer user-link"
-                        data-bs-trigger="hover"
-                        data-bs-html="true"
-                        data-bs-placement="right"
-                        data-bs-content="<strong>{{ $booking->creator?->first_name ?? '' }} {{ $booking->creator?->last_name ?? '' }}</strong><br>Email: {{ $booking->creator?->email ?? '' }}<br>Phone: {{ $booking->creator?->phone ?? '' }}"
-                        @click="{{ $userRole !== 'hunter' && $booking->creator ? "openUserModal({$booking->creator->id}, {$booking->id})" : '' }}">
-                {{ $booking->creator ? (!empty($booking->creator->user_name) ? $booking->creator->user_name : $booking->creator->first_name) : 'N/A' }}
+          class="cursor-pointer user-link"
+          data-bs-trigger="hover"
+          data-bs-html="true"
+          data-bs-placement="right"
+          data-bs-content="<strong>{{ $booking->creator?->first_name ?? '' }} {{ $booking->creator?->last_name ?? '' }}</strong><br>Email: {{ $booking->creator?->email ?? '' }}<br>Phone: {{ $booking->creator?->phone ?? '' }}"
+          @click="{{ $userRole !== 'hunter' && $booking->creator ? "openUserModal({$booking->creator->id}, {$booking->id})" : '' }}">
+          {{ $booking->creator ? (!empty($booking->creator->user_name) ? $booking->creator->user_name : $booking->creator->first_name) : 'N/A' }}
         </span>
         @if($booking->status === \Modules\Booking\Models\Booking::FINISHED_PREPAYMENT)
             <button
@@ -264,7 +264,11 @@
     <td>{{format_money($booking->total - $booking->paid)}}</td>
     <td>
         @if($userRole === 'baseadmin' && $booking->status === \Modules\Booking\Models\Booking::PROCESSING)
-            <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#confirmBookingModal{{ $booking->id }}">
+            <button
+                type="button"
+                class="btn btn-success"
+                data-bs-toggle="modal"
+                @click="openConfirmBookingModal({{ $booking->id }}, $event)">
                 {{ __("Booking apply") }}
             </button>
         @endif
@@ -320,25 +324,6 @@
 {{-- Модальное окно поиска заказчика --}}
 @include('User::frontend.modals.search-user-modal')
 
-<div class="modal fade" id="confirmBookingModal{{ $booking->id }}" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Подтверждение брони #{{ $booking->id }}</h5>
-
-            </div>
-            <div class="modal-body">
-                <p>Вы уверены, что хотите подтвердить эту бронь?</p>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
-                <button type="button" class="btn btn-success" @click="confirmBooking({{$booking->id}})">Подтвердить
-                </button>
-            </div>
-        </div>
-    </div>
-</div>
-
 <div class="modal fade" id="cancelBookingModal{{ $booking->id }}" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -357,16 +342,5 @@
         </div>
     </div>
 </div>
-
-@push('js')
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            document.querySelectorAll('[data-bs-toggle="popover"]').forEach(el => {
-                new bootstrap.Popover(el);
-            });
-        });
-    </script>
-@endpush
-
 
 

@@ -758,20 +758,34 @@ document.addEventListener('DOMContentLoaded', function () {
                     }
                 });
             },
-            confirmBooking($bookingId) {
-                $.ajax({
-                    url: `/booking/${$bookingId}/confirm`,
-                    type: 'POST',
-                    dataType: 'json',
-                    data: {},
-                    success: (res) => {
-                        if (res.status) {
-                            bookingCoreApp.showAjaxMessage(res);
-                            window.location.reload();
-                        }
-                    },
-                    error: (e) => {
-                        alert('Ошибка подтверждения брони');
+            openConfirmBookingModal($bookingId, event) {
+                const btn = event?.currentTarget || null;
+
+                bookingCoreApp.showConfirm({
+                    message: 'Вы уверены, что хотите подтвердить бронь?',
+                    callback: (result) => {
+                        if (!result) return;
+                        if (btn) bc_button_loading(btn, true);
+
+                        $.ajax({
+                            url: `/booking/${$bookingId}/confirm`,
+                            type: 'POST',
+                            dataType: 'json',
+                            data: {
+                                _token: $('meta[name="csrf-token"]').attr('content') || ''
+                            },
+                            success: (res) => {
+                                if (res.status) {
+                                    if (btn) bc_button_loading(btn, false);
+                                    bookingCoreApp.showAjaxMessage(res);
+                                    setTimeout(function () {window.location.reload()}, 1000);
+                                }
+                            },
+                            error: function (e) {
+                                if (btn) bc_button_loading(btn, false);
+                                bookingCoreApp.showError({ message: 'Ошибка подтверждения брони' });
+                            }
+                        });
                     }
                 });
             },
@@ -794,9 +808,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
                         if (res.status) {
                             bookingCoreApp.showAjaxMessage(res);
-                            setTimeout(function () {
-                                window.location.reload();
-                            }, 500);
+                            setTimeout(function () {window.location.reload()}, 1000);
                         } else if (res.message) {
                             bookingCoreApp.showAjaxMessage(res);
                         }
@@ -1372,8 +1384,6 @@ document.addEventListener('DOMContentLoaded', function () {
                         alert('Ошибка при запросе к серверу');
                     });
             },
-
-
             renderCalculatingData(booking, contentEl, res) {
                 const places = res.places ?? {};
                 const is_baseAdmin = res.is_baseAdmin ?? false;
@@ -1532,7 +1542,6 @@ document.addEventListener('DOMContentLoaded', function () {
                         console.log('[HunterInvitation] Получено событие приглашения:', e);
                         // Обновляем страницу истории бронирований
                         if (window.location.pathname.includes('booking-history')) {
-                            //console.log('[HunterInvitation] Обновление страницы...');
                             setTimeout(() => {
                                 location.reload();
                             }, 500);
@@ -1641,7 +1650,8 @@ document.addEventListener('DOMContentLoaded', function () {
                     let diffMs = end - now;
 
                     const extendBtn = document.querySelector('.btn-extend-collection[data-booking-id="' + bookingId + '"]');
-                    const finishBtn = document.querySelector('.btn-finish-collection[data-booking-id="' + bookingId + '"]');
+                    const btn = document.getElementById(`accept-btn-${bookingId}`);
+
 
                     // Таймер закончился
                     if (diffMs <= 0) {
@@ -1658,27 +1668,6 @@ document.addEventListener('DOMContentLoaded', function () {
                             const bookingKey = String(bookingId);
                             window.collectionState[bookingKey] = true;
 
-                            // Проверяем, достаточно ли охотников приглашено
-                            // Если таймер закончен, но не все охотники собраны - блокируем кнопку "Завершить сбор"
-                            if (finishBtn) {
-                                const vueEl = document.getElementById('booking-history');
-                                const modal = document.getElementById('collectionModal' + bookingId);
-
-                                if (vueEl && vueEl.__vue__ && modal) {
-                                    const vueComponent = vueEl.__vue__;
-                                    const requiredHunters = parseInt(modal.dataset.huntersCount || '0', 10);
-
-                                    // Считаем приглашенных охотников (со статусом не declined)
-                                    let invitedCount = 0;
-                                    if (vueComponent.hunterSlots && vueComponent.hunterSlots.length > 0) {
-                                        invitedCount = vueComponent.hunterSlots.filter(slot =>
-                                            slot.hunter &&
-                                            slot.hunter.invited &&
-                                            slot.hunter.invitation_status !== 'declined'
-                                        ).length;
-                                    }
-                                }
-                            }
                         return;
                     }
 
