@@ -100,7 +100,7 @@ window.bc_button_loading = function (btn, isLoading = true) {
     }
 };
 
-window.openModal = function (modalBaseId, bookingId = null, btn = null) {
+window.openModal = function (modalBaseId, bookingId = null) {
     let modalId;
 
     if (bookingId !== null && bookingId !== undefined) {
