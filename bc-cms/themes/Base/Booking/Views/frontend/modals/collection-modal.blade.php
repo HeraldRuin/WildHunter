@@ -11,52 +11,6 @@
         $huntersCount = $booking->total_hunting ?? 0;
         $animalMinHunters = $booking->hotelAnimal()->hunters_count ?? 0;
     }
-
-    $masterHunter = $bookingHunter->invitedBy()->first();
-
-    $currentUserId = auth()->id();
-    $isInvited = false;
-    if ($currentUserId) {
-        $creatorId = $booking->create_user ?? $booking->customer_id;
-        $isCreator = ($currentUserId == $creatorId);
-
-        if (!$isCreator) {
-            $isInvited = $booking->isInvited($currentUserId);
-        }
-    }
-
-
-    $invitedHunters = [];
-    if ($isInvited || in_array($booking->status, [\Modules\Booking\Models\Booking::FINISHED_COLLECTION, \Modules\Booking\Models\Booking::PREPAYMENT_COLLECTION, \Modules\Booking\Models\Booking::FINISHED_PREPAYMENT, \Modules\Booking\Models\Booking::BED_COLLECTION, \Modules\Booking\Models\Booking::FINISHED_BED])) {
-//        $invitations = $booking->getAllInvitations();
-//        foreach ($invitations as $invitation) {
-//            if ($invitation->hunter) {
-//                $isCurrentUser = $invitation->hunter->id == $currentUserId;
-//                $invitedHunters[] = [
-//                    'id' => $invitation->hunter->id,
-//                    'name' => $invitation->hunter->first_name . ' ' . $invitation->hunter->last_name,
-//                    'email' => $invitation->hunter->email,
-//                    'user_name' => $invitation->hunter->user_name ?? null,
-//                    'status' => $invitation->status,
-//                    'invited_at' => $invitation->invited_at,
-//                    'is_self' => $isCurrentUser,
-//                    'prepayment_paid' => (bool) ($invitation->prepayment_paid ?? false),
-//                ];
-//            } elseif ($invitation->email) {
-//                $invitedHunters[] = [
-//                    'id' => null,
-//                    'name' => $invitation->email,
-//                    'email' => $invitation->email,
-//                    'user_name' => null,
-//                    'status' => $invitation->status,
-//                    'invited_at' => $invitation->invited_at,
-//                    'is_self' => false,
-//                    'is_external' => true,
-//                    'prepayment_paid' => (bool) ($invitation->prepayment_paid ?? false),
-//                ];
-//            }
-//        }
-    }
 @endphp
 
 <div class="modal fade" id="collectionModal{{ $booking->id }}" tabindex="-1" aria-hidden="true"
@@ -125,7 +79,7 @@
                                             <div class="text-muted small mb-2">@{{ hunter.email }}</div>
                                         </div>
 
-                                        @if($booking->status === \Modules\Booking\Models\Booking::PREPAYMENT_COLLECTION)
+                                        @if($booking->status === \Modules\Booking\Models\Booking::PREPAYMENT_COLLECTION && $booking->is_master_hunter)
                                             <div class="d-flex">
                                                 <div v-if="!hunter.prepayment_paid && hunter.id !== booking.master_hunter_id">
                                                     <div v-if="hunterToReplace !== hunter.id">
@@ -204,7 +158,7 @@
                             @include('Booking::frontend.modals.hunter-collection-modal')
                         @endif
                     </div>
-            </div>
+                    </div>
         </div>
     </div>
 </div>
