@@ -222,14 +222,12 @@
     <td>
         @if($isInvited && $isCollectionStatus)
             @if(!$isInvitationAccepted)
-                <button
-                    type="button"
-                    class="btn btn-primary btn-sm mt-2"
-                    data-bs-toggle="modal"
-                    data-bs-target="#invitationModal{{ $booking->id }}"
-                    onclick="openInvitationModal({{ $booking->id }})">
-                    {{__("Open invitation")}}
-                </button>
+                 <button
+                      type="button"
+                      class="btn btn-primary btn-sm mt-2"
+                      onclick="openModal('invitationModal', {{ $booking->id }})">
+                      {{__("Open invitation")}}
+                 </button>
             @endif
             @if($isInvitationAccepted && $booking->type === \Modules\Booking\Models\Booking::BookingTypeAnimal)
                 @if(!$booking->is_master_hunter && in_array($booking->status, [\Modules\Booking\Models\Booking::PREPAYMENT_COLLECTION, \Modules\Booking\Models\Booking::FINISHED_PREPAYMENT, \Modules\Booking\Models\Booking::START_COLLECTION, \Modules\Booking\Models\Booking::BED_COLLECTION, \Modules\Booking\Models\Booking::FINISHED_BED]))

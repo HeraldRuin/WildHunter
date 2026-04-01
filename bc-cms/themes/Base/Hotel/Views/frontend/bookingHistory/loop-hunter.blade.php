@@ -293,9 +293,7 @@
                 <button
                     type="button"
                     class="btn btn-primary btn-sm mt-2"
-                    data-bs-toggle="modal"
-                    data-bs-target="#invitationModal{{ $booking->id }}"
-                    onclick="openInvitationModal({{ $booking->id }})">
+                    onclick="openModal('invitationModal', {{ $booking->id }})">
                     {{__("Open invitation")}}
                 </button>
             @endif

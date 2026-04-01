@@ -13,6 +13,7 @@
                         <div class="mt-4 p-3 border rounded">
                             <div class="d-flex justify-content-center gap-2 flex-wrap">
                                 <button
+                                    id="accept-btn-{{ $booking->id }}"
                                     type="button"
                                     class="btn btn-success mr-2"
                                     onclick="acceptInvitation({{ $booking->id }})">
@@ -70,11 +71,11 @@
                                                     {{ __('Invited') }}
                                                 @endif
                                             </span>
-                                            <span class="ml-2">
-                                                @if($inv->status != 'declined')
-                                                {{ $inv->prepayment_paid === 1 ? __('Paid') : __('Awaiting prepayment') }}
-                                                @endif
-                                            </span>
+{{--                                            <span class="ml-2">--}}
+{{--                                                @if($inv->status != 'declined')--}}
+{{--                                                {{ $inv->prepayment_paid === 1 ? __('Paid') : __('Awaiting prepayment') }}--}}
+{{--                                                @endif--}}
+{{--                                            </span>--}}
                                         </div>
                                         @if($inv->invited_at)
                                             <small class="text-muted">{{ __('Invited At') }}
