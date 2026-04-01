@@ -334,7 +334,7 @@
                     type="button"
                     class="btn btn-danger btn-sm mt-2"
                     data-bs-toggle="modal"
-                    data-bs-target="#cancelBookingModal{{ $booking->id }}">
+                    @click="openCancelBookingModal({{ $booking->id }}, $event)">
                     {{__("Cancele booking")}}
                 </button>
             @endif
@@ -413,23 +413,3 @@
 
 {{-- Модальное окно для калькуляции --}}
 @include('Booking::frontend.modals.calculating.calculating-hunter-modal', ['booking' => $booking])
-
-{{-- Отмена бронирования --}}
-<div class="modal fade" id="cancelBookingModal{{ $booking->id }}" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">{{__('Cancel booking')}} #{{ $booking->id }}</h5>
-            </div>
-            <div class="modal-body">
-                <p>{{__('Are you sure you want to cancel this booking?')}}</p>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary"
-                        data-bs-dismiss="modal">{{__('No, keep booking')}}</button>
-                <button type="button" class="btn btn-danger"
-                        @click="cancelBooking($event, {{ $booking->id }})">{{__('Yes, cancel')}}</button>
-            </div>
-        </div>
-    </div>
-</div>
