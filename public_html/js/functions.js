@@ -100,6 +100,25 @@ window.bc_button_loading = function (btn, isLoading = true) {
     }
 };
 
+window.openModal = function (modalBaseId, bookingId = null, btn = null) {
+    let modalId;
+
+    if (bookingId !== null && bookingId !== undefined) {
+        modalId = modalBaseId + bookingId;
+    } else {
+        modalId = modalBaseId;
+    }
+
+    const modalEl = document.getElementById(modalId);
+
+    if (!modalEl) {
+        console.warn('Modal not found:', modalId);
+        return;
+    }
+
+    bootstrap.Modal.getOrCreateInstance(modalEl).show();
+};
+
 // Form validation
 var forms = document.getElementsByClassName('needs-validation');
 // Loop over them and prevent submission
