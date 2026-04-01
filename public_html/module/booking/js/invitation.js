@@ -73,9 +73,7 @@ function acceptInvitation(bookingId) {
                         modal.hide();
                     }
                 }
-                setTimeout(function() {
-                    location.reload();
-                }, 500);
+                setTimeout(function() {location.reload()}, 500);
             } else if (res.message) {
                 alert(res.message);
             }
@@ -93,58 +91,32 @@ function acceptInvitation(bookingId) {
 }
 
 function declineInvitation(bookingId) {
-    if (typeof jQuery === 'undefined' || typeof $ === 'undefined') {
-        alert('Ошибка: jQuery не загружен');
-        return;
-    }
-    
-    const translations = getInvitationTranslations();
-    const confirmMessage = translations.declineConfirm || 'Вы уверены, что хотите отказаться от этого приглашения?';
-    
-    if (!confirm(confirmMessage)) {
-        return;
-    }
+    bookingCoreApp.showConfirm({
+        message: 'Вы уверены, что хотите отказаться от этого приглашения?',
+        callback: (result) => {
+            if (!result) return;
 
-    const csrfToken = $('meta[name="csrf-token"]').attr('content') || '';
-    const url = `/booking/${bookingId}/decline-invitation`;
-    
-    $.ajax({
-        url: url,
-        type: 'POST',
-        dataType: 'json',
-        data: {
-            _token: csrfToken
-        },
-        success: function(res) {
-            if (res.status) {
-                if (typeof bookingCoreApp !== 'undefined' && bookingCoreApp.showAjaxMessage) {
-                    bookingCoreApp.showAjaxMessage(res);
-                } else {
-                    const translations = getInvitationTranslations();
-                    alert(res.message || translations.declined);
-                }
-                // Закрываем модальное окно и обновляем страницу
-                if (typeof bootstrap !== 'undefined') {
-                    const modal = bootstrap.Modal.getInstance(document.getElementById('invitationModal' + bookingId));
-                    if (modal) {
-                        modal.hide();
+            $.ajax({
+                url: `/booking/${bookingId}/decline-invitation`,
+                type: 'POST',
+                dataType: 'json',
+                data: {
+                    _token: $('meta[name="csrf-token"]').attr('content') || ''
+                },
+                success: function(res) {
+                    if (res.status) {
+                        bookingCoreApp.showAjaxMessage(res);
+                        setTimeout(function() {location.reload()}, 1000);
+                    }
+                },
+                error: function (e) {
+                    if (e.status === 419) {
+                        alert('Сессия истекла, обновите страницу');
+                    } else if (e.responseJSON && e.responseJSON.message) {
+                        bookingCoreApp.showAjaxMessage(e.responseJSON);
                     }
                 }
-                setTimeout(function() {
-                    location.reload();
-                }, 500);
-            } else if (res.message) {
-                alert(res.message);
-            }
-        },
-        error: function(e) {
-            if (e.status === 419) {
-                alert('Сессия истекла, обновите страницу');
-            } else if (e.responseJSON && e.responseJSON.message) {
-                alert('Ошибка: ' + e.responseJSON.message);
-            } else {
-                alert('Произошла ошибка при отклонении приглашения');
-            }
+            });
         }
     });
 }
