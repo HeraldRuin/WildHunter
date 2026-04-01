@@ -63,6 +63,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'name',
         'first_name',
         'last_name',
+        'user_name',
         'email',
         'email_verified_at',
         'password',
@@ -240,9 +241,9 @@ class User extends Authenticatable implements MustVerifyEmail
         if (!empty($this->first_name) or !empty($this->last_name)) {
             $name = implode(' ', [$this->first_name, $this->last_name]);
         }
-//        if (!empty($this->business_name)) {
-//            $name = $this->business_name;
-//        }
+        if (!empty($this->user_name)) {
+            $name = $this->user_name;
+        }
         if (!trim($name) and $email) $name = $this->email;
         if (empty($name)) {
             $name = ' ';
@@ -261,9 +262,12 @@ class User extends Authenticatable implements MustVerifyEmail
         if (!empty($this->first_name) or !empty($this->last_name)) {
             $name = implode(' ', [$this->first_name, $this->last_name]);
         }
-        if (!empty($this->business_name)) {
-            $name = $this->business_name;
+        if (!empty($this->user_name)) {
+            $name = $this->user_name;
+        }else if(!empty($this->email)) {
+            $name = $this->email;
         }
+
         return $name;
     }
 
