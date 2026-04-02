@@ -2,6 +2,7 @@
 namespace Modules\Booking\Gateways;
 
 use Illuminate\Http\Request;
+use Modules\Booking\Models\Booking;
 use Modules\Booking\Models\Payment;
 
 abstract class BaseGateway
@@ -37,6 +38,9 @@ abstract class BaseGateway
     }
 
     public function processNormal($payment){
+
+    }
+    public function processFromBooking($data, Booking $booking){
 
     }
 
