@@ -16,7 +16,7 @@
 <div class="modal fade" id="collectionModal{{ $booking->id }}" tabindex="-1" aria-hidden="true"
      data-hunters-count="{{ $huntersCount }}"
      data-animal-min-hunters="{{ $animalMinHunters }}"
-     data-master-hunter-id="{{ $booking->masterHunterId() }}"
+     data-master-hunter-id="{{ $booking->master_hunter_id }}"
      data-text-paid="{{ __('Paid') }}"
      data-text-awaiting="{{ __('Awaiting prepayment') }}"
      data-booking-id="{{ $booking->id }}">
