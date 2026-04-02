@@ -1177,6 +1177,16 @@ function get_payment_gateways(){
 function get_active_payment_gateways(){
     return \Modules\Booking\Helpers\PaymentGatewayManager::available();
 }
+function get_active_payment_gateway_name(){
+    return \Modules\Booking\Helpers\PaymentGatewayManager::getFirstAvailableId();
+}
+function get_active_payment_gateway_object(){
+    $gateways = get_payment_gateways();
+    $payment_gateway = get_active_payment_gateway_name();
+
+    return $gateways[$payment_gateway] ?? null;
+
+}
 
 
 function format_percent($number){
