@@ -1039,26 +1039,32 @@ document.addEventListener('DOMContentLoaded', function () {
                     }
                 });
             },
-            bookingPrepaymentPaid(event) {
-                const btn = event.currentTarget;
-                if (!btn) return;
-
-                const bookingId = btn.dataset.bookingId;
+            bookingPrepaymentPaid(bookingId, event) {
                 if (!bookingId) return;
-
                 if (this.prepaymentPaidMap[bookingId]) return;
 
-                fetch(`/booking/${bookingId}/prepayment-paid`, {
-                    method: 'POST',
-                    headers: {
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-                    }
-                }).then(res => {
-                    if (!res.ok) {
-                        throw new Error();
-                    }
+                const btn = event.currentTarget;
+                if (btn) bc_button_loading(btn, true);
 
-                    this.$set(this.prepaymentPaidMap, bookingId, true);
+                $.ajax({
+                    url: `/booking/${bookingId}/prepayment-paid`,
+                    type: 'POST',
+                    dataType: 'json',
+                    data: {
+                        _token: $('meta[name="csrf-token"]').attr('content') || ''
+                    },
+                    success: function (res) {
+                        if (res.status) {
+                                if (res?.payment_url) {
+                                    window.open(res.payment_url, '_blank');
+                                }
+                                // this.$set(this.prepaymentPaidMap, bookingId, true);
+                        }
+                    },
+                    error: function (e) {
+                        bc_button_loading(btn, false);
+                        bookingCoreApp.showError({ message: 'Произошла ошибка при отмене сбора охотников' });
+                    }
                 });
             },
             searchReplaceHunter(bookingId) {
@@ -1181,24 +1187,13 @@ document.addEventListener('DOMContentLoaded', function () {
                     }
                 });
             },
-
-            // Открытие выбор койко-место
             openBookingPlacesModal(booking, event) {
-                const bookingIdNum = parseInt(booking.id, 10);
-                const modalEl = document.getElementById('placeBookingModal' + bookingIdNum);
-                let modalInstance = bootstrap.Modal.getInstance(modalEl);
-
-                if (!modalInstance) {
-                    modalInstance = new bootstrap.Modal(modalEl);
-                }
-
-                modalInstance.show();
+                window.openModal('placeBookingModal', booking.id);
                 this.loadBookingPlaces(booking, event);
             },
 
             // Метод загрузки данных занятых мест
             loadBookingPlaces(booking, event = null) {
-                const bookingIdNum = parseInt(booking.id, 10);
                 const btn = event?.currentTarget || null;
                 if (btn) bc_button_loading(btn, true);
 
@@ -1216,10 +1211,10 @@ document.addEventListener('DOMContentLoaded', function () {
                         self.placesMap = res.places || {};
                         self.currentUserId = res.current_user_id || null;
 
-                        const modalEl = document.getElementById('placeBookingModal' + bookingIdNum);
+                        const modalEl = document.getElementById('placeBookingModal' + booking.id);
                         if (!modalEl) return;
 
-                        const contentEl = modalEl.querySelector('#booking-places-content-' + bookingIdNum);
+                        const contentEl = modalEl.querySelector('#booking-places-content-' + booking.id);
                         if (!contentEl) return;
 
                         contentEl.innerHTML = '';
