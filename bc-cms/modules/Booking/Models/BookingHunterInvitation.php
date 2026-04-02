@@ -97,14 +97,4 @@ class BookingHunterInvitation extends Model
     {
         return $this->belongsTo(\App\User::class, 'hunter_id');
     }
-
-    /**
-     * Возвращает охотника в этом приглашение для брони
-     */
-    public static function findInventedHunterForBooking($bookingHunterId, $hunterId)
-    {
-        return self::where('booking_hunter_id', $bookingHunterId)
-            ->where('hunter_id', $hunterId)
-            ->first();
-    }
 }
