@@ -1373,15 +1373,7 @@ document.addEventListener('DOMContentLoaded', function () {
             },
 
             openCalculatingModal(booking, event) {
-                const bookingIdNum = parseInt(booking.id, 10);
-                const modalEl = document.getElementById('calculatingBookingModal' + bookingIdNum);
-                let modalInstance = bootstrap.Modal.getInstance(modalEl);
-
-                if (!modalInstance) {
-                    modalInstance = new bootstrap.Modal(modalEl);
-                }
-
-                modalInstance.show();
+                window.openModal('calculatingBookingModal', booking.id);
                 this.loadCalculatingData(booking);
             },
 
