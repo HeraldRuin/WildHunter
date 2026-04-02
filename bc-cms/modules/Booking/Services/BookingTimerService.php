@@ -4,7 +4,6 @@ namespace Modules\Booking\Services;
 
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 use Modules\Booking\Models\Booking;
 
 class BookingTimerService
@@ -156,6 +155,14 @@ class BookingTimerService
         $timerHour = $this->getTimerHours($booking, 'collection');
         $this->startTimer($booking->id, $timerHour, 'collection', ['collection', 'paid', 'beds']);
     }
+    public function startPaidTimer($booking): void
+    {
+        $booking->status = Booking::PREPAYMENT_COLLECTION;
+        $booking->save();
+
+        $timerHour = $this->getTimerHours($booking, 'paid');
+        $this->startTimer($booking->id, $timerHour, 'paid', ['collection', 'paid']);
+    }
     public function startBedTimer($booking): void
     {
         $booking->status = Booking::BED_COLLECTION;
@@ -163,14 +170,6 @@ class BookingTimerService
 
         $timerHour = $this->getTimerHours($booking, 'beds');
         $this->startTimer($booking->id, $timerHour, 'beds', ['paid']);
-    }
-    public function startPaidTimer($booking): void
-    {
-        $booking->status = Booking::PREPAYMENT_COLLECTION;
-        $booking->save();
-
-        $timerHour = $this->getTimerHours($booking, 'paid');
-        $this->startTimer($booking->id, $timerHour, 'paid', ['paid']);
     }
 }
 
