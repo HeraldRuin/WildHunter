@@ -73,7 +73,6 @@ class Booking extends BaseModel
     ];
 
     protected $appends = ['master_hunter_id','is_master_hunter', 'is_invited'];
-    private mixed $bookingHunter;
 
     public function getGatewayObjAttribute()
     {
@@ -83,23 +82,6 @@ class Booking extends BaseModel
     public function getStatusNameAttribute()
     {
         return booking_status_to_text($this->status);
-    }
-
-    /**
-     * Количество охотников, которые приняли приглашение и оплатили предоплату
-     */
-    public function countAcceptedAndPaidHunters(): int
-    {
-        $masterBookingHunter = $this->masterHunter();
-
-        if (!$masterBookingHunter) {
-            return 0;
-        }
-
-        return $masterBookingHunter->invitations
-            ->where('status', 'accepted')
-            ->where('prepayment_paid', true)
-            ->count();
     }
 
     /**
@@ -175,7 +157,7 @@ class Booking extends BaseModel
      */
     public function getInvitationsExceptMaster()
     {
-        $masterHunterId = $this->masterHunterId();
+        $masterHunterId = $this->master_hunter_id;
 
         $collection = $this->getAllInvitations();
 
@@ -1627,21 +1609,18 @@ class Booking extends BaseModel
     /**
      * Мастера брони
      */
-    public function masterHunter(): ?BookingHunter
+    public function masterHunter(): HasOne
     {
-        return $this->bookingHunter()
-            ->where('is_master', true)
-            ->first();
+        return $this->hasOne(BookingHunter::class, 'booking_id', 'id')
+            ->where('is_master', true);
     }
 
     /**
      * id Мастера брони
      */
-    public function masterHunterId(): ?int
+    public function getMasterHunterIdAttribute(): ?int
     {
-        return $this->bookingHunter()
-            ->where('is_master', true)
-            ->value('invited_by');
+        return $this->masterHunter?->invited_by;
     }
 
     /**
@@ -1649,22 +1628,35 @@ class Booking extends BaseModel
      */
     public function masterHunterRowId(): ?int
     {
-        return $this->bookingHunter()
-            ->where('is_master', true)
-            ->value('id');
-    }
-
-    public function getMasterHunterIdAttribute(): ?int
-    {
-        return $this->masterHunterId();
+        return $this->masterHunter?->id;
     }
     public function acceptedInvitationsOfMaster()
     {
-        return $this->bookingHunters()
-            ->where('is_master', true)
-            ->first()?->invitations()
+        return $this->masterHunter?->invitations()
             ->where('status', BookingHunterInvitation::STATUS_ACCEPTED)
             ->get() ?? collect();
+    }
+
+    /**
+     * Количество охотников, которые приняли приглашение и оплатили предоплату
+     */
+    public function countAcceptedAndPaidHunters(): int
+    {
+        return $this->masterHunter()
+            ->whereHas('invitations', function ($query) {
+                $query->where('status', BookingHunterInvitation::STATUS_ACCEPTED)
+                    ->where('prepayment_paid', true)
+                    ->where('prepayment_paid_status', BookingHunterInvitation::PREPAYMENT_PAID);
+            })
+            ->count();
+    }
+    public function countAcceptedHunters(): int
+    {
+        return $this->masterHunter()
+            ->whereHas('invitations', function ($query) {
+                $query->where('status', BookingHunterInvitation::STATUS_ACCEPTED);
+            })
+            ->count();
     }
     public function unpaidInvitationsOfHunters(): \Illuminate\Database\Eloquent\Collection|\Illuminate\Support\Collection
     {
@@ -1705,6 +1697,13 @@ class Booking extends BaseModel
         return optional($this->bookingHunter)->invitations->firstWhere('hunter_id', $userId);
     }
 
+    public function invitationUser(int $userId)
+    {
+        return BookingHunterInvitation::where('booking_hunter_id', $this->masterHunterRowId())
+            ->where('hunter_id', $userId)
+            ->first();
+    }
+
     public function getTypeTextAttribute()
     {
         return match ($this->type) {
@@ -1723,5 +1722,12 @@ class Booking extends BaseModel
             'status' => 'invitation',
             'code' => $this->code
         ]);
+    }
+
+    public function getAmountPerPerson(): float
+    {
+        $count = $this->acceptedInvitationsOfMaster()->count();
+
+        return round($this->total / $count, 2);
     }
 }
