@@ -1373,7 +1373,6 @@ document.addEventListener('DOMContentLoaded', function () {
             },
 
             openCalculatingModal(booking, event) {
-                window.openModal('calculatingBookingModal', booking.id);
                 this.loadCalculatingData(booking);
             },
 
@@ -1384,10 +1383,11 @@ document.addEventListener('DOMContentLoaded', function () {
                 return $.get(`/booking/${booking.id}/calculating`)
                     .done(res => {
                         if (!res.status) {
-                            alert('Ошибка получения данных');
+                            bookingCoreApp.showError({ message: res.message });
                             return;
                         }
 
+                        window.openModal('calculatingBookingModal', booking.id);
                         self.calculatingData = res;
 
                         const modalEl = document.getElementById('calculatingBookingModal' + bookingIdNum);

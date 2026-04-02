@@ -4,7 +4,6 @@ namespace Modules\Booking\Services;
 
 use Modules\Animals\Models\Animal;
 use Modules\Booking\Models\Booking;
-use Modules\Booking\Models\BookingHunterInvitation;
 use Modules\Booking\Models\BookingRoomPlace;
 use Modules\Booking\Models\BookingService;
 use Modules\Hotel\Models\HotelRoomBooking;
@@ -12,10 +11,17 @@ use Modules\User\Models\User;
 
 class BookingCalculatingService
 {
-    public function calculate($booking, $user): array
+    public function calculate($booking, $user)
     {
         $isBaseAdmin = $user->hasRole('baseadmin');
-        $masterBookingHunter = $booking->masterHunter();
+
+        $paidCount = $booking->countAcceptedAndPaidHunters();
+        if ($paidCount <= 0) {
+            return [
+                'status' => false,
+                'message' => 'Нет оплативших участников',
+            ];
+        }
 
         // === Распределение по комнатам ===
         $places = BookingRoomPlace::where('booking_id', $booking->id)->get();
@@ -47,13 +53,6 @@ class BookingCalculatingService
         }
 
         $totalMyCost = array_sum(array_column($result, 'my_cost'));
-
-        // Обновляем prepayment_paid текущего пользователя
-        BookingHunterInvitation::where('booking_hunter_id', $masterBookingHunter->id)
-            ->where('hunter_id', $user->id)
-            ->update(['prepayment_paid' => true]);
-
-        $paidCount = $booking->countAcceptedAndPaidHunters();
 
         // === Получаем услуги ===
         $services = BookingService::where('booking_id', $booking->id)->get();
