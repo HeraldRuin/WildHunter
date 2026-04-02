@@ -388,8 +388,6 @@
                     {{__("Add services")}}
                 </button>
             @endif
-
-
         @endif
     </td>
 </tr>

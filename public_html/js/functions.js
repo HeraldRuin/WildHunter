@@ -119,6 +119,25 @@ window.openModal = function (modalBaseId, bookingId = null) {
     bootstrap.Modal.getOrCreateInstance(modalEl).show();
 };
 
+window.closeModal = function (modalBaseId, bookingId = null) {
+    let modalId;
+
+    if (bookingId !== null && bookingId !== undefined) {
+        modalId = modalBaseId + bookingId;
+    } else {
+        modalId = modalBaseId;
+    }
+
+    const modalEl = document.getElementById(modalId);
+
+    if (!modalEl) {
+        console.warn('Modal not found:', modalId);
+        return;
+    }
+
+    bootstrap.Modal.getOrCreateInstance(modalEl).hide();
+};
+
 // Form validation
 var forms = document.getElementsByClassName('needs-validation');
 // Loop over them and prevent submission

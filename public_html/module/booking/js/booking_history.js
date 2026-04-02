@@ -76,9 +76,7 @@ document.addEventListener('DOMContentLoaded', function () {
             openUserModal(userId, bookingId) {
                 this.currentUserId = userId;
                 this.currentBookingId = bookingId;
-                const modalEl = document.getElementById('userModal');
-                const modal = new bootstrap.Modal(modalEl);
-                modal.show();
+                window.openModal('userModal');
             },
 
             isCollectionTimerExpired(bookingId) {
@@ -88,12 +86,11 @@ document.addEventListener('DOMContentLoaded', function () {
 
             // ТОЛЬКО ДЛЯ МАСТЕРА
             openCollectionAsMaster(bookingId, event) {
-                const bookingIdNum = parseInt(bookingId, 10);
                 const me = this;
                 const btn = event?.currentTarget || null;
                 if (btn) bc_button_loading(btn, true);
 
-                $.post(`/booking/${bookingIdNum}/start-collection`)
+                $.post(`/booking/${bookingId}/start-collection`)
                     .done(res => {
                         bc_button_loading(btn, false);
 
@@ -102,15 +99,12 @@ document.addEventListener('DOMContentLoaded', function () {
                             return;
                         }
 
-                        me.currentCollectionBookingId = bookingIdNum;
+                        me.currentCollectionBookingId = bookingId;
 
-                        const modalEl = document.getElementById('collectionModal' + bookingIdNum);
-                        if (modalEl) {
-                            new bootstrap.Modal(modalEl).show();
-                        }
+                        window.openModal('collectionModal', bookingId);
 
                         setTimeout(() => {
-                            me.initializeHunterSlots(bookingIdNum);
+                            me.initializeHunterSlots(bookingId);
                         }, 200);
                     })
                     .fail(() => {
@@ -120,17 +114,12 @@ document.addEventListener('DOMContentLoaded', function () {
             },
             // ТОЛЬКО ДЛЯ ПРИГЛАШЕННОГО
             openCollectionAsHunter(bookingId) {
-                const bookingIdNum = parseInt(bookingId, 10);
+                this.currentCollectionBookingId = bookingId;
 
-                this.currentCollectionBookingId = bookingIdNum;
-
-                const modalEl = document.getElementById('collectionModal' + bookingIdNum);
-                if (modalEl) {
-                    new bootstrap.Modal(modalEl).show();
-                }
+                window.openModal('collectionModal', bookingId);
 
                 setTimeout(() => {
-                    this.initializeHunterSlots(bookingIdNum);
+                    this.initializeHunterSlots(bookingId);
                 }, 200);
             },
             initializeHunterSlots(bookingId) {
@@ -870,12 +859,11 @@ document.addEventListener('DOMContentLoaded', function () {
                     });
             },
             startCollection(event, bookingId) {
-                const bookingIdNum = parseInt(bookingId, 10);
                 const btn = event?.currentTarget || null;
                 if (btn) bc_button_loading(btn, true);
 
                 $.ajax({
-                    url: `/booking/${bookingIdNum}/start-collection`,
+                    url: `/booking/${bookingId}/start-collection`,
                     type: 'POST',
                     dataType: 'json',
                     data: {},
@@ -883,14 +871,10 @@ document.addEventListener('DOMContentLoaded', function () {
                         bc_button_loading(btn, false);
 
                         if (res.status) {
-                            var modal = bootstrap.Modal.getInstance(document.getElementById('collectionModal' + bookingIdNum));
-                            if (modal) {
-                                modal.hide();
-                            }
+                            window.closeModal('collectionModal', bookingId);
+
                             bookingCoreApp.showAjaxMessage(res);
-                            setTimeout(function () {
-                                window.location.reload();
-                            }, 500);
+                            setTimeout(function () {window.location.reload()}, 500);
                         } else if (res.message) {
                             bookingCoreApp.showAjaxMessage(res);
                         }
