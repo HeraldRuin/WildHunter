@@ -17,6 +17,7 @@ function acceptInvitation(bookingId) {
                 },
                 success: function(res) {
                     if (res.status) {
+                        window.closeModal('invitationModal', bookingId)
                         bookingCoreApp.showAjaxMessage(res);
                         setTimeout(function() {location.reload()}, 1000);
                     }
@@ -48,6 +49,7 @@ function declineInvitation(bookingId) {
                 },
                 success: function(res) {
                     if (res.status) {
+                        window.closeModal('invitationModal', bookingId)
                         bookingCoreApp.showAjaxMessage(res);
                         setTimeout(function() {location.reload()}, 1000);
                     }
