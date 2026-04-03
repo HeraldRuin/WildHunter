@@ -288,7 +288,7 @@ class RoomAvailabilityService
 
                     // Если текущая дата входит в период брони
                     if ($dateKey >= $bookingStart && $dateKey <= $bookingEnd) {
-                        $day['bookings'][] = [
+                        $day['bookings'][$booking->id] = [
                             'id' => $booking->id,
                             'code' => $booking->code,
                             'status' => $booking->status,
@@ -304,6 +304,8 @@ class RoomAvailabilityService
         // Генерим HTML для всех броней, аналогично getRoomCalendar
         foreach ($allDates as &$day) {
             if (empty($day['bookings'])) continue;
+
+            $day['bookings'] = array_values($day['bookings']);
 
             $bookingHtml = '<div class="calendar-bookings">';
             foreach ($day['bookings'] as $b) {
