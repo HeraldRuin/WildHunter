@@ -17,6 +17,7 @@ use Modules\Animals\Models\AnimalFine;
 use Modules\Animals\Models\AnimalPreparation;
 use Modules\Animals\Models\AnimalTrophy;
 use Modules\Attendance\Models\AddetionalPrice;
+use Modules\Booking\DTO\ReplaceHunterData;
 use Modules\Booking\Emails\StatusUpdatedEmail;
 use Modules\Booking\Emails\HunterMessageEmail;
 use Modules\Booking\Events\BookingCreatedEvent;
@@ -25,15 +26,15 @@ use Modules\Booking\Events\BookingStartCollectionEvent;
 use Modules\Booking\Events\BookingUpdatedEvent;
 use Modules\Booking\Events\EnquirySendEvent;
 use Modules\Booking\Events\SetPaidAmountEvent;
+use Modules\Booking\Jobs\SendCheckToEmailJob;
 use Modules\Booking\Models\BookingHunter;
 use Modules\Booking\Models\BookingHunterInvitation;
 use Modules\Booking\Models\BookingPassenger;
 use Modules\Booking\Models\BookingRoomPlace;
 use Modules\Booking\Models\BookingService;
+use Modules\Booking\Models\Payment;
 use Modules\Booking\Services\BookingCalculatingService;
 use Modules\Booking\Services\BookingTimerService;
-use Modules\Hotel\Models\HotelAnimal;
-use Modules\Hotel\Models\HotelRoomBooking;
 use Modules\User\Events\SendMailUserRegistered;
 use Modules\Booking\Emails\CollectionTimerFinishedEmail;
 use Illuminate\Http\Request;
@@ -251,7 +252,7 @@ class BookingController extends \App\Http\Controllers\Controller
         $payment_gateway = $request->input('payment_gateway');
 
         if (empty($payment_gateway)) {
-            $payment_gateway = 'paykeeper';
+            $payment_gateway = get_active_payment_gateway_name();
         }
 
         // require payment gateway except pay full
@@ -270,13 +271,12 @@ class BookingController extends \App\Http\Controllers\Controller
 
         $rules = $service->filterCheckoutValidate($request, $rules);
         if (!empty($rules)) {
-
             $messages['term_conditions.required'] = __('Term conditions is required field');
-            $messages['payment_gateway.required'] = __('Payment gateway is required field');
-            $messages['last_name.required'] = __('Last Name field is required');
-            $messages['first_name.required'] = __('First Name field is required');
-            $messages['phone.required'] = __('Phone field is required');
-            $messages['email.required'] = __('Email field is required');
+//            $messages['payment_gateway.required'] = __('Payment gateway is required field');
+//            $messages['last_name.required'] = __('Last Name field is required');
+//            $messages['first_name.required'] = __('First Name field is required');
+//            $messages['phone.required'] = __('Phone field is required');
+//            $messages['email.required'] = __('Email field is required');
 
             $validator = Validator::make($request->all(), $rules, $messages);
             if ($validator->fails()) {
@@ -303,17 +303,17 @@ class BookingController extends \App\Http\Controllers\Controller
         }
 
         // Normal Checkout
-        $booking->first_name = $request->input('first_name');
-        $booking->last_name = $request->input('last_name');
-        $booking->email = $request->input('email');
-        $booking->phone = $request->input('phone');
-        $booking->address = $request->input('address_line_1');
-        $booking->address2 = $request->input('address_line_2');
-        $booking->city = $request->input('city');
-        $booking->state = $request->input('state');
-        $booking->zip_code = $request->input('zip_code');
-        $booking->country = $request->input('country');
-        $booking->customer_notes = $request->input('customer_notes');
+        $booking->first_name = $request->input('first_name', $user->first_name);
+        $booking->last_name = $request->input('last_name', $user->last_name);
+        $booking->email = $request->input('email', $user->email);
+        $booking->phone = $request->input('phone', $user->phone);
+        $booking->address = $request->input('address_line_1', $user->address);
+        $booking->address2 = $request->input('address_line_2', $user->address2);
+        $booking->city = $request->input('city', $user->city);
+        $booking->state = $request->input('state', $user->state);
+        $booking->zip_code = $request->input('zip_code', $user->zip_code);
+        $booking->country = $request->input('country', $user->country);
+        $booking->customer_notes = $request->input('customer_notes', $user->customer_notes);
         $booking->gateway = $payment_gateway;
         $booking->wallet_credit_used = floatval($credit);
         $booking->wallet_total_used = floatval($wallet_total_used);
@@ -375,15 +375,15 @@ class BookingController extends \App\Http\Controllers\Controller
 
         if (Auth::check()) {
             $user = auth()->user();
-            $user->first_name = $request->input('first_name');
-            $user->last_name = $request->input('last_name');
-            $user->phone = $request->input('phone');
-            $user->address = $request->input('address_line_1');
-            $user->address2 = $request->input('address_line_2');
-            $user->city = $request->input('city');
-            $user->state = $request->input('state');
-            $user->zip_code = $request->input('zip_code');
-            $user->country = $request->input('country');
+            $user->first_name = $request->input('first_name', $user->first_name);
+            $user->last_name = $request->input('last_name', $user->last_name);
+            $user->phone = $request->input('phone', $user->phone);
+            $user->address = $request->input('address_line_1', $user->address);
+            $user->address2 = $request->input('address_line_2', $user->address2);
+            $user->city = $request->input('city', $user->city);
+            $user->state = $request->input('state', $user->state);
+            $user->zip_code = $request->input('zip_code', $user->zip_code);
+            $user->country = $request->input('country', $user->country);
             $user->save();
         } elseif (!empty($confirmRegister)) {
             $user = new User();
@@ -414,7 +414,6 @@ class BookingController extends \App\Http\Controllers\Controller
         $booking->addMeta('locale', app()->getLocale());
         $booking->addMeta('how_to_pay', $how_to_pay);
 
-        // Save Passenger
         $this->savePassengers($booking, $request);
 
         if ($res = $service->afterCheckout($request, $booking)) {
@@ -985,7 +984,7 @@ class BookingController extends \App\Http\Controllers\Controller
 
         // Удаляем все приглашения охотников, кроме мастера охотника (того, кто приглашал)
         try {
-            $masterHunter = $booking->masterHunter();
+            $masterHunter = $booking->masterHunter;
 
             if (!$masterHunter) {
                 return $this->sendError('Не найден мастер охотник этой брони')->setStatusCode(400);
@@ -1375,19 +1374,12 @@ class BookingController extends \App\Http\Controllers\Controller
 
         $hunters = $invitations->map(function($invitation) {
             $hunter = $invitation->hunter;
-
-            $fullName = trim(($hunter->first_name ?? '') . ' ' . ($hunter->last_name ?? ''));
-
-            if (!$fullName) {
-                $fullName = $hunter->user_name ?: $hunter->email;
-            }
-
             $isCurrentUser = $hunter->id == auth()->id();
 
             if ($hunter) {
                 return [
                     'id' => $hunter->id,
-                    'name' => $fullName,
+                    'name' => $data->display_name ?? null,
                     'user_name' => $hunter->user_name,
                     'first_name' => $hunter->first_name,
                     'last_name' => $hunter->last_name,
@@ -2065,42 +2057,64 @@ class BookingController extends \App\Http\Controllers\Controller
 
     public function storePrepayment(Booking $booking): JsonResponse
     {
-        BookingHunterInvitation::where('booking_hunter_id', $booking->masterHunterId())
-            ->where('hunter_id', Auth::id())
-            ->update(['prepayment_paid' => true, 'prepayment_paid_status' => BookingHunterInvitation::PREPAYMENT_PAID]);
+        $payment = Payment::where('booking_id', $booking->id)
+            ->where('status', Booking::PROCESSING)
+            ->where('create_user', Auth::id())
+            ->first();
 
-        $acceptedInvitations = $booking->acceptedInvitationsOfMaster();
-
-        $paidCount = $acceptedInvitations->where('prepayment_paid', true)
-            ->where('prepayment_paid_status', BookingHunterInvitation::PREPAYMENT_PAID)->count();
-
-        $timerHour = $this->bookingTimerService->getTimerHours($booking, 'beds');
-
-        if ($paidCount === $acceptedInvitations->count()) {
-            $booking->status = Booking::BED_COLLECTION;
+        if ($payment) {
+            return $this->sendSuccess([
+                'message' => __('Payment already created'),
+                'payment_url' => $payment->payment_url,
+            ]);
         }
 
-        $this->bookingTimerService->startTimer($booking->id, $timerHour, 'beds', ['paid']);
+        $gatewayObj = get_active_payment_gateway_object();
+        $dto = $gatewayObj->handlePurchaseData(['amount' => $booking->getAmountPerPerson()], $booking);
+        $result = $gatewayObj->createOrder($dto);
+        $url = $result['invoice_url'];
+
+        $gatewayObj->processFromBooking([
+            'amount' => $booking->getAmountPerPerson(),
+            'payment_url' => $url,
+            'invoice_id' => $result['invoice_id']], $booking);
+
+        if (config('paykeeper.send_check')) {
+            SendCheckToEmailJob::dispatch($result['invoice_id'])->afterResponse();
+        }
+
+        //TODO сделать проверку, что клиент оплатил счет и тогда делать что он оплатил
+
+        $booking->invitationUser(Auth::id())?->update(['prepayment_paid' => true, 'prepayment_paid_status' => BookingHunterInvitation::PREPAYMENT_PAID]);
+
+        if ($booking->countAcceptedAndPaidHunters() !== $booking->countAcceptedHunters()) {
+            return $this->sendSuccess([
+                'message' => __('Payment already created'),
+                'payment_url' => $url,
+            ]);
+        }
+
+        $this->bookingTimerService->startBedTimer($booking);
 
         $booking->prepayment_paid = true;
-//        is_all_places_assigned
         $booking->save();
 
         return $this->sendSuccess([
             'message' => __('The gathering of hunters has begun'),
+            'payment_url' => $url,
         ]);
     }
 
     public function deleteNotPaidHunter(Request $request, Booking $booking): JsonResponse
     {
-        $invitation = BookingHunterInvitation::findInventedHunterForBooking($booking->masterHunterRowId(), $request->input('hunter_id'));
+        $invitation = $booking->$booking->invitationUser($request->input('hunter_id'));
 
-        if ($invitation) {
-            $invitation->delete();
-            $this->checkPrepaymentAllPaid($booking);
-        } else {
+        if (!$invitation) {
             return $this->sendError(__('There is no such hunter among the invitees'));
         }
+
+        $invitation->delete();
+        $this->checkPrepaymentAllPaid($booking);
 
         return $this->sendSuccess([
             'message' => __('Hunter successfully removed from this hunt'),
@@ -2109,40 +2123,34 @@ class BookingController extends \App\Http\Controllers\Controller
 
     public function replaceNotPaidHunter(Request $request, Booking $booking): JsonResponse
     {
-        $hunterData = $request->input('hunter');
-        $duplicate = BookingHunterInvitation::findInventedHunterForBooking($booking->masterHunterRowId(), $hunterData['id']);
+        $data = ReplaceHunterData::fromRequest($request);
+        $duplicate = $booking->invitationUser($data->newHunterId);
 
         if ($duplicate) {
             return $this->sendError(__('Такой охотник уже есть в списке этого бронирования'));
         }
 
-        $invitation = BookingHunterInvitation::findInventedHunterForBooking($booking->masterHunterRowId(), $request->input('old_hunter_id'));
+        $invitation = $booking->invitationUser($data->oldHunterId);
 
         if ($invitation) {
-            $invitation->hunter_id = $hunterData['id'];
-            $invitation->email = !empty($hunterData['email']) ? $hunterData['email'] : null;
+            $invitation->hunter_id = $data->newHunterId;
+            $invitation->email = !empty($data->email) ? $data->email : null;
             $invitation->save();
             $this->checkPrepaymentAllPaid($booking, $invitation);
-        }
-
-        $fullName = trim(($hunterData['first_name'] ?? '') . ' ' . ($hunterData['last_name'] ?? ''));
-
-        if (!$fullName) {
-            $fullName = $hunterData['user_name'] ?? $hunterData['email'] ?? null;
         }
 
         return response()->json([
             'status' => true,
             'message' => 'Охотник успешно заменён',
             'hunter' => [
-                'id' => $hunterData['id'],
+                'id' => $data->newHunterId,
                 'email' => $invitation->email ?? null,
-                'name' => $fullName ?? null,
-                'user_name' => $hunterData['user_name'] ?? null,
-                'first_name' => $hunterData['first_name'] ?? null,
-                'last_name' => $hunterData['last_name'] ?? null,
-                'is_external' => $hunterData['is_external'] ?? false,
-                'invitation_status' => $hunterData['invitation_status'] ?? BookingHunterInvitation::STATUS_ACCEPTED,
+                'name' => $data->display_name ?? null,
+                'user_name' => $data->userName ?? null,
+                'first_name' => $data->firstName ?? null,
+                'last_name' => $data->lastName ?? null,
+                'is_external' => $data->isExternal ?? false,
+                'invitation_status' => $data->invitationStatus ?? BookingHunterInvitation::STATUS_ACCEPTED,
                 'prepayment_paid' => (bool) ($invitation->prepayment_paid ?? false),
                 'prepayment_paid_status' => $invitation? $invitation->prepayment_paid_status: null,
                 'prepayment_badge' => $invitation? $invitation->prepayment_badge: null,
