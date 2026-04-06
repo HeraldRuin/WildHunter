@@ -2124,7 +2124,7 @@ class BookingController extends \App\Http\Controllers\Controller
         ]);
     }
 
-    public function replaceNotPaidHunter(Request $request, Booking $booking): JsonResponse
+    public function replaceHunter(Request $request, Booking $booking): JsonResponse
     {
         $data = ReplaceHunterData::fromRequest($request);
         $duplicate = $booking->invitationUser($data->newHunterId);
@@ -2139,7 +2139,10 @@ class BookingController extends \App\Http\Controllers\Controller
             $invitation->hunter_id = $data->newHunterId;
             $invitation->email = !empty($data->email) ? $data->email : null;
             $invitation->save();
-            $this->checkPrepaymentAllPaid($booking, $invitation);
+
+            if ($booking->shouldCheckPrepayment()){
+                $this->checkPrepaymentAllPaid($booking, $invitation);
+            }
         }
 
         return response()->json([
