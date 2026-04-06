@@ -161,7 +161,7 @@ class BookingTimerService
         $booking->save();
 
         $timerHour = $this->getTimerHours($booking, 'paid');
-        $this->startTimer($booking->id, $timerHour, 'paid', ['collection', 'paid']);
+        $this->startTimer($booking->id, $timerHour, 'paid', ['collection', 'paid', 'beds']);
     }
     public function startBedTimer($booking): void
     {
@@ -169,7 +169,7 @@ class BookingTimerService
         $booking->save();
 
         $timerHour = $this->getTimerHours($booking, 'beds');
-        $this->startTimer($booking->id, $timerHour, 'beds', ['paid']);
+        $this->startTimer($booking->id, $timerHour, 'beds', ['collection', 'paid', 'beds']);
     }
 }
 
