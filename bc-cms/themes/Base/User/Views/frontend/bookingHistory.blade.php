@@ -9,8 +9,8 @@
         </div>
     </div>
 
+@include('admin.message')
 
-    @include('admin.message')
     <div class="booking-history-manager">
         <div class="tabbable">
             @if(empty($bookingId && empty($bookingCode)))
@@ -29,6 +29,21 @@
                             <a href="{{route("user.booking_history",['status'=>$status])}}">{{booking_status_to_text($status)}}</a>
                         </li>
                     @endforeach
+                        @if($userRole === 'baseadmin')
+                            <select class="form-select form-select-sm"
+                                    style="width: 270px;"
+                                    onchange="if (this.value) window.location.href = this.value">
+
+                                <option value="" disabled selected hidden>Статусы</option>
+
+                                @foreach($dropdownStatuses as $status)
+                                    <option value="{{ request()->url() }}?status={{ $status }}"
+                                        {{ request('status') == $status ? 'selected' : '' }}>
+                                        {{ booking_status_to_text($status) }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        @endif
                 @endif
             </ul>
             @endif
@@ -70,9 +85,7 @@
                                 <th class="type-booking">{{__("Type Booking")}}</th>
                                 <th class="detail-booking">{{__("Detail Booking")}}</th>
                                 <th class="status-booking">{{__("Status Booking")}}</th>
-                                <th class="amount-booking">{{__("Amount Booking")}}</th>
                                 <th class="paid-booking">{{__("Paid Booking")}}</th>
-                                <th class="remnant-booking">{{__("Remnant Booking")}}</th>
                                 <th class="event-booking">{{__("Event Booking")}}</th>
                             </tr>
                             @else

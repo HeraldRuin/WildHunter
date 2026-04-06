@@ -13,7 +13,7 @@
           data-bs-content="<strong>{{ $booking->creator?->first_name ?? '' }} {{ $booking->creator?->last_name ?? '' }}</strong><br>Email: {{ $booking->creator?->email ?? '' }}<br>Phone: {{ $booking->creator?->phone ?? '' }}"
           @click="{{ $userRole !== 'hunter' && $booking->creator ? "openUserModal({$booking->creator->id}, {$booking->id})" : '' }}">
           {{ $booking->creator ? (!empty($booking->creator->user_name) ? $booking->creator->user_name : $booking->creator->first_name) : 'N/A' }}
-        </span>
+       </span>
         @if($booking->status === \Modules\Booking\Models\Booking::FINISHED_PREPAYMENT)
             <button
                 type="button"
@@ -44,26 +44,6 @@
                 @endif
 
                 {{__(':total guest',['count'=>$booking->total_guests])}} <br>
-                <button
-                    type="button"
-                    class="btn btn-info btn-sm details-btn mt-2"
-                    data-bs-toggle="popover"
-                    data-bs-trigger="click"
-                    data-bs-html="true"
-                    data-bs-placement="right"
-                    data-bs-custom-class="popover-width"
-                    data-bs-content="
-                    {{ __(':count rooms', ['count' => $booking->roomsBooking->count()]) }}<br>
-                     @foreach($booking->roomsBooking as $bookingRoom)
-                        {{ $bookingRoom->room?->title ?? '—' }},
-                        <span>вместимость = </span> {{ $bookingRoom->room?->adults ?? '—' }};
-                        <span>кол-во = </span> {{ $bookingRoom->number ?? '—' }};
-                        <span>цена = </span> {{ $bookingRoom->price ? round($bookingRoom->price) : '—' }} р/сут
-                        <br>
-                    @endforeach
-                    ">
-                    Подробности
-                </button>
             </div>
         @endif
         @if($booking->type === 'hotel_animal')
@@ -79,26 +59,6 @@
                 @endif
 
                 {{__(':total guest',['count'=>$booking->total_guests])}} <br>
-                <button
-                    type="button"
-                    class="btn btn-info btn-sm details-btn mt-2"
-                    data-bs-toggle="popover"
-                    data-bs-trigger="click"
-                    data-bs-html="true"
-                    data-bs-placement="right"
-                    data-bs-custom-class="popover-width"
-                    data-bs-content="
-                    {{ __(':count rooms', ['count' => $booking->roomsBooking->count()]) }}<br>
-                     @foreach($booking->roomsBooking as $bookingRoom)
-                        {{ $bookingRoom->room?->title ?? '—' }},
-                        <span>вместимость = </span> {{ $bookingRoom->room?->adults ?? '—' }};
-                        <span>кол-во = </span> {{ $bookingRoom->number ?? '—' }};
-                        <span>цена = </span> {{ $bookingRoom->price ? round($bookingRoom->price) : '—' }} р/сут
-                        <br>
-                    @endforeach
-                    ">
-                    Подробности
-                </button>
             </div>
             <strong>Охота:</strong>
             <div>
@@ -149,17 +109,12 @@
 
         @if($booking->status === \Modules\Booking\Models\Booking::START_COLLECTION)
             @php
-                $endTimestamp = null;
-                try {
-                    $collectionEndAt = $booking->getMeta('collection_end_at');
-                    if ($collectionEndAt) {
-                        $endCarbon = \Carbon\Carbon::parse($collectionEndAt);
-                        $endTimestamp = $endCarbon->timestamp * 1000;
-                    }
-                } catch (\Exception $e) {
-                    $endTimestamp = null;
-                }
+                $collectionEndAt = $booking->getMeta('collection_end_at');
+                $endTimestamp = $collectionEndAt
+                    ? \Carbon\Carbon::parse($collectionEndAt)->timestamp * 1000
+                    : null;
             @endphp
+
             @if($endTimestamp)
                 <div class="text-muted collection-timer" data-end="{{ $endTimestamp }}"
                      data-booking-id="{{ $booking->id }}">[0 мин]
@@ -168,7 +123,7 @@
 
             @if($totalHuntersNeeded > 0)
                 <div class="text-muted mt-1" style="font-size: 0.9em;">
-                    Собранно {{ $acceptedCount }}/{{ $totalHuntersNeeded }}
+                    Собрано {{ $acceptedCount }}/{{ $totalHuntersNeeded }}
                 </div>
             @endif
         @endif
@@ -232,36 +187,14 @@
             <div class="mt-3">
                 {{'Сбор завершен'}}
                 <div class="text-muted mt-1" style="font-size: 0.9em;">
-                    Собранно {{ $acceptedCount }}/{{ $totalHuntersNeeded }}
+                    Собрано {{ $acceptedCount }}/{{ $totalHuntersNeeded }}
                 </div>
             </div>
         @endif
     </td>
 
-    <td class="price-cell">
-        @if($booking->type === 'hotel')
-            <div>{{ format_money($booking->total) }}</div>
-        @endif
-        @if($booking->type === 'hotel_animal')
-            <div>{{ format_money($booking->total + $booking->amount_hunting) }}</div>
-        @endif
-        <button
-            type="button"
-            class="btn btn-info btn-sm details-btn mt-2"
-            data-bs-toggle="popover"
-            data-bs-trigger="click"
-            data-bs-html="true"
-            data-bs-placement="right"
-            data-bs-content="
-            <strong>Start:</strong> {{ display_date($booking->start_date) }}<br>
-            <strong>End:</strong> {{ display_date($booking->end_date) }}<br>
-            <strong>Duration:</strong> {{ $booking->duration_days }} {{ __('days') }}">
-            Подробности
-        </button>
-    </td>
-
     <td>{{format_money($booking->paid)}}</td>
-    <td>{{format_money($booking->total - $booking->paid)}}</td>
+
     <td>
         @if($userRole === 'baseadmin' && $booking->status === \Modules\Booking\Models\Booking::PROCESSING)
             <button

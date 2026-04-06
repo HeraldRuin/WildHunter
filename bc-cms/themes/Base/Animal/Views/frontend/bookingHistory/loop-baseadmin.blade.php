@@ -165,26 +165,8 @@
         @endif
     </td>
 
-    <td class="price-cell">
-        <div>{{ format_money($booking->amount_hunting) }}</div>
-
-        <button
-            type="button"
-            class="btn btn-info btn-sm details-btn mt-2"
-            data-bs-toggle="popover"
-            data-bs-trigger="click"
-            data-bs-html="true"
-            data-bs-placement="right"
-            data-bs-content="
-            <strong>Start:</strong> {{ display_date($booking->start_date) }}<br>
-            <strong>End:</strong> {{ display_date($booking->end_date) }}<br>
-            <strong>Duration:</strong> {{ $booking->duration_days }} {{ __('days') }}">
-            Подробности
-        </button>
-    </td>
-
     <td>{{format_money($booking->paid)}}</td>
-    <td>{{format_money($booking->total - $booking->paid)}}</td>
+
     <td>
         @if($userRole === 'baseadmin' && $booking->status === \Modules\Booking\Models\Booking::PROCESSING)
             <button
@@ -216,7 +198,7 @@
             </button>
         @endif
 
-        @if($userRole === 'baseadmin' && $booking->status === \Modules\Booking\Models\Booking::FINISHED_COLLECTION))
+        @if($userRole === 'baseadmin' && $booking->status === \Modules\Booking\Models\Booking::FINISHED_COLLECTION)
             <button
                 type="button"
                 class="btn btn-primary btn-sm mt-2"

@@ -868,20 +868,7 @@ class Booking extends BaseModel
         $list_booking->where('hotel_id', $hotel_id);
 
         if (!empty($booking_status)) {
-            if ($booking_status === \Modules\Booking\Models\Booking::PREPAYMENT_COLLECTION) {
-
-                $list_booking->whereIn('status', [
-                    \Modules\Booking\Models\Booking::PREPAYMENT_COLLECTION,
-                    \Modules\Booking\Models\Booking::FINISHED_PREPAYMENT,
-                    \Modules\Booking\Models\Booking::BED_COLLECTION,
-                    \Modules\Booking\Models\Booking::FINISHED_BED,
-                ]);
-
-            } else {
-
-                $list_booking->where('status', $booking_status);
-
-            }
+            $list_booking->where('status', $booking_status);
         }
 
 
@@ -1689,6 +1676,7 @@ class Booking extends BaseModel
             ->where('status', BookingHunterInvitation::STATUS_ACCEPTED)
             ->where('booking_hunter_id', $masterId)
             ->where('hunter_id', '<>', $masterId)
+            ->where('prepayment_paid', false)
             ->where('prepayment_paid_status', BookingHunterInvitation::PREPAYMENT_PENDING)
             ->get();
     }
@@ -1729,5 +1717,10 @@ class Booking extends BaseModel
         $count = $this->acceptedInvitationsOfMaster()->count();
 
         return round($this->total / $count, 2);
+    }
+
+    public function shouldCheckPrepayment(): bool
+    {
+        return $this->type !== self::BookingTypeAnimal;
     }
 }

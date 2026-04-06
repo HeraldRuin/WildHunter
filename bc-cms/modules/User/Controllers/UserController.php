@@ -226,8 +226,6 @@ class UserController extends FrontendController
                 abort(403);
             }
 
-
-
             $masterBookingHunter = BookingHunter::where('booking_id', $booking->id)->where('is_master', true)->first();
             if ($masterBookingHunter) {
                 $exists = BookingHunterInvitation::where('booking_hunter_id', $masterBookingHunter->id)
@@ -269,9 +267,31 @@ class UserController extends FrontendController
                 Booking::FINISHED_BED
             ],
             'baseadmin' => [
+                Booking::PROCESSING,
+                Booking::CONFIRMED,
+                Booking::CANCELLED,
+                Booking::UNPAID,
+                Booking::PAID,
+                Booking::PARTIAL_PAYMENT,
+                Booking::START_COLLECTION,
+                Booking::PREPAYMENT_COLLECTION,
                 Booking::BED_COLLECTION,
-                Booking::FINISHED_BED
+                Booking::FINISHED_BED,
+                Booking::INVITATION
             ]
+        ];
+
+        $dropdownStatuses = [
+            Booking::CANCELLED,
+            Booking::PROCESSING,
+            Booking::CONFIRMED,
+            Booking::START_COLLECTION,
+            Booking::FINISHED_COLLECTION,
+            Booking::PREPAYMENT_COLLECTION,
+            Booking::FINISHED_PREPAYMENT,
+            Booking::BED_COLLECTION,
+            Booking::FINISHED_BED,
+            Booking::PAID,
         ];
 
         $statuses = array_values(array_filter($allStatuses,fn($status) => !in_array($status, $excludedByRole[$userRole] ?? [])));
@@ -281,6 +301,7 @@ class UserController extends FrontendController
             'bookings' => $bookings,
             'hotelSlug' => $authUser->hotels?->first()?->slug,
             'statues'     => $statuses,
+            'dropdownStatuses'     => $dropdownStatuses,
             'bookingId' => $bookingId,
             'bookingCode' => $code,
             'breadcrumbs' => [
