@@ -16,6 +16,7 @@ class BookingCalculatingService
         $isBaseAdmin = $user->hasRole('baseadmin');
 
         $paidCount = $booking->countAcceptedAndPaidHunters();
+
         if ($paidCount <= 0) {
             return [
                 'status' => false,
@@ -182,7 +183,7 @@ class BookingCalculatingService
                 'my_cost' => $booking->type === Booking::BookingTypeAnimal ? 0 : $myPrepayment,
             ],
             [
-                'name' => 'Итог базе',
+                'name' => 'Остаток базе',
                 'total_cost' => $baseTotal,
                 'my_cost' => $baseMyTotalCost,
             ],
