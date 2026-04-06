@@ -258,17 +258,7 @@ class User extends Authenticatable implements MustVerifyEmail
 
     public function getDisplayNameAttribute()
     {
-        $name = $this->name;
-        if (!empty($this->first_name) or !empty($this->last_name)) {
-            $name = implode(' ', [$this->first_name, $this->last_name]);
-        }
-        if (!empty($this->user_name)) {
-            $name = $this->user_name;
-        }else if(!empty($this->email)) {
-            $name = $this->email;
-        }
-
-        return $name;
+        return $this->name?: trim($this->first_name . ' ' . $this->last_name)?: $this->user_name?: '';
     }
 
     public function sendPasswordResetNotification($token)
