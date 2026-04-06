@@ -1781,7 +1781,7 @@ class BookingController extends \App\Http\Controllers\Controller
 
         $hunters = User::query()
             ->whereIn('id', $hunterIds)
-            ->get(['id', 'first_name', 'last_name', 'user_name', 'email', 'name']);
+            ->get(['id', 'name', 'first_name', 'last_name', 'user_name']);
 
         $hunters = $hunters->map(function ($hunter) {
             return [
@@ -2016,7 +2016,7 @@ class BookingController extends \App\Http\Controllers\Controller
 
         $hunters = User::query()
             ->whereIn('id', $hunterIds)
-            ->get(['id', 'first_name', 'last_name', 'user_name', 'email', 'name']);
+            ->get(['id', 'name', 'first_name', 'last_name', 'user_name']);
 
         $hunters = $hunters->map(function ($hunter) {
             return [
