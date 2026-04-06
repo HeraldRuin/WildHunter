@@ -1,0 +1,22 @@
+<?php
+
+namespace Modules\Booking\Services;
+
+use Modules\Booking\Models\Booking;
+use Modules\Booking\Models\BookingService;
+
+class BookingDataBuilder
+{
+    public function build(Booking $booking): array
+    {
+        $services = BookingService::where('booking_id', $booking->id)->get();
+
+        $paidCount = $booking->countAcceptedAndPaidHunters();
+
+        return [
+            'booking' => $booking,
+            'services' => $services,
+            'paidCount' => $paidCount,
+        ];
+    }
+}
