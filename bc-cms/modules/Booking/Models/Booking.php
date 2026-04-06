@@ -1629,20 +1629,27 @@ class Booking extends BaseModel
      */
     public function countAcceptedAndPaidHunters(): int
     {
-        return $this->masterHunter()
-            ->whereHas('invitations', function ($query) {
-                $query->where('status', BookingHunterInvitation::STATUS_ACCEPTED)
-                    ->where('prepayment_paid', true)
-                    ->where('prepayment_paid_status', BookingHunterInvitation::PREPAYMENT_PAID);
-            })
+        $masterId = $this->masterHunterRowId();
+
+        if (!$masterId) {
+            return 0;
+        }
+
+        return BookingHunterInvitation::where('booking_hunter_id', $masterId)
+            ->where('status', BookingHunterInvitation::STATUS_ACCEPTED)
+            ->where('prepayment_paid_status', BookingHunterInvitation::PREPAYMENT_PAID)
             ->count();
     }
     public function countAcceptedHunters(): int
     {
-        return $this->masterHunter()
-            ->whereHas('invitations', function ($query) {
-                $query->where('status', BookingHunterInvitation::STATUS_ACCEPTED);
-            })
+        $masterId = $this->masterHunterRowId();
+
+        if (!$masterId) {
+            return 0;
+        }
+
+        return BookingHunterInvitation::where('booking_hunter_id', $masterId)
+            ->where('status', BookingHunterInvitation::STATUS_ACCEPTED)
             ->count();
     }
     public function unpaidInvitationsOfHunters(): \Illuminate\Database\Eloquent\Collection|\Illuminate\Support\Collection
