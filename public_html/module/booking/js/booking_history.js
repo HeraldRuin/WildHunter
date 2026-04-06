@@ -1149,7 +1149,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         const self = this;
 
                         $.ajax({
-                            url: `/booking/${bookingId}/remove/not_paid/hunter`,
+                            url: `/booking/${bookingId}/remove/hunter`,
                             type: 'DELETE',
                             dataType: 'json',
                             data: {
@@ -1647,28 +1647,36 @@ document.addEventListener('DOMContentLoaded', function () {
                     if (!end) return;
 
                     const bookingId = el.dataset.bookingId;
+                    const boId = 256;
                     if (!bookingId) return;
 
                     let diffMs = end - now;
 
                     const extendBtn = document.querySelector('.btn-extend-collection[data-booking-id="' + bookingId + '"]');
-                    const btn = document.getElementById(`accept-btn-${bookingId}`);
+                    // const buttons = document.querySelectorAll(`.accept-btn[data-booking-id="${bookingId}"]`);
+                    // const buttons = document.querySelectorAll('.accept-btn');
+                    const buttons = document.querySelectorAll(`.accept-btn[data-booking-id="${bookingId}"]`);
 
 
                     // Таймер закончился
                     if (diffMs <= 0) {
 
-                            if (extendBtn) {
-                                extendBtn.disabled = false;
-                                extendBtn.classList.remove('disabled');
+                        if (extendBtn) {
+                              extendBtn.disabled = false;
+                              extendBtn.classList.remove('disabled');
                             }
 
-                            if (el.dataset.collectionExpired === '1') return;
+                        buttons.forEach(btn => {
+                            btn.disabled = true;
+                            btn.classList.add('disabled');
+                        });
+
+                        if (el.dataset.collectionExpired === '1') return;
                             el.dataset.collectionExpired = '1';
 
-                            // Запрещаем приглашать охотников - нужно продлить сбор
-                            const bookingKey = String(bookingId);
-                            window.collectionState[bookingKey] = true;
+                        // Запрещаем приглашать охотников - нужно продлить сбор
+                        const bookingKey = String(bookingId);
+                        window.collectionState[bookingKey] = true;
 
                         return;
                     }
@@ -1685,6 +1693,10 @@ document.addEventListener('DOMContentLoaded', function () {
                             extendBtn.disabled = true;
                             extendBtn.classList.add('disabled');
                         }
+                    // buttons.forEach(btn => {
+                    //     btn.disabled = false;
+                    //     btn.classList.remove('disabled');
+                    // });
                 });
             };
 

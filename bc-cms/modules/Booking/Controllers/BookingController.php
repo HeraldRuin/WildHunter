@@ -2105,16 +2105,19 @@ class BookingController extends \App\Http\Controllers\Controller
         ]);
     }
 
-    public function deleteNotPaidHunter(Request $request, Booking $booking): JsonResponse
+    public function deleteHunter(Request $request, Booking $booking): JsonResponse
     {
-        $invitation = $booking->$booking->invitationUser($request->input('hunter_id'));
+        $invitation = $booking->invitationUser($request->input('hunter_id'));
 
         if (!$invitation) {
             return $this->sendError(__('There is no such hunter among the invitees'));
         }
 
         $invitation->delete();
-        $this->checkPrepaymentAllPaid($booking);
+
+        if ($booking->shouldCheckPrepayment()){
+            $this->checkPrepaymentAllPaid($booking);
+        }
 
         return $this->sendSuccess([
             'message' => __('Hunter successfully removed from this hunt'),
