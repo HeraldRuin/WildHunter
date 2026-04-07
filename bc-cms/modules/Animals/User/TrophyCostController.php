@@ -88,7 +88,7 @@ class TrophyCostController extends FrontendController
         $data = new UpdateEntityData($request->validated());
         $entity = $data->getEntity();
 
-        $fine = $entity->forHotel(get_user_hotel_id())->first();
+        $fine = $entity->forHotel(get_user_hotel_id())->where('id', $entity->id)->first();
 
         if (!$fine) {
             return new NotFoundResponse(__('Fine not found'));
@@ -109,7 +109,7 @@ class TrophyCostController extends FrontendController
         $data = new UpdateEntityData($request->validated());
         $entity = $data->getEntity();
 
-        $preparation = $entity->forHotel(get_user_hotel_id())->first();
+        $preparation = $entity->forHotel(get_user_hotel_id())->where('id', $entity->id)->first();
 
         if (!$preparation) {
             return new NotFoundResponse(__('Preparation not found'));
