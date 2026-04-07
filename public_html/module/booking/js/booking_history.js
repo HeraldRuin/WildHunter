@@ -1161,7 +1161,7 @@ document.addEventListener('DOMContentLoaded', function () {
                                     bookingCoreApp.showAjaxMessage(res);
                                     this.invitedHunters = this.invitedHunters.filter(h => h.id !== hunterId);
                                 } else {
-                                    bookingCoreApp.showError({ message: 'Ошибка удаления охотника' });
+                                    bookingCoreApp.showAjaxMessage(res);
                                 }
                             },
                             error: function() {

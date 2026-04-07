@@ -34,6 +34,7 @@ use Modules\Booking\Models\BookingRoomPlace;
 use Modules\Booking\Models\BookingService;
 use Modules\Booking\Models\Payment;
 use Modules\Booking\Services\BookingCalculatingService;
+use Modules\Booking\Services\BookingCollectionService;
 use Modules\Booking\Services\BookingTimerService;
 use Modules\User\Events\SendMailUserRegistered;
 use Modules\Booking\Emails\CollectionTimerFinishedEmail;
@@ -53,14 +54,15 @@ class BookingController extends \App\Http\Controllers\Controller
     protected $animalClass;
     protected $bookingTimerService;
     protected $bookingCalculatingService;
+    protected $bookingCollectionService;
 
-    public function __construct(Booking $booking, Enquiry $enquiryClass, Animal $animalClass, BookingTimerService $bookingTimerService, BookingCalculatingService $bookingCalculatingService)
+    public function __construct(Booking $booking, Enquiry $enquiryClass, Animal $animalClass, BookingTimerService $bookingTimerService, BookingCalculatingService $bookingCalculatingService, BookingCollectionService $bookingCollectionService)
     {
         $this->booking = $booking;
         $this->enquiryClass = $enquiryClass;
         $this->animalClass = $animalClass;
         $this->bookingTimerService = $bookingTimerService;
-        $this->bookingCalculatingService = $bookingCalculatingService;
+        $this->bookingCollectionService = $bookingCollectionService;
     }
 
     protected function validateCheckout($code)
@@ -2125,11 +2127,11 @@ class BookingController extends \App\Http\Controllers\Controller
             return $this->sendError(__('There is no such hunter among the invitees'));
         }
 
-        $invitation->delete();
-
-        if ($booking->shouldCheckPrepayment()){
-            $this->checkPrepaymentAllPaid($booking);
+        if ($booking->master_hunter_id && $invitation === $booking->master_hunter_id) {
+            return $this->sendError(__('You cannot remove the master hunter'));
         }
+
+        $invitation->delete();
 
         return $this->sendSuccess([
             'message' => __('Hunter successfully removed from this hunt'),
