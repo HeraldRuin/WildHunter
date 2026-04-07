@@ -48,6 +48,10 @@ abstract class BaseGateway
     {
 
     }
+    public function expirePaymentLink(Payment $payment)
+    {
+
+    }
 
     public function confirmPayment(Request $request)
     {
