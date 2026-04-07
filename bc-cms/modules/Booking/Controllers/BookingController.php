@@ -2144,7 +2144,7 @@ class BookingController extends \App\Http\Controllers\Controller
         $duplicate = $booking->invitationUser($data->newHunterId);
 
         if ($duplicate) {
-            return $this->sendError(__('Такой охотник уже есть в списке этого бронирования'));
+            return $this->sendError(__('Such a hunter is already on the list of this booking'));
         }
 
         $invitation = $booking->invitationUser($data->oldHunterId);
@@ -2155,7 +2155,7 @@ class BookingController extends \App\Http\Controllers\Controller
             $invitation->save();
 
             if ($booking->shouldCheckPrepayment()){
-                $this->checkPrepaymentAllPaid($booking, $invitation);
+                $this->bookingCollectionService->checkPrepaymentAllPaid($booking, $invitation);
             }
         }
 
@@ -2177,32 +2177,9 @@ class BookingController extends \App\Http\Controllers\Controller
             ],
         ]);
     }
-
-    public function checkPrepaymentAllPaid($booking, $invitation = []): void
-    {
-        $unpaidHunters = $booking->unpaidInvitationsOfHunters();
-
-        if ($unpaidHunters->isEmpty()) {
-            $this->bookingTimerService->startBedTimer($booking);
-        }else {
-            $invitation->prepayment_paid_status = BookingHunterInvitation::PREPAYMENT_PENDING;
-            $invitation->save();
-            $this->bookingTimerService->startPaidTimer($booking);
-        }
-    }
     public function checkPrepayment(Booking $booking): void
     {
-        $unpaidHunters = $booking->pendingInvitationsOfHunters();
-
-        if ($unpaidHunters->isNotEmpty()) {
-            $unpaidHunters->each(function (BookingHunterInvitation $invitation) {
-                $invitation->prepayment_paid_status = BookingHunterInvitation::PREPAYMENT_UNPAID;
-                $invitation->save();
-            });
-        } else {
-            // Все оплатили, таймер можно не трогать или остановить
-        }
-
+        $this->bookingCollectionService->markAllPendingAsUnpaid();
     }
     public function places(Booking $booking)
     {
@@ -2285,7 +2262,7 @@ class BookingController extends \App\Http\Controllers\Controller
                 'user_id'      => auth()->id(),
             ]);
 
-            $this->updateStatusIfAllPlacesSelected($booking);
+            $this->bookingCollectionService->updateStatusIfAllPlacesSelected($booking);
 
             $rooms = $booking
                 ->roomsBooking()
@@ -2328,17 +2305,6 @@ class BookingController extends \App\Http\Controllers\Controller
                 ], 409);
             }
             throw $e;
-        }
-    }
-
-    public function updateStatusIfAllPlacesSelected($booking): void
-    {
-        $paidCount = $booking->countAcceptedAndPaidHunters();
-        $alreadyHasPlace = BookingRoomPlace::where('booking_id', $booking->id)->count() === $paidCount;
-
-        if ($paidCount > 0 && $paidCount === $alreadyHasPlace) {
-            $booking->status = Booking::FINISHED_BED;
-            $booking->save();
         }
     }
 
