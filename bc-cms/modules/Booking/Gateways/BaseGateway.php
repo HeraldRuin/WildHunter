@@ -40,15 +40,7 @@ abstract class BaseGateway
     public function processNormal($payment){
 
     }
-    public function processFromBooking($data, Booking $booking){
-
-    }
-
     public function cancelPayment(Request $request)
-    {
-
-    }
-    public function expirePaymentLink(Payment $payment)
     {
 
     }
