@@ -1265,6 +1265,11 @@ function clean_decimal($value): string
     return rtrim(rtrim(sprintf('%.2f', $value), '0'), '.');
 }
 
+function booking_error($key, $params = [])
+{
+    return __("booking.errors.$key", $params);
+}
+
 
 
 
