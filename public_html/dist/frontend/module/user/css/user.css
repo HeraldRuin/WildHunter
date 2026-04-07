@@ -1713,10 +1713,10 @@
   max-width: 90% !important;
 }
 .number-booking {
-  width: 4%;
+  width: 1%;
 }
 .data-booking {
-  width: 3%;
+  width: 1%;
 }
 .client-booking {
   width: 2%;
@@ -1728,13 +1728,13 @@
   width: 6%;
 }
 .status-booking {
-  width: 8%;
+  width: 5%;
 }
 .amount-booking {
   width: 1%;
 }
 .paid-booking {
-  width: 2%;
+  width: 6%;
 }
 .remnant-booking {
   width: 2%;
