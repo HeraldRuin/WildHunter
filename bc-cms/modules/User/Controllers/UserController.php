@@ -15,6 +15,9 @@ use Modules\Booking\Models\BookingHunter;
 use Modules\Booking\Models\BookingHunterInvitation;
 use Modules\Booking\Models\Enquiry;
 use Modules\Booking\Models\Service;
+use Modules\Booking\Services\BookingCalculatingService;
+use Modules\Booking\Services\BookingCalculator;
+use Modules\Booking\Services\BookingDataBuilder;
 use Modules\Car\Models\Car;
 use Modules\Event\Models\Event;
 use Modules\Flight\Models\Flight;
@@ -217,8 +220,9 @@ class UserController extends FrontendController
 
         $authUser = Auth::user();
         $bookingId = $request->input('booking_id');
+        $booking = Booking::where('code', $bookingId)->first();
         $code = $request->input('code');
-
+//dd($bookingId);
         if ($code) {
             $booking = Booking::where('code', $code)->first();
 
@@ -242,7 +246,7 @@ class UserController extends FrontendController
             }
         }
 
-        if ($authUser->hasRole('baseadmin')){
+        if (is_baseAdmin()){
             $userRole = 'baseadmin';
             $hotelId = $authUser->hotels->first()->id;
             $bookings = $this->booking->getBookingHistoryForAdminBase($hotelId, $request->input('status'), $bookingId);
@@ -296,12 +300,38 @@ class UserController extends FrontendController
 
         $statuses = array_values(array_filter($allStatuses,fn($status) => !in_array($status, $excludedByRole[$userRole] ?? [])));
 
+//        $builder = app(BookingDataBuilder::class);
+//        $calculator = app(BookingCalculator::class);
+//        $bookings->getCollection()->transform(function ($booking) use ($calculator, $builder) {
+//            $data = $builder->build($booking);
+//
+//            $bookingTotal = match ($booking->type) {
+//                Booking::BookingTypeHotel => $booking->total,
+//                Booking::BookingTypeHotelAnimal => $booking->total + $booking->amount_hunting,
+//                Booking::BookingTypeAnimal => $booking->amount_hunting,
+//            };
+//
+//            $baseTotal = $calculator->calculateBaseTotal(
+//                $booking,
+//                $data['services'],
+//                $data['paidCount']
+//            );
+//
+//            $booking->calculation = [
+//                'booking_total' => $bookingTotal,
+//                'base_total' => $baseTotal,
+//                'paid_count' => $data['paidCount'],
+//            ];
+//
+//            return $booking;
+//        });
+
         $data = array_merge($cabinetData, [
             'userRole' => $userRole,
             'bookings' => $bookings,
             'hotelSlug' => $authUser->hotels?->first()?->slug,
             'statues'     => $statuses,
-            'dropdownStatuses'     => $dropdownStatuses,
+            'dropdownStatuses'  => $dropdownStatuses,
             'bookingId' => $bookingId,
             'bookingCode' => $code,
             'breadcrumbs' => [
@@ -463,6 +493,17 @@ class UserController extends FrontendController
             }
         }
 
-        return response()->json($users);
+        return response()->json(
+            $users->map(function ($user) {
+                return [
+                    'id' => $user->id,
+                    'name' => $user->display_name,
+                    'email' => $user->email,
+                    'phone' => $user->phone,
+                    'invited' => $user->invited,
+                    'invitation_status' => $user->invitation_status,
+                ];
+            })
+        );
     }
 }

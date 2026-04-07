@@ -79,7 +79,7 @@
                                             <div class="text-muted small mb-2">@{{ hunter.email }}</div>
                                         </div>
 
-                                        @if($booking->status === \Modules\Booking\Models\Booking::PREPAYMENT_COLLECTION && $booking->is_master_hunter)
+                                        @if(in_array($booking->status, [\Modules\Booking\Models\Booking::FINISHED_COLLECTION, \Modules\Booking\Models\Booking::PREPAYMENT_COLLECTION]) && $booking->is_master_hunter)
                                             <div class="d-flex">
                                                 <div v-if="!hunter.prepayment_paid && hunter.id !== booking.master_hunter_id">
                                                     <div v-if="hunterToReplace !== hunter.id">
@@ -134,7 +134,7 @@
                                                                      @click="selectReplaceHunter(user)">
 
                                                                     <strong>ID: @{{ user.id }}</strong>
-                                                                    @{{ user.first_name }} @{{ user.last_name }}
+                                                                    @{{ user.name }}
                                                                     <div class="text-muted small">@{{ user.email }}</div>
                                                                 </div>
                                                             </div>
