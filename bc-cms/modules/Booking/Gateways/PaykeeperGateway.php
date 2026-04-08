@@ -92,7 +92,7 @@ class PaykeeperGateway extends BaseGateway
         ];
     }
 
-    public function processFromBooking($data, $booking)
+    public function processFromBooking($data, $booking): void
     {
         if (in_array($booking->status, [
             $booking::PAID,
@@ -116,155 +116,32 @@ class PaykeeperGateway extends BaseGateway
         $payment->status = Booking::PROCESSING;
         $payment->amount = $data['amount'];
         $payment->save();
-
-
-//        $json = $response->json();
-
-//        if ($response->successful() and !empty($json['status']) and $json['status'] == 'CREATED') {
-//            $url  = '';
-//            foreach ($json['links'] as $link) {
-//                if ($link['rel'] == 'approve') {
-//                    $url = $link['href'];
-//                }
-//            }
-//            $payment->save();
-//            $booking->status = $booking::UNPAID;
-//            $booking->payment_id = $payment->id;
-//            $booking->save();
-//            try{
-//                event(new BookingCreatedEvent($booking));
-//            } catch (\Exception $e) {
-//                Log::warning($e->getMessage());
-//            }
-//            response()->json([
-//                'url' => $url
-//            ])->send();
-//        } else {
-//
-//            // Log to server
-//            Log::error('Paypal Process Payment: ' . json_encode($json));
-//
-//            // This is something with paypal,
-//            // Should not update order status or payment status here
-//
-//            // Use br to display error message in html
-//            $message = implode("<br>", $this->parsePaypalError($json));
-//
-//            throw new Exception('Paypal Gateway: ' . $message);
-//        }
     }
 
-//    public function confirmPayment(Request $request)
-//    {
-//        $response = $this->captureOrder($request->input('token'));
-//        $json = $response->json();
-//        if ($response->successful() and !empty($json['status'])) {
-//
-//            $referenceString = $json['purchase_units'][0]['reference_id']; // Format: b_<booking_id>
-//            if (!$referenceString) {
-//                return redirect(url('/'))->with("error", __("Booking not found"));
-//            }
-//            $referenceId = str_replace('b_', '', $referenceString);
-//            $booking = app(Booking::class)->find($referenceId);
-//
-//            if (!$booking) {
-//                return redirect(url('/'))->with("error", __("Booking not found"));
-//            }
-//
-//
-//            // Document: https://developer.paypal.com/docs/api/orders/v2/#orders_capture
-//            switch ($json['status']) {
-//                case 'COMPLETED';
-//
-//                    // Mark payment as completed
-//                    $payment = $booking->payment;
-//                    if ($payment) {
-//                        $payment->status = 'completed';
-//                        $payment->logs = \GuzzleHttp\json_encode($response->json());
-//                        $payment->save();
-//                    }
-//                    try{
-////                    $oldPaynow = (float)$booking->pay_now;
-//                        $booking->paid += (float)$booking->pay_now;
-////                    $booking->pay_now = (float)($oldPaynow - $data['originalAmount'] < 0 ? 0 : $oldPaynow - $data['originalAmount']);
-//                        $booking->markAsPaid();
-//                    } catch (\Exception $e) {
-//                        Log::warning($e->getMessage());
-//                    }
-//                    return redirect($booking->getDetailUrl())->with("success", __("You payment has been processed successfully"));
-//
-//                // Payment was declined — likely by the bank or fraud checks.
-//                case "DECLINED":
-//                    // Mark payment as failed
-//                    $payment = $booking->payment;
-//                    if ($payment) {
-//                        $payment->status = 'fail';
-//                        $payment->logs = \GuzzleHttp\json_encode($response->json());
-//                        $payment->save();
-//                    }
-//                    try {
-//                        $booking->markAsPaymentFailed();
-//                    } catch (\Exception $e) {
-//                        Log::warning($e->getMessage());
-//                    }
-//                    return redirect($booking->getDetailUrl())->with("error", __("Payment Failed"));
-//            }
-//        } else {
-//
-//            // Can not capture the payment
-//            // This is something with paypal,
-//            // Should not update order status or payment status here
-//
-//            Log::error('Paypal Confirm Payment: ' . json_encode($response->json()));
-//
-//            if (!empty($booking)) {
-//                return redirect($booking->getDetailUrl(false));
-//            }
-//        }
-//
-//        // Redirect home
-//        return redirect(url('/'));
-//    }
 
-//    public function cancelPayment(Request $request)
-//    {
-//        $paypalOrderId = $request->query('token');
-//
-//        // This is to make sure cancel payment is valid
-//        $paypalOrder = $this->getPaypalOrder($paypalOrderId);
-//        $json = $paypalOrder->json();
-//
-//        if ($paypalOrder->successful()) {
-//            $referenceString = $json['purchase_units'][0]['reference_id']; // Format: b_<booking_id>
-//            if (!$referenceString) {
-//                throw new Exception(__("No reference id found"));
-//
-//                return redirect(url('/'))->with("error", __("Payment not found"));
-//            }
-//
-//            $referenceId = str_replace('b_', '', $referenceString);
-//            $booking = app(Booking::class)->find($referenceId);
-//
-//            if (!$booking) {
-//                return redirect(url('/'))->with("error", __("Payment not found"));
-//            }
-//
-//            $payment = $booking->payment;
-//            if ($payment) {
-//                $payment->status = 'cancel';
-//                $payment->logs = \GuzzleHttp\json_encode([
-//                    'customer_cancel' => 1
-//                ]);
-//                $payment->save();
-//            }
-//
-//            // Refund without check status
-//            $booking->tryRefundToWallet(false);
-//            return redirect($booking->getDetailUrl())->with("error", __("You cancelled the payment"));
-//        }
-//
-//        return redirect(url('/'));
-//    }
+
+    public function deleteInvoice(string $invoiceId)
+    {
+        $token = $this->getAccessToken();
+
+        $data = array_merge(
+            ['id' => $invoiceId, 'token' => $token]
+        );
+
+        $response = Http::withBasicAuth($this->getClientId(), $this->getClientSecret())
+            ->asForm()
+            ->post($this->getUrl('/change/invoice/revoke/'), $data);
+
+        $json = $response->json();
+
+        if (($json['result'] ?? null) === 'fail') {
+            $messages = $this->parsePaykeeperError($json);
+//            Log::error('PayKeeper error', $messages);
+            throw new \Exception(implode(', ', $messages));
+        }
+
+        return ($json['result'] ?? null) === 'success';
+    }
 
 
     //NOTE: This is for Webhook only
@@ -329,7 +206,7 @@ class PaykeeperGateway extends BaseGateway
         ];
     }
 
-    public function getPayKeeperOrder($inventedId)
+    public function getPayKeeperOrder(string $inventedId)
     {
         $response = Http::withBasicAuth(
             $this->getClientId(),
@@ -337,10 +214,8 @@ class PaykeeperGateway extends BaseGateway
         )
             ->acceptJson()
             ->get($this->getUrl('info/invoice/byid/'), ['id' => $inventedId]);
-        $json = $response->json();
 
-        dd( $json);
-//        return $response;
+        return $response->json();
     }
 
     public function sendCheckToEmail($inventedId)
@@ -363,16 +238,6 @@ class PaykeeperGateway extends BaseGateway
             'response' => $json,
         ];
     }
-
-    //Делает подтверждение списания денег
-//    public function captureOrder($orderId)
-//    {
-//        $accessToken = $this->getAccessToken();
-//        return Http::withHeaders(['Accept' => 'application/json', 'content-type' => 'application/json', 'Accept-Language' => 'en_US'])
-//            ->withToken($accessToken['access_token'])
-//            ->asForm()
-//            ->post($this->getUrl('v2/checkout/orders/' . $orderId . '/capture'));
-//    }
 
     /**
      * @throws \Exception
