@@ -9,7 +9,7 @@ class BookingDataBuilder
 {
     public function build(Booking $booking): array
     {
-        $services = BookingService::where('booking_id', $booking->id)->get();
+        $services = BookingService::with(['hunter', 'animal'])->where('booking_id', $booking->id)->get();
 
         $paidCount = $booking->countAcceptedAndPaidHunters();
 

@@ -2,7 +2,10 @@
 
 namespace Modules\Booking\Models;
 
+use App\User;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Modules\Animals\Models\Animal;
 
 class BookingService extends Model
 {
@@ -20,11 +23,17 @@ class BookingService extends Model
         'comment',
     ];
 
-    /**
-     * Бронь
-     */
-    public function booking()
+    public function booking(): BelongsTo
     {
         return $this->belongsTo(Booking::class);
+    }
+
+    public function hunter(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'hunter_id');
+    }
+    public function animal(): BelongsTo
+    {
+        return $this->belongsTo(Animal::class, 'animal_id');
     }
 }
