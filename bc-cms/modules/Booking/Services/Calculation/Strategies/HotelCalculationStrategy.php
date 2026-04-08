@@ -1,28 +1,30 @@
 <?php
 
-namespace Modules\Booking\Services;
+namespace Modules\Booking\Services\Calculation\Strategies;
 
-use Modules\Animals\Models\Animal;
 use Modules\Booking\Models\Booking;
-use Modules\Booking\Models\BookingRoomPlace;
-use Modules\Booking\Models\BookingService;
-use Modules\Hotel\Models\HotelRoomBooking;
+use Modules\Booking\Services\Calculation\Contracts\BookingCalculationStrategy;
 use Modules\User\Models\User;
 
-class BookingCalculatingService
+class HotelCalculationStrategy implements BookingCalculationStrategy
 {
-    public function calculate($booking, $user)
+
+    public function calculate($booking, array $data, $user): array
     {
-        $isBaseAdmin = $user->hasRole('baseadmin');
+        $services = $data['services'];
+        $grouped = $services->groupBy('service_type');
 
-        $paidCount = $booking->countAcceptedAndPaidHunters();
-
-        if ($paidCount <= 0) {
+        if ($data['paidCount'] <= 0) {
             return [
                 'status' => false,
                 'message' => 'Нет оплативших участников',
             ];
         }
+
+
+
+
+
 
         // === Распределение по комнатам ===
         $places = BookingRoomPlace::where('booking_id', $booking->id)->get();
@@ -55,9 +57,7 @@ class BookingCalculatingService
 
         $totalMyCost = array_sum(array_column($result, 'my_cost'));
 
-        // === Получаем услуги ===
-        $services = BookingService::where('booking_id', $booking->id)->get();
-        $grouped = $services->groupBy('service_type');
+
 
         $trophies = [];
         $penalties = [];
@@ -147,30 +147,25 @@ class BookingCalculatingService
         }
 
         // === Подсчёты итогов ===
-        $trophiesTotal = array_sum(array_column($trophies, 'total_cost'));
-        $penaltiesTotal = array_sum(array_column($penalties, 'total_cost'));
-        $addetionalsTotal = array_sum(array_column($addetionals, 'total_cost'));
-        $preparationTotal = array_sum(array_column($preparations, 'total_cost'));
-        $mealsTotal = array_sum(array_column($meals, 'total_cost'));
-
         $trophiesMyTotal = array_sum(array_column($trophies, 'my_cost'));
         $penaltiesMyTotal = array_sum(array_column($penalties, 'my_cost'));
         $addetionalsMyTotal = array_sum(array_column($addetionals, 'my_cost'));
         $preparationMyTotal = array_sum(array_column($preparations, 'my_cost'));
         $mealsMyTotal = array_sum(array_column($meals, 'my_cost'));
 
-        $huntingAmountPaid = ($booking->amount_hunting / $booking->total_hunting) * $paidCount;
+        $baseTotal = $this->calculateBaseTotal(
+            $booking,
+            $trophies,
+            $penalties,
+            $addetionals,
+            $preparations,
+            $meals,
+            $paidCount);
 
-        $baseAmount = $booking->type === Booking::BookingTypeAnimal
-            ? round(
-                round($huntingAmountPaid) + $trophiesTotal + $penaltiesTotal + $addetionalsTotal + $preparationTotal + $mealsTotal
-            )
-            : round(
-                $booking->total + round($huntingAmountPaid) + $trophiesTotal + $penaltiesTotal + $addetionalsTotal + $preparationTotal + $mealsTotal
-            );
+        $huntingAmountMyPaid = $paidCount > 0
+            ? round($this->calculateHuntingAmountPaid($booking, $paidCount) / $paidCount)
+            : 0;
 
-        $baseTotal = $baseAmount - $booking->total;
-        $huntingAmountMyPaid = round($huntingAmountPaid / $paidCount);
         $baseMyAmount = round($trophiesMyTotal + $penaltiesMyTotal + $addetionalsMyTotal + $preparationMyTotal + $mealsMyTotal);
         $myPrepayment = round($booking->total / $paidCount);
         $baseMyTotalCost = round(($totalMyCost + $huntingAmountMyPaid + $baseMyAmount) - $myPrepayment);
@@ -210,7 +205,7 @@ class BookingCalculatingService
                 ],
                 [
                     'name' => 'Организация охоты',
-                    'total_cost' => round($huntingAmountPaid),
+                    'total_cost' => $this->calculateHuntingAmountPaid($booking, $paidCount),
                     'my_cost' => $huntingAmountMyPaid,
                     'has_tooltip' => true,
                 ],
@@ -223,5 +218,7 @@ class BookingCalculatingService
             'spendings' => $spendings,
             'all_items' => $allItems,
         ];
+
+
     }
 }
