@@ -1,6 +1,6 @@
 <?php
 
-namespace Modules\Booking\Services;
+namespace Modules\Booking\Services\Calculation;
 
 use Modules\Booking\Models\Booking;
 use Modules\Booking\Models\BookingService;
