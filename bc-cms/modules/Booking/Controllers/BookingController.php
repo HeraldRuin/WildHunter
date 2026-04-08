@@ -2,11 +2,14 @@
 
 namespace Modules\Booking\Controllers;
 
+use App\Helpers\ReCaptchaEngine;
 use App\User;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
@@ -18,31 +21,26 @@ use Modules\Animals\Models\AnimalPreparation;
 use Modules\Animals\Models\AnimalTrophy;
 use Modules\Attendance\Models\AddetionalPrice;
 use Modules\Booking\DTO\ReplaceHunterData;
-use Modules\Booking\Emails\StatusUpdatedEmail;
 use Modules\Booking\Emails\HunterMessageEmail;
+use Modules\Booking\Emails\StatusUpdatedEmail;
 use Modules\Booking\Events\BookingCreatedEvent;
 use Modules\Booking\Events\BookingFinishEvent;
 use Modules\Booking\Events\BookingStartCollectionEvent;
 use Modules\Booking\Events\BookingUpdatedEvent;
 use Modules\Booking\Events\EnquirySendEvent;
 use Modules\Booking\Events\SetPaidAmountEvent;
-use Modules\Booking\Jobs\SendCheckToEmailJob;
+use Modules\Booking\Models\Booking;
 use Modules\Booking\Models\BookingHunter;
 use Modules\Booking\Models\BookingHunterInvitation;
 use Modules\Booking\Models\BookingPassenger;
 use Modules\Booking\Models\BookingRoomPlace;
 use Modules\Booking\Models\BookingService;
-use Modules\Booking\Models\Payment;
-use Modules\Booking\Services\BookingCalculatingService;
+use Modules\Booking\Models\Enquiry;
 use Modules\Booking\Services\BookingCollectionService;
 use Modules\Booking\Services\BookingTimerService;
+use Modules\Booking\Services\Calculation\BookingCalculatingService;
+use Modules\Booking\Services\Payments\PaymentService;
 use Modules\User\Events\SendMailUserRegistered;
-use Modules\Booking\Emails\CollectionTimerFinishedEmail;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-use Modules\Booking\Models\Booking;
-use Modules\Booking\Models\Enquiry;
-use App\Helpers\ReCaptchaEngine;
 
 class BookingController extends \App\Http\Controllers\Controller
 {
@@ -52,17 +50,19 @@ class BookingController extends \App\Http\Controllers\Controller
     protected $enquiryClass;
     protected $bookingInst;
     protected $animalClass;
-    protected $bookingTimerService;
-    protected $bookingCalculatingService;
-    protected $bookingCollectionService;
 
-    public function __construct(Booking $booking, Enquiry $enquiryClass, Animal $animalClass, BookingTimerService $bookingTimerService, BookingCalculatingService $bookingCalculatingService, BookingCollectionService $bookingCollectionService)
+    public function __construct(
+        Booking $booking,
+        Enquiry $enquiryClass,
+        Animal $animalClass,
+        protected BookingTimerService $bookingTimerService,
+        protected BookingCalculatingService $bookingCalculatingService,
+        protected BookingCollectionService $bookingCollectionService,
+        protected PaymentService $paymentService)
     {
         $this->booking = $booking;
         $this->enquiryClass = $enquiryClass;
         $this->animalClass = $animalClass;
-        $this->bookingTimerService = $bookingTimerService;
-        $this->bookingCollectionService = $bookingCollectionService;
     }
 
     protected function validateCheckout($code)
@@ -2071,51 +2071,11 @@ class BookingController extends \App\Http\Controllers\Controller
 
     public function storePrepayment(Booking $booking): JsonResponse
     {
-        $payment = Payment::where('booking_id', $booking->id)
-            ->where('status', Booking::PROCESSING)
-            ->where('create_user', Auth::id())
-            ->first();
-
-        if ($payment) {
-            return $this->sendSuccess([
-                'message' => __('Payment already created'),
-                'payment_url' => $payment->payment_url,
-            ]);
-        }
-
-        $gatewayObj = get_active_payment_gateway_object();
-        $dto = $gatewayObj->handlePurchaseData(['amount' => $booking->getAmountPerPerson()], $booking);
-        $result = $gatewayObj->createOrder($dto);
-        $url = $result['invoice_url'];
-
-        $gatewayObj->processFromBooking([
-            'amount' => $booking->getAmountPerPerson(),
-            'payment_url' => $url,
-            'invoice_id' => $result['invoice_id']], $booking);
-
-        if (config('paykeeper.send_check')) {
-            SendCheckToEmailJob::dispatch($result['invoice_id'])->afterResponse();
-        }
-
-        //TODO сделать проверку, что клиент оплатил счет и тогда делать что он оплатил
-
-        $booking->invitationUser(Auth::id())?->update(['prepayment_paid' => true, 'prepayment_paid_status' => BookingHunterInvitation::PREPAYMENT_PAID]);
-
-        if ($booking->countAcceptedAndPaidHunters() !== $booking->countAcceptedHunters()) {
-            return $this->sendSuccess([
-                'message' => __('Payment already created'),
-                'payment_url' => $url,
-            ]);
-        }
-
-        $this->bookingTimerService->startBedTimer($booking);
-
-        $booking->prepayment_paid = true;
-        $booking->save();
+        $paymentUrl = $this->paymentService->getOrCreatePrepayment($booking, Auth::id());
 
         return $this->sendSuccess([
             'message' => __('The gathering of hunters has begun'),
-            'payment_url' => $url,
+            'payment_url' => $paymentUrl,
         ]);
     }
 
