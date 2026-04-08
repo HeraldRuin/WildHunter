@@ -2139,7 +2139,7 @@ class BookingController extends \App\Http\Controllers\Controller
     }
     public function checkPrepayment(Booking $booking): void
     {
-        $this->bookingCollectionService->markAllPendingAsUnpaid();
+        $this->bookingCollectionService->markAllPendingAsUnpaid($booking);
     }
     public function places(Booking $booking)
     {
