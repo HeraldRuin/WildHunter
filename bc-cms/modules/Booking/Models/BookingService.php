@@ -16,7 +16,7 @@ class BookingService extends Model
         'service_type',
         'service_id',
         'hunter_id',
-        'animal',
+        'animal_id',
         'type',
         'count',
         'price',
