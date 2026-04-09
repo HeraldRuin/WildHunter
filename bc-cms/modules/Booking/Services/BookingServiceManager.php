@@ -199,7 +199,7 @@ class BookingServiceManager
     public function createFood(Booking $booking, $price, StoreFoodData $data): BookingService
     {
         $count = $data->count;
-        $totalCost = number_format($price * $count, 2, '.', '');
+        $totalCost = $price * $count;
 
         return BookingService::create([
             'booking_id'   => $booking->id,
