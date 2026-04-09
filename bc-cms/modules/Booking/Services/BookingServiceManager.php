@@ -30,13 +30,13 @@ class BookingServiceManager
                 'bc_animals',
                 'bc_animals.id',
                 '=',
-                'bc_booking_services.animal'
+                'bc_booking_services.animal_id'
             )
             ->select([
                 'bc_booking_services.id',
                 'bc_booking_services.booking_id',
                 'bc_booking_services.service_type',
-                'bc_booking_services.animal as animal_id',
+                'bc_booking_services.animal_id as animal_id',
                 'bc_animals.title as animal_title',
                 'bc_booking_services.type',
                 'bc_booking_services.count',
@@ -52,14 +52,14 @@ class BookingServiceManager
                 'bc_animals',
                 'bc_animals.id',
                 '=',
-                'bc_booking_services.animal'
+                'bc_booking_services.animal_id'
             )
             ->leftJoin('users', 'users.id', '=', 'bc_booking_services.hunter_id')
             ->select([
                 'bc_booking_services.id',
                 'bc_booking_services.booking_id',
                 'bc_booking_services.service_type',
-                'bc_booking_services.animal as animal_id',
+                'bc_booking_services.animal_id as animal_id',
                 'bc_animals.title as animal_title',
                 'bc_booking_services.type',
                 'users.id as hunter_id',
@@ -76,13 +76,13 @@ class BookingServiceManager
                 'bc_animals',
                 'bc_animals.id',
                 '=',
-                'bc_booking_services.animal'
+                'bc_booking_services.animal_id'
             )
             ->select([
                 'bc_booking_services.id',
                 'bc_booking_services.booking_id',
                 'bc_booking_services.service_type',
-                'bc_booking_services.animal as animal_id',
+                'bc_booking_services.animal_id as animal_id',
                 'bc_animals.title as animal_title',
                 'bc_booking_services.count',
                 'bc_booking_services.created_at',
