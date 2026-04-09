@@ -2,9 +2,6 @@
 
 namespace Modules\Booking\Services\Calculation\Strategies;
 
-use Modules\User\Models\User;
-use Modules\Animals\Models\Animal;
-use Modules\Booking\Models\Booking;
 use Modules\Booking\Services\Calculation\BookingCalculator;
 use Modules\Booking\Services\Calculation\Contracts\BookingCalculationStrategy;
 
@@ -39,51 +36,36 @@ class HotelHuntingCalculationStrategy implements BookingCalculationStrategy
         $preparations = $this->bookingCalculator->calculatePreparations(collect($grouped['preparation'] ?? []), $paidCount);
 
         // === Дополнительные услуги ===
-        $addetionals = $this->bookingCalculator->calculateAdditional(collect($grouped['addetional'] ?? []), $paidCount);
+        $addetionals = $this->bookingCalculator->calculateAdditional(collect($grouped['addetional'] ?? []), $user, $paidCount);
 
         // === Расходы охотников ===
-        $data = $this->bookingCalculator->calculateSpendings(collect($grouped['spending'] ?? []), $user, $paidCount);
-        $spendings = $data['items'];
-        $totalMyDebt = $data['total_my_debt'];
-        $totalSpending = $data['total_spending'];
-
+        $spendingData = $this->bookingCalculator->getSpendings(collect($grouped['spending'] ?? []), $user, $paidCount);
 
         // === Подсчёты итогов ===
-        $trophiesMyTotal = array_sum(array_column($trophies, 'my_cost'));
-        $penaltiesMyTotal = array_sum(array_column($penalties, 'my_cost'));
-        $addetionalsMyTotal = array_sum(array_column($addetionals, 'my_cost'));
-        $preparationMyTotal = array_sum(array_column($preparations, 'my_cost'));
-        $mealsMyTotal = array_sum(array_column($meals, 'my_cost'));
-
-        $baseTotal = $this->bookingCalculator->calculateBaseTotal($booking, $services, $paidCount);
-
-        $huntingAmountMyPaid = $paidCount > 0
-            ? round($this->bookingCalculator->calculateHuntingAmountPaid($booking, $paidCount) / $paidCount)
-            : 0;
-
-        $baseMyAmount = round($trophiesMyTotal + $penaltiesMyTotal + $addetionalsMyTotal + $preparationMyTotal + $mealsMyTotal);
-        $myPrepayment = round($booking->total / $paidCount);
-        $baseMyTotalCost = round(($myAccommodationCost + $huntingAmountMyPaid + $baseMyAmount) - $myPrepayment);
+        $organisationHunting = $this->bookingCalculator->getOrganisationHunting($booking, $paidCount);
+        $accommodation = $this->bookingCalculator->getAccommodation($booking, $user, $paidCount);
+        $prepaymentMade = $this->bookingCalculator->getPrepaymentMade($booking, $paidCount);
+        $balanceBase = $this->bookingCalculator->getBalanceBase($booking, $user, $services, $paidCount);
 
         // === Формируем итоговые массивы ===
         $allItems = [
             [
-                'name' => 'Внесена предоплата:',
-                'total_cost' => $booking->type === Booking::BookingTypeAnimal ? 0 : round($booking->total),
-                'my_cost' => $booking->type === Booking::BookingTypeAnimal ? 0 : $myPrepayment,
+                'name' => $prepaymentMade['title_name'],
+                'total_cost' => $prepaymentMade['total_cost'],
+                'my_cost' => $prepaymentMade['my_cost'],
             ],
             [
-                'name' => 'Остаток базе',
-                'total_cost' => $baseTotal,
-                'my_cost' => $baseMyTotalCost,
-            ],
+                'name' => $balanceBase['title_name'],
+                'total_cost' => $balanceBase['total_cost'],
+                'my_cost' => $balanceBase['my_cost'],
+            ]
         ];
 
         if (!is_baseAdmin()) {
             $allItems[] = [
-                'name' => 'Итог охотникам',
-                'total_cost' => round($totalSpending),
-                'my_cost' => round($totalMyDebt),
+                'name' => $spendingData['title_name'],
+                'total_cost' => $spendingData['total_cost'],
+                'my_cost' => $spendingData['my_cost'],
             ];
         }
 
@@ -92,16 +74,14 @@ class HotelHuntingCalculationStrategy implements BookingCalculationStrategy
             'is_baseAdmin' => is_baseAdmin(),
             'items' => [
                 [
-                    'name' => $booking->type === Booking::BookingTypeAnimal
-                        ? 'Проживание, ' . plural_sutki(0)
-                        : 'Проживание, ' . plural_sutki($booking->duration_days),
-                    'total_cost' => $booking->type === Booking::BookingTypeAnimal ? 0 : round($booking->total),
-                    'my_cost' => $booking->type === Booking::BookingTypeAnimal ? 0 : $myAccommodationCost,
+                    'name' => $accommodation['title_name'],
+                    'total_cost' => $accommodation['total_cost'],
+                    'my_cost' => $accommodation['my_cost'],
                 ],
                 [
-                    'name' => 'Организация охоты',
-                    'total_cost' => $this->bookingCalculator->calculateHuntingAmountPaid($booking, $paidCount),
-                    'my_cost' => $huntingAmountMyPaid,
+                    'name' => $organisationHunting['title_name'],
+                    'total_cost' => $organisationHunting['total_cost'],
+                    'my_cost' => $organisationHunting['my_cost'],
                     'has_tooltip' => true,
                 ],
             ],
@@ -110,7 +90,7 @@ class HotelHuntingCalculationStrategy implements BookingCalculationStrategy
             'meals' => $meals,
             'preparation' => $preparations,
             'addetionals' => $addetionals,
-            'spendings' => $spendings,
+            'spendings' => $spendingData['items'],
             'all_items' => $allItems,
             //TODO тут нужно думать
             'base_total' => $this->bookingCalculator->calculateBaseTotal($booking, $services, $paidCount),
