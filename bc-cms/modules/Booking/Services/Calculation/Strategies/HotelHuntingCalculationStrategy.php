@@ -21,8 +21,6 @@ class HotelHuntingCalculationStrategy implements BookingCalculationStrategy
             ];
         }
 
-        $myAccommodationCost = $this->bookingCalculator->getMyAccommodationCost($booking, $user);
-
         // === Трофеи ===
         $trophies = $this->bookingCalculator->calculateTrophies(collect($grouped['trophy'] ?? []), $paidCount);
 
