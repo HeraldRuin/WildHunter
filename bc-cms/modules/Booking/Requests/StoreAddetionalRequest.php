@@ -17,6 +17,7 @@ class StoreAddetionalRequest extends FormRequest
             'addetional'    => 'required|string',
             'addetional_id' => 'required|integer|exists:bc_addetional_prices,id',
             'count'     => 'required|integer|min:1',
+            'hunter_id'     => 'required|integer',
         ];
     }
 }

@@ -206,7 +206,7 @@ $(document).ready(function () {
         });
     }
 
-    function renderSavedPenaltyRow(penalty, bookingId) {
+    function renderSavedPenaltyRow(penalty) {
         return $(`
         <div class="penalty-row border rounded p-2 mb-2 d-flex align-items-center"
              data-id="${penalty.id}">
@@ -415,7 +415,7 @@ $(document).ready(function () {
             <div class="col-auto" style="margin-left: 165px">
                 <input type="number" min="1" value="1" class="form-control form-control-sm preparation-count" placeholder="Количество">
             </div>
-
+           
             <div class="col-auto" style="margin-left: 110px">
                 <button class="btn btn-sm btn-success save-preparation" disabled>Сохранить</button>
                 <button class="btn btn-sm btn-outline-secondary cancel-new">Отмена</button>
@@ -487,7 +487,7 @@ $(document).ready(function () {
         container.append(`
             <div class="d-flex fw-bold mb-2 food-header">
                 <span class="flex-fill">Питание</span>
-                <span class="flex-fill">Количество</span>
+                <span class="flex-fill">Количество чел</span>
                 <span style="width:40px"></span>
             </div>
         `);
@@ -609,6 +609,7 @@ $(document).ready(function () {
             <div class="d-flex fw-bold mb-2 food-header">
                 <span class="flex-fill">Название</span>
                 <span class="flex-fill">Количество</span>
+                <span class="flex-fill">Охотник</span>
                 <span style="width:40px"></span>
             </div>
         `);
@@ -618,6 +619,7 @@ $(document).ready(function () {
         return $.get(`/booking/${bookingId}/addetional/services`)
             .done(res => {
                 block.data('otherPrices', res.addetionals || []);
+                block.data('hunters', res.hunters || []);
             });
     }
 
@@ -635,6 +637,7 @@ $(document).ready(function () {
                  data-id="${addetional.id}">
                 <div class="other-col type-col other-name-col">${addetional.type ?? '—'}</div>
                 <div class="other-col type-col other-count-col">${addetional.count ?? '—'}</div>
+                <div class="other-col type-col other-count-hunter">${addetional.hunter_name ?? '—'}</div>
 
                 <button class="btn btn-sm btn-outline-danger remove-saved-other">Удалить</button>
             </div>
@@ -646,11 +649,12 @@ $(document).ready(function () {
         const block = $(this).closest('.service-block');
         const bookingId = block.data('bookingId');
         const prices = block.data('otherPrices') || [];
+        const hunters = block.data('hunters') || [];
 
-        block.find('.others-list').append(renderNewOtherRow(prices, bookingId));
+        block.find('.others-list').append(renderNewOtherRow(prices, hunters, bookingId));
     });
 
-    function renderNewOtherRow(prices, bookingId) {
+    function renderNewOtherRow(prices, hunters, bookingId) {
         const $row = $(`
         <div class="other-row border rounded p-2 mb-2 d-flex align-items-center gap-2">
 
@@ -660,7 +664,7 @@ $(document).ready(function () {
                 </select>
             </div>
 
-            <div style="width: 220px; margin-right: 200px">
+            <div style="width: 220px; margin-right: 50px">
                 <input
                     type="number"
                     class="form-control form-control-sm other-count"
@@ -669,6 +673,13 @@ $(document).ready(function () {
                     disabled
                 />
             </div>
+            
+            <div>
+                <select class="form-select form-select-sm other-hunter" style="width: 190px;">
+                    <option value="" disabled selected hidden>Выберите охотника</option>
+                </select>
+            </div>
+
 
             <div class="col-auto">
                 <button class="btn btn-sm btn-success save-other" disabled>Сохранить</button>
@@ -679,6 +690,7 @@ $(document).ready(function () {
 
         const $select = $row.find('.other-price');
         const $countInput = $row.find('.other-count');
+        const $hunter = $row.find('.other-hunter');
         const $save = $row.find('.save-other');
 
         prices.forEach(p => {
@@ -688,6 +700,16 @@ $(document).ready(function () {
             </option>
         `);
         });
+        hunters.forEach(h => {
+            $hunter.append(`<option value="${h.id}">${h.name}</option>`);
+        });
+
+        function check() {
+            $save.prop(
+                'disabled',
+                !($select.val() && $hunter.val())
+            );
+        }
 
         $select.on('change', function () {
             const max = parseInt($(this).find('option:selected').data('max'), 10);
@@ -697,8 +719,10 @@ $(document).ready(function () {
                 .attr('max', max)
                 .val(1);
 
-            $save.prop('disabled', false);
+            check();
         });
+
+        $hunter.on('change', check);
 
         $countInput.on('input', function () {
             const max = parseInt($(this).attr('max'), 10);
@@ -720,6 +744,7 @@ $(document).ready(function () {
                 addetional: selected.text(),
                 addetional_id: addetionalId,
                 count: count,
+                hunter_id: $hunter.val(),
                 _token: $('meta[name="csrf-token"]').attr('content')
             }).done(saved => {
                 $row.replaceWith(renderSavedOtherRow(saved));

@@ -16,8 +16,6 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 use Modules\Animals\Models\Animal;
-use Modules\Animals\Models\AnimalFine;
-use Modules\Animals\Models\AnimalPreparation;
 use Modules\Animals\Models\AnimalTrophy;
 use Modules\Attendance\Models\AddetionalPrice;
 use Modules\Booking\DTO\ReplaceHunterData;
@@ -41,7 +39,6 @@ use Modules\Booking\Models\BookingHunter;
 use Modules\Booking\Models\BookingHunterInvitation;
 use Modules\Booking\Models\BookingPassenger;
 use Modules\Booking\Models\BookingRoomPlace;
-use Modules\Booking\Models\BookingService;
 use Modules\Booking\Models\Enquiry;
 use Modules\Booking\Requests\StoreAddetionalRequest;
 use Modules\Booking\Requests\StoreFoodRequest;
@@ -1754,6 +1751,7 @@ class BookingController extends \App\Http\Controllers\Controller
     //Другое
     public function getAddetionalServices(Booking $booking): JsonResponse
     {
+        $data = $this->serviceManager->getHunterData($booking);
         $addetionals = AddetionalPrice::whereNull('type')->where('hotel_id', $booking->hotel_id)->get()
             ->map(fn ($addetional) => [
                 'id'   => $addetional->id,
@@ -1767,6 +1765,7 @@ class BookingController extends \App\Http\Controllers\Controller
 
         return response()->json([
             'addetionals' => $addetionals,
+            'hunters' => $data['hunters'],
         ]);
     }
     public function storeAddetional(StoreAddetionalRequest $request, Booking $booking): JsonResponse
@@ -1778,6 +1777,7 @@ class BookingController extends \App\Http\Controllers\Controller
             'id'           => $service->id,
             'type'         => $service->type,
             'count'         => $service->count,
+            'hunter_name'  => $service->hunter->name ?? '—',
             'created_at'   => $service->created_at,
             'updated_at'   => $service->updated_at,
         ]);

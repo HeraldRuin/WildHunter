@@ -108,12 +108,29 @@ class BookingServiceManager
         ])
         ->get();
 
+        $addetionals = BookingService::query()
+        ->where('bc_booking_services.booking_id', $booking->id)
+        ->where('bc_booking_services.service_type', 'addetional')
+        ->leftJoin('users', 'users.id', '=', 'bc_booking_services.hunter_id')
+        ->select([
+            'bc_booking_services.id',
+            'bc_booking_services.booking_id',
+            'bc_booking_services.service_type',
+            'bc_booking_services.count',
+            'bc_booking_services.type',
+            'users.id as hunter_id',
+            'users.name as hunter_name',
+            'bc_booking_services.created_at',
+            'bc_booking_services.updated_at',
+        ])
+        ->get();
+
         return [
             'trophies'      => $trophies,
             'penalties'     => $penalties,
             'preparations'  => $preparations,
             'foods'         => $services->where('service_type', 'food')->values(),
-            'addetionals'   => $services->where('service_type', 'addetional')->values(),
+            'addetionals'   => $addetionals,
             'spendings'     => $spendings,
         ];
     }
@@ -203,6 +220,7 @@ class BookingServiceManager
             'service_type' => 'addetional',
             'type'       => $data->addetional,
             'count'       => $count,
+            'hunter_id'    => $data->hunter_id,
             'price'       => $totalCost,
         ]);
     }
