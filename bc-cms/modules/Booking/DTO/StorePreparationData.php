@@ -9,7 +9,6 @@ class StorePreparationData
     public function __construct(
         public int $preparation_id,
         public int $animal_id,
-        public string $type,
         public int $count,
     ) {}
 
@@ -20,7 +19,6 @@ class StorePreparationData
         return new self(
             preparation_id: (int) $data['preparation_id'],
             animal_id: (int) $data['animal_id'],
-            type: $data['type'],
             count: (int) $data['count'],
         );
     }

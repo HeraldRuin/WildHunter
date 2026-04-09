@@ -169,7 +169,7 @@ class BookingServiceManager
             $service = BookingService::create([
                 'booking_id'   => $booking->id,
                 'service_type' => 'preparation',
-                'type'         => $data->type,
+                'type'         => null,
                 'service_id'   => null,
                 'animal_id'    => $data->animal_id,
                 'count'        => $count,
