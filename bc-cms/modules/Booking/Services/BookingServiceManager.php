@@ -152,7 +152,7 @@ class BookingServiceManager
     public function createOrUpdatePreparation(Booking $booking, StorePreparationData $data): BookingService
     {
         $preparation = AnimalPreparation::findOrFail($data->preparation_id);
-        $price = $preparation->hotelPrices()->where('hotel_id', $booking->hotel_id)>value('price');
+        $price = $preparation->hotelPrices()->where('hotel_id', $booking->hotel_id)->value('price');
         $count = $data->count;
         $totalCost = $price * $count;
 
