@@ -10,6 +10,38 @@ use Modules\Hotel\Models\HotelRoomBooking;
 
 class BookingCalculator
 {
+    public function getServiceCount(Booking $booking, $services, array $allowedTypes): array
+    {
+        $grouped = $services->groupBy('service_type');
+
+        $totals = collect();
+
+        foreach ($allowedTypes as $type) {
+
+            $items = $grouped->get($type, collect());
+
+            $sum = $items->sum(function ($item) use ($booking, $type) {
+
+                if ($type === 'food') {
+                    return $item->price * max(1, $booking->duration_days);
+                }
+
+                return $item->price;
+            });
+
+            $totals->put($type, round($sum));
+        }
+
+        return [
+            'trophy' => $totals->get('trophy', 0),
+            'penalty' => $totals->get('penalty', 0),
+            'food' => $totals->get('food', 0),
+            'preparation' => $totals->get('preparation', 0),
+            'additional' => $totals->get('addetional', 0),
+
+            'total' => $totals->sum(),
+        ];
+    }
     public function calculateRooms($booking, User $user): array
     {
         $places = BookingRoomPlace::where('booking_id', $booking->id)->get();
@@ -39,6 +71,10 @@ class BookingCalculator
         return $result;
     }
 
+    public function getAccommodationCost(Booking $booking): float
+    {
+        return round($booking->total);
+    }
     public function getMyAccommodationCost(Booking $booking, User $user): float
     {
         $rooms = $this->calculateRooms($booking, $user);
@@ -89,7 +125,7 @@ class BookingCalculator
 
         foreach ($groupedByAnimalType as $items) {
             $first = $items->first();
-
+            $animalName = $first->animal?->title ?? '';
             $totalCost = $items->sum('price');
 
             $myCost = $items
@@ -97,7 +133,7 @@ class BookingCalculator
                 ->sum('price');
 
             $result[] = [
-                'name' => $first->type,
+                'name' => $first->type . ' (' . $animalName . ')',
                 'total_cost' => round($totalCost),
                 'my_cost' => round($myCost),
             ];
@@ -124,17 +160,19 @@ class BookingCalculator
         return $result;
     }
 
-    public function calculateAdditional(Collection $additional, int $paidCount): array
+    public function calculateAdditional(Collection $additional, User $user, int $paidCount): array
     {
         $result = [];
 
         foreach ($additional as $item) {
+            $isMe = $item->hunter_id === $user->id;
             $totalCost = round($item->price);
+            $myCost = $isMe ? round($totalCost): 0;
 
             $result[] = [
                 'name' => $item->type,
                 'total_cost' => $totalCost,
-                'my_cost' => round($item->price / max(1, $paidCount)),
+                'my_cost' => $myCost,
             ];
         }
 
@@ -166,52 +204,115 @@ class BookingCalculator
 
         return [
             'items' => $result,
-            'total_my_debt' => $totalMyDebt,
             'total_spending' => round($totalSpending),
+            'total_my_debt' => $totalMyDebt,
+        ];
+    }
+
+    public function getSpendings(Collection $spendings, User $user, int $paidCount): array
+    {
+        $data = $this->calculateSpendings($spendings, $user, $paidCount);
+
+        return [
+            'title_name' => 'Итог охотникам',
+            'items' => $data['items'],
+            'total_cost' => $data['total_spending'],
+            'my_cost' => $data['total_my_debt'],
         ];
     }
 
     public function calculateBaseTotal(Booking $booking, $services, int $paidCount): float
     {
-        $grouped = $services->groupBy('service_type');
-
-        $trophiesTotal = $grouped->get('trophy', collect())->sum('price');
-        $penaltiesTotal = $grouped->get('penalty', collect())->sum('price');
-        $addetionalsTotal = $grouped->get('addetional', collect())->sum('price');
-        $preparationTotal = $grouped->get('preparation', collect())->sum('price');
-        $mealsTotal = $grouped->get('food', collect())->sum('price');
-
-        $huntingAmountPaid = $this->calculateHuntingAmountPaid($booking, $paidCount);
-
-        $baseAmount = $booking->type === Booking::BookingTypeAnimal
-            ? (
-                $huntingAmountPaid +
-                $trophiesTotal +
-                $penaltiesTotal +
-                $addetionalsTotal +
-                $preparationTotal +
-                $mealsTotal
-            )
-            : (
-                $booking->total +
-                $huntingAmountPaid +
-                $trophiesTotal +
-                $penaltiesTotal +
-                $addetionalsTotal +
-                $preparationTotal +
-                $mealsTotal
+        $result = $this->getServiceCount($booking, $services, ['trophy', 'penalty', 'food', 'preparation', 'addetional']);
+        $organisationHuntingPaid = $this->calculateOrganisationHunting($booking, $paidCount);
+//TODO тут нужно будет убрать тип животного
+        $baseAmount = $booking->type === Booking::BookingTypeAnimal ? ($organisationHuntingPaid + $result['total']) :
+            (
+                $booking->total + $organisationHuntingPaid + $result['total']
             );
 
-        return $baseAmount - $booking->total;
+        return $organisationHuntingPaid + $result['total'];
     }
+    public function calculateMyBaseTotal(Booking $booking, User $user, $services, int $paidCount): float
+    {
+        $myAccommodationCost = $this->getMyAccommodationCost($booking, $user);
+        $myOrganizationCost = $this->calculateMyOrganisationHunting($booking, $paidCount);
 
-    public function calculateHuntingAmountPaid(Booking $booking, int $paidCount): float
+        $result = $this->getServiceCount($booking, $services, ['trophy', 'penalty', 'food', 'preparation', 'addetional']);
+        $myPrepaymentMade = $this->myPrepaymentMade($booking->total, $paidCount);
+//dd($myOrganizationCost);
+
+//        $baseMyAmount = round($trophiesMyTotal + $penaltiesMyTotal + $addetionalsMyTotal + $preparationMyTotal + $mealsMyTotal);
+//        $myPrepayment = round($booking->total / $paidCount);
+//        $baseMyTotalCost = round(($myAccommodationCost + $huntingAmountMyPaid + $baseMyAmount) - $this->>myPrepaymentMade());
+
+        return ($myAccommodationCost + $myOrganizationCost + $result['total']) - $myPrepaymentMade;
+    }
+    public function getAccommodation(Booking $booking, User $user, int $paidCount): array
+    {
+        $isAnimal = $booking->type === Booking::BookingTypeAnimal;
+
+        if ($isAnimal) {
+            return [
+                'title_name' => 'Проживание, ' . plural_sutki(0),
+                'total_cost' => 0,
+                'my_cost' => 0,
+            ];
+        }
+
+        return [
+            'title_name' => 'Проживание, ' . plural_sutki($booking->duration_days),
+            'total_cost' => $this->getAccommodationCost($booking),
+            'my_cost' => $this->getMyAccommodationCost($booking, $user),
+        ];
+    }
+    public function calculateOrganisationHunting(Booking $booking, int $paidCount): float
     {
         if (!$booking->total_hunting || $paidCount <= 0) {
             return 0;
         }
 
         return round(($booking->amount_hunting / $booking->total_hunting) * $paidCount);
+    }
+    public function calculateMyOrganisationHunting(Booking $booking, int $paidCount): float
+    {
+        return $this->calculateOrganisationHunting($booking, $paidCount) / $paidCount;
+    }
+
+    public function getOrganisationHunting(Booking $booking, int $paidCount): array
+    {
+        return [
+            'title_name' => 'Организация охоты',
+            'total_cost' => $this->calculateOrganisationHunting($booking, $paidCount),
+            'my_cost' => $this->calculateMyOrganisationHunting($booking, $paidCount),
+        ];
+    }
+    public function getPrepaymentMade(Booking $booking, int $paidCount): array
+    {
+        if ($booking->type === Booking::BookingTypeAnimal) {
+            return [
+                'total_cost' => 0,
+                'my_cost' => 0,
+            ];
+        }
+
+        return [
+            'title_name' => 'Внесена предоплата:',
+            'total_cost' => round($booking->total),
+            'my_cost' => $this->myPrepaymentMade($booking->total, $paidCount),
+        ];
+    }
+    public function myPrepaymentMade($bookingTotal, int $paidCount): float
+    {
+        return round($bookingTotal / $paidCount);
+    }
+    public function getBalanceBase(Booking $booking, User $user, $services, int $paidCount): array
+    {
+        return [
+            'title_name' =>  'Остаток базе',
+            'total_cost' => $this->calculateBaseTotal($booking, $services, $paidCount),
+            'my_cost' => $this->calculateMyBaseTotal($booking, $user, $services, $paidCount),
+        ];
     }
 
 }
