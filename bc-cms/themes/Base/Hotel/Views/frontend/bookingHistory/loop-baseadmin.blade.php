@@ -71,13 +71,7 @@
                 @endif
                 <br>
                 {{__(':total guest',['count'=>$booking->total_hunting])}} <br>
-                {{--            <button--}}
-                {{--                type="button"--}}
-                {{--                class="btn btn-info btn-sm mt-2"--}}
-                {{--                data-bs-toggle="modal"--}}
-                {{--                data-bs-target="#bookingDetailModal{{ $booking->id }}">--}}
-                {{--                Подробности--}}
-                {{--            </button>--}}
+
             </div>
         @endif
     </td>
@@ -193,7 +187,19 @@
         @endif
     </td>
 
-    <td>{{format_money($booking->paid)}}</td>
+    <td>
+        <div>
+            @if(in_array($booking->status, [\Modules\Booking\Models\Booking::PREPAYMENT_COLLECTION, \Modules\Booking\Models\Booking::FINISHED_PREPAYMENT, \Modules\Booking\Models\Booking::BED_COLLECTION]))
+{{--            Общая сумма: {{ format_money($booking->calculation['booking_total']) }} <br>--}}
+                {{--            Остаток базе: {{ format_money($booking->calculation['base_total']) }} <br>--}}
+                {{--            Всего: {{ format_money($booking->total) }}--}}
+                Общая сумма: <br>
+                Внесена предоплата: <br>
+                Остаток базе: <br>
+                Всего: <br>
+            @endif
+        </div>
+    </td>
 
     <td>
         @if($userRole === 'baseadmin' && $booking->status === \Modules\Booking\Models\Booking::PROCESSING)
