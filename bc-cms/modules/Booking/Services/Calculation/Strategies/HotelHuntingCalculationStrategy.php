@@ -55,14 +55,7 @@ class HotelHuntingCalculationStrategy implements BookingCalculationStrategy
         $preparationMyTotal = array_sum(array_column($preparations, 'my_cost'));
         $mealsMyTotal = array_sum(array_column($meals, 'my_cost'));
 
-        $baseTotal = $this->calculateBaseTotal(
-            $booking,
-            $trophies,
-            $penalties,
-            $addetionals,
-            $preparations,
-            $meals,
-            $paidCount);
+        $baseTotal = $this->bookingCalculator->calculateBaseTotal($booking, $services, $paidCount);
 
         $huntingAmountMyPaid = $paidCount > 0
             ? round($this->bookingCalculator->calculateHuntingAmountPaid($booking, $paidCount) / $paidCount)
