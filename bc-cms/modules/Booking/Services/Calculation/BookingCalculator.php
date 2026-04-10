@@ -315,4 +315,41 @@ class BookingCalculator
         ];
     }
 
+    //Подсчет в историю бронирования в колонку оплата (админа базы)
+    public function getBookingTotal(Booking $booking, $services, int $paidCount): array
+    {
+        if ($booking->type === Booking::BookingTypeAnimal) {
+            return [
+                'booking_total' => $booking->amount_hunting,
+                'prepaid_total' => 0,
+                'base_total' => 0,
+                'total' => 0,
+            ];
+        }
+
+        if ($booking->type === Booking::BookingTypeHotel) {
+            return [
+                'booking_total' => $booking->total,
+                'prepaid_total' => 0,
+                'base_total' => 0,
+                'total' => 0,
+            ];
+        }
+
+        if ($booking->type === Booking::BookingTypeHotelAnimal) {
+            return [
+                'booking_total' => $booking->total + $booking->amount_hunting,
+                'prepaid_total' => 0,
+                'base_total' => 0,
+                'total' => 0,
+            ];
+        }
+
+        return [
+            'booking_total' => 0,
+            'prepaid_total' => 0,
+            'base_total' => 0,
+            'total' => 0,
+        ];
+    }
 }
