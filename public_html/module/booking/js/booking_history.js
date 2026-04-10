@@ -465,7 +465,8 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
 
                 slot.hunter = hunter;
-                slot.query = hunter.user_name || hunter.first_name + ' ' + hunter.last_name;
+                // slot.query = hunter.user_name || hunter.first_name + ' ' + hunter.last_name;
+                slot.query = hunter.name;
                 slot.showResults = false;
                 slot.results = [];
                 slot.noResults = false;

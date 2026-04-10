@@ -15,9 +15,10 @@ use Modules\Booking\Models\BookingHunter;
 use Modules\Booking\Models\BookingHunterInvitation;
 use Modules\Booking\Models\Enquiry;
 use Modules\Booking\Models\Service;
-use Modules\Booking\Services\BookingCalculatingService;
-use Modules\Booking\Services\BookingCalculator;
-use Modules\Booking\Services\BookingDataBuilder;
+use Modules\Booking\Services\Calculation\BookingCalculatingService;
+use Modules\Booking\Services\Calculation\BookingCalculator;
+use Modules\Booking\Services\Calculation\BookingDataBuilder;
+use Modules\Booking\Services\Calculation\Strategies\BookingCalculationStrategyResolver;
 use Modules\Car\Models\Car;
 use Modules\Event\Models\Event;
 use Modules\Flight\Models\Flight;
@@ -44,7 +45,7 @@ class UserController extends FrontendController
     private Booking $booking;
     protected AddDataInView $cabinetService;
 
-    public function __construct(Booking $booking, Enquiry $enquiry, AddDataInView $cabinetService)
+    public function __construct(Booking $booking, Enquiry $enquiry, AddDataInView $cabinetService, protected BookingCalculatingService $bookingCalculatingService)
     {
         $this->enquiryClass = $enquiry;
         parent::__construct();
@@ -222,7 +223,7 @@ class UserController extends FrontendController
         $bookingId = $request->input('booking_id');
         $booking = Booking::where('code', $bookingId)->first();
         $code = $request->input('code');
-//dd($bookingId);
+
         if ($code) {
             $booking = Booking::where('code', $code)->first();
 
@@ -300,8 +301,26 @@ class UserController extends FrontendController
 
         $statuses = array_values(array_filter($allStatuses,fn($status) => !in_array($status, $excludedByRole[$userRole] ?? [])));
 
-//        $builder = app(BookingDataBuilder::class);
-//        $calculator = app(BookingCalculator::class);
+
+
+        $service = app(BookingCalculatingService::class);
+        $user = Auth::user();
+
+//        $bookings->getCollection()->transform(function ($booking) use ($service, $user) {
+//
+//            $booking->calculation = $service->calculate($booking, $user);
+//
+////            $booking->calculation = [
+////                'booking_total' => 12,
+////                'base_total' => $service->calculateBaseTotal($booking, $user),
+//////                'paid_count' => $data['paidCount'],
+////                'paid_count' => 12,
+////            ];
+//            return $booking;
+//        });
+//
+//        dd($service);
+
 //        $bookings->getCollection()->transform(function ($booking) use ($calculator, $builder) {
 //            $data = $builder->build($booking);
 //
@@ -498,6 +517,7 @@ class UserController extends FrontendController
                 return [
                     'id' => $user->id,
                     'name' => $user->display_name,
+                    'user_name' => $user->user_name,
                     'email' => $user->email,
                     'phone' => $user->phone,
                     'invited' => $user->invited,

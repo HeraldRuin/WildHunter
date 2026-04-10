@@ -12,14 +12,15 @@
                     @change="handleHunterInputChange(index)"
                     @focus="hunterSlot.showResults = true"
                     @blur="setTimeout(() => { hunterSlot.showResults = false; }, 200)">
+
                 <!-- Результаты поиска для этого слота -->
-                <div v-if="hunterSlot.showResults"
-                     class="position-absolute w-100 bg-white border rounded shadow-sm mt-1"
-                     style="z-index: 1000; max-height: 300px; overflow-y: auto;">
+                <div v-if="hunterSlot.showResults" class="position-absolute w-100 bg-white border rounded shadow-sm mt-1" style="z-index: 1000; max-height: 300px; overflow-y: auto;">
+
                     <!-- Спиннер при поиске -->
                     <div v-if="hunterSlot.isSearching" class="p-2 text-muted text-center">
                         {{ __('Searching...') }}
                     </div>
+
                     <!-- Результаты -->
                     <div v-else-if="hunterSlot.results.length">
                         <div v-for="hunter in hunterSlot.results"
@@ -40,7 +41,7 @@
                                                                 </template>
                                                             </span>
                                         <span
-                                            class="text-muted ms-2">@{{ hunter.first_name }} @{{ hunter.last_name }}</span>
+                                            class="text-muted ms-2">@{{ hunter.name }}</span>
                                     </div>
                                     <div class="text-muted small">@{{ hunter.email }}</div>
                                     <div class="mt-1">
