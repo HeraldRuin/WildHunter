@@ -301,49 +301,14 @@ class UserController extends FrontendController
 
         $statuses = array_values(array_filter($allStatuses,fn($status) => !in_array($status, $excludedByRole[$userRole] ?? [])));
 
-
-
         $service = app(BookingCalculatingService::class);
         $user = Auth::user();
 
-//        $bookings->getCollection()->transform(function ($booking) use ($service, $user) {
-//
-//            $booking->calculation = $service->calculate($booking, $user);
-//
-////            $booking->calculation = [
-////                'booking_total' => 12,
-////                'base_total' => $service->calculateBaseTotal($booking, $user),
-//////                'paid_count' => $data['paidCount'],
-////                'paid_count' => 12,
-////            ];
-//            return $booking;
-//        });
-//
-//        dd($service);
+        $bookings->getCollection()->transform(function ($booking) use ($service, $user) {
 
-//        $bookings->getCollection()->transform(function ($booking) use ($calculator, $builder) {
-//            $data = $builder->build($booking);
-//
-//            $bookingTotal = match ($booking->type) {
-//                Booking::BookingTypeHotel => $booking->total,
-//                Booking::BookingTypeHotelAnimal => $booking->total + $booking->amount_hunting,
-//                Booking::BookingTypeAnimal => $booking->amount_hunting,
-//            };
-//
-//            $baseTotal = $calculator->calculateBaseTotal(
-//                $booking,
-//                $data['services'],
-//                $data['paidCount']
-//            );
-//
-//            $booking->calculation = [
-//                'booking_total' => $bookingTotal,
-//                'base_total' => $baseTotal,
-//                'paid_count' => $data['paidCount'],
-//            ];
-//
-//            return $booking;
-//        });
+            $booking->calculation = $service->calculate($booking, $user);
+            return $booking;
+        });
 
         $data = array_merge($cabinetData, [
             'userRole' => $userRole,
