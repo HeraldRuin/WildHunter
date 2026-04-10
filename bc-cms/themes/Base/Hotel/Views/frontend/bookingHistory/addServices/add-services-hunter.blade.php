@@ -13,15 +13,17 @@
                         <h6>Доп. услуги:</h6>
 
                         <!-- Разделка -->
-                        <div class="service-block mb-3 p-3 border rounded bg-light shadow-sm"
-                             id="preparations-block-{{ $booking->id }}">
-                            <div class="d-flex justify-content-between align-items-center mb-2">
-                                <h6>Разделка:</h6>
-                                <button type="button" class="btn btn-sm btn-outline-primary add-preparation-btn" data-booking="{{ $booking->id }}">+</button>
-                            </div>
+                        @if($booking->type !== \Modules\Booking\Models\Booking::BookingTypeHotel)
+                            <div class="service-block mb-3 p-3 border rounded bg-light shadow-sm"
+                                 id="preparations-block-{{ $booking->id }}">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <h6>Разделка:</h6>
+                                    <button type="button" class="btn btn-sm btn-outline-primary add-preparation-btn" data-booking="{{ $booking->id }}">+</button>
+                                </div>
 
-                            <div class="preparations-list"></div>
-                        </div>
+                                <div class="preparations-list"></div>
+                            </div>
+                        @endif
                     </div>
 
                 </div>
@@ -36,6 +38,7 @@
 
                     <div class="foods-list"></div>
                 </div>
+
                 <!-- Другое -->
                 <div class="service-block mb-3 p-3 border rounded bg-light shadow-sm"
                      id="others-block-{{ $booking->id }}">
