@@ -44,6 +44,7 @@ class HotelHuntingCalculationStrategy implements BookingCalculationStrategy
         $accommodation = $this->bookingCalculator->getAccommodation($booking, $user, $paidCount);
         $prepaymentMade = $this->bookingCalculator->getPrepaymentMade($booking, $paidCount);
         $balanceBase = $this->bookingCalculator->getBalanceBase($booking, $user, $services, $paidCount);
+        $paymentDisplayData = $this->bookingCalculator->getBookingTotal($booking, $services, $paidCount);
 
         // === Формируем итоговые массивы ===
         $allItems = [
@@ -83,15 +84,21 @@ class HotelHuntingCalculationStrategy implements BookingCalculationStrategy
                     'has_tooltip' => true,
                 ],
             ],
+            'trophy_show' => true,
             'trophies' => $trophies,
+            'penalties_show' => true,
             'penalties' => $penalties,
             'meals' => $meals,
             'preparation' => $preparations,
             'addetionals' => $addetionals,
             'spendings' => $spendingData['items'],
             'all_items' => $allItems,
-            //TODO тут нужно думать
-            'base_total' => $this->bookingCalculator->calculateBaseTotal($booking, $services, $paidCount),
+
+            //Подсчет в историю бронирования в колонку оплата (админа базы)
+            'booking_total' => $paymentDisplayData['booking_total'],
+            'prepaid_total' => $paymentDisplayData['prepaid_total'],
+            'base_total' => $paymentDisplayData['base_total'],
+            'total' => $paymentDisplayData['total'],
         ];
     }
 }

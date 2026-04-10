@@ -21,17 +21,8 @@ class HotelCalculationStrategy implements BookingCalculationStrategy
             ];
         }
 
-        // === Трофеи ===
-        $trophies = $this->bookingCalculator->calculateTrophies(collect($grouped['trophy'] ?? []), $paidCount);
-
-        // === Штрафы ===
-        $penalties = $this->bookingCalculator->calculatePenalties(collect($grouped['penalty'] ?? []), $user);
-
         // === Питание ===
         $meals = $this->bookingCalculator->calculateMeals(collect($grouped['food'] ?? []), $paidCount, $booking);
-
-        // === Разделка ===
-        $preparations = $this->bookingCalculator->calculatePreparations(collect($grouped['preparation'] ?? []), $paidCount);
 
         // === Дополнительные услуги ===
         $addetionals = $this->bookingCalculator->calculateAdditional(collect($grouped['addetional'] ?? []), $user, $paidCount);
@@ -40,10 +31,10 @@ class HotelCalculationStrategy implements BookingCalculationStrategy
         $spendingData = $this->bookingCalculator->getSpendings(collect($grouped['spending'] ?? []), $user, $paidCount);
 
         // === Подсчёты итогов ===
-        $organisationHunting = $this->bookingCalculator->getOrganisationHunting($booking, $paidCount);
         $accommodation = $this->bookingCalculator->getAccommodation($booking, $user, $paidCount);
         $prepaymentMade = $this->bookingCalculator->getPrepaymentMade($booking, $paidCount);
         $balanceBase = $this->bookingCalculator->getBalanceBase($booking, $user, $services, $paidCount);
+        $paymentDisplayData = $this->bookingCalculator->getBookingTotal($booking, $services, $paidCount);
 
         // === Формируем итоговые массивы ===
         $allItems = [
@@ -76,22 +67,19 @@ class HotelCalculationStrategy implements BookingCalculationStrategy
                     'total_cost' => $accommodation['total_cost'],
                     'my_cost' => $accommodation['my_cost'],
                 ],
-                [
-                    'name' => $organisationHunting['title_name'],
-                    'total_cost' => $organisationHunting['total_cost'],
-                    'my_cost' => $organisationHunting['my_cost'],
-                    'has_tooltip' => true,
-                ],
             ],
-            'trophies' => $trophies,
-            'penalties' => $penalties,
+            'trophy_show' => false,
+            'penalties_show' => false,
             'meals' => $meals,
-            'preparation' => $preparations,
             'addetionals' => $addetionals,
             'spendings' => $spendingData['items'],
             'all_items' => $allItems,
-            //TODO тут нужно думать
-            'base_total' => $this->bookingCalculator->calculateBaseTotal($booking, $services, $paidCount),
+
+            //Подсчет в историю бронирования в колонку оплата (админа базы)
+            'booking_total' => $paymentDisplayData['booking_total'],
+            'prepaid_total' => $paymentDisplayData['prepaid_total'],
+            'base_total' => $paymentDisplayData['base_total'],
+            'total' => $paymentDisplayData['total'],
         ];
     }
 }

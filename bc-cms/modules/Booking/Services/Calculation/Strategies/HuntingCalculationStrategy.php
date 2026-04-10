@@ -12,7 +12,9 @@ class HuntingCalculationStrategy implements BookingCalculationStrategy
     {
         $services = $data['services'];
         $grouped = $services->groupBy('service_type');
-        $paidCount = 2;
+        //TODO не понятно как быть с значением оплаты - ведь мы везде считаем кол оплативших - разобраться
+        $paidCount = 1;
+
 
         // === Трофеи ===
         $trophies = $this->bookingCalculator->calculateTrophies(collect($grouped['trophy'] ?? []), $paidCount);
@@ -34,9 +36,8 @@ class HuntingCalculationStrategy implements BookingCalculationStrategy
 
         // === Подсчёты итогов ===
         $organisationHunting = $this->bookingCalculator->getOrganisationHunting($booking, $paidCount);
-        $accommodation = $this->bookingCalculator->getAccommodation($booking, $user, $paidCount);
-        $prepaymentMade = $this->bookingCalculator->getPrepaymentMade($booking, $paidCount);
         $balanceBase = $this->bookingCalculator->getBalanceBase($booking, $user, $services, $paidCount);
+        $paymentDisplayData = $this->bookingCalculator->getBookingTotal($booking, $services, $paidCount);
 
         // === Формируем итоговые массивы ===
         $allItems = [
@@ -63,18 +64,21 @@ class HuntingCalculationStrategy implements BookingCalculationStrategy
                     'name' => $organisationHunting['title_name'],
                     'total_cost' => $organisationHunting['total_cost'],
                     'my_cost' => $organisationHunting['my_cost'],
-                    'has_tooltip' => true,
                 ],
             ],
+            'trophy_show' => true,
             'trophies' => $trophies,
+            'penalties_show' => true,
             'penalties' => $penalties,
             'meals' => $meals,
             'preparation' => $preparations,
             'addetionals' => $addetionals,
             'spendings' => $spendingData['items'],
             'all_items' => $allItems,
-            //TODO тут нужно думать
-            'base_total' => $this->bookingCalculator->calculateBaseTotal($booking, $services, $paidCount),
+
+            //Подсчет в историю бронирования в колонку оплата (админа базы)
+            'booking_total' => $paymentDisplayData['booking_total'],
+            'base_total' => $paymentDisplayData['base_total'],
         ];
     }
 }
