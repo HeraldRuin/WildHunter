@@ -101,7 +101,8 @@
             @endif
         </div>
 
-        @if($booking->status === \Modules\Booking\Models\Booking::START_COLLECTION)
+{{--        @if($booking->status === \Modules\Booking\Models\Booking::START_COLLECTION)--}}
+        @if(in_array($booking->status, [\Modules\Booking\Models\Booking::START_COLLECTION, \Modules\Booking\Models\Booking::FINISHED_COLLECTION]))
             @php
                 $endTimestamp = null;
                 try {
@@ -115,7 +116,7 @@
                 }
             @endphp
 
-            @if($endTimestamp)
+            @if($endTimestamp && $booking->status !== \Modules\Booking\Models\Booking::FINISHED_COLLECTION)
                 <div class="text-muted collection-timer" data-end="{{ $endTimestamp }}"
                      data-booking-id="{{ $booking->id }}">[0 мин]
                 </div>
