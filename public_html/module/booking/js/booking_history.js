@@ -447,7 +447,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
 
                 if (slot.hunter) {
-                    const hunterName = slot.hunter.user_name || (slot.hunter.first_name + ' ' + slot.hunter.last_name).trim();
+                    const hunterName = slot.hunter.user_name || (slot.hunter.name).trim();
                     if (slot.query.trim() !== hunterName.trim()) {
                         slot.hunter = null;
                     }
@@ -465,8 +465,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
 
                 slot.hunter = hunter;
-                // slot.query = hunter.user_name || hunter.first_name + ' ' + hunter.last_name;
-                slot.query = hunter.name;
+                slot.query = hunter.user_name || hunter.name;
                 slot.showResults = false;
                 slot.results = [];
                 slot.noResults = false;
@@ -1427,17 +1426,21 @@ document.addEventListener('DOMContentLoaded', function () {
                 });
 
                 // === Трофеи ===
-                html += `<tr class="table-secondary"><td colspan="3"><strong>Трофеи</strong></td></tr>`;
-                (res.trophies || []).forEach(item => {
-                    html += `
+                if (res.trophy_show) {
+                    html += `<tr class="table-secondary"><td colspan="3"><strong>Трофеи</strong></td></tr>`;
+
+                    (res.trophies || []).forEach(item => {
+                        html += `
 <tr>
     <td>${item.name}</td>
     <td>${item.total_cost ?? 0}</td>
     <td>${item.my_cost ?? 0}</td>
 </tr>`;
-                });
+                    });
+                }
 
                 // === Штрафы ===
+                if (res.penalties_show) {
                 html += `<tr class="table-secondary"><td colspan="3"><strong>Штрафы</strong></td></tr>`;
                 (res.penalties || []).forEach(item => {
                     html += `
@@ -1447,6 +1450,7 @@ document.addEventListener('DOMContentLoaded', function () {
     <td>${item.my_cost ?? 0}</td>
 </tr>`;
                 });
+                }
 
                 // === Дополнительные услуги ===
                 html += `<tr class="table-secondary"><td colspan="3"><strong>Доп. услуги</strong></td></tr>`;
