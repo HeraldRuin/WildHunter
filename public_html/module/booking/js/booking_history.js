@@ -1393,14 +1393,12 @@ document.addEventListener('DOMContentLoaded', function () {
                 let html = `<table class="table table-bordered">
 <thead>
     <tr class="table-secondary">
-        <th>Услуги</th>
-        <th>Всего расходы</th>
-        <th>Мои расходы</th>
+        <th style="padding:5px;">Услуги</th>
+        <th style="padding:5px;">Всего расходы</th>
+        <th style="padding:5px;">Мои расходы</th>
     </tr>
 </thead>
 <tbody>`;
-
-                html += `<tr><td colspan="3"></td></tr>`;
 
                 // === Основные услуги ===
                 (res.items || []).forEach(item => {
@@ -1427,7 +1425,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
                 // === Трофеи ===
                 if (res.trophy_show) {
-                    html += `<tr class="table-secondary"><td colspan="3"><strong>Трофеи</strong></td></tr>`;
+                    html += `<tr class="table-secondary"><td style="padding:5px;" colspan="3"><strong>Трофеи</strong></td></tr>`;
 
                     (res.trophies || []).forEach(item => {
                         html += `
@@ -1441,7 +1439,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
                 // === Штрафы ===
                 if (res.penalties_show) {
-                html += `<tr class="table-secondary"><td colspan="3"><strong>Штрафы</strong></td></tr>`;
+                html += `<tr class="table-secondary"><td style="padding:5px;" colspan="3"><strong>Штрафы</strong></td></tr>`;
                 (res.penalties || []).forEach(item => {
                     html += `
 <tr>
@@ -1453,7 +1451,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
 
                 // === Дополнительные услуги ===
-                html += `<tr class="table-secondary"><td colspan="3"><strong>Доп. услуги</strong></td></tr>`;
+                html += `<tr class="table-secondary"><td style="padding:5px;" colspan="3"><strong>Доп. услуги</strong></td></tr>`;
                 (res.meals || []).concat(res.preparation || []).concat(res.addetionals || []).forEach(item => {
                     html += `
 <tr>
@@ -1467,9 +1465,9 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (!is_baseAdmin) {
                     html += `
 <tr class="table-secondary">
-    <td><strong>Расходы охотников</strong></td>
-    <td></td>
-    <td><strong style="color:red;">Я должен</strong></td>
+    <td style="padding:5px;"><strong>Расходы охотников</strong></td>
+    <td style="padding:5px;"></td>
+    <td style="padding:5px;"><strong style="color:red;">Я должен</strong></td>
 </tr>`;
                     (res.spendings || []).forEach(item => {
                         html += `
@@ -1482,8 +1480,36 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
 
                 // === Подытог ===
-                html += `<tr><td colspan="3"></td></tr>`;
-                (res.all_items || []).forEach(item => {
+                html += `
+<tr class="table-secondary">
+    <td style="padding:5px;"><strong>Подытог</strong></td>
+    <td style="padding:5px;"></td>
+    <td style="padding:5px;"></td>
+</tr>`;
+                (res.all_items || []).forEach((item, index) => {
+
+                    if (index === 1) {
+                        html += `
+<tr class="table-secondary">
+    <td style="padding:1px 8px;"></td>
+    <td style="padding:1px 8px;"></td>
+    <td style="padding:1px 8px; font-size:12px; color:red; white-space:nowrap;">
+        <strong style="color:red;">
+            Я должен
+        </strong>
+    </td>
+</tr>`;
+                    }
+                    if (index === 2) {
+                        html += `
+<tr class="table-secondary">
+    <td style="padding:9px"></td>
+    <td style="padding:9px"></td>
+    <td style="padding:9px">
+    </td>
+</tr>`;
+                    }
+
                     html += `
 <tr>
     <td>${item.name}</td>
