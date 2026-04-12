@@ -18,15 +18,15 @@
 
                 <button type="button"
                         class="btn btn-success btn-prepayment"
-                        :disabled="prepaymentPaidMap[{{ $booking->id }}]"
                         :data-booking-id="{{ $booking->id }}"
-                        :data-prepayment-paid="{{ $prepaymentPaid ? 'true' : 'false' }}"
+                        :disabled="prepaymentPaidMap[{{ $booking->id }}] === 'paid'"
                         @click="bookingPrepaymentPaid({{ $booking->id }}, $event)">
-                    <span v-if="prepaymentPaidMap[{{ $booking->id }}] || {{ $prepaymentPaid ? 'true' : 'false' }}">
-                        {{ __('Paid Booking Success') }}
+
+                    <span v-if="prepaymentPaidMap[{{ $booking->id }}] === 'process'">
+                             {{ __('Paid Prepayment') }}
                     </span>
-                    <span v-else>
-                        {{ __('Paid Prepayment') }}
+                    <span v-else-if="prepaymentPaidMap[{{ $booking->id }}] === 'paid'">
+                        {{ __('Paid Booking Success') }}
                     </span>
                 </button>
             </div>
