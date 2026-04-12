@@ -19,6 +19,12 @@ class Payment extends BaseModel
     protected $table = 'bc_booking_payments';
     protected $meta_json = null;
 
+    const CREATED = 'created';
+    const SEND = 'send';
+    const PROCESSING = 'processing';
+    const PAID = 'paid';
+    const EXPIRED = 'expired';
+
     public function save(array $options = [])
     {
         if (empty($this->code))
@@ -29,6 +35,25 @@ class Payment extends BaseModel
     public function getStatusNameAttribute()
     {
         return booking_status_to_text($this->status);
+    }
+    public function scopeByBooking($query, $bookingId)
+    {
+        return $query->where('booking_id', $bookingId);
+    }
+
+    public function scopeByUser($query, $userId)
+    {
+        return $query->where('create_user', $userId);
+    }
+
+    public function scopeByStatus($query, $status)
+    {
+        return $query->where('status', $status);
+    }
+
+    public function scopeByInvoice($query, $invoiceId)
+    {
+        return $query->where('invoice_id', $invoiceId);
     }
 
     public function getGatewayObjAttribute()
