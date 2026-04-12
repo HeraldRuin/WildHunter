@@ -2,14 +2,18 @@
 
 namespace Modules\Booking\Services\Payments;
 
+use Illuminate\Database\Eloquent\Builder;
 use Modules\Booking\Gateways\PaymentGatewayResolver;
+use Modules\Booking\Jobs\CheckPaymentStatusJob;
 use Modules\Booking\Jobs\SendCheckToEmailJob;
 use Modules\Booking\Models\Booking;
+use Modules\Booking\Models\BookingHunterInvitation;
 use Modules\Booking\Models\Payment;
+use Modules\Booking\Services\BookingTimerService;
 
 class PaymentService
 {
-    public function __construct(private readonly PaymentGatewayResolver $gatewayResolver) {}
+    public function __construct(private readonly PaymentGatewayResolver $gatewayResolver, public BookingTimerService $bookingTimerService) {}
     public function getOrCreatePrepayment(Booking $booking, int $userId)
     {
         $payment = $this->findValidPayment($booking, $userId);
@@ -22,10 +26,7 @@ class PaymentService
     }
     private function findValidPayment(Booking $booking, int $userId): ?Payment
     {
-        $payment = Payment::where('booking_id', $booking->id)
-            ->where('status', Booking::PROCESSING)
-            ->where('create_user', $userId)
-            ->first();
+        $payment = $this->queryByBooking($booking, $userId, Booking::PROCESSING)->first();
 
         if (!$payment) {
             return null;
@@ -37,6 +38,19 @@ class PaymentService
         }
 
         return $payment;
+    }
+
+    public function queryByBooking(Booking $booking, int $userId, $status): Builder
+    {
+        return Payment::query()
+            ->byBooking($booking->id)
+            ->byUser($userId)
+            ->byStatus($status);
+    }
+    public function queryByInvoice(int $invoiceId): Builder
+    {
+        return Payment::query()
+            ->byInvoice($invoiceId);
     }
     private function isExpired(Payment $payment): bool
     {
@@ -64,11 +78,13 @@ class PaymentService
         $result = $gateway->createOrder($dto);
         $url = $result['invoice_url'];
 
-        $gateway->processFromBooking([
+        $payment = $gateway->processFromBooking([
             'amount' => $booking->getAmountPerPerson(),
             'payment_url' => $url,
             'invoice_id' => $result['invoice_id'],
         ], $booking);
+
+        CheckPaymentStatusJob::dispatch($payment->invoice_id, 0)->delay(now()->addMinutes(3));
 
         if (config('paykeeper.send_check')) {
             SendCheckToEmailJob::dispatch($result['invoice_id'])->afterResponse();
@@ -77,20 +93,28 @@ class PaymentService
         return $url;
     }
 
-//
-//        //TODO сделать проверку, что клиент оплатил счет и тогда делать что он оплатил
-//
-//        $booking->invitationUser(Auth::id())?->update(['prepayment_paid' => true, 'prepayment_paid_status' => BookingHunterInvitation::PREPAYMENT_PAID]);
-//
-//        if ($booking->countAcceptedAndPaidHunters() !== $booking->countAcceptedHunters()) {
-//            return $this->sendSuccess([
-//                'message' => __('Payment already created'),
-//                'payment_url' => $url,
-//            ]);
-//        }
-//
-//        $this->bookingTimerService->startBedTimer($booking);
-//
-//        $booking->prepayment_paid = true;
-//        $booking->save();
+    public function checkStatus($invoiceId)
+    {
+        $gateway = $this->gatewayResolver->resolve();
+        $result = $gateway->getPayKeeperOrder($invoiceId);
+
+        return $result['status'];
+    }
+
+    public function handlePaymentSuccess(Payment $payment)
+    {
+        $payment->update(['status' => Payment::PAID]);
+        $booking = $payment->booking;
+        $userId = $payment->create_user;
+
+       $booking->invitationUser($userId)?->update(['prepayment_paid' => true, 'prepayment_paid_status' => BookingHunterInvitation::PREPAYMENT_PAID]);
+
+        if ($booking->countAcceptedAndPaidHunters() !== $booking->countAcceptedHunters()) {
+            return;
+        }
+
+        $this->bookingTimerService->startBedTimer($booking);
+        $booking->prepayment_paid = true;
+        $booking->save();
+    }
 }
