@@ -4,7 +4,7 @@ namespace Modules\Booking\Gateways;
 
 class PaymentGatewayResolver
 {
-    public function resolve(): BaseGateway
+    public function resolve()
     {
         return get_active_payment_gateway_object();
     }
