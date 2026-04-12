@@ -12,32 +12,40 @@ class HuntingCalculationStrategy implements BookingCalculationStrategy
     {
         $services = $data['services'];
         $grouped = $services->groupBy('service_type');
-        //TODO не понятно как быть с значением оплаты - ведь мы везде считаем кол оплативших - разобраться
-        $paidCount = 1;
+
+        if ($data['totalHunting'] === null || $data['totalHunting'] <= 0)
+        {
+            return [
+                'status' => false,
+                'message' => 'Нет участников охоты',
+            ];
+        }
+
+        $totalHunting = $data['totalHunting'];
 
 
         // === Трофеи ===
-        $trophies = $this->bookingCalculator->calculateTrophies(collect($grouped['trophy'] ?? []), $paidCount);
+        $trophies = $this->bookingCalculator->calculateTrophies(collect($grouped['trophy'] ?? []), $totalHunting);
 
         // === Штрафы ===
         $penalties = $this->bookingCalculator->calculatePenalties(collect($grouped['penalty'] ?? []), $user);
 
         // === Питание ===
-        $meals = $this->bookingCalculator->calculateMeals(collect($grouped['food'] ?? []), $paidCount, $booking);
+        $meals = $this->bookingCalculator->calculateMeals(collect($grouped['food'] ?? []), $totalHunting, $booking);
 
         // === Разделка ===
-        $preparations = $this->bookingCalculator->calculatePreparations(collect($grouped['preparation'] ?? []), $paidCount);
+        $preparations = $this->bookingCalculator->calculatePreparations(collect($grouped['preparation'] ?? []), $totalHunting);
 
         // === Дополнительные услуги ===
-        $addetionals = $this->bookingCalculator->calculateAdditional(collect($grouped['addetional'] ?? []), $user, $paidCount);
+        $addetionals = $this->bookingCalculator->calculateAdditional(collect($grouped['addetional'] ?? []), $user);
 
         // === Расходы охотников ===
-        $spendingData = $this->bookingCalculator->getSpendings(collect($grouped['spending'] ?? []), $user, $paidCount);
+        $spendingData = $this->bookingCalculator->getSpendings(collect($grouped['spending'] ?? []), $user, $totalHunting);
 
         // === Подсчёты итогов ===
-        $organisationHunting = $this->bookingCalculator->getOrganisationHunting($booking, $paidCount);
-        $balanceBase = $this->bookingCalculator->getBalanceBase($booking, $user, $services, $paidCount);
-        $paymentDisplayData = $this->bookingCalculator->getBookingTotal($booking, $services, $paidCount);
+        $organisationHunting = $this->bookingCalculator->getOrganisationHunting($booking, $totalHunting);
+        $balanceBase = $this->bookingCalculator->getBalanceBase($booking, $user, $services, $totalHunting);
+        $paymentDisplayData = $this->bookingCalculator->getBookingTotal($booking, $services, $totalHunting);
 
         // === Формируем итоговые массивы ===
         $allItems = [

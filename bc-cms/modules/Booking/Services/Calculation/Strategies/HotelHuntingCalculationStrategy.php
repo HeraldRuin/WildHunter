@@ -34,14 +34,14 @@ class HotelHuntingCalculationStrategy implements BookingCalculationStrategy
         $preparations = $this->bookingCalculator->calculatePreparations(collect($grouped['preparation'] ?? []), $paidCount);
 
         // === Дополнительные услуги ===
-        $addetionals = $this->bookingCalculator->calculateAdditional(collect($grouped['addetional'] ?? []), $user, $paidCount);
+        $addetionals = $this->bookingCalculator->calculateAdditional(collect($grouped['addetional'] ?? []), $user);
 
         // === Расходы охотников ===
         $spendingData = $this->bookingCalculator->getSpendings(collect($grouped['spending'] ?? []), $user, $paidCount);
 
         // === Подсчёты итогов ===
         $organisationHunting = $this->bookingCalculator->getOrganisationHunting($booking, $paidCount);
-        $accommodation = $this->bookingCalculator->getAccommodation($booking, $user, $paidCount);
+        $accommodation = $this->bookingCalculator->getAccommodation($booking, $user);
         $prepaymentMade = $this->bookingCalculator->getPrepaymentMade($booking, $paidCount);
         $balanceBase = $this->bookingCalculator->getBalanceBase($booking, $user, $services, $paidCount);
         $paymentDisplayData = $this->bookingCalculator->getBookingTotal($booking, $services, $paidCount);
