@@ -1814,7 +1814,20 @@ class BookingController extends \App\Http\Controllers\Controller
         $this->serviceManager->deleteService($serviceId, $booking);
         return response()->json(['status' => 'ok']);
     }
+    public function checkPrepayment(Booking $booking): void
+    {
+        $this->bookingCollectionService->markAllPendingAsUnpaid($booking);
+    }
+    public function checkPaymentStatus(Booking $booking): JsonResponse
+    {
+        $paymentStatus = $booking->payment->status;
 
+        return response()->json([
+            'success' => true,
+            'status' => $paymentStatus,
+        ]);
+
+    }
     public function storePrepayment(Booking $booking): JsonResponse
     {
         $paymentUrl = $this->paymentService->getOrCreatePrepayment($booking, Auth::id());
@@ -1882,10 +1895,6 @@ class BookingController extends \App\Http\Controllers\Controller
                 'prepayment_badge' => $invitation? $invitation->prepayment_badge: null,
             ],
         ]);
-    }
-    public function checkPrepayment(Booking $booking): void
-    {
-        $this->bookingCollectionService->markAllPendingAsUnpaid($booking);
     }
     public function places(Booking $booking)
     {
