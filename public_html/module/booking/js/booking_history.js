@@ -1023,9 +1023,12 @@ document.addEventListener('DOMContentLoaded', function () {
                     }
                 });
             },
+            openBookingPrepaymentPaid(bookingId, event) {
+                this.fetchPaymentStatus(bookingId);
+                window.openModal('bookingPrepaymentModal', bookingId);
+            },
             bookingPrepaymentPaid(bookingId, event) {
                 if (!bookingId) return;
-                if (this.prepaymentPaidMap[bookingId]) return;
 
                 const btn = event.currentTarget;
                 if (btn) bc_button_loading(btn, true);
@@ -1040,15 +1043,21 @@ document.addEventListener('DOMContentLoaded', function () {
                     success: function (res) {
                         if (res.status) {
                                 if (res?.payment_url) {
+                                    bc_button_loading(btn, false);
                                     window.open(res.payment_url, '_blank');
+                                    window.closeModal('bookingPrepaymentModal', bookingId);
                                 }
-                                // this.$set(this.prepaymentPaidMap, bookingId, true);
                         }
                     },
                     error: function (e) {
                         bc_button_loading(btn, false);
-                        bookingCoreApp.showError({ message: 'Произошла ошибка при отмене сбора охотников' });
+                        bookingCoreApp.showError({ message: 'Произошла ошибка при оплате' });
                     }
+                });
+            },
+            fetchPaymentStatus(bookingId) {
+                $.get(`/booking/${bookingId}/check/payment-status`, (res) => {
+                    this.$set(this.prepaymentPaidMap, bookingId, res.status);
                 });
             },
             searchReplaceHunter(bookingId) {
@@ -1823,13 +1832,6 @@ document.addEventListener('DOMContentLoaded', function () {
             // Обновляем таймер каждую секунду, чтобы он работал "в реальном времени"
             updateCollectionTimers(); updatePaidTimers(); updateBedsTimers();
             setInterval(() => {updateCollectionTimers(); updatePaidTimers(); updateBedsTimers()}, 1000);
-
-            //Кнопка оплата или оплачено в модальном окне предоплата
-            document.querySelectorAll('.btn-prepayment').forEach(btn => {
-                const bookingId = btn.dataset.bookingId;
-                const isPaid = btn.dataset.prepaymentPaid === '1' || btn.dataset.prepaymentPaid === 'true';
-                this.$set(this.prepaymentPaidMap, bookingId, isPaid);
-            });
         },
     });
 });
