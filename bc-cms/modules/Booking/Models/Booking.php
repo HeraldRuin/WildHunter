@@ -264,9 +264,9 @@ class Booking extends BaseModel
         return null;
     }
 
-    public function payment()
+    public function payments(): HasMany
     {
-        return $this->hasOne(Payment::class, 'id', 'payment_id');
+        return $this->hasMany(Payment::class, 'booking_id');
     }
 
     public function getCheckoutUrl()
@@ -478,7 +478,6 @@ class Booking extends BaseModel
             if($this->create_user) {
                 $hunter = User::find($this->create_user);
                 if($hunter && !empty($hunter->email)) {
-                    Log::info('Booking: 492');
                     Mail::to($hunter->email)->send(new NewBookingEmail($this, 'customer'));
                 }
             }
