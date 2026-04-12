@@ -1820,13 +1820,12 @@ class BookingController extends \App\Http\Controllers\Controller
     }
     public function checkPaymentStatus(Booking $booking): JsonResponse
     {
-        $paymentStatus = $booking->payment->status;
+        $paymentStatus = $booking->payments()->where('create_user', Auth::id())->first()?->status;
 
         return response()->json([
             'success' => true,
             'status' => $paymentStatus,
         ]);
-
     }
     public function storePrepayment(Booking $booking): JsonResponse
     {
