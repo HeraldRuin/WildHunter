@@ -92,7 +92,7 @@ class PaykeeperGateway extends BaseGateway
         ];
     }
 
-    public function processFromBooking($data, $booking): void
+    public function processFromBooking($data, $booking): Payment
     {
         if (in_array($booking->status, [
             $booking::PAID,
@@ -116,11 +116,13 @@ class PaykeeperGateway extends BaseGateway
         $payment->status = Booking::PROCESSING;
         $payment->amount = $data['amount'];
         $payment->save();
+
+        return $payment;
     }
 
 
 
-    public function deleteInvoice(string $invoiceId)
+    public function deleteInvoice(string $invoiceId): bool
     {
         $token = $this->getAccessToken();
 
@@ -142,23 +144,6 @@ class PaykeeperGateway extends BaseGateway
 
         return ($json['result'] ?? null) === 'success';
     }
-
-
-    //NOTE: This is for Webhook only
-    public function callbackPayment(Request $request)
-    {
-
-        // $this->validdateWebhook($request);
-
-        // TODO: apply paypal webhook handling
-
-    }
-
-    protected function validdateWebhook($request)
-    {
-        // TODO: apply paypal webhook validation
-    }
-
 
     public function handlePurchaseData($data, $booking): PaykeeperOrderDTO
     {
