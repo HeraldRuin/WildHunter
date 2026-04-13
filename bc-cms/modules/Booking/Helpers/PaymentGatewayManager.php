@@ -43,4 +43,15 @@ class PaymentGatewayManager
         }
         return $all;
     }
+
+    public static function getFirstAvailableId(): int|string|null
+    {
+        $available = static::available();
+
+        if (empty($available)) {
+            return null;
+        }
+
+        return array_key_first($available);
+    }
 }
