@@ -308,12 +308,11 @@ class ManageAnimalController extends FrontendController
         }
 
         $huntersCount = (int)$request->input('hunters_count', 1);
-        
+
         if ($huntersCount < 1) {
             return redirect()->back()->with('error', __('Number of hunters must be at least 1'));
         }
 
-        // Update the pivot table directly using DB
         $updated = DB::table('bc_hotel_animals')
             ->where('hotel_id', $userHotelId)
             ->where('animal_id', $id)
@@ -323,7 +322,6 @@ class ManageAnimalController extends FrontendController
             ]);
 
         if ($updated === 0) {
-            // If no rows were updated, try to insert or update
             DB::table('bc_hotel_animals')
                 ->updateOrInsert(
                     [
