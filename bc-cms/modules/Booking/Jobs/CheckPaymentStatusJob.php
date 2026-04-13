@@ -26,7 +26,7 @@ class CheckPaymentStatusJob implements ShouldQueue
 
         $status = $paymentService->checkStatus($this->invoiceId);
 
-        if ($status === 'paid') {
+        if ($status === Payment::PAID) {
             $paymentService->handlePaymentSuccess($payment);
             return;
         }
