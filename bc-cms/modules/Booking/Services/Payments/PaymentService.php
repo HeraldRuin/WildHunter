@@ -26,7 +26,7 @@ class PaymentService
     }
     private function findValidPayment(Booking $booking, int $userId): ?Payment
     {
-        $payment = $this->queryByBooking($booking, $userId, Booking::PROCESSING)->first();
+        $payment = $this->queryPayments($booking, $userId, Booking::PROCESSING)->first();
 
         if (!$payment) {
             return null;
@@ -40,7 +40,7 @@ class PaymentService
         return $payment;
     }
 
-    public function queryByBooking(Booking $booking, int $userId, $status): Builder
+    public function queryPayments(Booking $booking, int $userId, $status): Builder
     {
         return Payment::query()
             ->byBooking($booking->id)
@@ -87,7 +87,7 @@ class PaymentService
         CheckPaymentStatusJob::dispatch($payment->invoice_id, 0)->delay(now()->addMinutes(3));
 
         if (config('paykeeper.send_check')) {
-            SendCheckToEmailJob::dispatch($result['invoice_id'])->afterResponse();
+            SendCheckToEmailJob::dispatch($result['invoice_id'])->onQueue('low');
         }
 
         return $url;
@@ -100,10 +100,12 @@ class PaymentService
 
         return $result['status'];
     }
-
-    public function handlePaymentSuccess(Payment $payment)
+    public function handlePaymentSuccess(Payment $payment): void
     {
-        $payment->update(['status' => Payment::PAID]);
+        if (!$payment->markAsPaid($payment)) {
+            return;
+        }
+
         $booking = $payment->booking;
         $userId = $payment->create_user;
 
