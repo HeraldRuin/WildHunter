@@ -18,14 +18,14 @@
 
                 <button type="button"
                         class="btn btn-success btn-prepayment"
-                        :data-booking-id="{{ $booking->id }}"
-                        :disabled="prepaymentPaidMap[{{ $booking->id }}] === {{ \Modules\Booking\Models\Payment::PAID }}"
+                        data-booking-id="{{ $booking->id }}"
+                        :disabled='prepaymentPaidMap[{{ $booking->id }}] === @json(\Modules\Booking\Models\Payment::PAID)'
                         @click="bookingPrepaymentPaid({{ $booking->id }}, $event)">
 
-                    <span v-if="prepaymentPaidMap[{{ $booking->id }}] === {{ \Modules\Booking\Models\Payment::PROCESSING }}">
+                    <span v-if='prepaymentPaidMap[{{ $booking->id }}] === @json(\Modules\Booking\Models\Payment::PROCESSING)'>
                              {{ __('Paid Prepayment') }}
                     </span>
-                    <span v-else-if="prepaymentPaidMap[{{ $booking->id }}] === {{ \Modules\Booking\Models\Payment::PAID }}">
+                    <span v-else-if='prepaymentPaidMap[{{ $booking->id }}] === @json(\Modules\Booking\Models\Payment::PAID)'>
                         {{ __('Paid Booking Success') }}
                     </span>
                 </button>
