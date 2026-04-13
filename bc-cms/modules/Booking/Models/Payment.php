@@ -28,6 +28,7 @@ class Payment extends BaseModel
     const PROCESSING = 'processing';
     const PAID = 'paid';
     const EXPIRED = 'expired';
+    const FAILED = 'failed';
 
     public function save(array $options = [])
     {

@@ -113,14 +113,15 @@ class PaykeeperGateway extends BaseGateway
         $payment->payment_url = $data['payment_url'];
         $payment->invoice_id = $data['invoice_id'];
         $payment->payment_gateway = $this->id;
-        $payment->status = Booking::PROCESSING;
+        $payment->status = Payment::PROCESSING;
         $payment->amount = $data['amount'];
+        $payment->attempts = 0;
+        $payment->next_check_at = now()->addMinutes(1);
+        $payment->last_checked_at = null;
         $payment->save();
 
         return $payment;
     }
-
-
 
     public function deleteInvoice(string $invoiceId): bool
     {
