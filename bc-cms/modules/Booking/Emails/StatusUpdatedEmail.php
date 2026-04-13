@@ -39,7 +39,7 @@ class StatusUpdatedEmail extends Mailable
         }
 
         $service = $this->booking->service;
-        
+
         return $this->subject($subject)->view('Booking::emails.status-updated-booking')->with([
             'booking'       => $this->booking,
             'service'       => $service,

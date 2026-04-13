@@ -27,7 +27,7 @@ trait HasTranslations
 
             // NOTE: With livewire, request()->input() has no data like normal form
             // So we need to get data from current model
-            // we cant use  $this->attributes or $this->getAttributes() here 
+            // we cant use  $this->attributes or $this->getAttributes() here
             // cuz it will return raw value
             // But we need casted data so fillByAttr() will work
 

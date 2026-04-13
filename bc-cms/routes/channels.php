@@ -25,22 +25,22 @@ Broadcast::channel('booking-{id}', function ($user, $id) {
     if (!$booking) {
         return false;
     }
-    
+
     // Создатель брони может слушать
     $creatorId = $booking->create_user ?? $booking->customer_id;
     if ($user->id == $creatorId) {
         return true;
     }
-    
+
     // Вендор может слушать
     if ($booking->vendor_id && $user->id == $booking->vendor_id) {
         return true;
     }
-    
+
     // Приглашенные охотники могут слушать
     if ($booking->isInvited($user->id)) {
         return true;
     }
-    
+
     return false;
 });
