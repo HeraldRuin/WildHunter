@@ -138,7 +138,12 @@ class Payment extends BaseModel
         $this->sendNewPurchaseEmail();
         return $this->notifyObject();
     }
-
+    public function markAsPaid(Payment $payment): bool
+    {
+        return (bool) Payment::whereKey($payment->id)
+            ->where('status', Payment::PROCESSING)
+            ->update(['status' => Payment::PAID]);
+    }
 
     public function getMeta($key = '', $default = '')
     {
