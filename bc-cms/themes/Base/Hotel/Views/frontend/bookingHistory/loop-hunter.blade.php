@@ -362,7 +362,6 @@
                     type="button"
                     class="btn btn-primary btn-sm mt-2"
                     data-bs-toggle="modal"
-                    :disabled="prepaymentPaidMap[{{ $booking->id }}] === 'paid'"
                     data-booking-id="{{ $booking->id }}"
                     @click="openBookingPrepaymentPaid({{ $booking->id }}, $event)">
                     {{__("Prepayment")}}
