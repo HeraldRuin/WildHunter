@@ -23,8 +23,6 @@ class EmailVerificationNotificationController extends Controller
                         ? new JsonResponse('', 204)
                         : app(RedirectAsIntended::class, ['name' => 'email-verification']);
         }
-
-        //$request->user()->sendEmailVerificationNotification();
         $request->user()->notify(new \Illuminate\Auth\Notifications\VerifyEmail);
 
         return app(EmailVerificationNotificationSentResponse::class);
