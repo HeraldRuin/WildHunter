@@ -7,5 +7,5 @@ use Modules\Booking\Jobs\CheckPaymentStatusJob;
 app()->booted(function () {
     $schedule = app(Schedule::class);
     $schedule->command('beds:process-expired')->everyMinute()->timezone('Europe/Moscow');
-    $schedule->job(new CheckPaymentStatusJob())->everyMinute()->timezone('Europe/Moscow');
+    $schedule->command('payments:process')->everyMinute()->timezone('Europe/Moscow');
 });
