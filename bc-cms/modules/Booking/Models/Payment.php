@@ -5,13 +5,9 @@ use App\BaseModel;
 use App\User;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Facades\Mail;
-use Modules\Tour\Models\Tour;
 use Modules\User\Emails\CreditPaymentEmail;
 use Modules\User\Emails\PlanPaymentEmail;
-use Modules\User\Emails\VendorRegisteredEmail;
-use Modules\User\Events\UpdatePlanRequest;
 use Modules\User\Models\Plan;
-use Modules\User\Models\PlanPayment;
 use Modules\User\Models\Wallet\Transaction;
 
 class Payment extends BaseModel
@@ -19,6 +15,9 @@ class Payment extends BaseModel
     protected $table = 'bc_booking_payments';
 
     protected $fillable = [
+        'attempts',
+        'next_check_at',
+        'last_checked_at',
         'status',
     ];
     protected $meta_json = null;
