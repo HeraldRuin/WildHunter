@@ -321,7 +321,8 @@
                         type="button"
                         class="btn btn-primary btn-sm mt-2"
                         data-bs-toggle="modal"
-                        data-bs-target="#bookingPrepaymentModal{{ $booking->id }}">
+                        data-booking-id="{{ $booking->id }}"
+                        @click="openBookingPrepaymentPaid({{ $booking->id }}, $event)">
                         {{__("Prepayment")}}
                     </button>
                 @endif

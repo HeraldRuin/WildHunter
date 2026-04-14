@@ -101,7 +101,6 @@
             @endif
         </div>
 
-{{--        @if($booking->status === \Modules\Booking\Models\Booking::START_COLLECTION)--}}
         @if(in_array($booking->status, [\Modules\Booking\Models\Booking::START_COLLECTION, \Modules\Booking\Models\Booking::FINISHED_COLLECTION]))
             @php
                 $endTimestamp = null;
