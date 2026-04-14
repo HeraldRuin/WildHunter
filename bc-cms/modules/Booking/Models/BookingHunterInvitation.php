@@ -22,6 +22,7 @@ class BookingHunterInvitation extends Model
         'email',
         'invited',
         'status',
+        'prepayment_paid',
         'prepayment_paid_status',
         'invited_at',
         'accepted_at',
