@@ -40,6 +40,7 @@ use Modules\Booking\Models\BookingHunterInvitation;
 use Modules\Booking\Models\BookingPassenger;
 use Modules\Booking\Models\BookingRoomPlace;
 use Modules\Booking\Models\Enquiry;
+use Modules\Booking\Models\Payment;
 use Modules\Booking\Requests\StoreAddetionalRequest;
 use Modules\Booking\Requests\StoreFoodRequest;
 use Modules\Booking\Requests\StorePenaltyRequest;
@@ -1820,11 +1821,13 @@ class BookingController extends \App\Http\Controllers\Controller
     }
     public function checkPaymentStatus(Booking $booking): JsonResponse
     {
-        $paymentStatus = $booking->payments()->where('create_user', Auth::id())->first()?->status;
+        $payment = $booking->payments()->where('create_user', Auth::id())->first();
+
+        $status = $payment?->status ?? Payment::PROCESSING;
 
         return response()->json([
             'success' => true,
-            'status' => $paymentStatus,
+            'status' => $status,
         ]);
     }
     public function storePrepayment(Booking $booking): JsonResponse
