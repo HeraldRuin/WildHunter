@@ -4,7 +4,6 @@ namespace Modules\Booking\Services\Payments;
 
 use Illuminate\Database\Eloquent\Builder;
 use Modules\Booking\Gateways\PaymentGatewayResolver;
-use Modules\Booking\Jobs\CheckPaymentStatusJob;
 use Modules\Booking\Jobs\SendCheckToEmailJob;
 use Modules\Booking\Models\Booking;
 use Modules\Booking\Models\BookingHunterInvitation;
@@ -83,8 +82,6 @@ class PaymentService
             'payment_url' => $url,
             'invoice_id' => $result['invoice_id'],
         ], $booking);
-
-        CheckPaymentStatusJob::dispatch($payment->invoice_id, 0)->delay(now()->addMinutes(3));
 
         if (config('paykeeper.send_check')) {
             SendCheckToEmailJob::dispatch($result['invoice_id'])->onQueue('low');
