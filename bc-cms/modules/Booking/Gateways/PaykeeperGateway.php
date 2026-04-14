@@ -115,6 +115,7 @@ class PaykeeperGateway extends BaseGateway
         $payment->payment_gateway = $this->id;
         $payment->status = Payment::PROCESSING;
         $payment->amount = $data['amount'];
+        $payment->expires_at = now()->addDays(config('paykeeper.pay_ttl_days'));
         $payment->attempts = 0;
         $payment->next_check_at = now()->addMinutes(1);
         $payment->last_checked_at = null;

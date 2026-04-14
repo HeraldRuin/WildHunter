@@ -15,6 +15,7 @@ class Payment extends BaseModel
     protected $table = 'bc_booking_payments';
 
     protected $fillable = [
+        'expires_at',
         'attempts',
         'next_check_at',
         'last_checked_at',
