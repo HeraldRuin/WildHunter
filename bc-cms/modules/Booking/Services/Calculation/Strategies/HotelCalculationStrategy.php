@@ -76,7 +76,6 @@ class HotelCalculationStrategy implements BookingCalculationStrategy
             'all_items' => $allItems,
 
             //Подсчет в историю бронирования в колонку оплата (админа базы)
-            'booking_total' => $paymentDisplayData['booking_total'],
             'prepaid_total' => $paymentDisplayData['prepaid_total'],
             'base_total' => $paymentDisplayData['base_total'],
             'total' => $paymentDisplayData['total'],

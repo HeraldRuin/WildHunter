@@ -85,7 +85,6 @@ class HuntingCalculationStrategy implements BookingCalculationStrategy
             'all_items' => $allItems,
 
             //Подсчет в историю бронирования в колонку оплата (админа базы)
-            'booking_total' => $paymentDisplayData['booking_total'],
             'base_total' => $paymentDisplayData['base_total'],
         ];
     }

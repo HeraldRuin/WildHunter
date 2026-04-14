@@ -318,7 +318,6 @@ class BookingCalculator
     {
         if ($booking->type === Booking::BookingTypeAnimal) {
             return [
-                'booking_total' => $booking->amount_hunting,
                 'prepaid_total' => 0,
                 'base_total' => 0,
                 'total' => 0,
@@ -327,7 +326,6 @@ class BookingCalculator
 
         if ($booking->type === Booking::BookingTypeHotel) {
             return [
-                'booking_total' => $booking->total,
                 'prepaid_total' => $this->basePrepaymentMade($booking),
                 'base_total' => $this->calculateBaseTotal($booking, $services, $huntersCount),
                 'total' => $this->basePrepaymentMade($booking) + $this->calculateBaseTotal($booking, $services, $huntersCount),
@@ -336,7 +334,6 @@ class BookingCalculator
 
         if ($booking->type === Booking::BookingTypeHotelAnimal) {
             return [
-                'booking_total' => $booking->total + $booking->amount_hunting,
                 'prepaid_total' => $this->basePrepaymentMade($booking),
                 'base_total' => $this->calculateBaseTotal($booking, $services, $huntersCount),
                 'total' => $this->basePrepaymentMade($booking) + $this->calculateBaseTotal($booking, $services, $huntersCount),
@@ -344,7 +341,6 @@ class BookingCalculator
         }
 
         return [
-            'booking_total' => 0,
             'prepaid_total' => 0,
             'base_total' => 0,
             'total' => 0,
