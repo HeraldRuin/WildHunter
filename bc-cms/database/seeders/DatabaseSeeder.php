@@ -36,5 +36,6 @@ class DatabaseSeeder extends Seeder
         $this->call(SocialSeeder::class);
         $this->call(FlightSeeder::class);
         $this->call(BoatSeeder::class);
+        $this->call(BookingCounterSeeder::class);
     }
 }
