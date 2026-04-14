@@ -50,7 +50,15 @@ class ProcessPayments extends Command
                     $service->handlePaymentSuccess($payment);
 
                     $payment->update([
-                        'status' => Payment::PAID,
+                        'next_check_at' => null,
+                    ]);
+
+                    return;
+                }
+
+                if ($payment->expires_at && now()->greaterThan($payment->expires_at)) {
+                    $payment->update([
+                        'status' => Payment::FAILED,
                         'next_check_at' => null,
                     ]);
 
@@ -58,22 +66,18 @@ class ProcessPayments extends Command
                 }
 
                 $attempt = $payment->attempts + 1;
+                $age = now()->diffInSeconds($payment->created_at);
 
-                $delays = [120, 300, 600, 1800];
+                $delay = match (true) {
 
-                if ($attempt >= count($delays)) {
-                    $payment->update([
-                        'status' => Payment::FAILED,
-                        'attempts' => $attempt,
-                        'next_check_at' => null,
-                    ]);
-
-                    return;
-                }
+                    $age <= 900 => 60,        // 0–15 мин → каждую минуту
+                    $age <= 7200 => 120,      // до 2 часов → каждые 2 мин
+                    default => 900,           // дальше → каждые 15 мин
+                };
 
                 $payment->update([
                     'attempts' => $attempt,
-                    'next_check_at' => now()->addSeconds($delays[$attempt]),
+                    'next_check_at' => now()->addSeconds($delay),
                 ]);
             });
     }
