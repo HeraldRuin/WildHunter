@@ -201,7 +201,7 @@
         @if($userRole === 'baseadmin' && $booking->status === \Modules\Booking\Models\Booking::PROCESSING)
             <button
                 type="button"
-                class="btn btn-success"
+                class="btn btn-success btn-sm mt-2"
                 data-bs-toggle="modal"
                 @click="openConfirmBookingModal({{ $booking->id }}, $event)">
                 {{ __("Booking apply") }}
