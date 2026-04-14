@@ -168,7 +168,6 @@
     <td>
         <div>
             @if($booking->status === \Modules\Booking\Models\Booking::FINISHED_COLLECTION)
-                Общая сумма: {{ format_money($booking->calculation['booking_total']) }} <br>
                 Остаток базе: {{ format_money($booking->calculation['base_total']) }} <br>
             @endif
         </div>

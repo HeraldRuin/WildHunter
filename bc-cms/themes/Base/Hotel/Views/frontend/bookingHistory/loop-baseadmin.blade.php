@@ -190,7 +190,6 @@
     <td>
         <div>
             @if(in_array($booking->status, [\Modules\Booking\Models\Booking::FINISHED_PREPAYMENT, \Modules\Booking\Models\Booking::BED_COLLECTION]))
-                Общая сумма: {{ format_money($booking->calculation['booking_total']) }} <br>
                 Внесена предоплата: {{ format_money($booking->calculation['prepaid_total']) }} <br>
                 Остаток базе: {{ format_money($booking->calculation['base_total']) }} <br>
                 Всего: {{ format_money($booking->calculation['total']) }}
