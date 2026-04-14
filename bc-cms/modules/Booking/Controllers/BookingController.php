@@ -48,6 +48,7 @@ use Modules\Booking\Requests\StorePreparationRequest;
 use Modules\Booking\Requests\StoreSpendingRequest;
 use Modules\Booking\Requests\StoreTrophyRequest;
 use Modules\Booking\Services\BookingCollectionService;
+use Modules\Booking\Services\BookingNumberService;
 use Modules\Booking\Services\BookingServiceManager;
 use Modules\Booking\Services\BookingTimerService;
 use Modules\Booking\Services\Calculation\BookingCalculatingService;
@@ -71,7 +72,8 @@ class BookingController extends \App\Http\Controllers\Controller
         protected BookingCalculatingService $bookingCalculatingService,
         protected BookingCollectionService $bookingCollectionService,
         protected PaymentService $paymentService,
-        protected BookingServiceManager $serviceManager)
+        protected BookingServiceManager $serviceManager,
+        protected BookingNumberService $bookingNumberService)
     {
         $this->booking = $booking;
         $this->enquiryClass = $enquiryClass;
@@ -246,10 +248,6 @@ class BookingController extends \App\Http\Controllers\Controller
 
         $messages = [];
         $rules = [
-//            'first_name'      => 'required|string|max:255',
-//            'last_name'       => 'required|string|max:255',
-//            'email'           => 'required|string|email|max:255',
-//            'phone'           => 'required|string|max:255',
             'term_conditions' => 'required',
         ];
 
@@ -318,6 +316,7 @@ class BookingController extends \App\Http\Controllers\Controller
         }
 
         // Normal Checkout
+        $booking->booking_number = $this->bookingNumberService->generate($booking->type);
         $booking->first_name = $request->input('first_name', $user->first_name);
         $booking->last_name = $request->input('last_name', $user->last_name);
         $booking->email = $request->input('email', $user->email);

@@ -6,10 +6,8 @@ use Carbon\Carbon;
 use Eluceo\iCal\Component\Calendar;
 use Eluceo\iCal\Component\Event;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
-use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -61,6 +59,7 @@ class Booking extends BaseModel
 
     protected $fillable = [
         'is_all_places_assigned',
+        'booking_number',
     ];
 
     protected $casts = [
