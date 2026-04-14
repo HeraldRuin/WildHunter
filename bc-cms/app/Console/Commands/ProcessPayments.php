@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Cache;
 use Modules\Booking\Models\Payment;
 use Modules\Booking\Services\Payments\PaymentService;
 
@@ -27,58 +28,78 @@ class ProcessPayments extends Command
      */
     public function handle()
     {
-        Payment::query()
-            ->where('status', Payment::PROCESSING)
-            ->whereNotNull('invoice_id')
-            ->where(function ($q) {
-                $q->whereNull('next_check_at')
-                    ->orWhere('next_check_at', '<=', now());
-            })
-            ->limit(100)
-            ->get()
-            ->each(function ($payment) {
+        Cache::lock('payment-cron-lock', 120)->block(10, function () {
 
-                $service = app(PaymentService::class);
+            Payment::query()
+                ->where('status', Payment::PROCESSING)
+                ->whereNotNull('invoice_id')
+                ->where(function ($q) {
+                    $q->whereNull('next_check_at')
+                        ->orWhere('next_check_at', '<=', now());
+                })
+                ->orderBy('id')
+                ->chunkById(100, function ($payments) {
 
-                $status = $service->checkStatus($payment->invoice_id);
+                    foreach ($payments as $payment) {
 
-                $payment->update([
-                    'last_checked_at' => now(),
-                ]);
+                        try {
+                            $service = app(PaymentService::class);
 
-                if ($status === Payment::PAID) {
-                    $service->handlePaymentSuccess($payment);
+                            $status = $service->checkStatus($payment->invoice_id);
 
-                    $payment->update([
-                        'next_check_at' => null,
-                    ]);
+                            $payment->update([
+                                'last_checked_at' => now(),
+                            ]);
 
-                    return;
-                }
+                            if ($status === Payment::PAID) {
 
-                if ($payment->expires_at && now()->greaterThan($payment->expires_at)) {
-                    $payment->update([
-                        'status' => Payment::FAILED,
-                        'next_check_at' => null,
-                    ]);
+                                $service->handlePaymentSuccess($payment);
 
-                    return;
-                }
+                                $payment->update([
+                                    'status' => Payment::PAID,
+                                    'next_check_at' => null,
+                                ]);
 
-                $attempt = $payment->attempts + 1;
-                $age = now()->diffInSeconds($payment->created_at);
+                                logger()->info('Payment PAID', [
+                                    'payment_id' => $payment->id,
+                                ]);
 
-                $delay = match (true) {
+                                continue;
+                            }
 
-                    $age <= 900 => 60,        // 0–15 мин → каждую минуту
-                    $age <= 7200 => 120,      // до 2 часов → каждые 2 мин
-                    default => 900,           // дальше → каждые 15 мин
-                };
+                            if ($payment->expires_at && now()->greaterThan($payment->expires_at)) {
 
-                $payment->update([
-                    'attempts' => $attempt,
-                    'next_check_at' => now()->addSeconds($delay),
-                ]);
-            });
+                                $payment->update([
+                                    'status' => Payment::FAILED,
+                                    'next_check_at' => null,
+                                ]);
+
+                                continue;
+                            }
+
+                            $attempt = $payment->attempts + 1;
+                            $age = now()->diffInSeconds($payment->created_at);
+
+                            $delay = match (true) {
+                                $age <= 900 => 60,
+                                $age <= 7200 => 120,
+                                default => 900,
+                            };
+
+                            $payment->update([
+                                'attempts' => $attempt,
+                                'next_check_at' => now()->addSeconds($delay),
+                            ]);
+
+                        } catch (\Throwable $e) {
+
+                            logger()->error('Payment check failed', [
+                                'payment_id' => $payment->id,
+                                'error' => $e->getMessage(),
+                            ]);
+                        }
+                    }
+                });
+        });
     }
 }
