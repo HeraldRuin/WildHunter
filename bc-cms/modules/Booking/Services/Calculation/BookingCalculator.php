@@ -64,6 +64,12 @@ class BookingCalculator
                     }
                     return $item->price;
                 }
+                if ($type === 'penalty') {
+                    if ($item->hunter_id !== $user->id) {
+                        return 0;
+                    }
+                    return $item->price;
+                }
 
                 return $item->price / $huntersCount;
             });
@@ -226,13 +232,12 @@ class BookingCalculator
 
         foreach ($spendings as $spending) {
             $hunter = $spending->hunter;
-            $isMe = $spending->hunter_id === $user->id;
 
             $myCost = $spending->hunter_id === $user->id ? 0 : round($spending->price / max(1, $huntersCount));
             $totalMyDebt += $myCost;
             $totalSpending += $spending->price;
 
-            $name = $isMe ? (($hunter->last_name ?? '—') . ' (это я) ' .' (' . ($spending->comment ?? '') . ')') : (($hunter->last_name ?? '—') . ' (' . ($spending->comment ?? '') . ')');
+            $name = (($hunter->last_name ?? '—') . ' (' . ($spending->comment ?? '') . ')');
 
             $result[] = [
                 'name' => $name,
