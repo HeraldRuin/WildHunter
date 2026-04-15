@@ -44,7 +44,7 @@ class HuntingCalculationStrategy implements BookingCalculationStrategy
 
         // === Подсчёты итогов ===
         $organisationHunting = $this->bookingCalculator->getOrganisationHunting($booking, $totalHunting);
-        $balanceBase = $this->bookingCalculator->getBalanceBase($booking, $user, $services, $totalHunting);
+        $balanceBase = $this->bookingCalculator->getBalanceBaseHunting($booking, $user, $services, $totalHunting);
         $paymentDisplayData = $this->bookingCalculator->getBookingTotal($booking, $services, $totalHunting);
 
         // === Формируем итоговые массивы ===
