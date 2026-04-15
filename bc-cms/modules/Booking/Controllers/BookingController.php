@@ -24,7 +24,7 @@ use Modules\Booking\DTO\StoreFoodData;
 use Modules\Booking\DTO\StorePenaltyData;
 use Modules\Booking\DTO\StorePreparationData;
 use Modules\Booking\DTO\StoreSpendingData;
-use Modules\Booking\DTO\storeTrophyData;
+use Modules\Booking\DTO\StoreTrophyData;
 use Modules\Booking\DTO\StorPenaltyeData;
 use Modules\Booking\Emails\HunterMessageEmail;
 use Modules\Booking\Emails\StatusUpdatedEmail;
