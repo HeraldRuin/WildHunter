@@ -29,7 +29,6 @@ use Modules\Booking\DTO\StorPenaltyeData;
 use Modules\Booking\Emails\HunterMessageEmail;
 use Modules\Booking\Emails\StatusUpdatedEmail;
 use Modules\Booking\Events\BookingCreatedEvent;
-use Modules\Booking\Events\BookingFinishEvent;
 use Modules\Booking\Events\BookingStartCollectionEvent;
 use Modules\Booking\Events\BookingUpdatedEvent;
 use Modules\Booking\Events\EnquirySendEvent;
@@ -1049,127 +1048,19 @@ class BookingController extends \App\Http\Controllers\Controller
             return $this->sendError('Необходима авторизация')->setStatusCode(401);
         }
 
-        $user = Auth::user();
-        $isBaseAdmin = $user->hasRole('baseadmin') || $user->hasPermission('baseAdmin_dashboard_access');
+        try {
+            $this->bookingCollectionService->finishCollection($booking, $this->currentUser());
 
-        // Только владелец брони, base-admin могут завершить сбор
-        if (!$isBaseAdmin && $booking->create_user !== $user->id) {
-            return $this->sendError(__("You don't have access."))->setStatusCode(403);
-        }
-
-        if ($booking->status !== Booking::START_COLLECTION) {
-            return $this->sendError(__('Сбор охотников не начат или уже завершён'))->setStatusCode(422);
-        }
-
-        $allInvitations = $booking->getAllInvitations();
-
-        $notConfirmedInvitations = $allInvitations->filter(function ($invitation) {
-            return !in_array($invitation->status, ['accepted', 'declined', 'removed']);
-        });
-
-        $confirmedInvitations = $allInvitations->filter(function ($invitation) {
-            return $invitation->status === 'accepted';
-        });
-
-        $acceptedInvitations = $allInvitations->filter(function ($invitation) {
-            return !in_array($invitation->status, ['declined', 'removed']);
-        });
-
-        $booking = Booking::find($booking->id);
-
-        $animalName = '';
-        $requiredHunters = 1;
-
-        // Если есть животное и отель, получаем минимальное количество охотников из pivot таблицы
-        if ($booking->animal_id && $booking->hotel_id) {
-            $animal = Animal::find($booking->animal_id);
-            if ($animal) {
-                $animalName = $booking->getAnimalName();
-                $requiredHunters = $booking->getRequiredHuntersCount();
-            }
-        } else {
-            if ($booking->type === 'hotel') {
-                $requiredHunters = (int) ($booking->total_guests ?? 0);
-            } elseif ($booking->type === 'animal' || $booking->type === 'hotel_animal') {
-                $requiredHunters = (int) ($booking->total_hunting ?? 0);
-            }
-
-            if ($requiredHunters <= 0) {
-                $requiredHunters = 1;
-            }
-
-            if ($booking->animal_id) {
-                $animal = Animal::find($booking->animal_id);
-                if ($animal) {
-                    $animalName = $booking->getAnimalName();
-                }
-            }
-        }
-
-        if ($acceptedInvitations->count() < $requiredHunters) {
-            $message = __('Минимальное кол-во охотников для :animal :count', [
-                'animal' => $animalName ?: __('животного'),
-                'count' => $requiredHunters
+            return $this->sendSuccess([
+                'message' => __('Сбор охотников завершён.')
             ]);
-            return $this->sendError($message)->setStatusCode(422);
+
+        } catch (\DomainException $e) {
+            return $this->sendError($e->getMessage())->setStatusCode(422);
+
+        } catch (\Symfony\Component\HttpKernel\Exception\HttpException $e) {
+            return $this->sendError($e->getMessage())->setStatusCode($e->getStatusCode());
         }
-
-        if ($confirmedInvitations->count() < $requiredHunters) {
-            return $this->sendError(
-                __('Не все приглашённые участники подтвердили приглашение. Дождитесь ответа всех участников или удалите неподтвердившихся.')
-            )->setStatusCode(422);
-        }
-
-        if ($booking->type === 'animal') {
-            $booking->status = Booking::FINISHED_COLLECTION;
-        } else {
-            $timerHour = $this->bookingTimerService->getTimerHours($booking, 'paid');
-            $booking->status = Booking::PREPAYMENT_COLLECTION;
-            $this->bookingTimerService->startTimer($booking->id, $timerHour, 'paid', ['collection']);
-        }
-
-        $booking->save();
-        event(new BookingFinishEvent($booking));
-
-        // Находим "собирающего" охотника и отправляем ему письмо о завершении таймера
-//        try {
-//            $master = BookingHunter::where('booking_id', $booking->id)
-//                ->where('is_master', true)
-//                ->first();
-//
-//            if ($master) {
-//                $hunterUser = User::find($master->invited_by);
-//                if ($hunterUser && !empty($hunterUser->email)) {
-//                    Mail::to($hunterUser->email)->send(new CollectionTimerFinishedEmail($booking, $hunterUser));
-//                }
-//            }
-//        } catch (\Exception | \Swift_TransportException $e) {
-//            Log::warning('finishCollection: failed to send collection timer finished email: ' . $e->getMessage());
-//        }
-
-        // Уведомляем создателя брони о смене статуса
-//        try {
-//            $old = app()->getLocale();
-//            $bookingLocale = $booking->getMeta('locale');
-//            if ($bookingLocale) {
-//                app()->setLocale($bookingLocale);
-//            }
-//
-//            if ($booking->create_user) {
-//                $creator = User::find($booking->create_user);
-//                if ($creator && !empty($creator->email)) {
-//                    Mail::to($creator->email)->send(new StatusUpdatedEmail($booking, 'customer'));
-//                }
-//            }
-//
-//            app()->setLocale($old);
-//        } catch (\Exception | \Swift_TransportException $e) {
-//            Log::warning('finishCollection: failed to send status email to creator: ' . $e->getMessage());
-//        }
-
-        return $this->sendSuccess([
-            'message' => __('Сбор охотников завершён.'),
-        ]);
     }
 
     /**
