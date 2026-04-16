@@ -158,7 +158,7 @@ class BookingCollectionService
 
         if ($confirmed->count() < $requiredHunters) {
             throw new \DomainException(
-                __('Не все приглашённые участники подтвердили приглашение...')
+                __('Не все приглашённые участники подтвердили приглашение. Дождитесь ответа всех участников')
             );
         }
     }
