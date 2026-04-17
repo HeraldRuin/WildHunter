@@ -65,7 +65,7 @@ class AdditionalController extends Controller
         if (!$additional) {
             return response()->json([
                 'success' => false,
-                'message' => 'Услуга не найдена или нет прав на редактирование',
+                'message' => 'Услуга не найдена',
             ], 404);
         }
 
@@ -86,7 +86,7 @@ class AdditionalController extends Controller
         if (!$additional) {
             return response()->json([
                 'success' => false,
-                'message' => 'Услуга не найдена или нет прав на удаление',
+                'message' => 'Услуга не найдена',
             ], 404);
         }
 

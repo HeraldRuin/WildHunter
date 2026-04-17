@@ -18,21 +18,39 @@
                     let data = {
                         name: row.find('input[name="name"]').val(),
                         price: row.find('input[name="price"]').val(),
+                        calculation_type: row.find('select[name="calculation_type"]').val(),
                         count: row.find('input[name="count"]').val(),
                         _token: $('meta[name="csrf-token"]').attr('content')
                     };
 
                     let url = additionalId ? '/additionals/' + additionalId + '/update' : '/additionals/store';
 
-                    $.post(url, data, function(res) {
-                        if (res.status) {
-                            if (!additionalId && res.html) {
-                                row.replaceWith(res.html);
+                    $.ajax({
+                        url: url,
+                        type: 'POST',
+                        dataType: 'json',
+                        data: data,
+                        success: function (res) {
+
+                            if (res.status) {
+                                if (!additionalId && res.html) {
+                                    row.replaceWith(res.html);
+                                }
                             }
-                        } else {
-                            alert(res.message || 'Ошибка при сохранении');
+                        },
+                        error: function (xhr) {
+                            if (xhr.status === 422) {
+                                let errors = xhr.responseJSON.errors;
+
+                                let messages = Object.values(errors)
+                                    .flat()
+                                    .join('\n');
+
+                                bookingCoreApp.showError({ message: messages });
+                                return;
+                            }
                         }
-                    }, 'json');
+                    });
                 });
 
                 $('#addetional-app').on('click', '.remove-period', function () {
@@ -41,7 +59,10 @@
                     let additionalId = row.data('id');
                     let name = row.find('input[name="name"]').val();
                     if (name === 'Питание') {
-                        alert('Эту услугу удалить нельзя.');
+                        bookingCoreApp.showAjaxMessage({
+                            status: false,
+                            message: 'Эту услугу удалить нельзя'
+                        });
                         return;
                     }
 
@@ -50,24 +71,35 @@
                         return;
                     }
 
-                    if (!confirm('Вы точно хотите удалить услугу?')) return;
+                    bookingCoreApp.showConfirm({
+                        message: 'Вы уверены, что хотите удалить услугу?',
+                        callback: (result) => {
+                            if (!result) return;
 
-                    $.post('/additionals/' + additionalId + '/delete', {
-                        _token: $('meta[name="csrf-token"]').attr('content')
-                    }, function(res){
-                        if (res.success) {
-                            row.remove();
-                        } else {
-                            alert(res.message || 'Ошибка при удалении');
+                            $.ajax({
+                                url: '/additionals/' + additionalId,
+                                type: 'DELETE',
+                                dataType: 'json',
+                                data: {
+                                    _token: $('meta[name="csrf-token"]').attr('content')
+                                },
+                                success: (res) => {
+                                    if (res.status) {
+                                        window.location.reload();
+                                    }
+                                },
+                                error: function (e) {
+                                     if (e.responseJSON && e.responseJSON.message) {
+                                         bookingCoreApp.showError({ message: e.responseJSON.message });
+                                    }
+                                }
+                            });
                         }
-                    }, 'json');
+                    });
                 });
             },
 
             methods: {
-                // ----------------------------
-                // Добавление новой услуги
-                // ----------------------------
                 addAdditional() {
                     let tbody = $('#addetional-app table tbody');
                     let newRow = `

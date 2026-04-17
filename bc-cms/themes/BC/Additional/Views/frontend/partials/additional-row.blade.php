@@ -13,6 +13,22 @@
                        class="form-control"
                        value="{{ $additional->count ?? '' }}"
                        placeholder="кол-во">
+
+                <select name="calculation_type" class="form-control">
+                    <option value="" hidden
+                            @if(empty($additional->calculation_type)) selected @endif>
+                        Выберите тип расчета
+                    </option>
+                    <option value="per_person"
+                            @if(($additional->type ?? '') === 'per_person') selected @endif>
+                        Кол-во людей
+                    </option>
+
+                    <option value="individual"
+                            @if(($additional->type ?? '') === 'individual') selected @endif>
+                        Индивидуальный
+                    </option>
+                </select>
             @endif
         </div>
     </td>

@@ -20,4 +20,11 @@ class StoreAdditionalRequest extends FormRequest
             'count' => 'nullable|integer|min:0',
         ];
     }
+
+    public function messages(): array
+    {
+        return [
+            'name.required' => 'Поле "название" обязательно для заполнения.'
+        ];
+    }
 }
