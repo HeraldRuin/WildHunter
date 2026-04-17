@@ -58,6 +58,7 @@ class Booking extends BaseModel
     const BookingTypeHotel = 'hotel';
 
     protected $fillable = [
+        'status',
         'is_all_places_assigned',
         'booking_number',
     ];
