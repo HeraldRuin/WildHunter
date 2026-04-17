@@ -95,7 +95,7 @@
                         {{ $bookingRoom->room?->title ?? '—' }},
                         <span>вместимость = </span> {{ $bookingRoom->room?->adults ?? '—' }};
                         <span>кол-во = </span> {{ $bookingRoom->number ?? '—' }};
-                        <span>цена = </span> {{ $bookingRoom->room?->price ?? '—' }} р/сут
+                        <span>цена = </span> {{ round($bookingRoom->room?->price) ?? '—' }} р/сут
                         <br>
                     @endforeach">
                     Подробности
