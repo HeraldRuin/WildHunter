@@ -1,10 +1,9 @@
 <tr data-id="{{ $additional->id }}">
-    <td style="width: 60%;">
+    <td style="width: 70%;">
         <div class="d-flex gap-3 align-items-end w-100">
             <input type="text"
                    name="name"
                    class="form-control"
-                   style="width: 500px;"
                    value="{{ $additional->name }}"
                    @if($additional->name === 'Питание') readonly @endif>
 
@@ -14,7 +13,7 @@
                 <input type="text"
                        name="count"
                        class="form-control"
-                       style="width: 200px;"
+                       style="width: 90px;"
                        value="{{ $additional->count ?? '' }}"
                        placeholder="кол-во">
                 </div>
@@ -24,7 +23,7 @@
                 <select name="calculation_type" class="form-control w-100">
                     <option value="" hidden
                             @if(empty($additional->calculation_type)) selected @endif>
-                        Выберите тип расчета
+                        Выберите тип
                     </option>
                     <option value="per_person"
                             @if(($additional->calculation_type ?? '') === 'per_person') selected @endif>
