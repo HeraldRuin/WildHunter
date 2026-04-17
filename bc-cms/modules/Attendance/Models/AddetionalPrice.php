@@ -16,6 +16,7 @@ class AddetionalPrice extends Model
         'end_date',
         'price',
         'type',
+        'calculation_type',
         'count',
     ];
 }
