@@ -8,7 +8,7 @@
 
 <tr data-booking-id="{{ $booking->id }}">
     <td class="booking-history-type">
-        {{ $booking->service ? $booking->id : $booking->id }}
+        {{ $booking->service ? $booking->booking_number : $booking->booking_number }}
     </td>
 
     <td class="a-hidden">{{display_date($booking->created_at)}}</td>
