@@ -1917,7 +1917,15 @@ class BookingController extends \App\Http\Controllers\Controller
 
     public function cancelSelectPlace(Request $request, $bookingId)
     {
-        BookingRoomPlace::where('booking_id', $bookingId)->where('id', $request->input('place_id'))->where('user_id', auth()->id())->delete();
+        $place = BookingRoomPlace::where('booking_id', $bookingId)
+            ->where('id', $request->input('place_id'))
+            ->where('user_id', Auth::id())->first();
+
+        if (!$place) {
+            return $this->sendError(__('Вы можете сделать отмену только на себе'));
+        }
+
+        $place->delete();
     }
 
     //Калькуляция
