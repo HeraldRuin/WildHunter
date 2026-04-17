@@ -90,7 +90,7 @@
                     data-bs-custom-class="popover-width"
                     data-bs-content="
                     {{ __(':count rooms', ['count' => $booking->roomsBooking->count()]) }}<br>
-                    //TODO проверить N+1
+
                      @foreach($booking->roomsBooking as $bookingRoom)
                         {{ $bookingRoom->room?->title ?? '—' }},
                         <span>вместимость = </span> {{ $bookingRoom->room?->adults ?? '—' }};
