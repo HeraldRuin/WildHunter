@@ -10,7 +10,6 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Auth;
 use Modules\Booking\Models\Bookable;
 use Modules\Booking\Models\Booking;
-use Modules\Booking\Events\BookingCreatedEvent;
 use Modules\Hotel\Models\Hotel;
 use Illuminate\Http\Request;
 
@@ -70,8 +69,6 @@ class Animal extends Bookable
         $check = $booking->save();
 
         if ($check) {
-            event(new BookingCreatedEvent($booking));
-
             return $this->sendSuccess([
                 'url' => $booking->getCheckoutUrl(),
                 'booking_code' => $booking->code,
