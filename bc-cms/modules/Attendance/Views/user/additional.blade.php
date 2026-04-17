@@ -4,7 +4,7 @@
     <h2 class="title-bar">{{ __('Additionals services') }}</h2>
 
     <div id="addetional-app" class="row mt-4 row-width">
-        <div class="col-md-9">
+        <div class="col-md-12">
             <div class="tab-content">
                 <div class="d-flex justify-content-end mb-3">
                     <button class="btn btn-primary" @click="addAdditional">

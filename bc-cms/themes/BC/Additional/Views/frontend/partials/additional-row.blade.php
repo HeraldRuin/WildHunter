@@ -1,34 +1,42 @@
 <tr data-id="{{ $additional->id }}">
-    <td>
-        <div class="d-flex gap-3">
+    <td style="width: 60%;">
+        <div class="d-flex gap-3 align-items-end w-100">
             <input type="text"
                    name="name"
                    class="form-control"
+                   style="width: 500px;"
                    value="{{ $additional->name }}"
                    @if($additional->name === 'Питание') readonly @endif>
 
             @if($additional->name !== 'Питание')
+                <div class="d-flex flex-column gap-1">
+                    <label class="text-muted small mb-0">Количество</label>
                 <input type="text"
                        name="count"
                        class="form-control"
+                       style="width: 200px;"
                        value="{{ $additional->count ?? '' }}"
                        placeholder="кол-во">
+                </div>
 
-                <select name="calculation_type" class="form-control">
+                <div class="d-flex flex-column gap-1 flex-grow-1">
+                    <label class="text-muted small mb-0">Тип расчета</label>
+                <select name="calculation_type" class="form-control w-100">
                     <option value="" hidden
                             @if(empty($additional->calculation_type)) selected @endif>
                         Выберите тип расчета
                     </option>
                     <option value="per_person"
-                            @if(($additional->type ?? '') === 'per_person') selected @endif>
+                            @if(($additional->calculation_type ?? '') === 'per_person') selected @endif>
                         Кол-во людей
                     </option>
 
                     <option value="individual"
-                            @if(($additional->type ?? '') === 'individual') selected @endif>
+                            @if(($additional->calculation_type ?? '') === 'individual') selected @endif>
                         Индивидуальный
                     </option>
                 </select>
+                </div>
             @endif
         </div>
     </td>
