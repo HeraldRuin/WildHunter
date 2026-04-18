@@ -19,4 +19,19 @@ class AddetionalPrice extends Model
         'calculation_type',
         'count',
     ];
+
+    const INDIVIDUAL = 'individual';
+    const PERSON = 'per_person';
+
+    public const CALCULATION_TYPES = [
+        self::PERSON => 'Кол-во людей',
+        self::INDIVIDUAL => 'Индивидуальный',
+    ];
+
+    const ADDETIONAL = 'addetional';
+    const FOOD = 'food';
+    const SPENDING = 'spending';
+    const PREPARATION = 'preparation';
+    const PENALTY = 'penalty';
+    const TROPHY = 'trophy';
 }

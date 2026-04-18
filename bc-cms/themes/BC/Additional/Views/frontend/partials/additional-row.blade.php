@@ -25,15 +25,12 @@
                             @if(empty($additional->calculation_type)) selected @endif>
                         Выберите тип
                     </option>
-                    <option value="per_person"
-                            @if(($additional->calculation_type ?? '') === 'per_person') selected @endif>
-                        Кол-во людей
-                    </option>
-
-                    <option value="individual"
-                            @if(($additional->calculation_type ?? '') === 'individual') selected @endif>
-                        Индивидуальный
-                    </option>
+                    @foreach(\Modules\Attendance\Models\AddetionalPrice::CALCULATION_TYPES as $key => $label)
+                        <option value="{{ $key }}"
+                            @selected(($additional->calculation_type ?? '') === $key)>
+                            {{ $label }}
+                        </option>
+                    @endforeach
                 </select>
                 </div>
             @endif

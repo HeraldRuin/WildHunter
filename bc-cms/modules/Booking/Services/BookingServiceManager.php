@@ -25,7 +25,7 @@ class BookingServiceManager
 
         $trophies = BookingService::query()
             ->where('bc_booking_services.booking_id', $booking->id)
-            ->where('bc_booking_services.service_type', 'trophy')
+            ->where('bc_booking_services.service_type', AddetionalPrice::TROPHY)
             ->leftJoin(
                 'bc_animals',
                 'bc_animals.id',
@@ -47,7 +47,7 @@ class BookingServiceManager
 
         $penalties = BookingService::query()
             ->where('bc_booking_services.booking_id', $booking->id)
-            ->where('bc_booking_services.service_type', 'penalty')
+            ->where('bc_booking_services.service_type', AddetionalPrice::PENALTY)
             ->leftJoin(
                 'bc_animals',
                 'bc_animals.id',
@@ -71,7 +71,7 @@ class BookingServiceManager
 
         $preparations = BookingService::query()
             ->where('bc_booking_services.booking_id', $booking->id)
-            ->where('bc_booking_services.service_type', 'preparation')
+            ->where('bc_booking_services.service_type', AddetionalPrice::PREPARATION)
             ->leftJoin(
                 'bc_animals',
                 'bc_animals.id',
@@ -92,7 +92,7 @@ class BookingServiceManager
 
         $spendings = BookingService::query()
         ->where('bc_booking_services.booking_id', $booking->id)
-        ->where('bc_booking_services.service_type', 'spending')
+        ->where('bc_booking_services.service_type', AddetionalPrice::SPENDING)
         ->leftJoin('users', 'users.id', '=', 'bc_booking_services.hunter_id')
         ->select([
             'bc_booking_services.id',
@@ -110,7 +110,7 @@ class BookingServiceManager
 
         $addetionals = BookingService::query()
         ->where('bc_booking_services.booking_id', $booking->id)
-        ->where('bc_booking_services.service_type', 'addetional')
+        ->where('bc_booking_services.service_type', AddetionalPrice::ADDETIONAL)
         ->leftJoin('users', 'users.id', '=', 'bc_booking_services.hunter_id')
         ->select([
             'bc_booking_services.id',
@@ -129,7 +129,7 @@ class BookingServiceManager
             'trophies'      => $trophies,
             'penalties'     => $penalties,
             'preparations'  => $preparations,
-            'foods'         => $services->where('service_type', 'food')->values(),
+            'foods'         => $services->where('service_type', AddetionalPrice::FOOD)->values(),
             'addetionals'   => $addetionals,
             'spendings'     => $spendings,
         ];
@@ -143,7 +143,7 @@ class BookingServiceManager
 
         return BookingService::create([
             'booking_id'   => $booking->id,
-            'service_type' => 'trophy',
+            'service_type' => AddetionalPrice::TROPHY,
             'type'         => $data->type,
             'service_id'   => null,
             'animal_id'    => $data->animal_id,
@@ -158,7 +158,7 @@ class BookingServiceManager
 
         return BookingService::create([
             'booking_id'   => $booking->id,
-            'service_type' => 'penalty',
+            'service_type' => AddetionalPrice::PENALTY,
             'type'         => $data->type,
             'service_id'   => null,
             'hunter_id'    => $data->hunter_id,
@@ -174,7 +174,7 @@ class BookingServiceManager
         $totalCost = $price * $count;
 
         $service = BookingService::where('booking_id', $booking->id)
-            ->where('service_type', 'preparation')
+            ->where('service_type', AddetionalPrice::PREPARATION)
             ->where('animal_id', $data->animal_id)
             ->first();
 
@@ -185,7 +185,7 @@ class BookingServiceManager
         } else {
             $service = BookingService::create([
                 'booking_id'   => $booking->id,
-                'service_type' => 'preparation',
+                'service_type' => AddetionalPrice::PREPARATION,
                 'type'         => null,
                 'service_id'   => null,
                 'animal_id'    => $data->animal_id,
@@ -203,7 +203,7 @@ class BookingServiceManager
 
         return BookingService::create([
             'booking_id'   => $booking->id,
-            'service_type' => 'food',
+            'service_type' => AddetionalPrice::FOOD,
             'type' => 'Питание',
             'price' => $totalCost,
             'count' => $count,
@@ -219,7 +219,7 @@ class BookingServiceManager
 
         return BookingService::create([
             'booking_id'   => $booking->id,
-            'service_type' => 'addetional',
+            'service_type' =>AddetionalPrice::ADDETIONAL,
             'type'       => $data->addetional,
             'calculation_type'   => $calculation_type,
             'count'       => $count,
@@ -231,7 +231,7 @@ class BookingServiceManager
     {
         return BookingService::create([
             'booking_id'   => $booking->id,
-            'service_type' => 'spending',
+            'service_type' => AddetionalPrice::SPENDING,
             'price'        => $data->price,
             'comment'      => $data->comment,
             'service_id'   => null,
