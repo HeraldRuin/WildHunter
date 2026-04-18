@@ -57,7 +57,8 @@
         </button>
 
         <button class="btn btn-danger btn-sm remove-period"
-                data-id="{{ $additional->id }}">
+                data-id="{{ $additional->id }}"
+                @if($additional->name === 'Питание') disabled @endif>
             {{ __("Delete") }}
         </button>
     </td>
