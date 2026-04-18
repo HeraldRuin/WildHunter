@@ -33,14 +33,16 @@
                         success: function (res) {
 
                             if (res.status) {
+                                bookingCoreApp.showAjaxMessage(res);
+
                                 if (!additionalId && res.html) {
                                     row.replaceWith(res.html);
                                 }
                             }
                         },
-                        error: function (xhr) {
-                            if (xhr.status === 422) {
-                                let errors = xhr.responseJSON.errors;
+                        error: function (e) {
+                            if (e.status === 422) {
+                                let errors = e.responseJSON.errors;
 
                                 let messages = Object.values(errors)
                                     .flat()

@@ -72,7 +72,7 @@ class AdditionalController extends Controller
         $additional->update($request->validated());
 
         return $this->sendSuccess([
-            'message' => __("Updated Success")
+            'message' => __("Updated successfully!")
         ]);
     }
 
