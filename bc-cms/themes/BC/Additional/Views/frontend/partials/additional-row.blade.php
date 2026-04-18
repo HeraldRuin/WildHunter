@@ -1,4 +1,4 @@
-<tr data-id="{{ $additional->id }}">
+<tr data-id="{{ $additional->id }}" style="vertical-align: bottom;">
     <td style="width: 70%;">
         <div class="d-flex gap-3 align-items-end w-100">
             <input type="text"
@@ -40,15 +40,17 @@
         </div>
     </td>
 
-    <td>
-        <input type="text"
-               name="price"
-               class="form-control price-input"
-               value="{{ $additional->price }}"
-               inputmode="decimal">
+    <td class="align-bottom">
+        <div class="d-flex align-items-end h-100">
+            <input type="text"
+                   name="price"
+                   class="form-control price-input"
+                   value="{{ $additional->price }}"
+                   inputmode="decimal">
+        </div>
     </td>
 
-    <td class="text-center" style="width: 260px">
+    <td class="text-center align-bottom" style="width: 260px">
         <button class="btn btn-success btn-sm save-period"
                 data-id="{{ $additional->id }}">
             {{ __("Save") }}
