@@ -211,7 +211,9 @@ class BookingServiceManager
     }
     public function createAddetional(Booking $booking, StoreAddetionalData $data): BookingService
     {
-        $price = AddetionalPrice::where('id', $data->addetional_id)->value('price');
+        $addetional = AddetionalPrice::where('id', $data->addetional_id)->first();
+        $price = $addetional->price;
+        $calculation_type = $addetional->calculation_type;
         $count = $data->count;
         $totalCost = number_format($price * $count, 2, '.', '');
 
@@ -219,6 +221,7 @@ class BookingServiceManager
             'booking_id'   => $booking->id,
             'service_type' => 'addetional',
             'type'       => $data->addetional,
+            'calculation_type'   => $calculation_type,
             'count'       => $count,
             'hunter_id'    => $data->hunter_id,
             'price'       => $totalCost,
