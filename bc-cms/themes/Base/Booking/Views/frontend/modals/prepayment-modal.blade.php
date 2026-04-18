@@ -3,7 +3,7 @@
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">{{__('Prepayment booking')}} #{{ $booking->id }}</h5>
+                <h5 class="modal-title">{{__('Prepayment booking')}} #{{ $booking->booking_number }}</h5>
             </div>
             @php
                    $prepaymentPaid = false;

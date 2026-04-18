@@ -2,7 +2,7 @@
     <div class="modal-dialog modal-xl">
         <div class="modal-content" id="bookingServiceApp{{ $booking->id }}">
             <div class="modal-header">
-                <h5 class="modal-title">Добавить услуги для брони #{{ $booking->id }}</h5>
+                <h5 class="modal-title">Добавить услуги для брони #{{ $booking->booking_number }}</h5>
             </div>
 
             <div class="modal-body">
