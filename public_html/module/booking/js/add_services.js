@@ -606,7 +606,7 @@ $(document).ready(function () {
 
     function addOthersHeader(container) {
         container.append(`
-            <div class="d-flex fw-bold mb-2 food-header">
+            <div class="d-flex fw-bold mb-2 others-header">
                 <span class="flex-fill">Название</span>
                 <span class="flex-fill">Количество</span>
                 <span class="flex-fill">Охотник</span>
@@ -632,16 +632,30 @@ $(document).ready(function () {
     }
 
     function renderSavedOtherRow(addetional) {
-        return $(`
-            <div class="other-row border rounded p-2 mb-2 d-flex align-items-center"
-                 data-id="${addetional.id}">
-                <div class="other-col type-col other-name-col">${addetional.type ?? '—'}</div>
-                <div class="other-col type-col other-count-col">${addetional.count ?? '—'}</div>
-                <div class="other-col type-col other-count-hunter">${addetional.hunter_name ?? '—'}</div>
 
-                <button class="btn btn-sm btn-outline-danger remove-saved-other">Удалить</button>
-            </div>
-        `);
+        let hunterBlock;
+
+        if (addetional.calculation_type === 'per_person') {
+            hunterBlock = `<div class="other-col type-col other-count-hunter text-muted">
+            Разделено на всех
+        </div>`;
+        } else {
+            hunterBlock = `<div class="other-col type-col other-count-hunter">
+            ${addetional.hunter_name ?? '—'}
+        </div>`;
+        }
+
+        return $(`
+        <div class="other-row border rounded p-2 mb-2 d-flex"
+             data-id="${addetional.id}">
+            <div class="other-col type-col other-name-col">${addetional.type ?? '—'}</div>
+            <div class="other-col type-col other-count-col">${addetional.count ?? '—'}</div>
+
+            ${hunterBlock}
+
+            <button class="btn btn-sm btn-outline-danger remove-saved-other">Удалить</button>
+        </div>
+    `);
     }
 
     // Добавление новой строки
@@ -664,7 +678,7 @@ $(document).ready(function () {
                 </select>
             </div>
 
-            <div style="width: 220px; margin-right: 50px">
+            <div style="width: 220px; margin-right: 110px">
                 <input
                     type="number"
                     class="form-control form-control-sm other-count"
@@ -674,8 +688,8 @@ $(document).ready(function () {
                 />
             </div>
             
-            <div>
-                <select class="form-select form-select-sm other-hunter" style="width: 190px;">
+            <div class="hunter-wrapper" style="width: 190px;">
+                <select class="form-select form-select-sm other-hunter">
                     <option value="" disabled selected hidden>Выберите охотника</option>
                 </select>
             </div>
@@ -690,39 +704,79 @@ $(document).ready(function () {
 
         const $select = $row.find('.other-price');
         const $countInput = $row.find('.other-count');
-        const $hunter = $row.find('.other-hunter');
+        const $hunterWrapper = $row.find('.hunter-wrapper');
+        const $hunterSelect = $row.find('.other-hunter');
+        $hunterSelect.prop('disabled', true);
         const $save = $row.find('.save-other');
 
         prices.forEach(p => {
             $select.append(`
-            <option value="${p.id}" data-max="${p.count ?? 1}">
+            <option value="${p.id}" data-max="${p.count ?? 1}" data-type="${p.calculation_type}">
                 ${p.name}
             </option>
         `);
         });
         hunters.forEach(h => {
-            $hunter.append(`<option value="${h.id}">${h.name}</option>`);
+            $hunterSelect.append(`<option value="${h.id}">${h.name}</option>`);
         });
 
-        function check() {
-            $save.prop(
-                'disabled',
-                !($select.val() && $hunter.val())
-            );
-        }
-
         $select.on('change', function () {
-            const max = parseInt($(this).find('option:selected').data('max'), 10);
+            const selected = $(this).find('option:selected');
+            const id = selected.val();
+            const type = selected.data('type');
+            const max = parseInt(selected.data('max'), 10);
+
+            if (!id) {
+                $hunterSelect.prop('disabled', true);
+                $save.prop('disabled', true);
+                $countInput.prop('disabled', true);
+                return;
+            }
 
             $countInput
                 .prop('disabled', false)
                 .attr('max', max)
                 .val(1);
 
-            check();
+            if (type === 'per_person') {
+                $hunterWrapper.html(`
+            <div class="text-muted">
+                Разделяем на всех
+            </div>
+        `);
+            } else {
+                $hunterWrapper.html(`
+            <select class="form-select form-select-sm other-hunter">
+                <option value="" disabled selected hidden>Выберите охотника</option>
+                ${hunters.map(h => `<option value="${h.id}">${h.name}</option>`).join('')}
+            </select>
+        `);
+                $hunterSelect.prop('disabled', false);
+                $save.prop('disabled', true);
+            }
+
+            updateSaveState();
         });
 
-        $hunter.on('change', check);
+        function updateSaveState() {
+            const selected = $select.find('option:selected');
+            const type = selected.data('type');
+
+            if (!selected.val()) {
+                $save.prop('disabled', true);
+                return;
+            }
+
+            if (type === 'per_person') {
+                $save.prop('disabled', false);
+                return;
+            }
+
+            const hunterVal = $row.find('.other-hunter').val();
+            $save.prop('disabled', !hunterVal);
+        }
+
+        $row.on('change', '.other-hunter', updateSaveState);
 
         $countInput.on('input', function () {
             const max = parseInt($(this).attr('max'), 10);
@@ -739,12 +793,13 @@ $(document).ready(function () {
             const selected = $select.find('option:selected');
             const addetionalId = selected.val();
             const count = parseInt($countInput.val(), 10);
+            const hunterId = $row.find('.other-hunter').val();
 
             $.post(`/booking/${bookingId}/addetional`, {
                 addetional: selected.text(),
                 addetional_id: addetionalId,
                 count: count,
-                hunter_id: $hunter.val(),
+                hunter_id: hunterId,
                 _token: $('meta[name="csrf-token"]').attr('content')
             }).done(saved => {
                 $row.replaceWith(renderSavedOtherRow(saved));

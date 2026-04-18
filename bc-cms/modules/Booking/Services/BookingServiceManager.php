@@ -118,6 +118,7 @@ class BookingServiceManager
             'bc_booking_services.service_type',
             'bc_booking_services.count',
             'bc_booking_services.type',
+            'bc_booking_services.calculation_type',
             'users.id as hunter_id',
             'users.name as hunter_name',
             'bc_booking_services.created_at',
@@ -223,7 +224,7 @@ class BookingServiceManager
             'type'       => $data->addetional,
             'calculation_type'   => $calculation_type,
             'count'       => $count,
-            'hunter_id'    => $data->hunter_id,
+            'hunter_id' => $calculation_type === AddetionalPrice::INDIVIDUAL? $data->hunter_id: null,
             'price'       => $totalCost,
         ]);
     }

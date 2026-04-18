@@ -4,6 +4,7 @@ namespace Modules\Booking\Services\Calculation;
 
 use App\User;
 use Illuminate\Support\Collection;
+use Modules\Attendance\Models\AddetionalPrice;
 use Modules\Booking\Models\Booking;
 use Modules\Booking\Models\BookingRoomPlace;
 use Modules\Hotel\Models\HotelRoomBooking;
@@ -22,7 +23,7 @@ class BookingCalculator
 
             $sum = $items->sum(function ($item) use ($booking, $type) {
 
-                if ($type === 'food') {
+                if ($type === AddetionalPrice::FOOD) {
                     return $item->price * max(1, $booking->duration_days);
                 }
 
@@ -33,11 +34,11 @@ class BookingCalculator
         }
 
         return [
-            'trophy' => $totals->get('trophy', 0),
-            'penalty' => $totals->get('penalty', 0),
-            'food' => $totals->get('food', 0),
-            'preparation' => $totals->get('preparation', 0),
-            'additional' => $totals->get('addetional', 0),
+            'trophy' => $totals->get(AddetionalPrice::TROPHY, 0),
+            'penalty' => $totals->get(AddetionalPrice::PENALTY, 0),
+            'food' => $totals->get(AddetionalPrice::FOOD, 0),
+            'preparation' => $totals->get(AddetionalPrice::PREPARATION, 0),
+            'additional' => $totals->get(AddetionalPrice::ADDETIONAL, 0),
 
             'total' => $totals->sum(),
         ];
@@ -54,17 +55,25 @@ class BookingCalculator
 
             $sum = $items->sum(function ($item) use ($booking, $type, $user, $huntersCount) {
 
-                if ($type === 'food') {
+                if ($type === AddetionalPrice::FOOD) {
 
                     return $item->price * max(1, $booking->duration_days) / $huntersCount;
                 }
-                if ($type === 'addetional') {
-                    if ($item->hunter_id !== $user->id) {
-                        return 0;
+                if ($type === AddetionalPrice::ADDETIONAL) {
+
+                    if ($item->service_type === AddetionalPrice::ADDETIONAL && $item->calculation_type === AddetionalPrice::PERSON) {
+                        return $item->price / $huntersCount;
                     }
+
+                    if ($item->service_type === AddetionalPrice::ADDETIONAL && $item->calculation_type === AddetionalPrice::INDIVIDUAL) {
+                        if ($item->hunter_id !== $user->id) {
+                            return 0;
+                        }
+                    }
+
                     return $item->price;
                 }
-                if ($type === 'penalty') {
+                if ($type === AddetionalPrice::PENALTY) {
                     if ($item->hunter_id !== $user->id) {
                         return 0;
                     }
@@ -78,15 +87,16 @@ class BookingCalculator
         }
 
         return [
-            'trophy' => $totals->get('trophy', 0),
-            'penalty' => $totals->get('penalty', 0),
-            'food' => $totals->get('food', 0),
-            'preparation' => $totals->get('preparation', 0),
-            'additional' => $totals->get('addetional', 0),
+            'trophy' => $totals->get(AddetionalPrice::TROPHY, 0),
+            'penalty' => $totals->get(AddetionalPrice::PENALTY, 0),
+            'food' => $totals->get(AddetionalPrice::FOOD, 0),
+            'preparation' => $totals->get(AddetionalPrice::PREPARATION, 0),
+            'additional' => $totals->get(AddetionalPrice::ADDETIONAL, 0),
 
             'total' => $totals->sum(),
         ];
     }
+
     public function calculateRooms($booking, User $user): array
     {
         $places = BookingRoomPlace::where('booking_id', $booking->id)->get();
@@ -205,14 +215,13 @@ class BookingCalculator
         return $result;
     }
 
-    public function calculateAdditional(Collection $additional, User $user): array
+    public function calculateAdditional(Collection $additional, User $user, $huntersCount): array
     {
         $result = [];
 
         foreach ($additional as $item) {
-            $isMe = $item->hunter_id === $user->id;
             $totalCost = round($item->price);
-            $myCost = $isMe ? round($totalCost): 0;
+            $myCost = $this->calculateAddetionalByType($item, $user, $huntersCount);
 
             $result[] = [
                 'name' => $item->type,
@@ -222,6 +231,20 @@ class BookingCalculator
         }
 
         return $result;
+    }
+
+    public function calculateAddetionalByType($item, User $user, $huntersCount)
+    {
+        if ($item->service_type === AddetionalPrice::ADDETIONAL && $item->calculation_type === AddetionalPrice::PERSON) {
+            return round($item->price / $huntersCount);
+        }
+
+        if ($item->service_type === AddetionalPrice::ADDETIONAL && $item->calculation_type === AddetionalPrice::INDIVIDUAL) {
+            if ($item->hunter_id !== $user->id) {
+                return 0;
+            }
+            return round($item->price);
+        }
     }
 
     public function calculateSpendings(Collection $spendings, User $user, int $huntersCount): array

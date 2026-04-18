@@ -11,15 +11,6 @@ Route::group(['prefix'=>config('attendance.attendance_route_prefix')],function()
 
 Route::group(['prefix'=>'user/'.config('attendance.attendance_route_prefix'),'middleware' => ['auth','verified']],function(){
     Route::get('/','ManageAnimalController@manageAnimal')->name('attendance.vendor.index');
-//    Route::get('/create','ManageAnimalController@create')->name('animal.vendor.create');
-//    Route::get('/edit/{id}','ManageAnimalController@edit')->name('animal.vendor.edit');
-//    Route::get('/del/{id}','ManageAnimalController@delete')->name('animal.vendor.delete');
-//    Route::post('/store/{id}','ManageAnimalController@store')->name('animal.vendor.store');
-//    Route::get('bulkEdit/{id}','ManageAnimalController@bulkEDetach')->name("animal.vendor.bulk_detach");
-//    Route::post('bulkEdit','ManageAnimalController@bulkEAttach')->name("animal.vendor.bulk_attach");
-//    Route::get('/booking-report/bulkEdit/{id}','ManageAnimalController@bookingReportBulkEdit')->name("animal.vendor.booking_report.bulk_edit");
-//    Route::get('/recovery','ManageAnimalController@recovery')->name('animal.vendor.recovery');
-//    Route::get('/restore/{id}','ManageAnimalController@restore')->name('animal.vendor.restore');
 });
 
 

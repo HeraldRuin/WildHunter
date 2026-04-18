@@ -221,7 +221,6 @@ class UserController extends FrontendController
 
         $authUser = Auth::user();
         $bookingId = $request->input('booking_id');
-        $booking = Booking::where('code', $bookingId)->first();
         $code = $request->input('code');
 
         if ($code) {

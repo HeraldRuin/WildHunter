@@ -1,14 +1,6 @@
 .trophy-animal-col { width: 340px; }
 .trophy-type-col   { width: 360px; }
 .trophy-count-col { width: 200px; }
-
-/*.preparation-row.prep-col {*/
-/*    flex: 0 0 auto;*/
-/*    overflow: hidden;*/
-/*    text-overflow: ellipsis;*/
-/*    white-space: nowrap;*/
-/*}*/
-
 .animal-col { width: 530px; }
 .count-col   { width: 360px; }
 
@@ -16,16 +8,6 @@
 .animal-penalty-col { width: 340px; }
 .type-col   { width: 360px; }
 .hunter-col { width: 200px; }
-
-/*.preparation-row.prep-col {*/
-/*    flex: 0 0 auto;*/
-/*    overflow: hidden;*/
-/*    text-overflow: ellipsis;*/
-/*    white-space: nowrap;*/
-/*}*/
-
-/*.animal-col { width: 530px; }*/
-/*.count-col   { width: 370px; }*/
 
  /*Питание*/
 .food-row {
@@ -42,9 +24,10 @@
 /*Другое*/
 .other-row {
     align-items: center;
+    gap: 10px;
 }
 .other-col.other-name-col {
-    width: 535px;
+    width: 435px;
 }
 
 /*Траты охотника*/

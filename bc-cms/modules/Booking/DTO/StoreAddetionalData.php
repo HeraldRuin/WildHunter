@@ -10,7 +10,7 @@ class StoreAddetionalData
         public int $addetional_id,
         public string $addetional,
         public int $count,
-        public int $hunter_id,
+        public ?int $hunter_id,
     ) {}
 
     public static function fromRequest(Request $request): self
@@ -21,7 +21,7 @@ class StoreAddetionalData
             addetional_id: (int) $data['addetional_id'],
             addetional: $data['addetional'],
             count: (int) $data['count'],
-            hunter_id: (int) $data['hunter_id'],
+            hunter_id: isset($data['hunter_id'])? (int) $data['hunter_id']: null,
         );
     }
 }
