@@ -28,9 +28,15 @@
             <div class="col-left">
                 <form method="get" class="filter-form filter-form-right d-flex justify-content-end flex-column flex-sm-row" role="search">
                     <select class="form-control" name="role">
-                        <option value="">{{ __('-- Select --')}}</option>
+                        <option value="" disabled hidden {{ !Request()->role ? 'selected' : '' }}>
+                            {{ __('-- Select --') }}
+                        </option>
+
                         @foreach($roles as $role)
-                            <option value="{{$role->code}}" @if(Request()->role == $role->name) selected @endif >{{ucfirst($role->name)}}</option>
+                            <option value="{{ $role->code }}"
+                                {{ Request()->role == $role->code ? 'selected' : '' }}>
+                                {{ ucfirst($role->name) }}
+                            </option>
                         @endforeach
                     </select>
                     <input type="text" name="s" value="{{ Request()->s }}" placeholder="{{__('Search by name')}}" class="form-control">
