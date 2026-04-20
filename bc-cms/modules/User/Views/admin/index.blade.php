@@ -30,7 +30,7 @@
                     <select class="form-control" name="role">
                         <option value="">{{ __('-- Select --')}}</option>
                         @foreach($roles as $role)
-                            <option value="{{$role->name}}" @if(Request()->role == $role->name) selected @endif >{{ucfirst($role->name)}}</option>
+                            <option value="{{$role->code}}" @if(Request()->role == $role->name) selected @endif >{{ucfirst($role->name)}}</option>
                         @endforeach
                     </select>
                     <input type="text" name="s" value="{{ Request()->s }}" placeholder="{{__('Search by name')}}" class="form-control">
@@ -51,11 +51,9 @@
                             <th width="60px"><input type="checkbox" class="check-all"></th>
                             <th>{{__('Name')}}</th>
                             <th>{{__('Email')}}</th>
-                            <th>{{__('Credit')}}</th>
                             <th>{{__('Phone')}}</th>
                             <th>{{__('Role')}}</th>
                             <th class="date">{{ __('Date')}}</th>
-{{--                            <th class="status">{{__('Status')}}</th>--}}
                             <th></th>
                         </tr>
                         </thead>
@@ -73,13 +71,11 @@
                                         <i class="fa fa-info-circle text-warning" title="{{__("Not Verified")}}"></i>
                                     @endif
                                 </td>
-                                <td>{{$row->balance}}</td>
                                 <td>{{$row->phone}}</td>
                                 <td>
                                     {{$row->role->name ?? ''}}
                                 </td>
                                 <td>{{ display_date($row->created_at)}}</td>
-                                {{--<td class="status">{{$row->status}}</td>--}}
                                 <td>
                                     <div class="dropdown">
                                         <button class="btn btn-primary btn-sm dropdown-toggle" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
