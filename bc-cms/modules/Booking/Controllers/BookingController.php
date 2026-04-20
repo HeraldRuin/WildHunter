@@ -1600,7 +1600,7 @@ class BookingController extends \App\Http\Controllers\Controller
     public function getAddetionalServices(Booking $booking): JsonResponse
     {
         $data = $this->serviceManager->getHunterData($booking);
-        $addetionals = AddetionalPrice::whereNull('type')->where('hotel_id', $booking->hotel_id)->get()
+        $addetionals = AddetionalPrice::whereNull('type')->where('hotel_id', $booking->hotel_id)->where('price', '>', 0)->get()
             ->map(fn ($addetional) => [
                 'id'   => $addetional->id,
                 'type'   => $addetional->type,
