@@ -61,6 +61,7 @@ class Booking extends BaseModel
         'status',
         'is_all_places_assigned',
         'booking_number',
+        'is_paid',
     ];
 
     protected $casts = [
