@@ -68,7 +68,11 @@ Route::group(['prefix'=>config('booking.booking_route_prefix')],function(){
     Route::post('/{booking}/places', 'BookingController@places');
     Route::post('/{booking}/select-place', 'BookingController@selectPlace');
     Route::post('/{booking}/cancel-select-place', 'BookingController@cancelSelectPlace');
+//    Route::post('/{booking}/check/is-places-complete', 'BookingController@checkBedSelectCompleted');
 
+    //Админ базы переводит бронь в статус оплачено/завершено
+    Route::patch('/{booking}/mark-paid', 'BookingController@markPaid');
+    Route::patch('/{booking}/mark-completed', 'BookingController@markCompleted');
 
     //ical
 	Route::get('/export-ical/{type}/{id}','BookingController@exportIcal')->name('booking.admin.export-ical');
