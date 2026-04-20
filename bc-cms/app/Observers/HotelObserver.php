@@ -4,6 +4,7 @@ namespace App\Observers;
 
 use Illuminate\Support\Facades\Auth;
 use Modules\Attendance\Models\AddetionalPrice;
+use Modules\Booking\Models\BookingCounter;
 
 class HotelObserver
 {
@@ -26,5 +27,10 @@ class HotelObserver
                 ]);
             }
         }
+
+        BookingCounter::firstOrCreate(
+            ['hotel_id' => $hotel->id],
+            ['last_number' => 0]
+        );
     }
 }
