@@ -1,6 +1,6 @@
 <tr>
     <td class="booking-history-type">
-        {{ $booking->service ? $booking->booking_number : $booking->booking_number }}
+        {{ $booking->service ? $booking->id : $booking->booking_number }}
     </td>
 
     <td class="a-hidden">{{display_date($booking->created_at)}}</td>
@@ -104,14 +104,12 @@
         @if($booking->status === \Modules\Booking\Models\Booking::START_COLLECTION)
             @php
                 $collectionEndAt = $booking->getMeta('collection_end_at');
-                $endTimestamp = $collectionEndAt
-                    ? \Carbon\Carbon::parse($collectionEndAt)->timestamp * 1000
-                    : null;
+                $endTimestamp = $collectionEndAt? \Carbon\Carbon::parse($collectionEndAt)->timestamp * 1000: null;
             @endphp
 
             @if($endTimestamp)
                 <div class="text-muted collection-timer" data-end="{{ $endTimestamp }}"
-                     data-booking-id="{{ $booking->id }}">[0 мин]
+                     data-booking-id="{{ $booking->id }}">[0 мин 00 сек]
                 </div>
             @endif
 
@@ -138,7 +136,7 @@
 
             @if($endTimestamp)
                 <div class="text-muted paid-timer" data-end="{{ $endTimestamp }}"
-                     data-booking-id="{{ $booking->id }}">[0 мин]
+                     data-booking-id="{{ $booking->id }}">[0 мин 00 сек]
                 </div>
             @endif
         @endif
@@ -159,7 +157,7 @@
 
             @if($endTimestamp)
                 <div class="text-muted beds-timer" data-end="{{ $endTimestamp }}"
-                     data-booking-id="{{ $booking->id }}">[0 мин]
+                     data-booking-id="{{ $booking->id }}">[0 мин 00 сек]
                 </div>
             @endif
         @endif
@@ -189,9 +187,9 @@
 
     <td>
         <div>
-            @if(in_array($booking->status, [\Modules\Booking\Models\Booking::FINISHED_PREPAYMENT, \Modules\Booking\Models\Booking::BED_COLLECTION]))
+            @if(in_array($booking->status, [\Modules\Booking\Models\Booking::FINISHED_PREPAYMENT, \Modules\Booking\Models\Booking::BED_COLLECTION, \Modules\Booking\Models\Booking::FINISHED_BED, \Modules\Booking\Models\Booking::PAID, \Modules\Booking\Models\Booking::COMPLETED]))
                 Внесена предоплата: {{ format_money($booking->calculation['prepaid_total']) }} <br>
-                Остаток базе: {{ format_money($booking->calculation['base_total']) }} <br>
+                Остаток базе: {{ $booking->is_paid ? format_money(0) : format_money($booking->calculation['base_total'] ?? 0) }} <br>
                 Всего: {{ format_money($booking->calculation['total']) }}
             @endif
         </div>
@@ -202,7 +200,6 @@
             <button
                 type="button"
                 class="btn btn-success btn-sm mt-2"
-                data-bs-toggle="modal"
                 @click="openConfirmBookingModal({{ $booking->id }}, $event)">
                 {{ __("Booking apply") }}
             </button>
@@ -212,8 +209,7 @@
             <button
                 type="button"
                 class="btn btn-success btn-sm mt-2"
-                data-bs-toggle="modal"
-                @click="openCancelBookingModal({{ $booking->id }}, $event)">
+                @click="openFinalizeBookingModal({{ $booking->id }}, $event)">
                 {{__("Complete booking")}}
             </button>
         @endif
@@ -222,7 +218,6 @@
             <button
                 type="button"
                 class="btn btn-danger btn-sm mt-2"
-                data-bs-toggle="modal"
                 @click="openCancelBookingModal({{ $booking->id }}, $event)">
                 {{__("Cancele booking")}}
             </button>
@@ -242,9 +237,17 @@
             <button
                 type="button"
                 class="btn btn-primary btn-sm mt-2"
-                data-bs-toggle="modal"
                 @click="openCalculatingModal({{ $booking }}, $event)">
                 {{__("Calculating")}}
+            </button>
+        @endif
+
+        @if($userRole === 'baseadmin' && $booking->status === \Modules\Booking\Models\Booking::FINISHED_BED)
+            <button
+                type="button"
+                class="btn btn-success btn-sm mt-2"
+                @click="openPreFinalizeBookingModal({{ $booking->id }}, $event)">
+                {{__("Paid")}}
             </button>
         @endif
     </td>

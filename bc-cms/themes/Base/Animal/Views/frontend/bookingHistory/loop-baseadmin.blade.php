@@ -178,7 +178,6 @@
             <button
                 type="button"
                 class="btn btn-success btn-sm mt-2"
-                data-bs-toggle="modal"
                 @click="openConfirmBookingModal({{ $booking->id }}, $event)">
                 {{ __("Booking apply") }}
             </button>
@@ -188,7 +187,6 @@
             <button
                 type="button"
                 class="btn btn-success btn-sm mt-2"
-                data-bs-toggle="modal"
                 @click="openCancelBookingModal({{ $booking->id }}, $event)">
                 {{__("Complete booking")}}
             </button>
@@ -198,7 +196,6 @@
             <button
                 type="button"
                 class="btn btn-danger btn-sm mt-2"
-                data-bs-toggle="modal"
                 @click="openCancelBookingModal({{ $booking->id }}, $event)">
                 {{__("Cancele booking")}}
             </button>
@@ -218,7 +215,6 @@
             <button
                 type="button"
                 class="btn btn-primary btn-sm mt-2"
-                data-bs-toggle="modal"
                 @click="openCalculatingModal({{ $booking }}, $event)">
                 {{__("Calculating")}}
             </button>
