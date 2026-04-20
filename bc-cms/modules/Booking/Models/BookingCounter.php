@@ -9,7 +9,7 @@ class BookingCounter extends Model
     protected $table = 'bc_booking_counters';
 
     protected $fillable = [
-        'type',
+        'hotel_id',
         'last_number',
     ];
 

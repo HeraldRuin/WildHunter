@@ -7,16 +7,16 @@ use Modules\Booking\Models\BookingCounter;
 
 class BookingNumberService
 {
-    public function generate(string $type): int
+    public function generate(int $hotelId ): int
     {
-        return DB::transaction(function () use ($type) {
+        return DB::transaction(function () use ($hotelId) {
 
-            $counter = BookingCounter::where('type', $type)
+            $counter = BookingCounter::where('hotel_id', $hotelId)
                 ->lockForUpdate()
                 ->first();
 
             if (!$counter) {
-                throw new \Exception("Counter for type {$type} not found");
+                throw new \Exception("Counter for hotel {$hotelId} not found");
             }
 
             $counter->increment('last_number');

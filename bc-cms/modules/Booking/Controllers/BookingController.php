@@ -284,11 +284,6 @@ class BookingController extends \App\Http\Controllers\Controller
         $rules = $service->filterCheckoutValidate($request, $rules);
         if (!empty($rules)) {
             $messages['term_conditions.required'] = __('Term conditions is required field');
-//            $messages['payment_gateway.required'] = __('Payment gateway is required field');
-//            $messages['last_name.required'] = __('Last Name field is required');
-//            $messages['first_name.required'] = __('First Name field is required');
-//            $messages['phone.required'] = __('Phone field is required');
-//            $messages['email.required'] = __('Email field is required');
 
             $validator = Validator::make($request->all(), $rules, $messages);
             if ($validator->fails()) {
@@ -315,7 +310,7 @@ class BookingController extends \App\Http\Controllers\Controller
         }
 
         // Normal Checkout
-        $booking->booking_number = $this->bookingNumberService->generate($booking->type);
+        $booking->booking_number = $this->bookingNumberService->generate($booking->hotel_id);
         $booking->first_name = $request->input('first_name', $user->first_name);
         $booking->last_name = $request->input('last_name', $user->last_name);
         $booking->email = $request->input('email', $user->email);
@@ -355,20 +350,6 @@ class BookingController extends \App\Http\Controllers\Controller
                 $booking->deposit = 0;
                 $booking->pay_now = $booking->total;
             }
-        }
-
-       $gateways = get_payment_gateways();
-        if ($booking->pay_now) {
-            $gatewayObj = $gateways[$payment_gateway] ?? null;
-
-//            if (!empty($rules['payment_gateway'])) {
-//                if (empty($gatewayObj)) {
-//                    return $this->sendError(__("Payment gateway not found"));
-//                }
-//                if (!$gatewayObj->isAvailable()) {
-//                    return $this->sendError(__("Payment gateway is not available"));
-//                }
-//            }
         }
 
         if ($booking->wallet_credit_used && auth()->check()) {
@@ -433,30 +414,6 @@ class BookingController extends \App\Http\Controllers\Controller
             return $res;
         }
 
-        if ($booking->pay_now > 0) {
-            try {
-//                $gatewayObj->process($request, $booking, $service);
-            } catch (Exception $exception) {
-                return $this->sendError($exception->getMessage());
-            }
-        }
-//        else {
-//            if ($booking->paid < $booking->total) {
-//                $booking->status = $booking::PARTIAL_PAYMENT;
-//            } else {
-//                $booking->status = $booking::PAID;
-//            }
-//
-//            if (!empty($booking->coupon_amount) and $booking->coupon_amount > 0 and $booking->total == 0) {
-//                $booking->status = $booking::PAID;
-//            }
-//
-//            $booking->save();
-//            event(new BookingCreatedEvent($booking));
-//            return $this->sendSuccess([
-//                'url' => $booking->getDetailUrl()
-//            ], __("You payment has been processed successfully"));
-//        }
         $booking->status = $booking::PROCESSING;
         $booking->save();
 
@@ -1647,6 +1604,7 @@ class BookingController extends \App\Http\Controllers\Controller
             ->map(fn ($addetional) => [
                 'id'   => $addetional->id,
                 'type'   => $addetional->type,
+                'calculation_type'   => $addetional->calculation_type,
                 'name'   => $addetional->name,
                 'count'   => $addetional->count,
                 'price'   => $addetional->price,
@@ -1667,6 +1625,7 @@ class BookingController extends \App\Http\Controllers\Controller
         return response()->json([
             'id'           => $service->id,
             'type'         => $service->type,
+            'calculation_type'   => $service->calculation_type,
             'count'         => $service->count,
             'hunter_name'  => $service->hunter->name ?? '—',
             'created_at'   => $service->created_at,
@@ -1926,6 +1885,11 @@ class BookingController extends \App\Http\Controllers\Controller
         }
 
         $place->delete();
+    }
+
+    public function checkBedSelectCompleted(Booking $booking): void
+    {
+//        $this->bookingTimerService->processExpiredBeds();
     }
 
     //Калькуляция
