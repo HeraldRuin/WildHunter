@@ -382,7 +382,7 @@ class BookingCalculator
     {
         return [
             'title_name' =>  'Остаток базе',
-            'total_cost' => $this->calculateBaseTotal($booking, $services, $huntersCount),
+            'total_cost' => $booking->is_paid? 0: $this->calculateBaseTotal($booking, $services, $huntersCount),
             'my_cost' => $this->calculateMyBaseTotal($booking, $user, $services, $huntersCount),
         ];
     }
