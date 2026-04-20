@@ -64,6 +64,7 @@ class Booking extends BaseModel
     ];
 
     protected $casts = [
+        'is_paid' => 'boolean',
         'commission' => 'array',
         'vendor_service_fee' => 'array',
     ];
