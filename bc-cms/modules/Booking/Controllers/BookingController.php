@@ -1887,9 +1887,22 @@ class BookingController extends \App\Http\Controllers\Controller
         $place->delete();
     }
 
-    public function checkBedSelectCompleted(Booking $booking): void
+    public function markPaid(Booking $booking): JsonResponse
     {
-//        $this->bookingTimerService->processExpiredBeds();
+        $booking->update([
+            'status' => Booking::PAID,
+            'is_paid' => true,
+        ]);
+
+        return $this->sendSuccess([]);
+    }
+    public function markCompleted(Booking $booking): JsonResponse
+    {
+        $booking->update([
+            'status' => Booking::COMPLETED,
+        ]);
+
+        return $this->sendSuccess([]);
     }
 
     //Калькуляция
