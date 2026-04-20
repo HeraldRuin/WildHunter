@@ -84,7 +84,6 @@ class RoomAvailabilityService
                 $numberChanged = $row->number !== null && (int)$row->number != (int)$room->number;
             }
 
-            $title = '';
             if (!$isActive) {
                 $title = __('Blocked');
             } elseif ($number == 0) {
@@ -127,9 +126,6 @@ class RoomAvailabilityService
             $booking = Booking::find($roomBooking->booking_id);
             if (!$booking) continue;
 
-            // -------------------------------
-            // ИЗМЕНЕНИЕ: включаем день выезда в период для отображения
-            // раньше был ->subDay(), теперь полный диапазон
             $period = periodDate(
                 $roomBooking->start_date,
                 $roomBooking->end_date,
@@ -147,13 +143,12 @@ class RoomAvailabilityService
                 // Добавляем бронь в массив
                 $day['bookings'][] = [
                     'id' => $booking->id,
+                    'booking_number' => $booking->booking_number,
                     'code' => $booking->code,
                     'status' => $booking->status,
                     'statusName' => $booking->statusName,
                 ];
 
-                // -------------------------------
-                // ИЗМЕНЕНИЕ: расчет свободных комнат только если день не день выезда
                 if ($dateKey !== $endDate) {
                     $bookedRooms = (int)($roomBooking->number ?? 0);
                     $day['occupiedRooms'] = ($day['occupiedRooms'] ?? 0) + $bookedRooms;
@@ -191,7 +186,7 @@ class RoomAvailabilityService
 
                 $bookingHtml .= '<div class="booking-item booking-status-' . $status . '">'
                     . '<span class="booking-id" data-id="' . (int)$b['id'] . '" data-code="' . e($b['code']) . '">'
-                    . 'Б' . (int)$b['id'] .
+                    . 'Б' . htmlspecialchars($b['booking_number']) .
                     '</span>'
                     . '<span class="booking-status">' . $label . '</span>';
 
@@ -221,7 +216,6 @@ class RoomAvailabilityService
         $allDates = [];
         $period = periodDate($data->start, $data->end, false);
 
-        // Создаем базовые даты
         foreach ($period as $dt) {
             $dateKey = $dt->format('Y-m-d');
             $allDates[$dateKey] = [
@@ -256,8 +250,6 @@ class RoomAvailabilityService
             foreach ($period as $dt) {
                 $dateKey = $dt->format('Y-m-d');
                 $day = &$allDates[$dateKey];
-
-                // Стандартные значения
                 $price = $room->price;
                 $number = $room->number;
                 $active = 1;
@@ -269,7 +261,6 @@ class RoomAvailabilityService
                     $active = (int)$row->active;
                 }
 
-                // Суммируем по всем номерам
                 $day['number'] += $number;
                 $day['extendedProps']['max_number'] += $room->number;
                 $day['price'] = $day['price'] ?: $price;
@@ -277,7 +268,6 @@ class RoomAvailabilityService
                 $priceHtml = $data->forSingle ? format_money($day['price']) : format_money_main($day['price']);
                 $day['title'] = $priceHtml . ' x ' . $day['number'];
 
-                // Добавляем брони по этому номеру
                 $roomBookings = $room->getBookingsInRange($data->start, $data->end);
                 foreach ($roomBookings as $rb) {
                     $booking = Booking::find($rb->booking_id);
@@ -286,10 +276,10 @@ class RoomAvailabilityService
                     $bookingStart = Carbon::parse($rb->start_date)->format('Y-m-d');
                     $bookingEnd = Carbon::parse($rb->end_date)->format('Y-m-d');
 
-                    // Если текущая дата входит в период брони
                     if ($dateKey >= $bookingStart && $dateKey <= $bookingEnd) {
                         $day['bookings'][$booking->id] = [
                             'id' => $booking->id,
+                            'booking_number' => $booking->booking_number,
                             'code' => $booking->code,
                             'status' => $booking->status,
                             'statusName' => $booking->statusName,
@@ -301,7 +291,6 @@ class RoomAvailabilityService
             unset($day);
         }
 
-        // Генерим HTML для всех броней, аналогично getRoomCalendar
         foreach ($allDates as &$day) {
             if (empty($day['bookings'])) continue;
 
@@ -313,10 +302,9 @@ class RoomAvailabilityService
 
                 $bookingHtml .= '<div class="booking-item">'
                     . '<span class="booking-id" data-id="' . (int)$b['id'] . '" data-code="' . $code . '">'
-                    . 'Б' . (int)$b['id'] .
+                    . 'Б' . htmlspecialchars($b['booking_number']) .
                     '</span>';
 
-                // Проверяем, день выезда ли это для этой брони & Добавляем (Выезд) только рядом с этой бронью
                 $isCheckout = $this->isCheckoutDay($b['id'], $day['start']);
                 if ($isCheckout) {
                     $bookingHtml .= ' <span class="checkout-label">(В)</span>';
