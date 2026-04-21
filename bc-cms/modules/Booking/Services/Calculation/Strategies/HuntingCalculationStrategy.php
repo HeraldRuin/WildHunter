@@ -12,6 +12,7 @@ class HuntingCalculationStrategy implements BookingCalculationStrategy
     {
         $services = $data['services'];
         $grouped = $services->groupBy('service_type');
+        $isBaseAdmin = $data['isBaseAdmin'];
 
         if ($data['totalHunting'] === null || $data['totalHunting'] <= 0)
         {
@@ -22,7 +23,6 @@ class HuntingCalculationStrategy implements BookingCalculationStrategy
         }
 
         $totalHunting = $data['totalHunting'];
-
 
         // === Трофеи ===
         $trophies = $this->bookingCalculator->calculateTrophies(collect($grouped['trophy'] ?? []), $totalHunting);
@@ -44,7 +44,7 @@ class HuntingCalculationStrategy implements BookingCalculationStrategy
 
         // === Подсчёты итогов ===
         $organisationHunting = $this->bookingCalculator->getOrganisationHunting($booking, $totalHunting);
-        $balanceBase = $this->bookingCalculator->getBalanceBaseHunting($booking, $user, $services, $totalHunting);
+        $balanceBase = $this->bookingCalculator->getBalanceBaseHunting($booking, $user, $services, $totalHunting, $isBaseAdmin);
         $paymentDisplayData = $this->bookingCalculator->getBookingTotal($booking, $services, $totalHunting);
 
         // === Формируем итоговые массивы ===

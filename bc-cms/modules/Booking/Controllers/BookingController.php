@@ -624,10 +624,6 @@ class BookingController extends \App\Http\Controllers\Controller
             abort(404);
         }
 
-//        if ($booking->status == 'draft') {
-//            return redirect($booking->getCheckoutUrl());
-//        }
-
         if (!$ifAdminBase && !is_enable_guest_checkout() && $booking->customer_id != Auth::id())
         {
             abort(404);
