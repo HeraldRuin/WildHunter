@@ -292,11 +292,6 @@ class BookingCalculator
     {
         $result = $this->getServiceCount($booking, $services, ['trophy', 'penalty', 'food', 'preparation', 'addetional']);
         $organisationHuntingPaid = $this->calculateOrganisationHunting($booking, $huntersCount);
-//TODO тут нужно будет убрать тип животного
-        $baseAmount = $booking->type === Booking::BookingTypeAnimal ? ($organisationHuntingPaid + $result['total']) :
-            (
-                $booking->total + $organisationHuntingPaid + $result['total']
-            );
 
         return $organisationHuntingPaid + $result['total'];
     }
@@ -401,7 +396,7 @@ class BookingCalculator
         if ($booking->type === Booking::BookingTypeAnimal) {
             return [
                 'prepaid_total' => 0,
-                'base_total' => 0,
+                'base_total' => $this->calculateBaseTotal($booking, $services, $huntersCount),
                 'total' => 0,
             ];
         }
