@@ -79,7 +79,11 @@
         <div>
             @php
                 // Получаем информацию об охотниках
-                $totalHuntersNeeded = $booking->total_hunting ?? 0;
+                if ($booking->type === \Modules\Booking\Models\Booking::BookingTypeAnimal){
+                     $totalHuntersNeeded = $booking->total_hunting ?? 0;
+                }else{
+                     $totalHuntersNeeded = $booking->total_guests ?? 0;
+                }
                 $allInvitations = $booking->getAllInvitations();
                 $acceptedInvitations = $allInvitations->where('status', 'accepted');
                 $acceptedCount = $acceptedInvitations->count();
@@ -189,7 +193,7 @@
         <div>
             @if(in_array($booking->status, [\Modules\Booking\Models\Booking::FINISHED_PREPAYMENT, \Modules\Booking\Models\Booking::BED_COLLECTION, \Modules\Booking\Models\Booking::FINISHED_BED, \Modules\Booking\Models\Booking::PAID, \Modules\Booking\Models\Booking::COMPLETED]))
                 Внесена предоплата: {{ format_money($booking->calculation['prepaid_total']) }} <br>
-                Остаток базе: {{ $booking->is_paid ? format_money(0) : format_money($booking->calculation['base_total'] ?? 0) }} <br>
+                Остаток базе:  {{ $booking->is_paid ? 0 : format_money($booking->calculation['base_total']) }} <br>
                 Всего: {{ format_money($booking->calculation['total']) }}
             @endif
         </div>

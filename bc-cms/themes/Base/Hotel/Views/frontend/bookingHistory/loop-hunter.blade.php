@@ -120,7 +120,12 @@
         <div>
             @php
                 // Получаем информацию об охотниках
-                $totalHuntersNeeded = $booking->total_hunting ?? 0;
+                if ($booking->type === \Modules\Booking\Models\Booking::BookingTypeAnimal){
+                     $totalHuntersNeeded = $booking->total_hunting ?? 0;
+                }else{
+                     $totalHuntersNeeded = $booking->total_guests ?? 0;
+                }
+
                 $allInvitations = $booking->getAllInvitations();
                 $acceptedInvitations = $allInvitations->where('status', 'accepted');
                 $acceptedCount = $acceptedInvitations->count();
@@ -281,7 +286,6 @@
             <button
                 type="button"
                 class="btn btn-primary btn-sm mt-2"
-                data-bs-toggle="modal"
                 @click="openCalculatingModal({{ $booking }}, $event)">
                 {{__("Calculating")}}
             </button>
@@ -303,7 +307,6 @@
                     <button
                         type="button"
                         class="btn btn-primary btn-sm mt-2"
-                        data-bs-toggle="modal"
                         @click="openCollectionAsHunter({{ $booking->id }})">
                         {{__("Open collection")}}
                     </button>
@@ -312,7 +315,6 @@
                     <button
                         type="button"
                         class="btn btn-primary btn-sm mt-2"
-                        data-bs-toggle="modal"
                         @click="openBookingPlacesModal({{ $booking }}, $event)">
                         {{__("Select bed place")}}
                     </button>
@@ -321,7 +323,6 @@
                     <button
                         type="button"
                         class="btn btn-primary btn-sm mt-2"
-                        data-bs-toggle="modal"
                         data-booking-id="{{ $booking->id }}"
                         @click="openBookingPrepaymentPaid({{ $booking->id }}, $event)">
                         {{__("Prepayment")}}
@@ -333,7 +334,6 @@
                 <button
                     type="button"
                     class="btn btn-danger btn-sm mt-2"
-                    data-bs-toggle="modal"
                     @click="openCancelBookingModal({{ $booking->id }}, $event)">
                     {{__("Cancele booking")}}
                 </button>
@@ -352,7 +352,6 @@
                     <button
                         type="button"
                         class="btn btn-primary btn-sm mt-2"
-                        data-bs-toggle="modal"
                         @click="openCollectionAsMaster({{ $booking->id }}, $event)">
                         {{__("Open collection")}}
                     </button>
@@ -363,7 +362,6 @@
                 <button
                     type="button"
                     class="btn btn-primary btn-sm mt-2"
-                    data-bs-toggle="modal"
                     data-booking-id="{{ $booking->id }}"
                     @click="openBookingPrepaymentPaid({{ $booking->id }}, $event)">
                     {{__("Prepayment")}}
@@ -374,7 +372,6 @@
                     <button
                     type="button"
                     class="btn btn-primary btn-sm mt-2"
-                    data-bs-toggle="modal"
                     @click="openBookingPlacesModal({{ $booking }}, $event)">
                     {{__("Select bed place")}}
                 </button>
