@@ -167,7 +167,7 @@
 
     <td>
         <div>
-            @if($booking->status === \Modules\Booking\Models\Booking::FINISHED_COLLECTION)
+            @if(in_array($booking->status, [\Modules\Booking\Models\Booking::FINISHED_COLLECTION, \Modules\Booking\Models\Booking::PAID, \Modules\Booking\Models\Booking::COMPLETED]))
                 Остаток базе: {{ format_money($booking->calculation['base_total']) }} <br>
             @endif
         </div>
@@ -187,7 +187,7 @@
             <button
                 type="button"
                 class="btn btn-success btn-sm mt-2"
-                @click="openCancelBookingModal({{ $booking->id }}, $event)">
+                @click="openFinalizeBookingModal({{ $booking->id }}, $event)">
                 {{__("Complete booking")}}
             </button>
         @endif
@@ -217,6 +217,14 @@
                 class="btn btn-primary btn-sm mt-2"
                 @click="openCalculatingModal({{ $booking }}, $event)">
                 {{__("Calculating")}}
+            </button>
+        @endif
+        @if($userRole === 'baseadmin' && $booking->status === \Modules\Booking\Models\Booking::FINISHED_COLLECTION)
+            <button
+                type="button"
+                class="btn btn-success btn-sm mt-2"
+                @click="openPreFinalizeBookingModal({{ $booking->id }}, $event)">
+                {{__("Paid")}}
             </button>
         @endif
     </td>

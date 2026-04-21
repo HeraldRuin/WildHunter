@@ -193,7 +193,7 @@
         <div>
             @if(in_array($booking->status, [\Modules\Booking\Models\Booking::FINISHED_PREPAYMENT, \Modules\Booking\Models\Booking::BED_COLLECTION, \Modules\Booking\Models\Booking::FINISHED_BED, \Modules\Booking\Models\Booking::PAID, \Modules\Booking\Models\Booking::COMPLETED]))
                 Внесена предоплата: {{ format_money($booking->calculation['prepaid_total']) }} <br>
-                Остаток базе:  {{ $booking->is_paid ? 0 : format_money($booking->calculation['base_total']) }} <br>
+                Остаток базе:  {{ format_money($booking->calculation['base_total']) }} <br>
                 Всего: {{ format_money($booking->calculation['total']) }}
             @endif
         </div>
