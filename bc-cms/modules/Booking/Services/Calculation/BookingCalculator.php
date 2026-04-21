@@ -373,30 +373,30 @@ class BookingCalculator
     {
         return round($bookingTotal / $huntersCount);
     }
-    public function getBalanceBase(Booking $booking, User $user, $services, int $huntersCount): array
+    public function getBalanceBase(Booking $booking, User $user, $services, int $huntersCount, bool $isBaseAdmin): array
     {
         return [
             'title_name' =>  'Остаток базе',
-            'total_cost' => $booking->is_paid? 0: $this->calculateBaseTotal($booking, $services, $huntersCount),
+            'total_cost' => $isBaseAdmin? 0: $this->calculateBaseTotal($booking, $services, $huntersCount),
             'my_cost' => $this->calculateMyBaseTotal($booking, $user, $services, $huntersCount),
         ];
     }
-    public function getBalanceBaseHunting(Booking $booking, User $user, $services, int $huntersCount): array
+    public function getBalanceBaseHunting(Booking $booking, User $user, $services, int $huntersCount, bool $isBaseAdmin): array
     {
         return [
             'title_name' =>  'Остаток базе',
-            'total_cost' => $booking->is_paid ? 0 : $this->calculateBaseTotal($booking, $services, $huntersCount),
+            'total_cost' => $isBaseAdmin? 0 : $this->calculateBaseTotal($booking, $services, $huntersCount),
             'my_cost' => $this->calculateMyBaseTotalOnlyHunting($booking, $user, $services, $huntersCount),
         ];
     }
 
     //Подсчет в историю бронирования в колонку оплата (админа базы)
-    public function getBookingTotal(Booking $booking, $services, int $huntersCount): array
+    public function getBookingTotal(Booking $booking, $services, int $huntersCount)
     {
         if ($booking->type === Booking::BookingTypeAnimal) {
             return [
                 'prepaid_total' => 0,
-                'base_total' => $booking->is_paid ? 0 : $this->calculateBaseTotal($booking, $services, $huntersCount),
+                'base_total' => $booking->is_paid? 0 : $this->calculateBaseTotal($booking, $services, $huntersCount),
                 'total' => 0,
             ];
         }
@@ -404,7 +404,7 @@ class BookingCalculator
         if ($booking->type === Booking::BookingTypeHotel) {
             return [
                 'prepaid_total' => $this->basePrepaymentMade($booking),
-                'base_total' => $booking->is_paid ? 0 : $this->calculateBaseTotal($booking, $services, $huntersCount),
+                'base_total' => $booking->is_paid? 0 : $this->calculateBaseTotal($booking, $services, $huntersCount),
                 'total' => $this->basePrepaymentMade($booking) + $this->calculateBaseTotal($booking, $services, $huntersCount),
             ];
         }
@@ -412,15 +412,9 @@ class BookingCalculator
         if ($booking->type === Booking::BookingTypeHotelAnimal) {
             return [
                 'prepaid_total' => $this->basePrepaymentMade($booking),
-                'base_total' => $booking->is_paid ? 0 : $this->calculateBaseTotal($booking, $services, $huntersCount),
+                'base_total' => $booking->is_paid? 0 : $this->calculateBaseTotal($booking, $services, $huntersCount),
                 'total' => $this->basePrepaymentMade($booking) + $this->calculateBaseTotal($booking, $services, $huntersCount),
             ];
         }
-
-        return [
-            'prepaid_total' => 0,
-            'base_total' => 0,
-            'total' => 0,
-        ];
     }
 }
