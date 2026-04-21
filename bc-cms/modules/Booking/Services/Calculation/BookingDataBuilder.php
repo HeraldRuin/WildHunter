@@ -19,6 +19,7 @@ class BookingDataBuilder
             'services' => $services,
             'paidCount' => $paidCount,
             'totalHunting' => $totalHunting,
+            'isBaseAdmin' => is_baseAdmin(),
         ];
     }
 }
