@@ -14,7 +14,7 @@
                                 <a class="dropdown-item" href="{{route('core.admin.settings.index',['group'=>$id])}}">
                                 @if (!empty($group['icon']))
                                     <i class="{{ $group['icon'] }}"></i>
-                                @endif    
+                                @endif
                                 {{$group['title']}}
                             </a>
                             @endforeach

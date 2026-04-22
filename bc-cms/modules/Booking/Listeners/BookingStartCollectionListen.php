@@ -20,7 +20,6 @@
             $booking = $event->booking;
 
             // Уведомляем админа базы о начале сбора
-//            $booking_hunter = BookingHunter::where('booking_id', $booking->id)->where('is_master', true)->first();
             $BaseAdmin = $booking->hotel->adminBase;
             Mail::to($BaseAdmin->email)->send(new StatusStartCollectionEmail($booking, 'BaseAdmin', $BaseAdmin));
 

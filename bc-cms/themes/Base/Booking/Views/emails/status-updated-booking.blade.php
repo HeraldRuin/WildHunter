@@ -20,7 +20,7 @@
                         <table class="b-table" cellspacing="0" cellpadding="0">
                             <tr>
                                 <td class="label">{{__('Booking Number')}}</td>
-                                <td class="val">#{{$booking->id}}</td>
+                                <td class="val">#{{$booking->booking_number}}</td>
                             </tr>
                             <tr>
                                 <td class="label">{{__('Booking Status')}}</td>
@@ -46,7 +46,7 @@
                         <table class="b-table" cellspacing="0" cellpadding="0">
                             <tr>
                                 <td class="label">{{__('Booking Number')}}</td>
-                                <td class="val">#{{$booking->id}}</td>
+                                <td class="val">#{{$booking->booking_number}}</td>
                             </tr>
                             <tr>
                                 <td class="label">{{__('Booking Status')}}</td>

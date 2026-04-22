@@ -25,7 +25,6 @@ class StatusStartCollectionEmail extends Mailable
     public function build()
     {
         $subject = '';
-        //            case "customer":
         if ($this->email_type == "BaseAdmin") {
             $subject = __('[:site_name] The booking status has been updated', ['site_name' => setting_item('site_title')]);
         }

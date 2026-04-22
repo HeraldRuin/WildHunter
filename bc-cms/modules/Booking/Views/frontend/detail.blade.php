@@ -22,7 +22,7 @@
                 </div>
                 <div class="col-lg-4 col-md-4">
                     <ul class="booking-info-detail">
-                        <li><span>{{__('Booking Number')}}:</span> {{$booking->id}}</li>
+                        <li><span>{{__('Booking Number')}}:</span> {{$booking->booking_number}}</li>
                         <li><span>{{__('Booking Date')}}:</span> {{display_date($booking->created_at)}}</li>
                         @if(!empty($gateway))
                         <li><span>{{__('Payment Method')}}:</span> {{$gateway->name}}</li>
