@@ -22,35 +22,5 @@
             // Уведомляем админа базы о начале сбора
             $BaseAdmin = $booking->hotel->adminBase;
             Mail::to($BaseAdmin->email)->send(new StatusStartCollectionEmail($booking, 'BaseAdmin', $BaseAdmin));
-
-//            if (!$booking_hunter) {
-//                return;
-//            }
-
-//            $invitations = $booking_hunter->invitations;
-//            $filtered_invitations = $invitations->filter(function($invitation) use ($booking_hunter) {
-//                return $invitation->hunter_id != $booking_hunter->invited_by;
-//            });
-//
-//            foreach ($filtered_invitations as $invitation) {
-//                if ($invitation->hunter_id == $booking_hunter->id) {
-//                    continue;
-//                }
-//
-//                $email = null;
-//                $hunter = null;
-//
-//                if ($invitation->hunter_id) {
-//                    $hunter = User::find($invitation->hunter_id);
-//                    if ($hunter) {
-//                        $email = $hunter->email;
-//                    }
-//                } else {
-//                    // hunter_id пустой → используем email из записи
-//                    $email = $invitation->email;
-//                }
-//
-//                Mail::to($email)->send(new StatusStartCollectionEmail($booking, 'customer', $hunter));
-//            }
         }
     }
