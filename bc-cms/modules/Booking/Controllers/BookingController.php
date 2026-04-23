@@ -3,15 +3,17 @@
 namespace Modules\Booking\Controllers;
 
 use App\Helpers\ReCaptchaEngine;
+use App\Service\MailService;
 use App\User;
+use DomainException;
 use Illuminate\Auth\Events\Registered;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
@@ -25,9 +27,7 @@ use Modules\Booking\DTO\StorePenaltyData;
 use Modules\Booking\DTO\StorePreparationData;
 use Modules\Booking\DTO\StoreSpendingData;
 use Modules\Booking\DTO\StoreTrophyData;
-use Modules\Booking\DTO\StorPenaltyeData;
 use Modules\Booking\Emails\HunterMessageEmail;
-use Modules\Booking\Emails\StatusUpdatedEmail;
 use Modules\Booking\Events\BookingCreatedEvent;
 use Modules\Booking\Events\BookingStartCollectionEvent;
 use Modules\Booking\Events\BookingUpdatedEvent;
@@ -40,6 +40,9 @@ use Modules\Booking\Models\BookingPassenger;
 use Modules\Booking\Models\BookingRoomPlace;
 use Modules\Booking\Models\Enquiry;
 use Modules\Booking\Models\Payment;
+use Modules\Booking\Requests\EmailHunterRequest;
+use Modules\Booking\Requests\InviteHunterByEmailRequest;
+use Modules\Booking\Requests\InviteHunterRequest;
 use Modules\Booking\Requests\StoreAddetionalRequest;
 use Modules\Booking\Requests\StoreFoodRequest;
 use Modules\Booking\Requests\StorePenaltyRequest;
@@ -47,9 +50,12 @@ use Modules\Booking\Requests\StorePreparationRequest;
 use Modules\Booking\Requests\StoreSpendingRequest;
 use Modules\Booking\Requests\StoreTrophyRequest;
 use Modules\Booking\Services\BookingCollectionService;
+use Modules\Booking\Services\BookingInvitationService;
+use Modules\Booking\Services\BookingNotificationService;
 use Modules\Booking\Services\BookingNumberService;
 use Modules\Booking\Services\BookingServiceManager;
 use Modules\Booking\Services\BookingTimerService;
+use Modules\Booking\Services\BookingUserService;
 use Modules\Booking\Services\Calculation\BookingCalculatingService;
 use Modules\Booking\Services\Payments\PaymentService;
 use Modules\User\Events\SendMailUserRegistered;
@@ -72,7 +78,11 @@ class BookingController extends \App\Http\Controllers\Controller
         protected BookingCollectionService $bookingCollectionService,
         protected PaymentService $paymentService,
         protected BookingServiceManager $serviceManager,
-        protected BookingNumberService $bookingNumberService)
+        protected BookingNumberService $bookingNumberService,
+        protected BookingInvitationService $bookingInvitationService,
+        protected BookingNotificationService $bookingNotificationService,
+        protected MailService $mailService,
+        protected BookingUserService $bookingUserService)
     {
         $this->booking = $booking;
         $this->enquiryClass = $enquiryClass;
@@ -832,23 +842,10 @@ class BookingController extends \App\Http\Controllers\Controller
 
     public function changeUserBooking(Request $request, Booking $booking): JsonResponse
     {
-        $userId = $request->input('user_id');
-
-        $booking->create_user = $userId;
-        $booking->save();
-
-        if ($userId) {
-            $user = User::find($userId);
-            if ($user) {
-                $bookingHunter = BookingHunter::where('booking_id', $booking->id)->first();
-                if ($bookingHunter) {
-                    $bookingHunter->invited_by = $userId;
-                    $bookingHunter->is_master = $user->hasRole('hunter');
-                    $bookingHunter->creator_role = $user->role->code ?? null;
-                    $bookingHunter->save();
-                }
-            }
-        }
+        $this->bookingUserService->changeUser(
+            $booking,
+            $request->input('user_id')
+        );
 
         return $this->sendSuccess([
             'message' => __('Customer changed')
@@ -858,10 +855,7 @@ class BookingController extends \App\Http\Controllers\Controller
     public function confirmBooking( Booking $booking): JsonResponse
     {
         if ($booking->status !== 'processing') {
-            return response()->json([
-                'status' => false,
-                'message' => 'Эта бронь уже подтверждена или недоступна для подтверждения.'
-            ]);
+            return $this->sendError('Эта бронь уже подтверждена или недоступна для подтверждения.')->setStatusCode(409);
         }
         $booking->status = Booking::CONFIRMED;
         $booking->save();
@@ -880,13 +874,6 @@ class BookingController extends \App\Http\Controllers\Controller
         }
 
         $this->bookingTimerService->startCollectionTimer($booking);
-
-        // TODO понять что это и для чего нужно
-        // ВСЕГДА не отправляем письмо инициатору при запуске сбора
-        // Инициатор (create_user) уже автоматически является участником сбора
-        // и не должен получать письмо о смене статуса
-        $booking->skip_status_email = true;
-
         event(new BookingStartCollectionEvent($booking));
 
         return $this->sendSuccess([
@@ -904,91 +891,22 @@ class BookingController extends \App\Http\Controllers\Controller
             return $this->sendError('Необходима авторизация')->setStatusCode(401);
         }
 
-        $user = Auth::user();
-        $isBaseAdmin = $user->hasRole('baseadmin') || $user->hasPermission('baseAdmin_dashboard_access');
-
-        // Только владелец брони, base-admin могут отменить сбор
-        if (!$isBaseAdmin && $booking->create_user !== $user->id
-        ) {
-            return $this->sendError(__("You don't have access."))->setStatusCode(403);
-        }
-
-        // Заблокируем отмену сбора только для уже окончательно отменённых/завершённых броней
-        if (in_array($booking->status, [Booking::CANCELLED, Booking::COMPLETED], true)) {
-            return $this->sendError(__('This booking cannot be modified'))->setStatusCode(422);
-        }
-
-        if ($booking->status === Booking::START_COLLECTION || $booking->status === Booking::FINISHED_COLLECTION) {
-            $booking->status = Booking::CONFIRMED;
-
-            $this->bookingTimerService->clearAllTimers($booking->id);
-
-            $booking->save();
-
-            event(new BookingUpdatedEvent($booking));
-        }
-
-        $invitations = $booking->getAllInvitations();
-
-        foreach ($invitations as $invitation) {
-            $hunter = $invitation->hunter;
-
-            // Уведомляем охотника о том, что сбор отменён
-            if ($hunter && !empty($hunter->email)) {
-                try {
-                    $message = __('Сбор охотников для этой брони отменён.');
-                    Mail::to($hunter->email)->send(new HunterMessageEmail($booking, $hunter, $message, false));
-                } catch (\Exception $e) {
-                    Log::warning('cancelCollection: failed to send email to hunter', [
-                        'booking_id' => $booking->id,
-                        'hunter_id'  => $hunter->id ?? null,
-                        'error'      => $e->getMessage(),
-                    ]);
-                }
-            }
-        }
-
-        // Удаляем все приглашения охотников, кроме мастера охотника (того, кто приглашал)
         try {
-            $masterHunter = $booking->masterHunter;
+            $this->bookingCollectionService->cancelCollection($booking, $this->currentUser());
 
-            if (!$masterHunter) {
-                return $this->sendError('Не найден мастер охотник этой брони')->setStatusCode(400);
-            }
-            $booking->getInvitationsExceptMaster()->each(function ($invitation) {
-                $invitation->delete();
-            });
-        } catch (\Exception $e) {
-            Log::warning('cancelCollection: failed to force delete invitations', [
-                'booking_id' => $booking->id,
-                'error' => $e->getMessage(),
+            return $this->sendSuccess([
+                'message' => __('Сбор охотников для этой брони отменён.')
             ]);
+        } catch (DomainException $e) {
+            return $this->sendError($e->getMessage())->setStatusCode(422);
+        } catch (\Throwable $e) {
+            Log::error('cancelCollection failed', [
+                'booking_id' => $booking->id,
+                'error' => $e->getMessage()
+            ]);
+
+            return $this->sendError('Server error')->setStatusCode(500);
         }
-
-        // Уведомляем создателя брони о смене статуса
-        try {
-            $old = app()->getLocale();
-            $bookingLocale = $booking->getMeta('locale');
-            if ($bookingLocale) {
-                app()->setLocale($bookingLocale);
-            }
-
-            if ($booking->create_user) {
-                $creator = User::find($booking->create_user);
-                if ($creator && !empty($creator->email)) {
-                    $customMessage = __('Сбор охотников для этой брони отменён.');
-                    Mail::to($creator->email)->send(new StatusUpdatedEmail($booking, 'customer', $customMessage));
-                }
-            }
-
-            app()->setLocale($old);
-        } catch (\Exception | \Swift_TransportException $e) {
-            Log::warning('cancelCollection: failed to send status email to creator: ' . $e->getMessage());
-        }
-
-        return $this->sendSuccess([
-            'message' => __('Сбор охотников для этой брони отменён.')
-        ]);
     }
 
     /**
@@ -1018,172 +936,67 @@ class BookingController extends \App\Http\Controllers\Controller
 
     /**
      * Сохраняет приглашение охотника для брони
-     *
-     * @param \Illuminate\Http\Request $request
-     * @param \Modules\Booking\Models\Booking $booking
-     * @return \Illuminate\Http\JsonResponse
      */
-    public function inviteHunter(Request $request, Booking $booking): JsonResponse
+    public function inviteHunter(InviteHunterRequest $request, Booking $booking): JsonResponse
     {
         if (!Auth::check()) {
             return $this->sendError('Необходима авторизация')->setStatusCode(401);
         }
 
-        $hunterId = (int) $request->input('hunter_id');
-        if (!$hunterId) {
-            return $this->sendError('Не передан hunter_id')->setStatusCode(422);
-        }
-
-        $hunter = User::find($hunterId);
-        if (!$hunter) {
-            return $this->sendError('Пользователь не найден')->setStatusCode(404);
-        }
-
-        $bookingHunter = BookingHunter::where('booking_id', $booking->id)->first();
-        if (!$bookingHunter) {
-            return $this->sendError('Запись BookingHunter для этой брони не найдена')->setStatusCode(404);
-        }
-
-        $invitation = BookingHunterInvitation::updateOrCreate(
-            [
-                'booking_hunter_id' => $bookingHunter->id,
-                'hunter_id'         => $hunterId,
-            ],
-            [
-                'invited'         => true,
-                'status'          => 'pending',
-                'invited_at'      => now(),
-                'invitation_token'=> $booking->code . '-' . $hunterId,
-            ]
-        );
-
-        // Пытаемся сразу отправить письмо-приглашение охотнику
-        // НЕ отправляем письмо создателю брони - он уже приглашен автоматически
-        if (!empty($hunter->email) && $hunterId != $booking->create_user) {
-            try {
-                $message = __('Вас пригласили в сбор для брони №:id', ['id' => $booking->id]);
-                Mail::to($hunter->email)->send(new HunterMessageEmail($booking, $hunter, $message, true));
-            } catch (\Exception $e) {
-                Log::warning('inviteHunter: failed to send invitation email', [
-                    'booking_id' => $booking->id,
-                    'hunter_id'  => $hunterId,
-                    'error'      => $e->getMessage(),
-                ]);
-            }
-        }
-
         try {
-            event(new \Modules\Booking\Events\HunterInvitedEvent($booking, $hunterId));
-        } catch (\Exception $e) {
-            Log::error('Ошибка отправки HunterInvitedEvent', [
-                'error' => $e->getMessage(),
-                'booking_id' => $booking->id,
-                'hunter_id' => $hunterId
-            ]);
-        }
+            $invitation = $this->bookingInvitationService->invite($booking, (int) $request->input('hunter_id'));
 
-        return $this->sendSuccess([
-            'data'    => [
-                'invitation_id' => $invitation->id,
-            ],
-        ]);
+            return $this->sendSuccess([
+                'data' => [
+                    'invitation_id' => $invitation->id,
+                ],
+            ]);
+
+        }catch (ModelNotFoundException $e) {
+            return $this->sendError($e->getMessage())->setStatusCode(404);
+        } catch (\Throwable $e) {
+            Log::error('inviteHunter failed', [
+                'booking_id' => $booking->id,
+                'error' => $e->getMessage()
+            ]);
+
+            return $this->sendError('Server error')->setStatusCode(500);
+        }
     }
 
     /**
      * Отправка приглашения охотнику по email (даже если пользователя нет в системе)
      */
-    public function inviteHunterByEmail(Request $request, Booking $booking): JsonResponse
+    public function inviteHunterByEmail(InviteHunterByEmailRequest $request, Booking $booking): JsonResponse
     {
         if (!Auth::check()) {
             return $this->sendError('Необходима авторизация')->setStatusCode(401);
         }
 
-        $email = trim((string)$request->input('email', ''));
-        if (!$email) {
-            return $this->sendError('Не передан email')->setStatusCode(422);
-        }
+        try {
+            $invitation = $this->bookingInvitationService->inviteByEmail($booking, trim((string) $request->input('email')));
 
-        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-            return $this->sendError('Некорректный email адрес')->setStatusCode(422);
-        }
-        $hunter = User::where('email', $email)->first();
-
-        if ($hunter && $hunter->id) {
-            $request->merge(['hunter_id' => $hunter->id]);
-            return $this->inviteHunter($request, $booking);
-        }
-        $bookingHunter = BookingHunter::where('booking_id', $booking->id)->first();
-        if (!$bookingHunter) {
-            return $this->sendError('Запись BookingHunter для этой брони не найдена')->setStatusCode(404);
-        }
-        $invitation = BookingHunterInvitation::where('booking_hunter_id', $bookingHunter->id)
-            ->where('email', $email)
-            ->whereNull('hunter_id')
-            ->first();
-
-        if ($invitation) {
-            $invitation->update([
-                'invited'         => true,
-                'status'          => 'pending',
-                'invited_at'      => now(),
-                'invitation_token'=> $booking->code . '-' . md5($email),
+            return $this->sendSuccess([
+                'message' => __('Приглашение отправлено'),
+                'data' => [
+                    'invitation_id' => $invitation->id,
+                ],
             ]);
-        } else {
-            $invitation = BookingHunterInvitation::create([
-                'booking_hunter_id' => $bookingHunter->id,
-                'email'             => $email,
-                'hunter_id'         => null,
-                'invited'           => true,
-                'status'            => 'pending',
-                'invited_at'        => now(),
-                'invitation_token'  => $booking->code . '-' . md5($email),
+
+        } catch (\Throwable $e) {
+            Log::error('inviteHunterByEmail failed', [
+                'booking_id' => $booking->id,
+                'error' => $e->getMessage(),
             ]);
+
+            return $this->sendError('Server error')->setStatusCode(500);
         }
-
-        // НЕ отправляем письмо создателю брони - он уже приглашен автоматически
-        $creatorEmail = null;
-        if($booking->create_user) {
-            $creator = User::find($booking->create_user);
-            if($creator) {
-                $creatorEmail = $creator->email;
-            }
-        }
-
-        // Отправляем письмо только если email не принадлежит создателю брони
-        if($email !== $creatorEmail) {
-            try {
-                $message = __('Вас пригласили в сбор для брони №:id', ['id' => $booking->id]);
-                $tempHunter = new User();
-                $tempHunter->setAttribute('id', 0);
-                $tempHunter->setAttribute('email', $email);
-                $tempHunter->setAttribute('first_name', '');
-                $tempHunter->setAttribute('last_name', '');
-                $tempHunter->setAttribute('name', $email);
-                $tempHunter->syncOriginal();
-
-                Mail::to($email)->send(new HunterMessageEmail($booking, $tempHunter, $message, true));
-            } catch (\Exception $e) {
-                Log::error('inviteHunterByEmail: failed to send invitation email', [
-                    'booking_id' => $booking->id,
-                    'email'      => $email,
-                    'error'      => $e->getMessage(),
-                ]);
-                return $this->sendError('Не удалось отправить приглашение: ' . $e->getMessage())->setStatusCode(500);
-            }
-        }
-
-        return $this->sendSuccess([
-            'message' => __('Приглашение отправлено на email :email', ['email' => $email]),
-            'data'    => [
-                'invitation_id' => $invitation->id,
-            ],
-        ]);
     }
 
     /**
      * Отправка письма выбранному охотнику с произвольным сообщением
      */
-    public function emailHunter(Request $request, Booking $booking): JsonResponse
+    public function emailHunter(EmailHunterRequest $request, Booking $booking): JsonResponse
     {
         if (!Auth::check()) {
             return $this->sendError('Необходима авторизация')->setStatusCode(401);
@@ -1191,26 +1004,17 @@ class BookingController extends \App\Http\Controllers\Controller
 
         $hunterId = (int) $request->input('hunter_id');
         $message  = trim((string)$request->input('message', ''));
-
-        if (!$hunterId) {
-            return $this->sendError('Не передан hunter_id')->setStatusCode(422);
-        }
-        if ($message === '') {
-            return $this->sendError('Введите текст сообщения')->setStatusCode(422);
-        }
-
         $hunter = User::find($hunterId);
 
-        if (!$hunter || empty($hunter->email)) {
+        if (!$hunter) {
+            return $this->sendError('Пользователь не найден')->setStatusCode(404);
+        }
+
+        if (empty($hunter->email)) {
             return $this->sendError('У выбранного пользователя не указан email')->setStatusCode(404);
         }
 
-        try {
-            Mail::to($hunter->email)->send(new HunterMessageEmail($booking, $hunter, $message, false));
-        } catch (\Exception $e) {
-            Log::warning('emailHunter: ' . $e->getMessage());
-            return $this->sendError('Не удалось отправить письмо')->setStatusCode(500);
-        }
+        $this->mailService->send($hunter->email, new HunterMessageEmail($booking, $hunter, $message, false));
 
         return $this->sendSuccess([
             'message' => __('Message has been sent'),
@@ -1227,52 +1031,7 @@ class BookingController extends \App\Http\Controllers\Controller
             return $this->sendError('Необходима авторизация')->setStatusCode(401);
         }
 
-        $allInvitations = $booking->getAllInvitations();
-        $invitations = $allInvitations->whereNotIn('status', ['removed']);
-
-        $hunters = $invitations->map(function($invitation) {
-            $hunter = $invitation->hunter;
-            $isCurrentUser = $hunter->id == auth()->id();
-
-            if ($hunter) {
-                return [
-                    'id' => $hunter->id,
-                    'name' => $data->display_name ?? null,
-                    'user_name' => $hunter->user_name,
-                    'first_name' => $hunter->first_name,
-                    'last_name' => $hunter->last_name,
-                    'email' => $hunter->email,
-                    'phone' => $hunter->phone,
-                    'invited' => true,
-                    'is_self' => $isCurrentUser,
-                    'invitation_status' => $invitation->status,
-                    'prepayment_paid' => (bool) ($invitation->prepayment_paid ?? false),
-                    'prepayment_paid_status' => $invitation->prepayment_paid_status,
-                    'prepayment_badge' => $invitation->prepayment_badge,
-                ];
-            }
-
-            if (!$hunter && $invitation->email) {
-                return [
-                    'id' => null,
-                    'name' => $invitation->email,
-                    'user_name' => null,
-                    'first_name' => '',
-                    'last_name' => '',
-                    'email' => $invitation->email,
-                    'phone' => null,
-                    'invited' => true,
-                    'is_self' => $isCurrentUser,
-                    'invitation_status' => $invitation->status,
-                    'is_external' => true,
-                    'prepayment_paid' => (bool) ($invitation->prepayment_paid ?? false),
-                    'prepayment_paid_status' => $invitation->prepayment_paid_status,
-                    'prepayment_badge' => $invitation->prepayment_badge,
-                ];
-            }
-
-            return null;
-        })->filter()->values();
+        $hunters = $this->bookingInvitationService->getInvitedHunters($booking, Auth::id());
 
         return $this->sendSuccess([
             'hunters' => $hunters,
@@ -1288,27 +1047,10 @@ class BookingController extends \App\Http\Controllers\Controller
         if (!Auth::check()) {
             return $this->sendError('Необходима авторизация')->setStatusCode(401);
         }
-
-        $userId = Auth::id();
-        $invitation = $booking->getCurrentUserInvitation();
-
-        if (!$invitation) {
-            return $this->sendError('Приглашение не найдено')->setStatusCode(404);
-        }
-
-        $invitation->status = 'accepted';
-        $invitation->accepted_at = now();
-        $invitation->save();
-
-        // Отправляем событие для обновления счетчика в реальном времени
         try {
-            event(new \Modules\Booking\Events\HunterInvitationAcceptedEvent($booking, $userId));
-        } catch (\Exception $e) {
-            \Log::error('Ошибка отправки HunterInvitationAcceptedEvent', [
-                'booking_id' => $booking->id,
-                'hunter_id' => $userId,
-                'error' => $e->getMessage()
-            ]);
+            $this->bookingInvitationService->accept($booking, Auth::id());
+        } catch (\DomainException $e) {
+            return $this->sendError($e->getMessage())->setStatusCode(404);
         }
 
         return $this->sendSuccess([
@@ -1319,7 +1061,7 @@ class BookingController extends \App\Http\Controllers\Controller
     /**
      * Отказаться от приглашения на бронь
      */
-    public function declineInvitation(Request $request, Booking $booking): JsonResponse
+    public function declineInvitation(Booking $booking): JsonResponse
     {
         if (!Auth::check()) {
             return $this->sendError('Необходима авторизация')->setStatusCode(401);
@@ -1358,72 +1100,8 @@ class BookingController extends \App\Http\Controllers\Controller
             return $this->sendError(__('This booking cannot be cancelled'));
         }
 
-        $booking->status = Booking::CANCELLED;
-        $booking->save();
-
-        $booking->skip_status_email = true;
-        event(new BookingUpdatedEvent($booking));
-
-        // Удаляем все приглашения охотников, кроме мастера охотника (того, кто приглашал)
-        try {
-            // Получаем все booking_hunter_id для этой брони, где is_master = false (не мастера)
-            $nonMasterBookingHunterIds = BookingHunter::where('booking_id', $booking->id)
-                ->where('is_master', false)
-                ->pluck('id');
-
-            if ($nonMasterBookingHunterIds->isNotEmpty()) {
-                // Жёстко удаляем все приглашения, связанные с не-мастерами
-                $deletedCount = BookingHunterInvitation::whereIn('booking_hunter_id', $nonMasterBookingHunterIds)->forceDelete();
-
-                Log::info('cancelBooking: force delete приглашений охотников (кроме мастера)', [
-                    'booking_id' => $booking->id,
-                    'non_master_booking_hunter_ids' => $nonMasterBookingHunterIds->toArray(),
-                    'deleted' => $deletedCount,
-                ]);
-            } else {
-                Log::info('cancelBooking: нет не-мастеров для удаления приглашений', [
-                    'booking_id' => $booking->id,
-                ]);
-            }
-        } catch (\Exception $e) {
-            Log::warning('cancelBooking: failed to force delete invitations', [
-                'booking_id' => $booking->id,
-                'error' => $e->getMessage(),
-            ]);
-        }
-
-        try {
-            $old = app()->getLocale();
-            $bookingLocale = $booking->getMeta('locale');
-            if($bookingLocale){
-                app()->setLocale($bookingLocale);
-            }
-
-            if($isBaseAdmin) {
-                if($booking->create_user) {
-                    Mail::to(User::find($booking->create_user))->send(new StatusUpdatedEmail($booking, 'customer'));
-                }
-            } else {
-                if(!$booking->relationLoaded('hotel')) {
-                    $booking->load('hotel');
-                }
-
-                if($booking->hotel && $booking->hotel->admin_base) {
-                    $baseAdmin = User::find($booking->hotel->admin_base);
-                    if($baseAdmin && $baseAdmin->email) {
-                        Mail::to($baseAdmin->email)->send(new StatusUpdatedEmail($booking, 'admin', null, $baseAdmin));
-                    }
-                }
-
-                if (!empty($booking->email)) {
-                    Mail::to($booking->email)->send(new StatusUpdatedEmail($booking, 'customer'));
-                }
-            }
-
-            app()->setLocale($old);
-        } catch(\Exception | \Swift_TransportException $e){
-            Log::warning('sendCompletedStatusEmail: '.$e->getMessage());
-        }
+        $this->bookingCollectionService->cancel($booking);
+        $this->bookingNotificationService->sendCancelledEmail($booking, $isBaseAdmin);
 
         return $this->sendSuccess([
             'message' => __('Booking has been cancelled successfully')
@@ -1442,31 +1120,12 @@ class BookingController extends \App\Http\Controllers\Controller
             return $this->sendError(__("You don't have access."))->setStatusCode(403);
         }
 
-        if (in_array($booking->status, [Booking::CANCELLED, Booking::COMPLETED])) {
-            return $this->sendError(__('This booking cannot be completed'));
-        }
-
-        $booking->status = Booking::COMPLETED;
-        $booking->save();
-        event(new BookingUpdatedEvent($booking));
-
         try {
-            $old = app()->getLocale();
-            $bookingLocale = $booking->getMeta('locale');
-            if($bookingLocale){
-                app()->setLocale($bookingLocale);
-            }
+            $this->bookingCollectionService->complete($booking);
+            $this->bookingNotificationService->sendCompletedEmail($booking);
 
-            if($booking->create_user) {
-                $creator = User::find($booking->create_user);
-                if($creator && !empty($creator->email)) {
-                    Mail::to($creator->email)->send(new StatusUpdatedEmail($booking, 'customer'));
-                }
-            }
-
-            app()->setLocale($old);
-        } catch(\Exception | \Swift_TransportException $e){
-            Log::warning('sendCompletedStatusEmail: '.$e->getMessage());
+        } catch (\DomainException $e) {
+            return $this->sendError($e->getMessage(), [], 422);
         }
 
         return $this->sendSuccess([
