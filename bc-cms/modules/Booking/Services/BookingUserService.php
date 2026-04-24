@@ -117,7 +117,7 @@ class BookingUserService
         $invitation = $booking->invitationUser($data->oldHunterId);
 
         if (!$invitation) {
-            throw new \Exception('Invitation not found for this hunter in booking');
+            throw new \RuntimeException('Invitation not found for this hunter in booking');
         }
 
             $invitation->hunter_id = $data->newHunterId;
@@ -138,8 +138,8 @@ class BookingUserService
                 'is_external' => $data->isExternal ?? false,
                 'invitation_status' => $data->invitationStatus ?? BookingHunterInvitation::STATUS_ACCEPTED,
                 'prepayment_paid' => (bool) ($invitation->prepayment_paid ?? false),
-                'prepayment_paid_status' => $invitation? $invitation->prepayment_paid_status: null,
-                'prepayment_badge' => $invitation? $invitation->prepayment_badge: null,
+                'prepayment_paid_status' => $invitation->prepayment_paid_status,
+                'prepayment_badge' => $invitation->prepayment_badge,
             ],
         ];
     }
