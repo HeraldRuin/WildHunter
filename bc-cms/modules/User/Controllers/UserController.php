@@ -15,6 +15,7 @@ use Modules\Booking\Models\BookingHunter;
 use Modules\Booking\Models\BookingHunterInvitation;
 use Modules\Booking\Models\Enquiry;
 use Modules\Booking\Models\Service;
+use Modules\Booking\Services\BookingUserService;
 use Modules\Booking\Services\Calculation\BookingCalculatingService;
 use Modules\Car\Models\Car;
 use Modules\Event\Models\Event;
@@ -42,7 +43,7 @@ class UserController extends FrontendController
     private Booking $booking;
     protected AddDataInView $cabinetService;
 
-    public function __construct(Booking $booking, Enquiry $enquiry, AddDataInView $cabinetService, protected BookingCalculatingService $bookingCalculatingService)
+    public function __construct(Booking $booking, Enquiry $enquiry, AddDataInView $cabinetService, protected BookingCalculatingService $bookingCalculatingService, protected BookingUserService $bookingUserService)
     {
         $this->enquiryClass = $enquiry;
         parent::__construct();
@@ -429,62 +430,6 @@ class UserController extends FrontendController
 
     public function searchHunters(Request $request): JsonResponse
     {
-        $query = trim($request->get('query'));
-        $bookingId = (int) $request->get('booking_id');
-
-        $users = User::query()
-            ->where(function($q) use ($query) {
-                $q->where('user_name', 'LIKE', $query.'%')
-                    ->orWhere('first_name', 'LIKE', $query.'%')
-                    ->orWhere('last_name', 'LIKE', $query.'%')
-                    ->orWhere('email', 'LIKE', $query.'%')
-                    ->orWhere('id', 'LIKE', $query.'%');
-            })
-            ->limit(10)
-            ->get(['id','user_name','first_name','last_name','email','phone']);
-
-        // По умолчанию считаем, что никто не приглашён
-        foreach ($users as $user) {
-            $user->invited = false;
-            $user->invitation_status = null;
-        }
-
-        // Если есть конкретная бронь — проверяем статус приглашений
-        if ($bookingId) {
-            $invitations = BookingHunterInvitation::query()
-                ->whereHas('bookingHunter', function ($q) use ($bookingId) {
-                    $q->where('booking_id', $bookingId);
-                })
-                ->whereIn('hunter_id', $users->pluck('id'))
-                ->whereNull('deleted_at')
-                ->get(['hunter_id', 'status']);
-
-            foreach ($users as $user) {
-                $invitation = $invitations->firstWhere('hunter_id', $user->id);
-                if ($invitation) {
-                    if ($invitation->status === 'declined') {
-                        $user->invited = false;
-                        $user->invitation_status = 'declined';
-                    } else {
-                        $user->invited = true;
-                        $user->invitation_status = $invitation->status;
-                    }
-                }
-            }
-        }
-
-        return response()->json(
-            $users->map(function ($user) {
-                return [
-                    'id' => $user->id,
-                    'name' => $user->display_name,
-                    'user_name' => $user->user_name,
-                    'email' => $user->email,
-                    'phone' => $user->phone,
-                    'invited' => $user->invited,
-                    'invitation_status' => $user->invitation_status,
-                ];
-            })
-        );
+        return response()->json($this->bookingUserService->searchHunters($request->get('query'), (int) $request->get('booking_id')));
     }
 }
