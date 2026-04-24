@@ -74,7 +74,7 @@
                 </div>
                 <!-- Информация о выбранном охотнике (показываем только если текст в поле соответствует выбранному охотнику) -->
                 <div
-                    v-if="hunterSlot.hunter && hunterSlot.query && ((hunterSlot.hunter.is_external && hunterSlot.query.trim() === hunterSlot.hunter.email) || (!hunterSlot.hunter.is_external && hunterSlot.query.trim() === ((hunterSlot.hunter.user_name || (hunterSlot.hunter.first_name + ' ' + hunterSlot.hunter.last_name)).trim())))"
+                    v-if="hunterSlot.hunter && hunterSlot.query && ((hunterSlot.hunter.is_external && hunterSlot.query.trim() === hunterSlot.hunter.email) || (!hunterSlot.hunter.is_external && hunterSlot.query.trim() === ((hunterSlot.hunter.user_name || (hunterSlot.hunter.name)).trim())))"
                     class="mt-2">
                     <div class="d-flex align-items-center mb-1">
                         <span class="text-muted small">@{{ hunterSlot.hunter.email }}</span>
@@ -83,7 +83,7 @@
             </div>
             <div class="d-flex align-items-start">
                 <button
-                    v-if="hunterSlot.hunter && hunterSlot.query && ((hunterSlot.hunter.is_external && hunterSlot.query.trim() === hunterSlot.hunter.email) || (!hunterSlot.hunter.is_external && hunterSlot.query.trim() === ((hunterSlot.hunter.user_name || (hunterSlot.hunter.first_name + ' ' + hunterSlot.hunter.last_name)).trim())))"
+                    v-if="hunterSlot.hunter && hunterSlot.query && ((hunterSlot.hunter.is_external && hunterSlot.query.trim() === hunterSlot.hunter.email) || (!hunterSlot.hunter.is_external && hunterSlot.query.trim() === ((hunterSlot.hunter.user_name || (hunterSlot.hunter.name)).trim())))"
                     type="button"
                     class="btn btn-sm me-2 ml-2"
                     :class="(hunterSlot.hunter && hunterSlot.hunter.invited && hunterSlot.hunter.invitation_status !== 'declined') ? 'btn-success' : 'btn-outline-primary'"
