@@ -34,8 +34,6 @@ use Modules\Booking\Events\BookingUpdatedEvent;
 use Modules\Booking\Events\EnquirySendEvent;
 use Modules\Booking\Events\SetPaidAmountEvent;
 use Modules\Booking\Models\Booking;
-use Modules\Booking\Models\BookingHunter;
-use Modules\Booking\Models\BookingHunterInvitation;
 use Modules\Booking\Models\BookingPassenger;
 use Modules\Booking\Models\BookingRoomPlace;
 use Modules\Booking\Models\Enquiry;
@@ -1363,41 +1361,23 @@ class BookingController extends \App\Http\Controllers\Controller
         ]);
     }
 
+    /**
+     * @throws \Exception
+     */
     public function replaceHunter(Request $request, Booking $booking): JsonResponse
     {
         $data = ReplaceHunterData::fromRequest($request);
-        $duplicate = $booking->invitationUser($data->newHunterId);
 
-        if ($duplicate) {
-            return $this->sendError(__('Such a hunter is already on the list of this booking'));
-        }
+        $result = $this->bookingUserService->replaceHunter($booking, $data);
 
-        $invitation = $booking->invitationUser($data->oldHunterId);
-
-        if ($invitation) {
-            $invitation->hunter_id = $data->newHunterId;
-            $invitation->email = !empty($data->email) ? $data->email : null;
-            $invitation->save();
-
-            if ($booking->shouldCheckPrepayment()){
-                $this->bookingCollectionService->checkPrepaymentAllPaid($booking, $invitation);
-            }
+        if (!($result['success'] ?? false)) {
+            return $this->sendError(__($result['error']));
         }
 
         return response()->json([
             'status' => true,
             'message' => 'Охотник успешно заменён',
-            'hunter' => [
-                'id' => $data->newHunterId,
-                'email' => $invitation->email ?? null,
-                'name' => $data->userName ?? null,
-                'user_name' => $data->userNik ?? null,
-                'is_external' => $data->isExternal ?? false,
-                'invitation_status' => $data->invitationStatus ?? BookingHunterInvitation::STATUS_ACCEPTED,
-                'prepayment_paid' => (bool) ($invitation->prepayment_paid ?? false),
-                'prepayment_paid_status' => $invitation? $invitation->prepayment_paid_status: null,
-                'prepayment_badge' => $invitation? $invitation->prepayment_badge: null,
-            ],
+            'hunter' => $result['data'],
         ]);
     }
     public function places(Booking $booking)
