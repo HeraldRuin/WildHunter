@@ -10,6 +10,7 @@ use Modules\Booking\Emails\HunterMessageEmail;
 use Modules\Booking\Events\HunterInvitationAcceptedEvent;
 use Modules\Booking\Events\HunterInvitedEvent;
 use Modules\Booking\Models\Booking;
+use Modules\Booking\Models\BookingHunter;
 use Modules\Booking\Models\BookingHunterInvitation;
 
 class BookingInvitationService
@@ -223,5 +224,31 @@ class BookingInvitationService
         $invitation->save();
 
         event(new HunterInvitationAcceptedEvent($booking, $userId));
+    }
+
+    public function handleCodeAccess($code, $authUser): void
+    {
+        if ($code) {
+            $booking = Booking::where('code', $code)->first();
+
+            if (!$booking) {
+                abort(403);
+            }
+
+            $masterBookingHunter = BookingHunter::where('booking_id', $booking->id)->where('is_master', true)->first();
+            if ($masterBookingHunter) {
+                $exists = BookingHunterInvitation::where('booking_hunter_id', $masterBookingHunter->id)
+                    ->where('hunter_id', $authUser->id)
+                    ->exists();
+
+                if (!$exists) {
+                    BookingHunterInvitation::create([
+                        'booking_hunter_id' => $masterBookingHunter->id,
+                        'hunter_id' => $authUser->id,
+                        'invited' => true
+                    ]);
+                }
+            }
+        }
     }
 }

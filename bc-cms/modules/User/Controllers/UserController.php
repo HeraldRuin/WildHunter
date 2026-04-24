@@ -11,10 +11,10 @@ use Illuminate\Validation\Rule;
 use Matrix\Exception;
 use Modules\Boat\Models\Boat;
 use Modules\Booking\Models\Booking;
-use Modules\Booking\Models\BookingHunter;
-use Modules\Booking\Models\BookingHunterInvitation;
 use Modules\Booking\Models\Enquiry;
 use Modules\Booking\Models\Service;
+use Modules\Booking\Services\BookingInvitationService;
+use Modules\Booking\Services\BookingStatusService;
 use Modules\Booking\Services\BookingUserService;
 use Modules\Booking\Services\Calculation\BookingCalculatingService;
 use Modules\Car\Models\Car;
@@ -43,7 +43,11 @@ class UserController extends FrontendController
     private Booking $booking;
     protected AddDataInView $cabinetService;
 
-    public function __construct(Booking $booking, Enquiry $enquiry, AddDataInView $cabinetService, protected BookingCalculatingService $bookingCalculatingService, protected BookingUserService $bookingUserService)
+    public function __construct(Booking $booking, Enquiry $enquiry, AddDataInView $cabinetService,
+        protected BookingCalculatingService $bookingCalculatingService,
+        protected BookingUserService $bookingUserService,
+        protected BookingInvitationService $bookingInvitationService,
+        protected BookingStatusService $bookingStatusService)
     {
         $this->enquiryClass = $enquiry;
         parent::__construct();
@@ -69,7 +73,7 @@ class UserController extends FrontendController
         $data['viewAdminCabinet'] = $user->hasRole('administrator');
         return view($view, $data);
     }
-    protected function getVendorDashboardData($user)
+    protected function getVendorDashboardData($user): array
     {
         return [
             'cards_report'       => $this->booking->getTopCardsReportForVendor($user->id),
@@ -80,7 +84,7 @@ class UserController extends FrontendController
             ]
         ];
     }
-    protected function getBaseAdminDashboardData($user)
+    protected function getBaseAdminDashboardData($user): array
     {
         return [
             'cards_report'       => $this->booking->getTopCardsReportForBaseAdmin($user->id),
@@ -221,28 +225,7 @@ class UserController extends FrontendController
         $bookingId = $request->input('booking_id');
         $code = $request->input('code');
 
-        if ($code) {
-            $booking = Booking::where('code', $code)->first();
-
-            if (!$booking) {
-                abort(403);
-            }
-
-            $masterBookingHunter = BookingHunter::where('booking_id', $booking->id)->where('is_master', true)->first();
-            if ($masterBookingHunter) {
-                $exists = BookingHunterInvitation::where('booking_hunter_id', $masterBookingHunter->id)
-                    ->where('hunter_id', $authUser->id)
-                    ->exists();
-
-                if (!$exists) {
-                    BookingHunterInvitation::create([
-                        'booking_hunter_id' => $masterBookingHunter->id,
-                        'hunter_id' => $authUser->id,
-                        'invited' => true
-                    ]);
-                }
-            }
-        }
+        $this->bookingInvitationService->handleCodeAccess($code, $authUser);
 
         if (is_baseAdmin()){
             $userRole = 'baseadmin';
@@ -253,51 +236,9 @@ class UserController extends FrontendController
             $bookings = $this->booking->getBookingHistory($request->input('status'), $authUser->id, false, false, false, $bookingId);
         }
 
-        $allStatuses = config('booking.statuses');
-        $excludedByRole = [
-            'hunter' => [
-                Booking::COMPLETED,
-                Booking::PROCESSING,
-                Booking::CONFIRMED,
-                Booking::CANCELLED,
-                Booking::UNPAID,
-                Booking::PAID,
-                Booking::PARTIAL_PAYMENT,
-                Booking::START_COLLECTION,
-                Booking::PREPAYMENT_COLLECTION,
-                Booking::BED_COLLECTION,
-                Booking::FINISHED_BED
-            ],
-            'baseadmin' => [
-                Booking::PROCESSING,
-                Booking::CONFIRMED,
-                Booking::CANCELLED,
-                Booking::UNPAID,
-                Booking::PAID,
-                Booking::PARTIAL_PAYMENT,
-                Booking::START_COLLECTION,
-                Booking::PREPAYMENT_COLLECTION,
-                Booking::BED_COLLECTION,
-                Booking::FINISHED_BED,
-                Booking::INVITATION
-            ]
-        ];
+        $statuses = $this->bookingStatusService->getAllowedStatuses($userRole);
 
-        $dropdownStatuses = [
-            Booking::CANCELLED,
-            Booking::PROCESSING,
-            Booking::CONFIRMED,
-            Booking::START_COLLECTION,
-            Booking::FINISHED_COLLECTION,
-            Booking::PREPAYMENT_COLLECTION,
-            Booking::FINISHED_PREPAYMENT,
-            Booking::BED_COLLECTION,
-            Booking::FINISHED_BED,
-            Booking::PAID,
-        ];
-
-        $statuses = array_values(array_filter($allStatuses,fn($status) => !in_array($status, $excludedByRole[$userRole] ?? [])));
-
+        //Вывод калькуляции в главном шаблоне в колонке оплата админа базы
         $service = app(BookingCalculatingService::class);
         $user = Auth::user();
 
@@ -312,7 +253,7 @@ class UserController extends FrontendController
             'bookings' => $bookings,
             'hotelSlug' => $authUser->hotels?->first()?->slug,
             'statues'     => $statuses,
-            'dropdownStatuses'  => $dropdownStatuses,
+            'dropdownStatuses'  => $this->bookingStatusService->getDropdownStatuses(),
             'bookingId' => $bookingId,
             'bookingCode' => $code,
             'breadcrumbs' => [
@@ -417,7 +358,7 @@ class UserController extends FrontendController
 
     }
 
-    public function searchUser(Request $request)
+    public function searchUser(Request $request): JsonResponse
     {
         $query = trim($request->get('query'));
 
@@ -430,6 +371,7 @@ class UserController extends FrontendController
 
     public function searchHunters(Request $request): JsonResponse
     {
-        return response()->json($this->bookingUserService->searchHunters($request->get('query'), (int) $request->get('booking_id')));
+        $query = trim($request->get('query'));
+        return response()->json($this->bookingUserService->searchHunters($query, (int) $request->get('booking_id')));
     }
 }

@@ -149,18 +149,13 @@ class BookingController extends \App\Http\Controllers\Controller
             'user'       => auth()->user(),
             'is_api'     => $is_api,
             'booking_type'  => $booking->type,
-            'all_total'  => $this->getAllPay($booking->total, $booking->amount_hunting),
+            'all_total'  => $booking->total + $booking->amount_hunting,
             'trophyPrice' => $trophyPrice
         ];
         return view('Booking::frontend/checkout', $data);
     }
 
-    public function getAllPay($booking, $hunter)
-    {
-        return $booking + $hunter;
-    }
-
-    public function checkStatusCheckout($code)
+    public function checkStatusCheckout($code): JsonResponse
     {
         $booking = $this->booking::where('code', $code)->first();
         $data = [
@@ -658,7 +653,7 @@ class BookingController extends \App\Http\Controllers\Controller
             'user'       => auth()->user(),
             'ifAdminBase' => $ifAdminBase,
             'booking_type'  => $booking->type,
-            'all_total'  => $this->getAllPay($booking->total, $booking->amount_hunting),
+            'all_total'  => $booking->total + $booking->amount_hunting,
             'trophyPrice' => $trophyPrice
         ];
         if ($booking->gateway) {
