@@ -1390,10 +1390,8 @@ class BookingController extends \App\Http\Controllers\Controller
             'hunter' => [
                 'id' => $data->newHunterId,
                 'email' => $invitation->email ?? null,
-                'name' => $data->display_name ?? null,
-                'user_name' => $data->userName ?? null,
-                'first_name' => $data->firstName ?? null,
-                'last_name' => $data->lastName ?? null,
+                'name' => $data->userName ?? null,
+                'user_name' => $data->userNik ?? null,
                 'is_external' => $data->isExternal ?? false,
                 'invitation_status' => $data->invitationStatus ?? BookingHunterInvitation::STATUS_ACCEPTED,
                 'prepayment_paid' => (bool) ($invitation->prepayment_paid ?? false),
