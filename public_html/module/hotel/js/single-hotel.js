@@ -962,7 +962,6 @@
                 return animalInput ? animalInput.value : ''
             },
             onRoomSelectionChange: function(event) {
-                console.log('onRoomSelectionChange called', event.target.value);
                 var me = this;
                 var selectedValue = parseInt(event.target.value) || 0;
                 
@@ -970,7 +969,6 @@
                 if (selectedValue > 0) {
                     // Небольшая задержка, чтобы Vue успел обновить модель
                     setTimeout(function() {
-                        console.log('Calling validateRoomsSelection');
                         me.validateRoomsSelection();
                     }, 100);
                 } else {
@@ -998,7 +996,6 @@
                 
                 // Проверяем, что есть выбранные номера и даты
                 if (!this.start_date || !this.end_date) {
-                    console.log('No dates selected');
                     this.room_validation_error = '';
                     return;
                 }
@@ -1036,9 +1033,7 @@
                         };
                     })
                 };
-                
-                console.log('Sending validation request', requestData);
-                
+
                 $.ajax({
                     url: bookingCore.url + '/booking/validateRooms',
                     data: requestData,
@@ -1048,7 +1043,6 @@
                         console.log('Validation response', res);
                         me.onValidateRooms = false;
                         if (!res.status) {
-                            // Если есть ошибка, сохраняем её
                             if (res.message) {
                                 me.room_validation_error = res.message;
                             } else if (res.errors && typeof res.errors == 'object') {
@@ -1061,14 +1055,11 @@
                                 me.room_validation_error = errorMessages.join('<br>');
                             }
                         } else {
-                            // Валидация прошла успешно
                             me.room_validation_error = '';
                         }
                     },
                     error: function(e) {
                         me.onValidateRooms = false;
-                        // При ошибке запроса не показываем ошибку валидации
-                        // me.room_validation_error = 'Ошибка при проверке доступности';
                     }
                 });
             },
