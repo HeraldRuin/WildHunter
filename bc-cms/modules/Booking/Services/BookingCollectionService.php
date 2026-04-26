@@ -2,6 +2,7 @@
 
 namespace Modules\Booking\Services;
 
+use App\Exceptions\ConflictException;
 use App\Service\MailService;
 use App\User;
 use Illuminate\Support\Facades\DB;
@@ -14,11 +15,10 @@ use Modules\Booking\Events\BookingUpdatedEvent;
 use Modules\Booking\Models\Booking;
 use Modules\Booking\Models\BookingHunter;
 use Modules\Booking\Models\BookingHunterInvitation;
-use Modules\Booking\Models\BookingRoomPlace;
 
 readonly class BookingCollectionService
 {
-    public function __construct(private BookingTimerService $bookingTimerService, private BookingInvitationService $bookingInvitationService, protected MailService $mailService)
+    public function __construct(private BookingTimerService $bookingTimerService, private BookingInvitationService $bookingInvitationService, protected MailService $mailService, private BookingStatusService $bookingStatusService)
     {
     }
     public function checkPrepaymentAllPaid(Booking $booking, ?BookingHunterInvitation $invitation = null): void
@@ -33,18 +33,6 @@ readonly class BookingCollectionService
             $this->bookingTimerService->startPaidTimer($booking);
         }
     }
-
-    public function updateStatusIfAllPlacesSelected(Booking $booking): void
-    {
-        $paidCount = $booking->countAcceptedAndPaidHunters();
-        $alreadyHasPlace = BookingRoomPlace::where('booking_id', $booking->id)->count() === $paidCount;
-
-        if ($paidCount > 0 && $paidCount === $alreadyHasPlace) {
-            $booking->status = Booking::FINISHED_BED;
-            $booking->save();
-        }
-    }
-
     public function markAllPendingAsUnpaid(Booking $booking): void
     {
         $unpaidHunters = $booking->pendingInvitationsOfHunters();
@@ -57,7 +45,27 @@ readonly class BookingCollectionService
         }
     }
 
-    public function finishCollection(Booking $booking, $user): void
+    /**
+     * @throws ConflictException
+     */
+    public function confirmBooking(Booking $booking): array
+    {
+        if ($booking->status !== 'processing') {
+            throw new ConflictException(
+                errorCode: 'booking_not_confirmable',
+                domain: 'booking'
+            );
+        }
+
+        $booking->status = Booking::CONFIRMED;
+        $booking->save();
+
+        return [
+            'code' => 'booking_confirmed',
+        ];
+    }
+
+    public function finishCollection(Booking $booking, $user): array
     {
         $this->checkAccess($booking, $user);
 
@@ -120,9 +128,13 @@ readonly class BookingCollectionService
 
         $booking->save();
         event(new BookingFinishEvent($booking));
+
+        return [
+            'code' => 'gathering_has_completed'
+        ];
     }
 
-    public function cancelCollection(Booking $booking, $user): void
+    public function cancelCollection(Booking $booking, $user): array
     {
         $this->checkAccess($booking, $user);
         $this->checkCancelStatus($booking);
@@ -136,6 +148,10 @@ readonly class BookingCollectionService
 
             event(new BookingUpdatedEvent($booking));
         });
+
+        return [
+            'code' => 'hunter_gathering_cancelled'
+        ];
     }
 
     private function checkAccess(Booking $booking, User $user): void
@@ -239,25 +255,36 @@ readonly class BookingCollectionService
         }
     }
 
-    public function complete(Booking $booking): void
+    /**
+     * @throws ConflictException
+     */
+    public function complete(Booking $booking): array
     {
-        if (in_array($booking->status, [
-            Booking::CANCELLED,
-            Booking::COMPLETED
-        ])) {
-            throw new \DomainException('This booking cannot be completed');
-        }
+        $this->bookingStatusService->canChangeBookingState($booking);
 
         $booking->status = Booking::COMPLETED;
         $booking->save();
 
         event(new BookingUpdatedEvent($booking));
+
+        return [
+            'code' => 'booking_completed',
+        ];
     }
 
-    public function cancel(Booking $booking): void
+    /**
+     * @throws ConflictException
+     */
+    public function cancel(Booking $booking): array
     {
+        $this->bookingStatusService->canChangeBookingState($booking);
+
         $this->markCancelled($booking);
         $this->cleanupHunterInvitations($booking);
+
+        return [
+            'code' => 'booking_cancelled',
+        ];
     }
 
     public function markCancelled(Booking $booking): void

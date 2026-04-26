@@ -2,6 +2,9 @@
 
 namespace Modules\Booking\Services;
 
+use App\Exceptions\ConflictException;
+use App\Exceptions\ForbiddenException;
+use App\Exceptions\NotFoundException;
 use App\User;
 use Illuminate\Support\Collection;
 use Modules\Booking\DTO\ReplaceHunterData;
@@ -12,31 +15,41 @@ use Modules\Booking\Models\BookingHunterInvitation;
 class BookingUserService
 {
     public function __construct(protected BookingCollectionService $bookingCollectionService){}
-    public function changeUser(Booking $booking, int $userId): void
+
+    /**
+     * @throws NotFoundException
+     */
+    public function changeUser(Booking $booking, int $userId): array
     {
         $booking->create_user = $userId;
         $booking->save();
 
-        if (!$userId) {
-            return;
-        }
-
         $user = User::find($userId);
 
         if (!$user) {
-            return;
+            throw new NotFoundException(
+                errorCode: 'user_not_found',
+                domain: 'booking'
+            );
         }
 
-        $bookingHunter = BookingHunter::where('booking_id', $booking->id)->first();
+        $bookingHunter = $booking->masterHunter;
 
         if (!$bookingHunter) {
-            return;
+            throw new NotFoundException(
+                errorCode: 'master_not_found',
+                domain: 'booking'
+            );
         }
 
         $bookingHunter->invited_by = $userId;
         $bookingHunter->is_master = $user->hasRole('hunter');
         $bookingHunter->creator_role = $user->role->code ?? null;
         $bookingHunter->save();
+
+        return [
+            'code' => 'customer_changed',
+        ];
     }
 
     public function searchHunters(string $query, int $bookingId = null): Collection
@@ -108,16 +121,19 @@ class BookingUserService
     public function replaceHunter(Booking $booking, ReplaceHunterData $data): array
     {
         if ($booking->invitationUser($data->newHunterId)) {
-            return [
-                'success' => false,
-                'error' => 'Such a hunter is already on the list of this booking',
-            ];
+            throw new ConflictException(
+                errorCode: 'hunter_already_in_booking',
+                domain: 'booking'
+            );
         }
 
         $invitation = $booking->invitationUser($data->oldHunterId);
 
         if (!$invitation) {
-            throw new \RuntimeException('Invitation not found for this hunter in booking');
+            throw new NotFoundException(
+                errorCode: 'booking_invitation_not_found',
+                domain: 'booking'
+            );
         }
 
             $invitation->hunter_id = $data->newHunterId;
@@ -129,17 +145,19 @@ class BookingUserService
             }
 
         return [
-            'success' => true,
+            'code' => 'hunter_replace',
             'data' => [
-                'id' => $data->newHunterId,
-                'email' => $invitation->email?? null,
-                'name' => $data->userName?? null,
-                'user_name' => $data->userNik?? null,
-                'is_external' => $data->isExternal ?? false,
-                'invitation_status' => $data->invitationStatus ?? BookingHunterInvitation::STATUS_ACCEPTED,
-                'prepayment_paid' => (bool) ($invitation->prepayment_paid ?? false),
-                'prepayment_paid_status' => $invitation->prepayment_paid_status,
-                'prepayment_badge' => $invitation->prepayment_badge,
+                'hunter' => [
+                    'id' => $data->newHunterId,
+                    'email' => $invitation->email?? null,
+                    'name' => $data->userName?? null,
+                    'user_name' => $data->userNik?? null,
+                    'is_external' => $data->isExternal ?? false,
+                    'invitation_status' => $data->invitationStatus ?? BookingHunterInvitation::STATUS_ACCEPTED,
+                    'prepayment_paid' => (bool) ($invitation->prepayment_paid ?? false),
+                    'prepayment_paid_status' => $invitation->prepayment_paid_status,
+                    'prepayment_badge' => $invitation->prepayment_badge,
+                ],
             ],
         ];
     }

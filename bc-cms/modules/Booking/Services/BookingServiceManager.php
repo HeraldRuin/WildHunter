@@ -127,22 +127,35 @@ class BookingServiceManager
         ->get();
 
         return [
-            'trophies'      => $trophies,
-            'penalties'     => $penalties,
-            'preparations'  => $preparations,
-            'foods'         => $services->where('service_type', AddetionalPrice::FOOD)->values(),
-            'addetionals'   => $addetionals,
-            'spendings'     => $spendings,
+            'data' => [
+                'trophies'      => $trophies,
+                'penalties'     => $penalties,
+                'preparations'  => $preparations,
+                'foods'         => $services->where('service_type', AddetionalPrice::FOOD)->values(),
+                'addetionals'   => $addetionals,
+                'spendings'     => $spendings,
+            ],
         ];
     }
-    public function createTrophy(Booking $booking, StoreTrophyData $data): BookingService
+
+    public function getTrophyData(Booking $booking): array
+    {
+        $animals = Animal::forHotelWithService($booking->hotel_id, Animal::SERVICE_TROPHIES)->get();
+
+        return [
+            'data' => [
+                'animals' => $animals,
+            ],
+        ];
+    }
+    public function createTrophy(Booking $booking, StoreTrophyData $data): array
     {
         $trophy = AnimalTrophy::find($data->trophy_id);
         $price = $trophy->hotelPrices()->where('hotel_id', $booking->hotel_id)->first()?->price;
         $count = $data->count;
         $totalCost = number_format($price * $count, 2, '.', '');
 
-        return BookingService::create([
+        $service = BookingService::create([
             'booking_id'   => $booking->id,
             'service_type' => AddetionalPrice::TROPHY,
             'type'         => $data->type,
@@ -151,13 +164,22 @@ class BookingServiceManager
             'count'        => $data->count,
             'price'        => $totalCost,
         ])->load('animal');
+
+        return [
+            'data' => [
+                'id'           => $service->id,
+                'animal_title' => $service->animal->title ?? '—',
+                'type'         => $service->type,
+                'count'        => $service->count,
+            ],
+        ];
     }
-    public function createPenalty(Booking $booking, StorePenaltyData $data): BookingService
+    public function createPenalty(Booking $booking, StorePenaltyData $data): array
     {
         $penalty = AnimalFine::find($data->penalty_id);
         $price = $penalty->hotelPrices()->where('hotel_id', $booking->hotel_id)->first()?->price;
 
-        return BookingService::create([
+        $service = BookingService::create([
             'booking_id'   => $booking->id,
             'service_type' => AddetionalPrice::PENALTY,
             'type'         => $data->type,
@@ -166,8 +188,29 @@ class BookingServiceManager
             'animal_id'    => $data->animal_id,
             'price'        => $price,
         ])->load('hunter', 'animal');
+
+        return [
+            'data' => [
+                'id'           => $service->id,
+                'animal_title' => $service->animal->title ?? '—',
+                'type'         => $service->type,
+                'count'        => 1,
+                'hunter_name'  => $service->hunter->name ?? '—',
+            ],
+        ];
     }
-    public function createOrUpdatePreparation(Booking $booking, StorePreparationData $data): BookingService
+
+    public function getPreparationData(Booking $booking): array
+    {
+        $animals = Animal::forHotelWithService($booking->hotel_id, Animal::SERVICE_PREPARATIONS)->get();
+
+        return [
+            'data' => [
+                'animals'  => $animals
+            ],
+        ];
+    }
+    public function createOrUpdatePreparation(Booking $booking, StorePreparationData $data): array
     {
         $preparation = AnimalPreparation::findOrFail($data->preparation_id);
         $price = $preparation->hotelPrices()->where('hotel_id', $booking->hotel_id)->value('price');
@@ -192,25 +235,49 @@ class BookingServiceManager
                 'animal_id'    => $data->animal_id,
                 'count'        => $count,
                 'price'        => round($totalCost, 2),
-            ]);
+            ])->load('animal');
         }
 
-        return $service->load('animal');
+        return [
+            'data' => [
+                'id'           => $service->id,
+                'animal_title' => $service->animal->title ?? '—',
+                'count'        => $service->count,
+            ],
+        ];
     }
-    public function createFood(Booking $booking, $price, StoreFoodData $data): BookingService
+    public function createFood(Booking $booking, StoreFoodData $data): array
     {
+
+        $price = AddetionalPrice::where('type', 'food')->where('hotel_id', $booking->hotel_id)->value('price');
+
+        if (!$price) {
+//            return response()->json([
+//                'status' => false,
+//                'message' => 'Цена питания не найдена'
+//            ], 400);
+        }
+
+
         $count = $data->count;
         $totalCost = $price * $count;
 
-        return BookingService::create([
+        $service = BookingService::create([
             'booking_id'   => $booking->id,
             'service_type' => AddetionalPrice::FOOD,
             'type' => 'Питание',
             'price' => $totalCost,
             'count' => $count,
         ]);
+
+        return [
+            'data' => [
+                'id'           => $service->id,
+                'count'        => $service->count,
+            ],
+        ];
     }
-    public function createAddetional(Booking $booking, StoreAddetionalData $data): BookingService
+    public function createAddetional(Booking $booking, StoreAddetionalData $data): array
     {
         $addetional = AddetionalPrice::where('id', $data->addetional_id)->first();
         $price = $addetional->price;
@@ -218,7 +285,7 @@ class BookingServiceManager
         $count = $data->count;
         $totalCost = number_format($price * $count, 2, '.', '');
 
-        return BookingService::create([
+        $service = BookingService::create([
             'booking_id'   => $booking->id,
             'service_type' =>AddetionalPrice::ADDETIONAL,
             'type'       => $data->addetional,
@@ -227,10 +294,21 @@ class BookingServiceManager
             'hunter_id' => $calculation_type === AddetionalPrice::INDIVIDUAL? $data->hunter_id: null,
             'price'       => $totalCost,
         ]);
+
+        return [
+            'data' => [
+                'id'           => $service->id,
+                'type'         => $service->type,
+                'calculation_type'   => $service->calculation_type,
+                'count'         => $service->count,
+                'hunter_name'  => $service->hunter->name ?? '—',
+            ],
+        ];
+
     }
-    public function createSpending(Booking $booking, StoreSpendingData $data): BookingService
+    public function createSpending(Booking $booking, StoreSpendingData $data): array
     {
-        return BookingService::create([
+        $service = BookingService::create([
             'booking_id'   => $booking->id,
             'service_type' => AddetionalPrice::SPENDING,
             'price'        => $data->price,
@@ -238,6 +316,15 @@ class BookingServiceManager
             'service_id'   => null,
             'hunter_id'    => $data->hunter_id,
         ])->load('hunter');
+
+        return [
+            'data' => [
+                'id'           => $service->id,
+                'count'        => $service->price,
+                'comment'      => $service->comment,
+                'hunter_name'  => $service->hunter->name ?? '—',
+            ],
+        ];
     }
     public function getAnimalHunterData(Booking $booking): array
     {
@@ -256,11 +343,13 @@ class BookingServiceManager
             ]);
 
         return [
-            'animals' => $animals,
-            'hunters' => $hunters,
+            'data' => [
+                'animals' => $animals,
+                'hunters' => $hunters,
+            ],
         ];
     }
-    public function getHunterData(Booking $booking): array
+    public function getAddetionalHunterData(Booking $booking): array
     {
         $booking->load('bookingHunter.invitations');
         $hunterIds = $booking->bookingHunter?->invitations?->pluck('hunter_id')->unique();
@@ -273,8 +362,23 @@ class BookingServiceManager
                 'name' => $hunter->display_name,
             ]);
 
+        $addetionals = AddetionalPrice::whereNull('type')->where('hotel_id', $booking->hotel_id)->where('price', '>', 0)->get()
+            ->map(fn ($addetional) => [
+                'id'   => $addetional->id,
+                'type'   => $addetional->type,
+                'calculation_type'   => $addetional->calculation_type,
+                'name'   => $addetional->name,
+                'count'   => $addetional->count,
+                'price'   => $addetional->price,
+            ])
+            ->values()
+            ->toArray();
+
         return [
-            'hunters' => $hunters,
+            'data' => [
+                'addetionals' => $addetionals,
+                'hunters' => $hunters
+            ],
         ];
     }
     public function deleteService(int $serviceId, Booking $booking): void

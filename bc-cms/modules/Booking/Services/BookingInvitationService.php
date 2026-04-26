@@ -20,66 +20,76 @@ class BookingInvitationService
     ) {}
     public function getInvitedHunters(Booking $booking, ?int $currentUserId): array
     {
-        $invitations = $booking->getAllInvitations()
-            ->whereNotIn('status', ['removed']);
-
-        return $invitations->map(function ($invitation) use ($currentUserId) {
-
-            $hunter = $invitation->hunter;
-            $isCurrentUser = $hunter && $hunter->id === $currentUserId;
-
-            if ($hunter) {
-                return [
-                    'id' => $hunter->id,
-                    'name' => $hunter->display_name ?? null,
-                    'user_name' => $hunter->user_name,
-                    'first_name' => $hunter->first_name,
-                    'last_name' => $hunter->last_name,
-                    'email' => $hunter->email,
-                    'phone' => $hunter->phone,
-                    'invited' => true,
-                    'is_self' => $isCurrentUser,
-                    'invitation_status' => $invitation->status,
-                    'prepayment_paid' => (bool) ($invitation->prepayment_paid ?? false),
-                    'prepayment_paid_status' => $invitation->prepayment_paid_status,
-                    'prepayment_badge' => $invitation->prepayment_badge,
-                ];
-            }
-
-            if (!$hunter && $invitation->email) {
-                return [
-                    'id' => null,
-                    'name' => $invitation->email,
-                    'user_name' => null,
-                    'first_name' => '',
-                    'last_name' => '',
-                    'email' => $invitation->email,
-                    'phone' => null,
-                    'invited' => true,
-                    'is_self' => $isCurrentUser,
-                    'invitation_status' => $invitation->status,
-                    'is_external' => true,
-                    'prepayment_paid' => (bool) ($invitation->prepayment_paid ?? false),
-                    'prepayment_paid_status' => $invitation->prepayment_paid_status,
-                    'prepayment_badge' => $invitation->prepayment_badge,
-                ];
-            }
-
-            return null;
-        })
+        $hunters = $booking->getAllInvitations()
+            ->whereNotIn('status', ['removed'])
+            ->map(fn ($invitation) =>
+            $this->mapInvitation($invitation, $currentUserId)
+            )
             ->filter()
             ->values()
             ->toArray();
+
+        return [
+            'data' => [
+                'hunters' => $hunters,
+                'booking' => $booking,
+            ],
+        ];
+    }
+
+    private function mapInvitation($invitation, ?int $currentUserId): ?array
+    {
+        $hunter = $invitation->hunter;
+        $isCurrentUser = $hunter && $hunter->id === $currentUserId;
+
+        if ($hunter) {
+            return [
+                'id' => $hunter->id,
+                'name' => $hunter->display_name ?? null,
+                'user_name' => $hunter->user_name,
+                'first_name' => $hunter->first_name,
+                'last_name' => $hunter->last_name,
+                'email' => $hunter->email,
+                'phone' => $hunter->phone,
+                'invited' => true,
+                'is_self' => $isCurrentUser,
+                'invitation_status' => $invitation->status,
+                'prepayment_paid' => (bool) ($invitation->prepayment_paid ?? false),
+                'prepayment_paid_status' => $invitation->prepayment_paid_status,
+                'prepayment_badge' => $invitation->prepayment_badge,
+            ];
+        }
+
+        if ($invitation->email) {
+            return [
+                'id' => null,
+                'name' => $invitation->email,
+                'user_name' => null,
+                'first_name' => '',
+                'last_name' => '',
+                'email' => $invitation->email,
+                'phone' => null,
+                'invited' => true,
+                'is_self' => $isCurrentUser,
+                'invitation_status' => $invitation->status,
+                'is_external' => true,
+                'prepayment_paid' => (bool) ($invitation->prepayment_paid ?? false),
+                'prepayment_paid_status' => $invitation->prepayment_paid_status,
+                'prepayment_badge' => $invitation->prepayment_badge,
+            ];
+        }
+
+        return null;
     }
 
 
-    public function invite(Booking $booking, int $hunterId): BookingHunterInvitation
+    public function invite(Booking $booking, int $hunterId): array
     {
         $hunter = User::findOrFail($hunterId);
 
         $bookingHunter = $booking->masterHunter()->firstOrFail();
 
-        return DB::transaction(function () use ($booking, $hunter, $hunterId, $bookingHunter) {
+        $invitation = DB::transaction(function () use ($booking, $hunter, $hunterId, $bookingHunter) {
 
             $invitation = BookingHunterInvitation::updateOrCreate(
                 [
@@ -99,6 +109,12 @@ class BookingInvitationService
 
             return $invitation;
         });
+
+        return [
+            'data' => [
+                'invitation_id' => $invitation->id,
+            ],
+        ];
     }
     private function sendEmail(Booking $booking, User $hunter, int $hunterId): void
     {
@@ -141,7 +157,7 @@ class BookingInvitationService
         $booking->getInvitationsExceptMaster()->each(fn($invitation) => $invitation->delete());
     }
 
-    public function inviteByEmail(Booking $booking, string $email): BookingHunterInvitation
+    public function inviteByEmail(Booking $booking, string $email): array
     {
         $email = trim($email);
 
@@ -152,20 +168,30 @@ class BookingInvitationService
         }
 
         $bookingHunter = $booking->bookingHunter()->firstOrFail();
+
         $invitationMaster = BookingHunterInvitation::where('booking_hunter_id', $bookingHunter->id)
             ->where('email', $email)
             ->whereNull('hunter_id')
             ->first();
 
-        $invitation = $this->createOrUpdateEmailInvitation($invitationMaster, $booking, $email);
+        $invitation = $invitationMaster;
+
+        if (empty($invitationMaster)) {
+            $invitation = $this->createOrUpdateEmailInvitation($bookingHunter, $booking, $email);
+        }
 
         $this->sendEmailIfNeeded($booking, $email);
 
-        return $invitation;
+        return [
+            'code' => 'booking_invitation_sent',
+            'data' => [
+                'invitation_id' => $invitation->id,
+            ],
+        ];
     }
-
     private function createOrUpdateEmailInvitation($bookingHunter, Booking $booking, string $email): BookingHunterInvitation
     {
+
         return BookingHunterInvitation::updateOrCreate(
             [
                 'booking_hunter_id' => $bookingHunter->id,
@@ -211,7 +237,7 @@ class BookingInvitationService
         return $user;
     }
 
-    public function accept(Booking $booking, int $userId): void
+    public function accept(Booking $booking, int $userId): array
     {
         $invitation = $booking->getCurrentUserInvitation();
 
@@ -224,6 +250,10 @@ class BookingInvitationService
         $invitation->save();
 
         event(new HunterInvitationAcceptedEvent($booking, $userId));
+
+        return [
+            'code' => 'invitation_accepted',
+        ];
     }
 
     public function handleCodeAccess($code, $authUser): void
@@ -250,5 +280,53 @@ class BookingInvitationService
                 }
             }
         }
+    }
+
+    public function deleteHunter(Booking $booking, int $hunterId): array
+    {
+        $invitation = $booking->invitationUser($hunterId);
+
+        if (!$invitation) {
+            return [
+                'success' => false,
+                'error' => 'There is no such hunter among the invitees',
+                'code' => 404,
+            ];
+        }
+
+        if ($booking->master_hunter_id && $invitation->id === $booking->master_hunter_id) {
+            return [
+                'success' => false,
+                'error' => 'You cannot remove the master hunter',
+                'code' => 403,
+            ];
+        }
+
+        $invitation->delete();
+
+        return [
+            'code' => 'hunter_removed',
+        ];
+    }
+
+    public function declineInvitation(Booking $booking): array
+    {
+        $invitation = $booking->getCurrentUserInvitation();
+
+        if (!$invitation) {
+            return [
+                'success' => false,
+                'error' => 'Invitation not found',
+                'code' => 404,
+            ];
+        }
+
+        $invitation->status = 'declined';
+        $invitation->declined_at = now();
+        $invitation->save();
+
+        return [
+            'code' => 'invitation_declined',
+        ];
     }
 }
