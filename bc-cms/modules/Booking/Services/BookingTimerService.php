@@ -147,13 +147,17 @@ class BookingTimerService
         });
     }
 
-    public function startCollectionTimer($booking): void
+    public function startCollectionTimer($booking): array
     {
         $booking->status = Booking::START_COLLECTION;
         $booking->save();
 
         $timerHour = $this->getTimerHours($booking, 'collection');
         $this->startTimer($booking->id, $timerHour, 'collection', ['collection', 'paid', 'beds']);
+
+        return [
+            'code' => 'gathering_has_started',
+        ];
     }
     public function startPaidTimer($booking): void
     {
