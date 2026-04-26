@@ -27,10 +27,10 @@ $(document).ready(function () {
     }
 
     function loadTrophyAnimals(block, bookingId) {
-        return $.get(`/booking/${bookingId}/trophies/animals`)
-            .done(animals => block.data('trophyAnimals', animals));
+        return $.get(`/booking/${bookingId}/trophies/animals`).done(res => {
+            block.data('trophyAnimals', res.animals || [])
+        });
     }
-
     function loadSavedTrophies(bookingId, container) {
         $.get(`/booking/${bookingId}/saved-services`, res => {
             (res.trophies || []).forEach(trophy => {
