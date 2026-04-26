@@ -2,6 +2,7 @@
 
 namespace Modules\Booking\Services;
 
+use App\Exceptions\ConflictException;
 use Modules\Booking\Models\Booking;
 
 class BookingStatusService
@@ -59,5 +60,24 @@ class BookingStatusService
             Booking::FINISHED_BED,
             Booking::PAID,
         ];
+    }
+
+    /**
+     * @throws ConflictException
+     */
+    public function canChangeBookingState(Booking $booking): void
+    {
+        if (in_array($booking->status, [
+            Booking::CANCELLED,
+            Booking::COMPLETED,
+        ])) {
+            throw new ConflictException(
+                errorCode: 'booking_status_locked',
+                domain: 'booking',
+                context: [
+                    'status' => $booking->statu
+                ]
+            );
+        }
     }
 }
