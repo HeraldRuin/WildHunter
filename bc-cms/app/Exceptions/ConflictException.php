@@ -2,7 +2,7 @@
 
 namespace App\Exceptions;
 
-class ConflictException extends ApiException
+class ConflictException extends BaseException
 {
     public function __construct(
         string $message = 'Conflict',

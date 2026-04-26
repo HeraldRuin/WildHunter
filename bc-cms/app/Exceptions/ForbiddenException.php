@@ -2,7 +2,7 @@
 
 namespace App\Exceptions;
 
-class ForbiddenException extends ApiException
+class ForbiddenException extends BaseException
 {
     public function __construct(
         string $message = 'Forbidden',
