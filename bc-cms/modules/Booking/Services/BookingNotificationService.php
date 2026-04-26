@@ -28,11 +28,11 @@ class BookingNotificationService
         });
     }
 
-    public function sendCancelledEmail(Booking $booking, bool $isBaseAdmin): void
+    public function sendCancelledEmail(Booking $booking): void
     {
-        $this->withLocale($booking, function () use ($booking, $isBaseAdmin) {
+        $this->withLocale($booking, function () use ($booking) {
 
-            if ($isBaseAdmin) {
+            if (is_baseAdmin()) {
                 if ($booking->creator?->email) {
                     $this->mailService->send(
                         $booking->creator->email,
