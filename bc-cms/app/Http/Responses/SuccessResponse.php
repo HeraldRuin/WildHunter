@@ -4,24 +4,35 @@ namespace App\Http\Responses;
 
 use Illuminate\Http\JsonResponse;
 
-/**
- * Class ErrorResponse
- *
- */
 final class SuccessResponse extends JsonResponse
 {
-    /**
-     * @var string
-     *
-     */
-    protected string $message;
+    public function __construct(
+        private readonly string  $message = '',
+        private readonly ?string $code = null,
+        private readonly ?string $domain = null,
+        int                      $status = 200,
+        array                    $data = []
+    ) {
+        parent::__construct(
+            $this->buildPayload($data),
+            $status
+        );
+    }
 
-    public function __construct(string $message = '', int $status = 200)
+    private function buildPayload(array $data): array
     {
-        parent::__construct([
-                'success' => true,
-                'error' => null,
-                'message' => $message,
-            ], $status);
+        return array_merge([
+            'success' => true,
+            'message' => $this->resolveMessage(),
+        ], $data);
+    }
+
+    private function resolveMessage(): string
+    {
+        if ($this->code && $this->domain) {
+            return __($this->domain . '.successes.' . $this->code);
+        }
+
+        return $this->message;
     }
 }
