@@ -2,13 +2,14 @@
 
 namespace Modules\Booking\Controllers;
 
+use App\Exceptions\ConflictException;
+use App\Exceptions\ForbiddenException;
+use App\Exceptions\NotFoundException;
 use App\Helpers\ReCaptchaEngine;
+use App\Http\Responses\SuccessResponse;
 use App\Service\MailService;
 use App\User;
-use DomainException;
 use Illuminate\Auth\Events\Registered;
-use Illuminate\Database\Eloquent\ModelNotFoundException;
-use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -19,15 +20,14 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 use Modules\Animals\Models\Animal;
 use Modules\Animals\Models\AnimalTrophy;
-use Modules\Attendance\Models\AddetionalPrice;
 use Modules\Booking\DTO\ReplaceHunterData;
+use Modules\Booking\DTO\SelectPlaceData;
 use Modules\Booking\DTO\StoreAddetionalData;
 use Modules\Booking\DTO\StoreFoodData;
 use Modules\Booking\DTO\StorePenaltyData;
 use Modules\Booking\DTO\StorePreparationData;
 use Modules\Booking\DTO\StoreSpendingData;
 use Modules\Booking\DTO\StoreTrophyData;
-use Modules\Booking\Emails\HunterMessageEmail;
 use Modules\Booking\Events\BookingCreatedEvent;
 use Modules\Booking\Events\BookingStartCollectionEvent;
 use Modules\Booking\Events\BookingUpdatedEvent;
@@ -35,10 +35,8 @@ use Modules\Booking\Events\EnquirySendEvent;
 use Modules\Booking\Events\SetPaidAmountEvent;
 use Modules\Booking\Models\Booking;
 use Modules\Booking\Models\BookingPassenger;
-use Modules\Booking\Models\BookingRoomPlace;
 use Modules\Booking\Models\Enquiry;
-use Modules\Booking\Models\Payment;
-use Modules\Booking\Requests\EmailHunterRequest;
+use Modules\Booking\Requests\ChangeUserBookingRequest;
 use Modules\Booking\Requests\InviteHunterByEmailRequest;
 use Modules\Booking\Requests\InviteHunterRequest;
 use Modules\Booking\Requests\StoreAddetionalRequest;
@@ -47,15 +45,18 @@ use Modules\Booking\Requests\StorePenaltyRequest;
 use Modules\Booking\Requests\StorePreparationRequest;
 use Modules\Booking\Requests\StoreSpendingRequest;
 use Modules\Booking\Requests\StoreTrophyRequest;
+use Modules\Booking\Services\BookingAccessService;
 use Modules\Booking\Services\BookingCollectionService;
 use Modules\Booking\Services\BookingInvitationService;
 use Modules\Booking\Services\BookingNotificationService;
 use Modules\Booking\Services\BookingNumberService;
+use Modules\Booking\Services\BookingPlaceService;
 use Modules\Booking\Services\BookingServiceManager;
+use Modules\Booking\Services\BookingStatusService;
 use Modules\Booking\Services\BookingTimerService;
 use Modules\Booking\Services\BookingUserService;
 use Modules\Booking\Services\Calculation\BookingCalculatingService;
-use Modules\Booking\Services\Payments\PaymentService;
+use Modules\Booking\Services\Payments\PaymentManagerService;
 use Modules\User\Events\SendMailUserRegistered;
 
 class BookingController extends \App\Http\Controllers\Controller
@@ -74,13 +75,16 @@ class BookingController extends \App\Http\Controllers\Controller
         protected BookingTimerService $bookingTimerService,
         protected BookingCalculatingService $bookingCalculatingService,
         protected BookingCollectionService $bookingCollectionService,
-        protected PaymentService $paymentService,
         protected BookingServiceManager $serviceManager,
         protected BookingNumberService $bookingNumberService,
         protected BookingInvitationService $bookingInvitationService,
         protected BookingNotificationService $bookingNotificationService,
         protected MailService $mailService,
-        protected BookingUserService $bookingUserService)
+        protected BookingUserService $bookingUserService,
+        protected BookingPlaceService $bookingPlaceService,
+        protected BookingStatusService $bookingStatusService,
+        protected PaymentManagerService $paymentManagerService,
+        protected BookingAccessService $bookingAccessService)
     {
         $this->booking = $booking;
         $this->enquiryClass = $enquiryClass;
@@ -454,7 +458,6 @@ class BookingController extends \App\Http\Controllers\Controller
 
     public function confirmPayment(Request $request, $gateway)
     {
-
         $gateways = get_payment_gateways();
         if (empty($gateways[$gateway])) {
             return $this->sendError(__("Payment gateway not found"));
@@ -833,98 +836,59 @@ class BookingController extends \App\Http\Controllers\Controller
         return view('Booking::frontend.detail.modal', ['booking' => $booking, 'service' => $booking->service]);
     }
 
-    public function changeUserBooking(Request $request, Booking $booking): JsonResponse
+    /**
+     * @throws NotFoundException
+     */
+    public function changeUserBooking(ChangeUserBookingRequest $request, Booking $booking): JsonResponse
     {
-        $this->bookingUserService->changeUser(
-            $booking,
-            $request->input('user_id')
-        );
+        $result = $this->bookingUserService->changeUser($booking, $request->input('user_id'));
 
-        return $this->sendSuccess([
-            'message' => __('Customer changed')
-        ]);
+        return new SuccessResponse(code: $result['code']);
     }
 
-    public function confirmBooking( Booking $booking): JsonResponse
+    /**
+     * @throws ConflictException
+     */
+    public function confirmBooking(Booking $booking): JsonResponse
     {
-        if ($booking->status !== 'processing') {
-            return $this->sendError('Эта бронь уже подтверждена или недоступна для подтверждения.')->setStatusCode(409);
-        }
-        $booking->status = Booking::CONFIRMED;
-        $booking->save();
-
+        $result = $this->bookingCollectionService->confirmBooking($booking);
         event(new BookingUpdatedEvent($booking));
 
-        return $this->sendSuccess([
-            'message' => __('Reservation successfully confirmed')
-        ]);
+        return new SuccessResponse(code: $result['code']);
     }
 
-    public function startCollection(Booking $booking)
+    public function startCollection(Booking $booking): JsonResponse
     {
         if (!Auth::check()) {
             return $this->sendError('Необходима авторизация')->setStatusCode(401);
         }
 
-        $this->bookingTimerService->startCollectionTimer($booking);
+        $result = $this->bookingTimerService->startCollectionTimer($booking);
         event(new BookingStartCollectionEvent($booking));
 
-        return $this->sendSuccess([
-            'message' => __('The gathering of hunters has begun'),
-        ]);
+        return new SuccessResponse(code: $result['code']);
     }
 
-    /**
-     * Отменяет сбор охотников и переводит бронь в статус "подтверждено"
-     * Также уведомляет всех приглашенных охотников и скрывает их приглашения
-     */
     public function cancelCollection(Booking $booking): JsonResponse
     {
         if (!Auth::check()) {
             return $this->sendError('Необходима авторизация')->setStatusCode(401);
         }
 
-        try {
-            $this->bookingCollectionService->cancelCollection($booking, $this->currentUser());
+        $result = $this->bookingCollectionService->cancelCollection($booking, $this->currentUser());
 
-            return $this->sendSuccess([
-                'message' => __('Сбор охотников для этой брони отменён.')
-            ]);
-        } catch (DomainException $e) {
-            return $this->sendError($e->getMessage())->setStatusCode(422);
-        } catch (\Throwable $e) {
-            Log::error('cancelCollection failed', [
-                'booking_id' => $booking->id,
-                'error' => $e->getMessage()
-            ]);
-
-            return $this->sendError('Server error')->setStatusCode(500);
-        }
+        return new SuccessResponse(code: $result['code']);
     }
 
-    /**
-     * Завершает сбор охотников и переводит бронь в статус "подтверждено"
-     * Проверяет минимальное количество принятых охотников
-     */
     public function finishCollection(Booking $booking): JsonResponse
     {
         if (!Auth::check()) {
             return $this->sendError('Необходима авторизация')->setStatusCode(401);
         }
 
-        try {
-            $this->bookingCollectionService->finishCollection($booking, $this->currentUser());
+        $result = $this->bookingCollectionService->finishCollection($booking, $this->currentUser());
 
-            return $this->sendSuccess([
-                'message' => __('Сбор охотников завершён.')
-            ]);
-
-        } catch (\DomainException $e) {
-            return $this->sendError($e->getMessage())->setStatusCode(422);
-
-        } catch (\Symfony\Component\HttpKernel\Exception\HttpException $e) {
-            return $this->sendError($e->getMessage())->setStatusCode($e->getStatusCode());
-        }
+        return new SuccessResponse(code: $result['code']);
     }
 
     /**
@@ -936,25 +900,9 @@ class BookingController extends \App\Http\Controllers\Controller
             return $this->sendError('Необходима авторизация')->setStatusCode(401);
         }
 
-        try {
-            $invitation = $this->bookingInvitationService->invite($booking, (int) $request->input('hunter_id'));
+        $result = $this->bookingInvitationService->invite($booking, (int) $request->validated('hunter_id'));
 
-            return $this->sendSuccess([
-                'data' => [
-                    'invitation_id' => $invitation->id,
-                ],
-            ]);
-
-        }catch (ModelNotFoundException $e) {
-            return $this->sendError($e->getMessage())->setStatusCode(404);
-        } catch (\Throwable $e) {
-            Log::error('inviteHunter failed', [
-                'booking_id' => $booking->id,
-                'error' => $e->getMessage()
-            ]);
-
-            return $this->sendError('Server error')->setStatusCode(500);
-        }
+        return new SuccessResponse(data: $result['data']);
     }
 
     /**
@@ -966,394 +914,233 @@ class BookingController extends \App\Http\Controllers\Controller
             return $this->sendError('Необходима авторизация')->setStatusCode(401);
         }
 
-        try {
-            $invitation = $this->bookingInvitationService->inviteByEmail($booking, trim((string) $request->input('email')));
+        $result = $this->bookingInvitationService->inviteByEmail($booking, trim((string) $request->validated('email')));
 
-            return $this->sendSuccess([
-                'message' => __('Приглашение отправлено'),
-                'data' => [
-                    'invitation_id' => $invitation->id,
-                ],
-            ]);
-
-        } catch (\Throwable $e) {
-            Log::error('inviteHunterByEmail failed', [
-                'booking_id' => $booking->id,
-                'error' => $e->getMessage(),
-            ]);
-
-            return $this->sendError('Server error')->setStatusCode(500);
-        }
+        return new SuccessResponse(code: $result['code'], data: $result['data']);
     }
 
-    /**
-     * Отправка письма выбранному охотнику с произвольным сообщением
-     */
-    public function emailHunter(EmailHunterRequest $request, Booking $booking): JsonResponse
+    public function getInvitedHunters(Booking $booking): JsonResponse
     {
         if (!Auth::check()) {
             return $this->sendError('Необходима авторизация')->setStatusCode(401);
         }
 
-        $hunterId = (int) $request->input('hunter_id');
-        $message  = trim((string)$request->input('message', ''));
-        $hunter = User::find($hunterId);
+        $result = $this->bookingInvitationService->getInvitedHunters($booking, Auth::id());
 
-        if (!$hunter) {
-            return $this->sendError('Пользователь не найден')->setStatusCode(404);
-        }
-
-        if (empty($hunter->email)) {
-            return $this->sendError('У выбранного пользователя не указан email')->setStatusCode(404);
-        }
-
-        $this->mailService->send($hunter->email, new HunterMessageEmail($booking, $hunter, $message, false));
-
-        return $this->sendSuccess([
-            'message' => __('Message has been sent'),
-        ]);
+        return new SuccessResponse(data: $result['data']);
     }
 
-    /**
-     * Получить список приглашенных охотников для брони
-     * Включая отказавшихся для истории
-     */
-    public function getInvitedHunters(Request $request, Booking $booking): JsonResponse
+    public function acceptInvitation(Booking $booking): JsonResponse
     {
         if (!Auth::check()) {
             return $this->sendError('Необходима авторизация')->setStatusCode(401);
         }
 
-        $hunters = $this->bookingInvitationService->getInvitedHunters($booking, Auth::id());
+        $result = $this->bookingInvitationService->accept($booking, Auth::id());
 
-        return $this->sendSuccess([
-            'hunters' => $hunters,
-            'booking' => $booking,
-        ]);
+        return new SuccessResponse(code: $result['code']);
     }
 
-    /**
-     * Принять приглашение на бронь
-     */
-    public function acceptInvitation(Request $request, Booking $booking): JsonResponse
-    {
-        if (!Auth::check()) {
-            return $this->sendError('Необходима авторизация')->setStatusCode(401);
-        }
-        try {
-            $this->bookingInvitationService->accept($booking, Auth::id());
-        } catch (\DomainException $e) {
-            return $this->sendError($e->getMessage())->setStatusCode(404);
-        }
-
-        return $this->sendSuccess([
-            'message' => __('Invitation accepted'),
-        ]);
-    }
-
-    /**
-     * Отказаться от приглашения на бронь
-     */
     public function declineInvitation(Booking $booking): JsonResponse
     {
         if (!Auth::check()) {
             return $this->sendError('Необходима авторизация')->setStatusCode(401);
         }
 
-        $invitation = $booking->getCurrentUserInvitation();
+        $result = $this->bookingInvitationService->declineInvitation($booking);
 
-        if (!$invitation) {
-            return $this->sendError('Приглашение не найдено')->setStatusCode(404);
-        }
-
-        $invitation->status = 'declined';
-        $invitation->declined_at = now();
-        $invitation->save();
-
-        return $this->sendSuccess([
-            'message' => __('Invitation declined'),
-        ]);
+        return new SuccessResponse(code: $result['code']);
     }
 
-    public function cancelBooking(Booking $booking)
+
+    /**
+     * @throws ConflictException
+     * @throws ForbiddenException
+     */
+    public function cancelBooking(Booking $booking): JsonResponse
     {
         if (!Auth::check()) {
             return $this->sendError('Необходима авторизация')->setStatusCode(401);
         }
 
-        $isBaseAdmin = Auth::user()->hasRole('baseadmin') || Auth::user()->hasPermission('baseAdmin_dashboard_access');
+        $this->bookingAccessService->ensureCanAccessBooking($booking, Auth::user());
+        $result = $this->bookingCollectionService->cancel($booking);
+        $this->bookingNotificationService->sendCancelledEmail($booking);
 
-        if (!$isBaseAdmin && !Auth::user()->hasPermission('dashboard_vendor_access')) {
-            if ($booking->customer_id != Auth::id() && $booking->create_user != Auth::id()) {
-                return $this->sendError(__("You don't have access."))->setStatusCode(403);
-            }
-        }
-
-        if (in_array($booking->status, [Booking::CANCELLED, Booking::COMPLETED])) {
-            return $this->sendError(__('This booking cannot be cancelled'));
-        }
-
-        $this->bookingCollectionService->cancel($booking);
-        $this->bookingNotificationService->sendCancelledEmail($booking, $isBaseAdmin);
-
-        return $this->sendSuccess([
-            'message' => __('Booking has been cancelled successfully')
-        ]);
+        return new SuccessResponse(code: $result['code']);
     }
 
+    /**
+     * @throws ForbiddenException
+     * @throws ConflictException
+     */
     public function completeBooking(Booking $booking)
     {
         if (!Auth::check()) {
             return $this->sendError('Необходима авторизация')->setStatusCode(401);
         }
 
-        $isBaseAdmin = Auth::user()->hasRole('baseadmin') || Auth::user()->hasPermission('baseAdmin_dashboard_access');
+        $this->bookingAccessService->ensureCanAccessBooking($booking, Auth::user());
+        $result = $this->bookingCollectionService->complete($booking);
+        $this->bookingNotificationService->sendCompletedEmail($booking);
 
-        if (!$isBaseAdmin) {
-            return $this->sendError(__("You don't have access."))->setStatusCode(403);
-        }
-
-        try {
-            $this->bookingCollectionService->complete($booking);
-            $this->bookingNotificationService->sendCompletedEmail($booking);
-
-        } catch (\DomainException $e) {
-            return $this->sendError($e->getMessage(), [], 422);
-        }
-
-        return $this->sendSuccess([
-            'message' => __('Booking has been completed successfully')
-        ]);
+        return new SuccessResponse(code: $result['code']);
     }
 
 
-    public function getBookingServices(Booking $booking): JsonResponse
+    public function getBookingServices(Booking $booking): SuccessResponse
     {
-        $data = $this->serviceManager->getBookingServices($booking);
-        return response()->json($data);
+        $result = $this->serviceManager->getBookingServices($booking);
+
+        return new SuccessResponse(data: $result['data']);
     }
 
     //Трофеи
     public function getAnimalTrophyServices(Booking $booking): JsonResponse
     {
-        $animals = Animal::forHotelWithService($booking->hotel_id, Animal::SERVICE_TROPHIES)->get();
-        return response()->json($animals);
+        $result = $this->serviceManager->getTrophyData($booking);
+
+        return new SuccessResponse(data: $result['data']);
     }
 
     public function storeTrophy(StoreTrophyRequest $request, Booking $booking): JsonResponse
     {
         $data = StoreTrophyData::fromRequest($request);
-        $service = $this->serviceManager->createTrophy($booking, $data);
+        $result = $this->serviceManager->createTrophy($booking, $data);
 
-        return response()->json([
-            'id'           => $service->id,
-            'animal_title' => $service->animal->title ?? '—',
-            'type'         => $service->type,
-            'count'        => $service->count,
-            'created_at'   => $service->created_at,
-            'updated_at'   => $service->updated_at,
-        ]);
+        return new SuccessResponse(data: $result['data']);
     }
 
     public function deleteTrophy(Booking $booking, $serviceId): JsonResponse
     {
         $this->serviceManager->deleteService($serviceId, $booking);
-        return response()->json(['status' => 'ok']);
+
+        return new SuccessResponse();
     }
 
     //Штрафы
     public function getAnimalPenaltyServices(Booking $booking): JsonResponse
     {
-        $data = $this->serviceManager->getAnimalHunterData($booking);
+        $result = $this->serviceManager->getAnimalHunterData($booking);
 
-        return response()->json($data);
+        return new SuccessResponse(data: $result['data']);
     }
     public function storePenalty(StorePenaltyRequest $request, Booking $booking): JsonResponse
     {
         $data = StorePenaltyData::fromRequest($request);
-        $service = $this->serviceManager->createPenalty($booking, $data);
+        $result = $this->serviceManager->createPenalty($booking, $data);
 
-        return response()->json([
-            'id'           => $service->id,
-            'animal_title' => $service->animal->title ?? '—',
-            'type'         => $service->type,
-            'count'        => 1,
-            'hunter_name'  => $service->hunter->name ?? '—',
-            'created_at'   => $service->created_at,
-            'updated_at'   => $service->updated_at,
-        ]);
+        return new SuccessResponse(data: $result['data']);
     }
     public function deletePenalty(Booking $booking, $serviceId): JsonResponse
     {
         $this->serviceManager->deleteService($serviceId, $booking);
-        return response()->json(['status' => 'ok']);
+
+        return new SuccessResponse();
     }
 
-
-// Разделка
+    // Разделка
     public function getAnimalPreparationServices(Booking $booking): JsonResponse
     {
-        $animals = Animal::forHotelWithService($booking->hotel_id, Animal::SERVICE_PREPARATIONS)->get();
+        $result = $this->serviceManager->getPreparationData($booking);
 
-        return response()->json(['animals'  => $animals]);
+        return new SuccessResponse(data: $result['data']);
     }
     public function storePreparation(StorePreparationRequest $request, Booking $booking): JsonResponse
     {
         $data = StorePreparationData::fromRequest($request);
-        $service = $this->serviceManager->createOrUpdatePreparation($booking, $data);
+        $result = $this->serviceManager->createOrUpdatePreparation($booking, $data);
 
-        return response()->json([
-            'id'           => $service->id,
-            'animal_title' => $service->animal->title ?? '—',
-            'count'        => $service->count,
-            'created_at'   => $service->created_at,
-            'updated_at'   => $service->updated_at,
-        ]);
+        return new SuccessResponse(data: $result['data']);
     }
     public function deletePreparation(Booking $booking, $serviceId): JsonResponse
     {
         $this->serviceManager->deleteService($serviceId, $booking);
-        return response()->json(['status' => 'ok']);
+
+        return new SuccessResponse();
     }
 
     // Питание
     public function storeFoods(StoreFoodRequest $request, Booking $booking): JsonResponse
     {
         $data = StoreFoodData::fromRequest($request);
-        $price = AddetionalPrice::where('type', 'food')->where('hotel_id', $booking->hotel_id)->value('price');
+        $result = $this->serviceManager->createFood($booking, $data);
 
-        if (!$price) {
-            return response()->json([
-                'status' => false,
-                'message' => 'Цена питания не найдена'
-            ], 400);
-        }
-
-        $service = $this->serviceManager->createFood($booking, $price, $data);
-
-        return response()->json([
-            'id'           => $service->id,
-            'count'        => $service->count,
-            'created_at'   => $service->created_at,
-            'updated_at'   => $service->updated_at,
-        ]);
+        return new SuccessResponse(data: $result['data']);
     }
     public function deleteFoods(Booking $booking, $serviceId): JsonResponse
     {
         $this->serviceManager->deleteService($serviceId, $booking);
-        return response()->json(['status' => 'ok']);
+
+        return new SuccessResponse();
     }
 
     //Другое
     public function getAddetionalServices(Booking $booking): JsonResponse
     {
-        $data = $this->serviceManager->getHunterData($booking);
-        $addetionals = AddetionalPrice::whereNull('type')->where('hotel_id', $booking->hotel_id)->where('price', '>', 0)->get()
-            ->map(fn ($addetional) => [
-                'id'   => $addetional->id,
-                'type'   => $addetional->type,
-                'calculation_type'   => $addetional->calculation_type,
-                'name'   => $addetional->name,
-                'count'   => $addetional->count,
-                'price'   => $addetional->price,
-            ])
-            ->values()
-            ->toArray();
+        $result = $this->serviceManager->getAddetionalHunterData($booking);
 
-        return response()->json([
-            'addetionals' => $addetionals,
-            'hunters' => $data['hunters'],
-        ]);
+        return new SuccessResponse(data: $result['data']);
+
     }
     public function storeAddetional(StoreAddetionalRequest $request, Booking $booking): JsonResponse
     {
         $data = StoreAddetionalData::fromRequest($request);
-        $service = $this->serviceManager->createAddetional($booking, $data);
+        $result = $this->serviceManager->createAddetional($booking, $data);
 
-        return response()->json([
-            'id'           => $service->id,
-            'type'         => $service->type,
-            'calculation_type'   => $service->calculation_type,
-            'count'         => $service->count,
-            'hunter_name'  => $service->hunter->name ?? '—',
-            'created_at'   => $service->created_at,
-            'updated_at'   => $service->updated_at,
-        ]);
+        return new SuccessResponse(data: $result['data']);
     }
     public function deleteAddetional(Booking $booking, $serviceId): JsonResponse
     {
         $this->serviceManager->deleteService($serviceId, $booking);
-        return response()->json(['status' => 'ok']);
+
+        return new SuccessResponse();
     }
 
     // Траты охотника
     public function getUserSpendingServices(Booking $booking): JsonResponse
     {
-        $data = $this->serviceManager->getHunterData($booking);
+        $result = $this->serviceManager->getAddetionalHunterData($booking);
 
-        return response()->json($data);
+        return new SuccessResponse(data: $result['data']);
     }
     public function storeSpending(StoreSpendingRequest $request, Booking $booking): JsonResponse
     {
         $data = StoreSpendingData::fromRequest($request);
-        $service = $this->serviceManager->createSpending($booking, $data);
+        $result = $this->serviceManager->createSpending($booking, $data);
 
-        return response()->json([
-            'id'           => $service->id,
-            'count'        => $service->price,
-            'comment'      => $service->comment,
-            'hunter_name'  => $service->hunter->name ?? '—',
-            'created_at'   => $service->created_at,
-            'updated_at'   => $service->updated_at,
-        ]);
+        return new SuccessResponse(data: $result['data']);
     }
     public function deleteSpending(Booking $booking, $serviceId): JsonResponse
     {
         $this->serviceManager->deleteService($serviceId, $booking);
-        return response()->json(['status' => 'ok']);
+
+        return new SuccessResponse();
     }
-    public function checkPrepayment(Booking $booking): void
+    public function checkPrepayment(Booking $booking): JsonResponse
     {
         $this->bookingCollectionService->markAllPendingAsUnpaid($booking);
+
+        return new SuccessResponse();
     }
     public function checkPaymentStatus(Booking $booking): JsonResponse
     {
-        $payment = $booking->payments()->where('create_user', Auth::id())->first();
+        $result = $this->paymentManagerService->getStatusFromPayment($booking, Auth::id());
 
-        $status = $payment?->status ?? Payment::PROCESSING;
-
-        return response()->json([
-            'success' => true,
-            'status' => $status,
-        ]);
+        return new SuccessResponse(data: $result['data']);
     }
     public function storePrepayment(Booking $booking): JsonResponse
     {
-        $paymentUrl = $this->paymentService->getOrCreatePrepayment($booking, Auth::id());
+        $result = $this->paymentManagerService->store($booking, Auth::id());
 
-        return $this->sendSuccess([
-            'message' => __('The gathering of hunters has begun'),
-            'payment_url' => $paymentUrl,
-        ]);
+        return new SuccessResponse(data: $result['data']);
     }
 
     public function deleteHunter(Request $request, Booking $booking): JsonResponse
     {
-        $invitation = $booking->invitationUser($request->input('hunter_id'));
+        $result = $this->bookingInvitationService->deleteHunter($booking, (int) $request->input('hunter_id'));
 
-        if (!$invitation) {
-            return $this->sendError(__('There is no such hunter among the invitees'));
-        }
-
-        if ($booking->master_hunter_id && $invitation === $booking->master_hunter_id) {
-            return $this->sendError(__('You cannot remove the master hunter'));
-        }
-
-        $invitation->delete();
-
-        return $this->sendSuccess([
-            'message' => __('Hunter successfully removed from this hunt'),
-        ]);
+        return new SuccessResponse(code: $result['code'], domain: 'booking');
     }
 
     /**
@@ -1362,157 +1149,37 @@ class BookingController extends \App\Http\Controllers\Controller
     public function replaceHunter(Request $request, Booking $booking): JsonResponse
     {
         $data = ReplaceHunterData::fromRequest($request);
-
         $result = $this->bookingUserService->replaceHunter($booking, $data);
 
-        if (!($result['success'] ?? false)) {
-            return $this->sendError(__($result['error']));
-        }
-
-        return response()->json([
-            'status' => true,
-            'message' => 'Охотник успешно заменён',
-            'hunter' => $result['data'],
-        ]);
+        return new SuccessResponse(code: $result['code'], domain: 'booking', data: $result['data']);
     }
-    public function places(Booking $booking)
+    public function places(Booking $booking): SuccessResponse
     {
-        $rooms = $booking
-            ->roomsBooking()
-            ->with('room', 'booking:id,total_guests')
-            ->get()
-            ->map(function ($roomBooking) {
-                $booking = $roomBooking->booking;
-                $room = $roomBooking->room;
+        $result = $this->bookingPlaceService->getPlaces($booking);
 
-                return [
-                    'booking_total_guests' => $booking->total_guests,
-                    'booking_room_id' => $roomBooking->id,
-                    'booking_number' => $roomBooking->number,
-                    'room_id'         => $room->id,
-                    'title'           => $room->title,
-                    'number'          => $room->number,
-                    'total_guests_in_type'   => $roomBooking->number * $room->number,
-                ];
-            });
-
-        $places = BookingRoomPlace::with('user:id,first_name,last_name,user_name')
-            ->where('booking_id', $booking->id)
-            ->get()
-            ->groupBy(['room_index', 'room_id', 'place_number']);
-
-        return $this->sendSuccess([
-            'rooms' => $rooms,
-            'places' => $places,
-        ]);
+        return new SuccessResponse(data: $result['data']);
     }
 
+    /**
+     * @throws ForbiddenException
+     * @throws ConflictException
+     */
     public function selectPlace(Request $request, Booking $booking): JsonResponse
     {
-        $roomId = $request->input('room_id');
-        $selectedPlaceNumber = $request->input('place_number');
-        $selectedRoomIndex = $request->input('room_index');
-        $booking = Booking::findOrFail($booking->id);
+        $data = SelectPlaceData::fromRequest($request);
+        $result = $this->bookingPlaceService->selectPlace($booking, $data);
 
-        try {
-            $alreadyHasPlace = BookingRoomPlace::where('booking_id', $booking->id)
-                ->where('user_id', auth()->id())
-                ->exists();
-
-            if ($alreadyHasPlace) {
-                return $this->sendError(__('You have already selected a place'));
-            }
-
-            $occupiedPlaceNumbers = BookingRoomPlace::where('booking_id', $booking->id)
-                ->where('room_id', $roomId)
-                ->where('room_index', $selectedRoomIndex)
-                ->pluck('place_number')
-                ->toArray();
-
-            $totalPlaces = $booking->hotelRoom()
-                ->find($roomId)
-                ->number;
-
-            $finalPlaceNumber = null;
-            for ($i = 1; $i <= $totalPlaces; $i++) {
-                if (!in_array($i, $occupiedPlaceNumbers)) {
-                    $finalPlaceNumber = $i;
-                    break;
-                }
-            }
-
-            if (!$finalPlaceNumber) {
-                return response()->json([
-                    'success' => false,
-                    'message' => __('No free places available in this room')
-                ], 409);
-            }
-
-            BookingRoomPlace::create([
-                'booking_id'   => $booking->id,
-                'room_index'   => $selectedRoomIndex,
-                'room_id'      => $roomId,
-                'place_number' => $finalPlaceNumber,
-                'user_id'      => auth()->id(),
-            ]);
-
-            $this->bookingCollectionService->updateStatusIfAllPlacesSelected($booking);
-
-            $rooms = $booking
-                ->roomsBooking()
-                ->with('room', 'booking:id,total_guests')
-                ->get()
-                ->map(function ($roomBooking) {
-                    $booking = $roomBooking->booking;
-                    $room = $roomBooking->room;
-
-                    return [
-                        'booking_total_guests' => $booking->total_guests,
-                        'booking_room_id' => $roomBooking->id,
-                        'booking_number' => $roomBooking->number,
-                        'room_id'         => $room->id,
-                        'title'           => $room->title,
-                        'number'          => $room->number,
-                        'total_guests_in_type'   => $roomBooking->number * $room->number,
-                    ];
-                });
-
-            $places = BookingRoomPlace::with('user:id,first_name,last_name,user_name')
-                ->where('booking_id', $booking->id)
-                ->get()
-                ->groupBy(['room_index', 'room_id', 'place_number']);
-
-            return response()->json([
-                'success' => true,
-                'current_user_id' => auth()->id(),
-                'rooms' => $rooms,
-                'places' => $places,
-            ]);
-
-
-
-        } catch (QueryException $e) {
-            if ($e->getCode() === '23000') {
-                return response()->json([
-                    'success' => false,
-                    'message' => __('The selected seat is already taken, try choosing a different one')
-                ], 409);
-            }
-            throw $e;
-        }
+        return new SuccessResponse(code: $result['code'], domain: 'booking');
     }
 
-    public function cancelSelectPlace(Request $request, $bookingId)
+    /**
+     * @throws ForbiddenException
+     */
+    public function cancelSelectPlace(Request $request, $bookingId): JsonResponse
     {
-        $place = BookingRoomPlace::where('booking_id', $bookingId)
-            ->where('id', $request->input('place_id'))
-            ->where('user_id', Auth::id())->first();
+        $result = $this->bookingPlaceService->cancelSelectPlace($bookingId, $request->input('place_id'), Auth::id());
 
-        if (!$place) {
-            return $this->sendError(__('Вы можете сделать отмену только на себе'));
-        }
-
-        $place->delete();
+        return new SuccessResponse(code: $result['code'], domain: 'booking');
     }
 
     public function markPaid(Booking $booking): JsonResponse
@@ -1522,7 +1189,7 @@ class BookingController extends \App\Http\Controllers\Controller
             'is_paid' => true,
         ]);
 
-        return $this->sendSuccess([]);
+        return new SuccessResponse();
     }
     public function markCompleted(Booking $booking): JsonResponse
     {
@@ -1530,7 +1197,7 @@ class BookingController extends \App\Http\Controllers\Controller
             'status' => Booking::COMPLETED,
         ]);
 
-        return $this->sendSuccess([]);
+        return new SuccessResponse();
     }
 
     //Калькуляция
@@ -1538,6 +1205,6 @@ class BookingController extends \App\Http\Controllers\Controller
     {
         $result = $this->bookingCalculatingService->calculate($booking, Auth::user());
 
-        return response()->json($result);
+        return new SuccessResponse(data: $result);
     }
 }
