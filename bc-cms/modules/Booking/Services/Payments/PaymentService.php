@@ -77,7 +77,7 @@ class PaymentService
         $result = $gateway->createOrder($dto);
         $url = $result['invoice_url'];
 
-        $payment = $gateway->processFromBooking([
+        $gateway->processFromBooking([
             'amount' => $booking->getAmountPerPerson(),
             'payment_url' => $url,
             'invoice_id' => $result['invoice_id'],
