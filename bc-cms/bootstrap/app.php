@@ -25,6 +25,7 @@ return Application::configure(basePath: dirname(__DIR__))
             \App\Http\Middleware\SetLanguageForAdmin::class,
             \App\Http\Middleware\SetCurrentCurrency::class,
             \App\Http\Middleware\RequireChangePassword::class,
+            \App\Http\Middleware\AttachTraceId::class,
         ]);
         $middleware->api([
             \App\Http\Middleware\MayAuthenticateWithSanctum::class,
@@ -46,5 +47,20 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->throttleApi();
     })
     ->withExceptions(function (Exceptions $exceptions) {
-        //
+        $exceptions->render(function (\Throwable $e, $request) {
+
+            if ($e instanceof \App\Exceptions\BaseException) {
+                $message = $e->getDomain() . '.errors.' . $e->getErrorCode();
+
+                return response()->json([
+                    'success' => false,
+                    'message' => __($message),
+                    'error_code' => $e->getErrorCode(),
+                    'trace_id' => $request->attributes->get('trace_id'),
+                    'context' => $e->getContext(),
+                ], $e->getStatus());
+            }
+
+            return null;
+        });
     })->create();
