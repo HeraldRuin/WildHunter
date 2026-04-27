@@ -32,7 +32,7 @@ Route::group(['prefix'=>'user/'.config('animal.animal_route_prefix')],function()
 });
 
 Route::group(['prefix'=>'organisation'],function(){
-    Route::get('/','OrganisationController@index')->name('animal.vendor.organisation');
+    Route::get('/',[OrganisationController::class, 'index'])->name('animal.vendor.organisation');
 });
 
 Route::group(['prefix'=>'trophy-cost','middleware' => ['auth','verified']],function(){
@@ -44,7 +44,7 @@ Route::group(['prefix'=>'trophy-cost','middleware' => ['auth','verified']],funct
 
 Route::group(['prefix'=>config('animal.animal_route_prefix')],function(){
     Route::post('/{animal}/period/create', [OrganisationController::class, 'create'])->name('animal.vendor.period.create');
-    Route::post('/period/{period}/update', [OrganisationController::class, 'update']);
+    Route::post('/period/{period}/update', [OrganisationController::class, 'update'])->name('animal.period.update');
     Route::post('/period/{period}', [OrganisationController::class, 'delete'])->name('animal.vendor.period.delete');
 
 });

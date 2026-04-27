@@ -25,7 +25,7 @@
                                 dataType: 'json',
                                 data: {_token: $('meta[name="csrf-token"]').attr('content')},
                                 success: function (res) {
-                                    if (res.status) {
+                                    if (res.success) {
                                         $(this).closest('tr').remove();
                                     }
                                 }.bind(this)
@@ -35,7 +35,9 @@
                 });
 
                 $('#animal-app').on('click', '.save-period', function () {
+
                     let periodId = $(this).data('id');
+                    let url = $(this).data('url');
                     let row = $(this).closest('tr');
 
                     let data = {
@@ -47,16 +49,20 @@
 
                     $.ajax({
                         url: '/animal/period/' + periodId + '/update',
+                        // url: url,
                         type: 'post',
                         dataType: 'json',
                         data: data,
                         success: function (res) {
-                            if (res.status) {
+                            if (res.success) {
                                 if (res.message) {
                                     bookingCoreApp.showAjaxMessage(res);
                                 }
                             }
                         },
+                        error: function(e) {
+                            bookingCoreApp.showAjaxError(e);
+                        }
                     });
                 });
             },
@@ -71,10 +77,13 @@
                         dataType: 'json',
                         type: 'post',
                         success: function (res) {
-                            if (res.status && res.html) {
+                            if (res.success && res.html) {
                                 $('#periods-' + res.animal_id).append(res.html);
                             }
                         },
+                        error: function(e) {
+                            bookingCoreApp.showAjaxError(e);
+                        }
                     })
                 },
                 attachAnimal() {
