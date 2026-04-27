@@ -3,7 +3,6 @@ return [
     'errors' => [
         'unknown_booking_type' => 'Неизвестный тип бронирования',
         'cannot_select_more_than_one_place' => 'Нельзя выбрать больше одного места',
-        'The selected seat is already taken, try choosing a different one' => 'Выбранное место уже занято, попробуйте выбрать другое',
         'no_free_places_in_room' => 'В этой комнате свободных мест нет',
         'cancel_only_own_place' => 'Вы можете отменить только своё занятое место',
         'hunter_already_in_booking' => 'Такой охотник уже есть в списке этого бронирования',
@@ -13,7 +12,7 @@ return [
         'booking_cannot_be_cancelled' => 'Эта бронь уже отменена или завершена и не доступна для отмены',
         'booking_access_denied' => 'Доступ запрещён',
         'booking_status_locked' => 'Статус бронирования заблокирован',
-        'booking_invitation_not_found' => 'Дя этой брони не найден приглашенный',
+        'booking_invitation_not_found' => 'Для этой брони не найден приглашенный',
     ],
     'successes' => [
         'place_selected' => 'Выбранное место занято за вами',
