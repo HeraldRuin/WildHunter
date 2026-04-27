@@ -43,7 +43,7 @@ Route::group(['prefix'=>'trophy-cost','middleware' => ['auth','verified']],funct
 });
 
 Route::group(['prefix'=>config('animal.animal_route_prefix')],function(){
-    Route::post('/{animal}/period/create', [OrganisationController::class, 'create'])->name('animal.vendor.period.create');
+    Route::post('/{animal}/period/create', [OrganisationController::class, 'create'])->name('animal.period.create');
     Route::post('/period/{period}/update', [OrganisationController::class, 'update'])->name('animal.period.update');
     Route::post('/period/{period}', [OrganisationController::class, 'delete'])->name('animal.vendor.period.delete');
 

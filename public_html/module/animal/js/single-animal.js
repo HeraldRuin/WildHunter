@@ -35,9 +35,7 @@
                 });
 
                 $('#animal-app').on('click', '.save-period', function () {
-
                     let periodId = $(this).data('id');
-                    let url = $(this).data('url');
                     let row = $(this).closest('tr');
 
                     let data = {
@@ -49,7 +47,6 @@
 
                     $.ajax({
                         url: '/animal/period/' + periodId + '/update',
-                        // url: url,
                         type: 'post',
                         dataType: 'json',
                         data: data,
@@ -88,8 +85,8 @@
                 },
                 attachAnimal() {
                     if (!this.animalIdToAttach) return;
-
                     let url = $('#animal-app').data('bulk-url');
+
                     $.ajax({
                         url: url,
                         type: 'POST',
@@ -104,15 +101,12 @@
                                 location.reload();
                             }
                         }.bind(this),
-                        error: function (err) {
-                            console.error(err);
+                        error: function (e) {
+                            bookingCoreApp.showAjaxError(e);
                         }
                     });
                 }
-
-
             }
-
         });
     });
 
