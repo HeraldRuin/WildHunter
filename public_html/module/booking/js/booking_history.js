@@ -1408,18 +1408,19 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
 
                 // === Дополнительные услуги ===
-                html += `<tr class="table-secondary"><td style="padding:5px;" colspan="3"><strong>Доп. услуги</strong></td></tr>`;
-                (res.meals || []).concat(res.preparation || []).concat(res.addetionals || []).forEach(item => {
-                    html += `
+                if (res.additional_services_show) {
+                    html += `<tr class="table-secondary"><td style="padding:5px;" colspan="3"><strong>Доп. услуги</strong></td></tr>`;
+                    (res.meals || []).concat(res.preparation || []).concat(res.addetionals || []).forEach(item => {
+                        html += `
 <tr>
     <td>${item.name}</td>
     <td>${item.total_cost ?? 0}</td>
     <td>${item.my_cost ?? 0}</td>
 </tr>`;
-                });
-
+                    });
+                }
                 // === Расходы охотников ===
-                if (!is_baseAdmin) {
+                if (!is_baseAdmin && res.spendings_show) {
                     html += `
 <tr class="table-secondary">
     <td style="padding:5px;"><strong>Расходы охотников</strong></td>

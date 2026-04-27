@@ -28,14 +28,20 @@ class HotelHuntingCalculationStrategy implements BookingCalculationStrategy
         // === Штрафы ===
         $penalties = $this->bookingCalculator->calculatePenalties(collect($grouped['penalty'] ?? []), $user);
 
+        // === Дополнительные услуги ===
+        $addetionals = $this->bookingCalculator->calculateAdditional(collect($grouped['addetional'] ?? []), $user, $paidCount);
+
         // === Питание ===
         $meals = $this->bookingCalculator->calculateMeals(collect($grouped['food'] ?? []), $paidCount, $booking);
 
         // === Разделка ===
         $preparations = $this->bookingCalculator->calculatePreparations(collect($grouped['preparation'] ?? []), $paidCount);
 
-        // === Дополнительные услуги ===
-        $addetionals = $this->bookingCalculator->calculateAdditional(collect($grouped['addetional'] ?? []), $user, $paidCount);
+        $additionalServices = array_merge(
+            $meals,
+            $preparations,
+            $addetionals
+        );
 
         // === Расходы охотников ===
         $spendingData = $this->bookingCalculator->getSpendings(collect($grouped['spending'] ?? []), $user, $paidCount);
@@ -85,13 +91,15 @@ class HotelHuntingCalculationStrategy implements BookingCalculationStrategy
                     'has_tooltip' => true,
                 ],
             ],
-            'trophy_show' => true,
+            'trophy_show' =>  !empty($trophies),
             'trophies' => $trophies,
-            'penalties_show' => true,
+            'penalties_show' => !empty($penalties),
             'penalties' => $penalties,
+            'additional_services_show' => !empty($additionalServices),
             'meals' => $meals,
             'preparation' => $preparations,
             'addetionals' => $addetionals,
+            'spendings_show' => !empty($spendingData['items']),
             'spendings' => $spendingData['items'],
             'all_items' => $allItems,
 

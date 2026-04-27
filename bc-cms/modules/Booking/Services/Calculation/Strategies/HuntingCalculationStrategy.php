@@ -30,14 +30,21 @@ class HuntingCalculationStrategy implements BookingCalculationStrategy
         // === Штрафы ===
         $penalties = $this->bookingCalculator->calculatePenalties(collect($grouped['penalty'] ?? []), $user);
 
+
+        // === Дополнительные услуги ===
+        $addetionals = $this->bookingCalculator->calculateAdditional(collect($grouped['addetional'] ?? []), $user, $totalHunting);
+
         // === Питание ===
         $meals = $this->bookingCalculator->calculateMeals(collect($grouped['food'] ?? []), $totalHunting, $booking);
 
         // === Разделка ===
         $preparations = $this->bookingCalculator->calculatePreparations(collect($grouped['preparation'] ?? []), $totalHunting);
 
-        // === Дополнительные услуги ===
-        $addetionals = $this->bookingCalculator->calculateAdditional(collect($grouped['addetional'] ?? []), $user, $totalHunting);
+        $additionalServices = array_merge(
+            $meals,
+            $preparations,
+            $addetionals
+        );
 
         // === Расходы охотников ===
         $spendingData = $this->bookingCalculator->getSpendings(collect($grouped['spending'] ?? []), $user, $totalHunting);
@@ -78,9 +85,11 @@ class HuntingCalculationStrategy implements BookingCalculationStrategy
             'trophies' => $trophies,
             'penalties_show' => true,
             'penalties' => $penalties,
+            'additional_services_show' => !empty($additionalServices),
             'meals' => $meals,
             'preparation' => $preparations,
             'addetionals' => $addetionals,
+            'spendings_show' => !empty($spendingData),
             'spendings' => $spendingData['items'],
             'all_items' => $allItems,
 

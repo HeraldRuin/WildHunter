@@ -22,11 +22,16 @@ class HotelCalculationStrategy implements BookingCalculationStrategy
             ];
         }
 
+        // === Дополнительные услуги ===
+        $addetionals = $this->bookingCalculator->calculateAdditional(collect($grouped['addetional'] ?? []), $user, $paidCount);
+
         // === Питание ===
         $meals = $this->bookingCalculator->calculateMeals(collect($grouped['food'] ?? []), $paidCount, $booking);
 
-        // === Дополнительные услуги ===
-        $addetionals = $this->bookingCalculator->calculateAdditional(collect($grouped['addetional'] ?? []), $user, $paidCount);
+        $additionalServices = array_merge(
+            $meals,
+            $addetionals
+        );
 
         // === Расходы охотников ===
         $spendingData = $this->bookingCalculator->getSpendings(collect($grouped['spending'] ?? []), $user, $paidCount);
@@ -71,8 +76,10 @@ class HotelCalculationStrategy implements BookingCalculationStrategy
             ],
             'trophy_show' => false,
             'penalties_show' => false,
+            'additional_services_show' => !empty($additionalServices),
             'meals' => $meals,
             'addetionals' => $addetionals,
+            'spendings_show' => !empty($spendingData),
             'spendings' => $spendingData['items'],
             'all_items' => $allItems,
 
