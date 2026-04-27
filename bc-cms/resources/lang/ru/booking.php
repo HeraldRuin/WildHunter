@@ -1,7 +1,7 @@
 <?php
 return [
     'errors' => [
-        'unknown_type' => 'Неизвестный тип бронирования: :type',
+        'unknown_booking_type' => 'Неизвестный тип бронирования',
         'cannot_select_more_than_one_place' => 'Нельзя выбрать больше одного места',
         'The selected seat is already taken, try choosing a different one' => 'Выбранное место уже занято, попробуйте выбрать другое',
         'no_free_places_in_room' => 'В этой комнате свободных мест нет',
