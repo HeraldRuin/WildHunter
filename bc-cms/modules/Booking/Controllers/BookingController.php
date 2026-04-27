@@ -843,7 +843,7 @@ class BookingController extends \App\Http\Controllers\Controller
     {
         $result = $this->bookingUserService->changeUser($booking, $request->input('user_id'));
 
-        return new SuccessResponse(code: $result['code']);
+        return new SuccessResponse(code: $result['code'], domain: 'booking');
     }
 
     /**
@@ -854,7 +854,7 @@ class BookingController extends \App\Http\Controllers\Controller
         $result = $this->bookingCollectionService->confirmBooking($booking);
         event(new BookingUpdatedEvent($booking));
 
-        return new SuccessResponse(code: $result['code']);
+        return new SuccessResponse(code: $result['code'], domain: 'booking');
     }
 
     public function startCollection(Booking $booking): JsonResponse
@@ -864,9 +864,8 @@ class BookingController extends \App\Http\Controllers\Controller
         }
 
         $result = $this->bookingTimerService->startCollectionTimer($booking);
-        event(new BookingStartCollectionEvent($booking));
 
-        return new SuccessResponse(code: $result['code']);
+        return new SuccessResponse(code: $result['code'], domain: 'booking');
     }
 
     public function cancelCollection(Booking $booking): JsonResponse
@@ -877,7 +876,7 @@ class BookingController extends \App\Http\Controllers\Controller
 
         $result = $this->bookingCollectionService->cancelCollection($booking, $this->currentUser());
 
-        return new SuccessResponse(code: $result['code']);
+        return new SuccessResponse(code: $result['code'], domain: 'booking');
     }
 
     public function finishCollection(Booking $booking): JsonResponse
@@ -888,7 +887,7 @@ class BookingController extends \App\Http\Controllers\Controller
 
         $result = $this->bookingCollectionService->finishCollection($booking, $this->currentUser());
 
-        return new SuccessResponse(code: $result['code']);
+        return new SuccessResponse(code: $result['code'], domain: 'booking');
     }
 
     /**
@@ -916,7 +915,7 @@ class BookingController extends \App\Http\Controllers\Controller
 
         $result = $this->bookingInvitationService->inviteByEmail($booking, trim((string) $request->validated('email')));
 
-        return new SuccessResponse(code: $result['code'], data: $result['data']);
+        return new SuccessResponse(code: $result['code'], domain: 'booking', data: $result['data']);
     }
 
     public function getInvitedHunters(Booking $booking): JsonResponse
@@ -938,7 +937,7 @@ class BookingController extends \App\Http\Controllers\Controller
 
         $result = $this->bookingInvitationService->accept($booking, Auth::id());
 
-        return new SuccessResponse(code: $result['code']);
+        return new SuccessResponse(code: $result['code'], domain: 'booking');
     }
 
     public function declineInvitation(Booking $booking): JsonResponse
@@ -949,7 +948,7 @@ class BookingController extends \App\Http\Controllers\Controller
 
         $result = $this->bookingInvitationService->declineInvitation($booking);
 
-        return new SuccessResponse(code: $result['code']);
+        return new SuccessResponse(code: $result['code'], domain: 'booking');
     }
 
 
@@ -967,14 +966,14 @@ class BookingController extends \App\Http\Controllers\Controller
         $result = $this->bookingCollectionService->cancel($booking);
         $this->bookingNotificationService->sendCancelledEmail($booking);
 
-        return new SuccessResponse(code: $result['code']);
+        return new SuccessResponse(code: $result['code'], domain: 'booking');
     }
 
     /**
      * @throws ForbiddenException
      * @throws ConflictException
      */
-    public function completeBooking(Booking $booking)
+    public function completeBooking(Booking $booking): JsonResponse
     {
         if (!Auth::check()) {
             return $this->sendError('Необходима авторизация')->setStatusCode(401);
@@ -984,7 +983,7 @@ class BookingController extends \App\Http\Controllers\Controller
         $result = $this->bookingCollectionService->complete($booking);
         $this->bookingNotificationService->sendCompletedEmail($booking);
 
-        return new SuccessResponse(code: $result['code']);
+        return new SuccessResponse(code: $result['code'], domain: 'booking');
     }
 
 
