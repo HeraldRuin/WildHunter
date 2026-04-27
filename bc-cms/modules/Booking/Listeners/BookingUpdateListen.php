@@ -28,7 +28,7 @@
             $data = [
                 'event'=>'BookingUpdatedEvent',
                 'to'=>'admin',
-                'id' =>  $booking->id,
+                'id' =>  $booking->booking_number,
                 'name'    => $name,
                 'avatar'  => $avatar,
                 'link' => route('report.admin.booking'),
