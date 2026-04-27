@@ -185,10 +185,9 @@ var bookingCoreApp ={
         if(typeof json !='undefined'){
             if(typeof json.errors !='undefined'){
                 var html = '';
-                _.forEach(json.errors,function (val) {
-                    html+=val+'<br>';
+                Object.values(json.errors).forEach(val => {
+                    html += val + '<br>';
                 });
-
                 return this.showError(html);
             }
             if(json.message){
