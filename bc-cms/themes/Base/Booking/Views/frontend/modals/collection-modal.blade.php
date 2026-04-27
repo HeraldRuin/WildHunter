@@ -87,7 +87,7 @@
                         <template v-if="invitedHunters.length > 0">
 
                             <div class="list-group">
-                                <div v-for="hunter in invitedHunters" :key="hunter.id">
+                                <div v-for="hunter in invitedHuntersWithoutPending" :key="hunter.id">
 
                                     <div class="d-flex justify-content-between align-items-start">
 

@@ -53,6 +53,9 @@ document.addEventListener('DOMContentLoaded', function () {
                     '{{ \Modules\Booking\Models\Booking::BED_COLLECTION }}',
                     '{{ \Modules\Booking\Models\Booking::FINISHED_BED }}'
                 ];
+            },
+            invitedHuntersWithoutPending() {
+                return this.invitedHunters.filter(h => h.invitation_status !== 'pending');
             }
         },
         methods: {
@@ -188,7 +191,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         this.$set(this, 'declinedHunters', declinedHunters);
                         this.invitedHunters = activeHunters
                         this.booking = data.booking
-                        if (data.status && activeHunters.length > 0) {
+                        if (data.success && activeHunters.length > 0) {
                             const updatedSlots = this.hunterSlots.map((slot, index) => {
                                 if (index < activeHunters.length) {
                                     const hunter = activeHunters[index];
@@ -346,7 +349,6 @@ document.addEventListener('DOMContentLoaded', function () {
                     success: (res) => {
                         bc_button_loading(btn, false);
 
-                        if (res.status) {
                             // Находим объект в массиве и обновляем его напрямую
                             const index = this.hunterSearchResults.findIndex(h => h.id === hunter.id);
                             if (index !== -1) {
@@ -381,18 +383,11 @@ document.addEventListener('DOMContentLoaded', function () {
                             } else if (res.message) {
                                 alert(res.message);
                             }
-                        } else if (res.message) {
-                            alert(res.message);
-                        }
                     },
                     error: function (e) {
                         bc_button_loading(btn, false);
-                        if (e.status === 419) {
-                            alert('Сессия истекла, обновите страницу');
-                        } else if (e.responseJSON && e.responseJSON.message) {
-                            alert('Ошибка: ' + e.responseJSON.message);
-                        } else {
-                            alert('Произошла ошибка при сохранении приглашения охотника');
+                        if (e.responseJSON && e.responseJSON.message){
+                            bookingCoreApp.showError({ message: e.responseJSON.message });
                         }
                     }
                 });
