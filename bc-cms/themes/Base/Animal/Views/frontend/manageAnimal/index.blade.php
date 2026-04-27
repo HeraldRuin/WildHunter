@@ -5,7 +5,14 @@
             @if(Auth::user()->hasPermission('animal_create') && empty($recovery))
                 <div style="position:absolute; z-index:1000; background:#fff; width:460px; top:19px; right:30px;" id="animal-app" data-bulk-url="{{ route('animal.vendor.bulk_attach') }}">
                     <select v-model="animalIdToAttach" class="form-control" @change="attachAnimal">
-                        <option value="">{{ __('Select animal') }}</option>
+                        <option value="" hidden>
+                            @if(empty($animal_list) || count($animal_list) === 0)
+                              Список пуст
+                            @else
+                                {{ __('Select animal') }}
+                            @endif
+
+                        </option>
                         @foreach($animal_list as $animal)
                             <option value="{{ $animal->id }}">{{ $animal->title }}</option>
                         @endforeach
@@ -14,7 +21,7 @@
             @endif
         </h2>
 
-        <div class="container-fluid list-animal-width">
+        <div class="container-fluid list-animal-width custom-fluid">
         <div class="panel">
             <div class="panel-body">
                 <div class="table-responsive">
@@ -35,17 +42,16 @@
                                         @if($row->is_featured)
                                             <span class="badge badge-primary">{{ __("Featured") }}</span>
                                         @endif
-{{--                                            <a href="{{route('animal.admin.edit',['id'=>$row->id])}}">{{$row->title}}</a>--}}
                                         <span>{{$row->title}}</span>
                                     </td>
                                     <td>
                                         <form method="POST" action="{{ route('animal.vendor.update_hunters_count', $row->id) }}" class="d-inline">
                                             @csrf
                                             <div class="input-group" style="max-width: 150px;">
-                                                <input type="number" 
-                                                       name="hunters_count" 
-                                                       value="{{ $row->hunters_count ?? 1 }}" 
-                                                       min="1" 
+                                                <input type="number"
+                                                       name="hunters_count"
+                                                       value="{{ $row->hunters_count ?? 1 }}"
+                                                       min="1"
                                                        class="form-control form-control-sm hunters-count-input"
                                                        data-animal-id="{{ $row->id }}">
                                                 <div class="input-group-append">
