@@ -29,8 +29,6 @@
         <button class="btn btn-danger btn-sm remove-period" data-id="{{ $period->id }}">
             {{__("Delete")}}
         </button>
-
     </td>
-
 </tr>
 

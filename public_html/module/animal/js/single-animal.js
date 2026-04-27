@@ -11,23 +11,26 @@
                 animalIdToAttach: ''
             },
             mounted() {
-                var vm = this;
-
                 $('#animal-app').on('click', '.remove-period', function () {
                     let periodId = $(this).data('id');
 
-                    if (!confirm('Хотите удалить период?')) return;
+                    bookingCoreApp.showConfirm({
+                        message: 'Вы удаляете период. Продолжить?',
+                        callback: (result) => {
+                            if (!result) return;
 
-                    $.ajax({
-                        url: '/animal/period/' + periodId,
-                        type: 'post',
-                        dataType: 'json',
-                        data: {_token: $('meta[name="csrf-token"]').attr('content')},
-                        success: function (res) {
-                            if (res.status) {
-                                $(this).closest('tr').remove();
-                            }
-                        }.bind(this)
+                            $.ajax({
+                                url: '/animal/period/' + periodId,
+                                type: 'post',
+                                dataType: 'json',
+                                data: {_token: $('meta[name="csrf-token"]').attr('content')},
+                                success: function (res) {
+                                    if (res.status) {
+                                        $(this).closest('tr').remove();
+                                    }
+                                }.bind(this)
+                            });
+                        }
                     });
                 });
 
