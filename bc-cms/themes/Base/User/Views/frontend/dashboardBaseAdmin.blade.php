@@ -67,7 +67,7 @@
                             @if(count($recent_bookings) > 0)
                                 @foreach($recent_bookings as $booking)
                                     <tr>
-                                        <td>#{{$booking->id}}</td>
+                                        <td>#{{$booking->booking_number}}</td>
                                         <td>
                                             @if(get_bookable_service_by_id($booking->object_model) and $service = $booking->service)
                                                 <a href="{{$service->getDetailUrl()}}" target="_blank">{{$service->title}}</a>
