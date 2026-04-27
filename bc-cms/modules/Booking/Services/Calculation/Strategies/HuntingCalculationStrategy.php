@@ -89,7 +89,7 @@ class HuntingCalculationStrategy implements BookingCalculationStrategy
             'meals' => $meals,
             'preparation' => $preparations,
             'addetionals' => $addetionals,
-            'spendings_show' => !empty($spendingData),
+            'spendings_show' => !empty($spendingData['items']),
             'spendings' => $spendingData['items'],
             'all_items' => $allItems,
 
