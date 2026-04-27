@@ -20,6 +20,7 @@
     <link href="{{ asset('module/additional/css/additional.css') }}" rel="stylesheet">
     <link rel="stylesheet" type="text/css" href="{{ asset('libs/daterange/daterangepicker.css') }}">
     <link rel="stylesheet" type="text/css" href="{{ asset('libs/select2/css/select2.min.css') }}">
+    <link href="{{ asset('themes/admin/dist/css/style.css') }}" rel="stylesheet">
     <!-- Fonts -->
     <link rel="dns-prefetch" href="//fonts.gstatic.com">
     <link rel='stylesheet' id='google-font-css-css'

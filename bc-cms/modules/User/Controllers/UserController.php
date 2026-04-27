@@ -68,9 +68,18 @@ class UserController extends FrontendController
         } else {
             abort(403);
         }
+
+        $f = strtotime('monday this week');
+        $data = [
+            'recent_bookings'    => Booking::getRecentBookings(),
+            'top_cards'          => Booking::getTopCardsReport(),
+            'earning_chart_data' => Booking::getDashboardChartData($f, time())
+        ];
+
         $data['user'] = $user;
         $data['isAdmin'] = $user->hasRole('administrator');
         $data['viewAdminCabinet'] = $user->hasRole('administrator');
+
         return view($view, $data);
     }
     protected function getVendorDashboardData($user): array

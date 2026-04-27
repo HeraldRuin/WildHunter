@@ -2,3 +2,8 @@
     padding-left: 1px;
     padding-right: 46px;
 }
+
+.col-md-custom {
+    flex: 0 0 23%;
+    max-width: 23%;
+}
