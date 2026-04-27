@@ -4,7 +4,7 @@
     <h2 class="title-bar">{{ __('Hunting organization') }}</h2>
 
     @if($rows->count())
-        <div id="animal-app" class="row mt-4 row-width">
+        <div id="animal-app" class="row row-width">
 
             <div class="col-md-3">
                 <ul class="nav nav-tabs flex-column custom-nav-style">
