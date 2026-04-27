@@ -21,7 +21,7 @@ class BookingInvitationService
     public function getInvitedHunters(Booking $booking, ?int $currentUserId): array
     {
         $hunters = $booking->getAllInvitations()
-            ->whereNotIn('status', ['removed', 'pending'])
+            ->whereNotIn('status', ['removed', 'pending', 'declined'])
             ->map(fn ($invitation) =>
             $this->mapInvitation($invitation, $currentUserId)
             )
