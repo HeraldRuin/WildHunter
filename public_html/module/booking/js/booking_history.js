@@ -94,22 +94,21 @@ document.addEventListener('DOMContentLoaded', function () {
                     .done(res => {
                         bc_button_loading(btn, false);
 
-                        if (!res.status) {
-                            bookingCoreApp.showAjaxMessage(res);
-                            return;
+                        if (res.success) {
+                            me.currentCollectionBookingId = bookingId;
+
+                            window.openModal('collectionModal', bookingId);
+
+                            setTimeout(() => {
+                                me.initializeHunterSlots(bookingId);
+                            }, 200);
                         }
-
-                        me.currentCollectionBookingId = bookingId;
-
-                        window.openModal('collectionModal', bookingId);
-
-                        setTimeout(() => {
-                            me.initializeHunterSlots(bookingId);
-                        }, 200);
                     })
-                    .fail(() => {
+                    .fail((e) => {
                         bc_button_loading(btn, false);
-                        alert('Ошибка при запуске сбора');
+                        if (e.responseJSON && e.responseJSON.message){
+                            bookingCoreApp.showError({ message: e.responseJSON.message });
+                        }
                     });
             },
             // ТОЛЬКО ДЛЯ ПРИГЛАШЕННОГО
@@ -638,46 +637,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 slot.emailMessage = '';
                 slot.emailAddress = '';
             },
-            sendHunterEmail(hunter, bookingId, event) {
-                if (!hunter || !hunter.id) return;
-
-                const bookingIdNum = parseInt(bookingId, 10);
-                if (!bookingIdNum) return;
-
-                const btn = event?.currentTarget || null;
-                if (btn) bc_button_loading(btn, true);
-
-                $.ajax({
-                    url: `/booking/${bookingIdNum}/email-hunter`,
-                    type: 'POST',
-                    dataType: 'json',
-                    data: {
-                        hunter_id: hunter.id,
-                        message: hunter.emailMessage || '',
-                        _token: $('meta[name="csrf-token"]').attr('content') || ''
-                    },
-                    success: function (res) {
-                        bc_button_loading(btn, false);
-
-                        if (res.status) {
-                            bookingCoreApp.showAjaxMessage(res);
-                            hunter.showEmailInput = false;
-                        } else if (res.message) {
-                            alert(res.message);
-                        }
-                    },
-                    error: function (e) {
-                        bc_button_loading(btn, false);
-                        if (e.status === 419) {
-                            alert('Сессия истекла, обновите страницу');
-                        } else if (e.responseJSON && e.responseJSON.message) {
-                            alert('Ошибка: ' + e.responseJSON.message);
-                        } else {
-                            alert('Произошла ошибка при отправке письма охотнику');
-                        }
-                    }
-                });
-            },
             searchUserDebounced() {
                 if (this.userSearchQuery.length < 1) return;
 
@@ -1062,7 +1021,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         _token: $('meta[name="csrf-token"]').attr('content') || ''
                     },
                     success: (res) => {
-                        if (res.status) {
+                        if (res.success) {
                             const newHunter = res.hunter;
                             const index = this.invitedHunters.findIndex(h => h.id === oldHunterId);
                             if (index !== -1) {
@@ -1077,12 +1036,10 @@ document.addEventListener('DOMContentLoaded', function () {
                                 });
                             }
                             this.clearReplace();
-                        } else {
-                            bookingCoreApp.showError(res.message);
                         }
                     },
                     error: function(e) {
-                        console.error(e);
+                        bookingCoreApp.showError({ message: e.responseJSON.message });
                     }
                 });
             },
@@ -1210,9 +1167,11 @@ document.addEventListener('DOMContentLoaded', function () {
                         self.renderBookingPlaces(booking, res.rooms, self.placesMap, contentEl);
 
                     })
-                    .fail(() => {
+                    .fail((e) => {
                         bc_button_loading(btn, false);
-                        alert('Ошибка при запросе к серверу');
+                        if (e.responseJSON && e.responseJSON.message){
+                            bookingCoreApp.showError({ message: e.responseJSON.message });
+                        }
                     });
             },
 
@@ -1323,26 +1282,20 @@ document.addEventListener('DOMContentLoaded', function () {
             },
 
             selectPlace(bookingId, roomId, placeNumber, roomIndex) {
-                const self = this;
-
                  return $.post(`/booking/${bookingId}/select-place`, {
                     room_id: roomId,
                     place_number: placeNumber,
                     room_index: roomIndex
                 })
                      .done(function(res) {
-                         if (res.success) {
-                             const booking = { id: bookingId };
-                             self.loadBookingPlaces(booking);
-                         } else {
-                             bookingCoreApp.showAjaxMessage(res);
-                         }
+                         // if (res.success) {
+                         //
+                         // }
                      })
-                     .fail(function(xhr) {
-                         bookingCoreApp.showAjaxMessage({
-                             status: false,
-                             message: 'Ошибка выбора места'
-                         });
+                     .fail(function(e) {
+                         if (e.responseJSON && e.responseJSON.message){
+                             bookingCoreApp.showError({ message: e.responseJSON.message });
+                         }
                      });
             },
 
@@ -1353,18 +1306,13 @@ document.addEventListener('DOMContentLoaded', function () {
                     place_id: placeId
                 })
                     .done(function(res) {
-                        if (res.success) {
-                            const booking = { id: bookingId };
-                            self.loadBookingPlaces(booking);
-                        } else {
-                            bookingCoreApp.showAjaxMessage(res);
-                        }
+                        const booking = { id: bookingId };
+                        self.loadBookingPlaces(booking);
                     })
-                    .fail(function() {
-                        bookingCoreApp.showAjaxMessage({
-                            status: false,
-                            message: 'Ошибка отмены места'
-                        });
+                    .fail(function(e) {
+                        if (e.responseJSON && e.responseJSON.message){
+                            bookingCoreApp.showError({ message: e.responseJSON.message });
+                        }
                     });
             },
 
@@ -1394,8 +1342,10 @@ document.addEventListener('DOMContentLoaded', function () {
 
                         self.renderCalculatingData(booking, contentEl, res);
                     })
-                    .fail(() => {
-                        alert('Ошибка при запросе к серверу');
+                    .fail((e) => {
+                        if (e.responseJSON && e.responseJSON.message){
+                            bookingCoreApp.showError({ message: e.responseJSON.message });
+                        }
                     });
             },
             renderCalculatingData(booking, contentEl, res) {
