@@ -4,6 +4,7 @@ namespace Modules\Booking\Services;
 
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
+use Modules\Booking\Events\BookingStartCollectionEvent;
 use Modules\Booking\Models\Booking;
 
 class BookingTimerService
@@ -154,6 +155,8 @@ class BookingTimerService
 
         $timerHour = $this->getTimerHours($booking, 'collection');
         $this->startTimer($booking->id, $timerHour, 'collection', ['collection', 'paid', 'beds']);
+
+        event(new BookingStartCollectionEvent($booking));
 
         return [
             'code' => 'gathering_has_started',

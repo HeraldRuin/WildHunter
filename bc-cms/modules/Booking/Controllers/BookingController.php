@@ -29,7 +29,6 @@ use Modules\Booking\DTO\StorePreparationData;
 use Modules\Booking\DTO\StoreSpendingData;
 use Modules\Booking\DTO\StoreTrophyData;
 use Modules\Booking\Events\BookingCreatedEvent;
-use Modules\Booking\Events\BookingStartCollectionEvent;
 use Modules\Booking\Events\BookingUpdatedEvent;
 use Modules\Booking\Events\EnquirySendEvent;
 use Modules\Booking\Events\SetPaidAmountEvent;
