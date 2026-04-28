@@ -30,6 +30,7 @@ use Modules\User\Events\UserSubscriberSubmit;
 use Modules\User\Models\Subscriber;
 use Modules\User\Models\User;
 use Modules\User\Models\UserWeapon;
+use Modules\User\Services\DashboardService;
 use Modules\Vendor\Models\VendorRequest;
 use Modules\Weapon\Models\Caliber;
 use Modules\Weapon\Models\WeaponType;
@@ -47,7 +48,8 @@ class UserController extends FrontendController
         protected BookingCalculatingService $bookingCalculatingService,
         protected BookingUserService $bookingUserService,
         protected BookingInvitationService $bookingInvitationService,
-        protected BookingStatusService $bookingStatusService)
+        protected BookingStatusService $bookingStatusService,
+        protected DashboardService $dashboardService)
     {
         $this->enquiryClass = $enquiry;
         parent::__construct();
@@ -55,52 +57,27 @@ class UserController extends FrontendController
         $this->cabinetService = $cabinetService;
     }
 
-    public function dashboard(Request $request)
+    public function dashboard()
     {
         $user = Auth::user();
 
-        if ($user->hasRole('baseadmin') && $user->hasPermission('baseAdmin_dashboard_access')) {
+        if (is_baseAdmin()) {
+            $data = $this->dashboardService->getBaseAdminData($this->booking, $user);
             $view = 'User::frontend.dashboardBaseAdmin';
-            $data = $this->getBaseAdminDashboardData($user);
-        } elseif ($user->hasRole('hunter') && $user->hasPermission('hunter_dashboard_access')) {
+        } elseif (is_vendor()) {
             $view = 'User::frontend.dashboardHunter';
-//            $data = $this->getVendorDashboardData($user);
+            $data = $this->dashboardService->getBaseHunterData($this->booking, $user);
         } else {
             abort(403);
         }
 
         $data['user'] = $user;
-        $data['isAdmin'] = $user->hasRole('administrator');
-        $data['viewAdminCabinet'] = $user->hasRole('administrator');
+        $data['isAdmin'] = is_admin();
+        $data['viewAdminCabinet'] = is_admin();
 
         return view($view, $data);
     }
-    protected function getVendorDashboardData($user): array
-    {
-        return [
-            'cards_report'       => $this->booking->getTopCardsReportForVendor($user->id),
-            'earning_chart_data' => $this->booking->getEarningChartDataForVendor(strtotime('monday this week'), time(), $user->id),
-            'page_title'         => __("Vendor Dashboard"),
-            'breadcrumbs'        => [
-                ['name' => __('Dashboard'), 'class' => 'active']
-            ]
-        ];
-    }
-    protected function getBaseAdminDashboardData($user): array
-    {
-        $hotelId = $user->hotels->first()->id;
 
-        return [
-            'recent_bookings'    => Booking::getRecentBookings(hotel_id: $hotelId),
-            'top_cards'          => Booking::getTopCardsReport(),
-            'cards_report'       => $this->booking->getTopCardsReportForBaseAdmin($user->id),
-            'earning_chart_data' => $this->booking->getEarningChartDataForVendor(strtotime('monday this week'), time(), $user->id),
-            'page_title'         => __("BaseAdmin Dashboard"),
-            'breadcrumbs'        => [
-                ['name' => __('Dashboard'), 'class' => 'active']
-            ]
-        ];
-    }
 
     public function reloadChart(Request $request)
     {
