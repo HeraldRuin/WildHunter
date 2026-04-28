@@ -53,7 +53,7 @@
                             <thead>
                             <tr>
                                 <th width="60px">#</th>
-                                <th>{{__('Item')}}</th>
+                                <th>{{__('BaseName')}}</th>
                                 <th width="100px">{{__("Total")}}</th>
                                 <th width="100px">{{__("Paid")}}</th>
                                 <th width="100px">{{__("Status")}}</th>

@@ -4076,5 +4076,6 @@
     "There is no such hunter among the invitees": "Такого охотника нет среди приглашенных",
     "You cannot remove the master hunter": "Нельзя удалить мастера охотника этой брони",
     "You can only cancel on yourself": "Вы можете сделать отмену только на себе",
-    "Invitation not found": "Приглашение не найдено"
+    "Invitation not found": "Приглашение не найдено",
+    "BaseName": "База"
 }

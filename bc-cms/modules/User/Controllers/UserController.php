@@ -58,24 +58,16 @@ class UserController extends FrontendController
     public function dashboard(Request $request)
     {
         $user = Auth::user();
-        $hotelId = $user->hotels->first()->id;
 
         if ($user->hasRole('baseadmin') && $user->hasPermission('baseAdmin_dashboard_access')) {
             $view = 'User::frontend.dashboardBaseAdmin';
             $data = $this->getBaseAdminDashboardData($user);
         } elseif ($user->hasRole('hunter') && $user->hasPermission('hunter_dashboard_access')) {
             $view = 'User::frontend.dashboardHunter';
-            $data = $this->getVendorDashboardData($user);
+//            $data = $this->getVendorDashboardData($user);
         } else {
             abort(403);
         }
-
-        $f = strtotime('monday this week');
-        $data = [
-            'recent_bookings'    => Booking::getRecentBookings(hotel_id: $hotelId),
-            'top_cards'          => Booking::getTopCardsReport(),
-            'earning_chart_data' => Booking::getDashboardChartData($f, time())
-        ];
 
         $data['user'] = $user;
         $data['isAdmin'] = $user->hasRole('administrator');
@@ -96,7 +88,11 @@ class UserController extends FrontendController
     }
     protected function getBaseAdminDashboardData($user): array
     {
+        $hotelId = $user->hotels->first()->id;
+
         return [
+            'recent_bookings'    => Booking::getRecentBookings(hotel_id: $hotelId),
+            'top_cards'          => Booking::getTopCardsReport(),
             'cards_report'       => $this->booking->getTopCardsReportForBaseAdmin($user->id),
             'earning_chart_data' => $this->booking->getEarningChartDataForVendor(strtotime('monday this week'), time(), $user->id),
             'page_title'         => __("BaseAdmin Dashboard"),
