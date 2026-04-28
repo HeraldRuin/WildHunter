@@ -247,6 +247,17 @@ function post_request(endpoint,data){
     })
 }
 
+window.apiFetch = function (url, options = {}) {
+    return fetch(url, options)
+        .then(res => res.json())
+        .then(response => {
+            if (!response.success) {
+                throw response;
+            }
+
+            return response.data;
+        });
+};
 
 // Merge object, same as _. if lodash
 function _isObject(obj) {
