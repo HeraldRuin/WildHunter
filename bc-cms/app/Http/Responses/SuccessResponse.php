@@ -2,6 +2,8 @@
 
 namespace App\Http\Responses;
 
+use Illuminate\Support\Collection;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\JsonResponse;
 
 final class SuccessResponse extends JsonResponse
@@ -11,20 +13,22 @@ final class SuccessResponse extends JsonResponse
         private readonly ?string $code = null,
         private readonly ?string $domain = null,
         int                      $status = 200,
-        array                    $data = []
+        protected mixed $data = [],
     ) {
-        parent::__construct(
-            $this->buildPayload($data),
-            $status
-        );
-    }
-
-    private function buildPayload(array $data): array
-    {
-        return array_merge([
+        parent::__construct([
             'success' => true,
             'message' => $this->resolveMessage(),
-        ], $data);
+            'data' => $this->normalize($data),
+        ], $status);
+    }
+
+    private function normalize(mixed $data): mixed
+    {
+        if ($data instanceof Collection || $data instanceof Model) {
+            return $data->values()->toArray();
+        }
+
+        return $data;
     }
 
     private function resolveMessage(): string
