@@ -16,10 +16,6 @@ class DashboardService
             'top_cards'          => Booking::getTopCardsReport(),
             'cards_report'       => $booking->getTopCardsReportForBaseAdmin($user->id),
             'earning_chart_data' => $booking->getEarningChartDataForVendor(strtotime('monday this week'), time(), $user->id),
-            'page_title'         => __("BaseAdmin Dashboard"),
-            'breadcrumbs'        => [
-                ['name' => __('Dashboard'), 'class' => 'active']
-            ]
         ];
     }
 
@@ -28,11 +24,6 @@ class DashboardService
         return [
             'cards_report'       => $booking->getTopCardsReportForVendor($user->id),
             'earning_chart_data' => $booking->getEarningChartDataForVendor(strtotime('monday this week'), time(), $user->id),
-            'page_title'         => __("Vendor Dashboard"),
-            'breadcrumbs'        => [
-                ['name' => __('Dashboard'), 'class' => 'active']
-            ]
         ];
     }
-
 }

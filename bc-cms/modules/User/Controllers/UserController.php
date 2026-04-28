@@ -62,11 +62,15 @@ class UserController extends FrontendController
         $user = Auth::user();
 
         if (is_baseAdmin()) {
-            $data = $this->dashboardService->getBaseAdminData($this->booking, $user);
             $view = 'User::frontend.dashboardBaseAdmin';
+            $data = $this->dashboardService->getBaseAdminData($this->booking, $user);
+            $data['page_title'] = __("BaseAdmin Dashboard");
+
         } elseif (is_vendor()) {
             $view = 'User::frontend.dashboardHunter';
             $data = $this->dashboardService->getBaseHunterData($this->booking, $user);
+            $data['page_title'] = __("Vendor Dashboard");
+
         } else {
             abort(403);
         }
@@ -74,6 +78,9 @@ class UserController extends FrontendController
         $data['user'] = $user;
         $data['isAdmin'] = is_admin();
         $data['viewAdminCabinet'] = is_admin();
+        $data['breadcrumbs'] = [
+            ['name' => __('Dashboard'), 'class' => 'active']
+        ];
 
         return view($view, $data);
     }
