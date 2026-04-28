@@ -21,10 +21,10 @@ class HotelHuntingCalculationStrategy implements BookingCalculationStrategy
         $isBaseAdmin = $data['isBaseAdmin'];
 
         if ($data['paidCount'] <= 0) {
-            throw new BusinessException(
-                errorCode: 'no_paid_participants',
-                domain: 'calculate'
-            );
+            return [
+                'status' => false,
+                'message' => 'no_paid_participants',
+            ];
         }
 
         // === Трофеи ===

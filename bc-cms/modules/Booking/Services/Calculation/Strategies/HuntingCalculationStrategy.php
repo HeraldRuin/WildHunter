@@ -2,17 +2,12 @@
 
 namespace Modules\Booking\Services\Calculation\Strategies;
 
-use App\Exceptions\BusinessException;
 use Modules\Booking\Services\Calculation\BookingCalculator;
 use Modules\Booking\Services\Calculation\Contracts\BookingCalculationStrategy;
 
 class HuntingCalculationStrategy implements BookingCalculationStrategy
 {
     public function __construct(protected BookingCalculator $bookingCalculator){}
-
-    /**
-     * @throws BusinessException
-     */
     public function calculate($booking, array $data, $user): array
     {
         $services = $data['services'];
@@ -21,10 +16,10 @@ class HuntingCalculationStrategy implements BookingCalculationStrategy
 
         if ($data['totalHunting'] === null || $data['totalHunting'] <= 0)
         {
-            throw new BusinessException(
-                errorCode: 'no_hunters',
-                domain: 'calculate'
-            );
+            return [
+                'status' => false,
+                'message' => 'no_hunters',
+            ];
         }
 
         $totalHunting = $data['totalHunting'];
