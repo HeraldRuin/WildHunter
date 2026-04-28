@@ -20,15 +20,7 @@ readonly class BookingCalculatingService
         $data = $this->builder->build($booking);
 
         $strategy = $this->resolver->resolve($booking);
-        $result = $strategy->calculate($booking, $data, $user);
 
-
-        if ($result['status'] === false) {
-            throw new BusinessException(
-                errorCode: $result['message'],
-                domain: 'calculate'
-            );
-        }
-        return $result;
+        return $strategy->calculate($booking, $data, $user);
     }
 }

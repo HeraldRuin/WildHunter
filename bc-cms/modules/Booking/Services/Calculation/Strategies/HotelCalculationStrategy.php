@@ -22,7 +22,7 @@ class HotelCalculationStrategy implements BookingCalculationStrategy
 
         if ($data['paidCount'] <= 0) {
             return [
-                'status' => false,
+                'success' => false,
                 'message' => 'no_paid_participants',
             ];
         }
@@ -70,7 +70,7 @@ class HotelCalculationStrategy implements BookingCalculationStrategy
         }
 
         return [
-            'status' => true,
+            'success' => true,
             'is_baseAdmin' => is_baseAdmin(),
             'items' => [
                 [

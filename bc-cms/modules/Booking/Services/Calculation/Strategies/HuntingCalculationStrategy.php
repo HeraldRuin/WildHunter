@@ -17,7 +17,7 @@ class HuntingCalculationStrategy implements BookingCalculationStrategy
         if ($data['totalHunting'] === null || $data['totalHunting'] <= 0)
         {
             return [
-                'status' => false,
+                'success' => false,
                 'message' => 'no_hunters',
             ];
         }
@@ -72,7 +72,7 @@ class HuntingCalculationStrategy implements BookingCalculationStrategy
         }
 
         return [
-            'status' => true,
+            'success' => true,
             'is_baseAdmin' => is_baseAdmin(),
             'items' => [
                 [
