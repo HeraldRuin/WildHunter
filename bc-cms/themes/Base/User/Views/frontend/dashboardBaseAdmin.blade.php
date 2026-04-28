@@ -3,9 +3,6 @@
 
 @include('admin.message')
 <div class="container-fluid custom-container">
-{{--    <div class="dashboard-page">--}}
-{{--        <h4 class="welcome-title text-uppercase">{{__('Welcome :name!',['name'=>Auth::user()->nameOrEmail])}}</h4>--}}
-{{--    </div>--}}
     <br>
     <div class="row">
         @if(!empty($top_cards))
@@ -67,7 +64,7 @@
                             @if(count($recent_bookings) > 0)
                                 @foreach($recent_bookings as $booking)
                                     <tr>
-                                        <td>#{{$booking->booking_number}}</td>
+                                        <td>{{$booking->booking_number}}</td>
                                         <td>
                                             @if(get_bookable_service_by_id($booking->object_model) and $service = $booking->service)
                                                 <a href="{{$service->getDetailUrl()}}" target="_blank">{{$service->title}}</a>

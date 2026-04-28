@@ -58,6 +58,7 @@ class UserController extends FrontendController
     public function dashboard(Request $request)
     {
         $user = Auth::user();
+        $hotelId = $user->hotels->first()->id;
 
         if ($user->hasRole('baseadmin') && $user->hasPermission('baseAdmin_dashboard_access')) {
             $view = 'User::frontend.dashboardBaseAdmin';
@@ -71,7 +72,7 @@ class UserController extends FrontendController
 
         $f = strtotime('monday this week');
         $data = [
-            'recent_bookings'    => Booking::getRecentBookings(),
+            'recent_bookings'    => Booking::getRecentBookings(hotel_id: $hotelId),
             'top_cards'          => Booking::getTopCardsReport(),
             'earning_chart_data' => Booking::getDashboardChartData($f, time())
         ];

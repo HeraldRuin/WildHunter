@@ -602,11 +602,14 @@ class Booking extends BaseModel
         return $this->hasOne(User::class, "id", 'vendor_id');
     }
 
-    public static function getRecentBookings($limit = 10,$vendor_id = false)
+    public static function getRecentBookings($limit = 10, $user_id = false, $hotel_id = false)
     {
         $q = parent::where('status', '!=', 'draft');
-        if(!empty($vendor_id)){
-            $q->where('vendor_id', $vendor_id);
+        if(!empty($user_id)){
+            $q->where('customer_id', $user_id);
+        }
+        if(!empty($hotel_id)){
+            $q->where('hotel_id', $hotel_id);
         }
         return $q->orderBy('id', 'desc')->limit($limit)->get();
     }
