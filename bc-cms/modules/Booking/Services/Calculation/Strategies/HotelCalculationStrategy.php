@@ -2,12 +2,17 @@
 
 namespace Modules\Booking\Services\Calculation\Strategies;
 
+use App\Exceptions\BusinessException;
 use Modules\Booking\Services\Calculation\BookingCalculator;
 use Modules\Booking\Services\Calculation\Contracts\BookingCalculationStrategy;
 
 class HotelCalculationStrategy implements BookingCalculationStrategy
 {
     public function __construct(protected BookingCalculator $bookingCalculator){}
+
+    /**
+     * @throws BusinessException
+     */
     public function calculate($booking, array $data, $user): array
     {
         $services = $data['services'];
@@ -16,10 +21,10 @@ class HotelCalculationStrategy implements BookingCalculationStrategy
         $isBaseAdmin = $data['isBaseAdmin'];
 
         if ($data['paidCount'] <= 0) {
-            return [
-                'status' => false,
-                'message' => 'Нет оплативших участников',
-            ];
+            throw new BusinessException(
+                errorCode: 'no_paid_participants',
+                domain: 'calculate'
+            );
         }
 
         // === Дополнительные услуги ===
