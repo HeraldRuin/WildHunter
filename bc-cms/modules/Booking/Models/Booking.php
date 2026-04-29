@@ -614,14 +614,20 @@ class Booking extends BaseModel
         return $q->orderBy('id', 'desc')->limit($limit)->get();
     }
 
-    public static function getTopCardsReport()
+    public static function getTopCardsReport($hotel_id = false)
     {
-
         $res = [];
+        $query = parent::whereNotIn('status', static::$notAcceptedStatus);
         $total_data = parent::selectRaw('sum(`total`) as total_price , sum( `total` - `total_before_fees` + `commission` - `vendor_service_fee_amount` ) AS total_earning ')->whereNotIn('status',static::$notAcceptedStatus)->first();
-        $total_booking = parent::whereNotIn('status',static::$notAcceptedStatus)->count('id');
+
+        if ($hotel_id) {
+            $query->where('hotel_id', $hotel_id);
+        }
+
+        $total_booking = (clone $query)->count('id');
         $total_service = 0;
         $services = get_bookable_services();
+
         if(!empty($services))
         {
             foreach ($services as $service){
