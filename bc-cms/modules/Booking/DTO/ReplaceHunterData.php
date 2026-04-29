@@ -10,7 +10,8 @@ class ReplaceHunterData
     public function __construct(
         public int $newHunterId,
         public ?string $email,
-        public ?string $userName,
+        public ?string $firstName,
+        public ?string $lastName,
         public ?string $userNik,
         public ?string $invitationStatus,
         public bool $isExternal,
@@ -24,7 +25,8 @@ class ReplaceHunterData
         return new self(
             newHunterId: (int) $hunter['id'],
             email: $hunter['email'] ?? null,
-            userName: $hunter['name'] ?? null,
+            firstName: $hunter['first_name'] ?? null,
+            lastName: $hunter['last_name'] ?? null,
             userNik: $hunter['user_name'] ?? null,
             invitationStatus: $hunter['invitation_status'] ?? null,
             isExternal: (bool) ($hunter['is_external'] ?? false),
