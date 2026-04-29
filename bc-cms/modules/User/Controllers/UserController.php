@@ -1,6 +1,7 @@
 <?php
 namespace Modules\User\Controllers;
 
+use App\Http\Responses\SuccessResponse;
 use Illuminate\Foundation\Auth\AuthenticatesUsers;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -31,10 +32,10 @@ use Modules\User\Models\Subscriber;
 use Modules\User\Models\User;
 use Modules\User\Models\UserWeapon;
 use Modules\User\Services\DashboardService;
+use Modules\User\Services\UserService;
 use Modules\Vendor\Models\VendorRequest;
 use Modules\Weapon\Models\Caliber;
 use Modules\Weapon\Models\WeaponType;
-use Validator;
 
 class UserController extends FrontendController
 {
@@ -49,7 +50,8 @@ class UserController extends FrontendController
         protected BookingUserService $bookingUserService,
         protected BookingInvitationService $bookingInvitationService,
         protected BookingStatusService $bookingStatusService,
-        protected DashboardService $dashboardService)
+        protected DashboardService $dashboardService,
+        protected UserService $userService)
     {
         $this->enquiryClass = $enquiry;
         parent::__construct();
@@ -128,7 +130,7 @@ class UserController extends FrontendController
             'is_vendor_access' => $this->hasPermission('hunter_dashboard_access')
         ];
 
-        if ($user->hasRole('baseadmin')){
+        if (is_baseAdmin()){
           return view('User::frontend.profile.profile_base_admin', $data);
         }else {
            return view('User::frontend.profile.profile_hunter', $data);
@@ -310,8 +312,6 @@ class UserController extends FrontendController
         return redirect()->back()->with('success', __('Request vendor success!'));
     }
 
-
-
     public function permanentlyDelete(Request $request){
         if(is_demo_mode()){
             return back()->with('error',"Demo mode: disabled");
@@ -351,17 +351,16 @@ class UserController extends FrontendController
     public function searchUser(Request $request): JsonResponse
     {
         $query = trim($request->get('query'));
+        $result = $this->userService->searchUser($query);
 
-        $users = User::where('id', $query)
-            ->select(['id', 'user_name', 'first_name'])
-            ->get();
-
-        return response()->json($users);
+        return new SuccessResponse(data: $result['data']);
     }
 
     public function searchHunters(Request $request): JsonResponse
     {
         $query = trim($request->get('query'));
-        return response()->json($this->bookingUserService->searchHunters($query, (int) $request->get('booking_id')));
+        $result = $this->bookingUserService->searchHunters($query, (int) $request->get('booking_id'));
+
+        return new SuccessResponse(data: $result);
     }
 }

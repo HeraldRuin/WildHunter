@@ -52,7 +52,7 @@ class BookingUserService
         ];
     }
 
-    public function searchHunters(string $query, int $bookingId = null): Collection
+    public function searchHunters(string $query, int $bookingId = null)
     {
         $users = User::query()
             ->whereNotIn('role_id', function ($q) {
@@ -79,15 +79,7 @@ class BookingUserService
             $this->applyInvitationStatus($users, $bookingId);
         }
 
-        return $users->map(fn ($user) => [
-            'id' => $user->id,
-            'name' => $user->display_name,
-            'user_name' => $user->user_name,
-            'email' => $user->email,
-            'phone' => $user->phone,
-            'invited' => $user->invited,
-            'invitation_status' => $user->invitation_status,
-        ]);
+        return $users;
     }
 
     private function applyInvitationStatus($users, int $bookingId): void
@@ -150,7 +142,8 @@ class BookingUserService
                 'hunter' => [
                     'id' => $data->newHunterId,
                     'email' => $invitation->email?? null,
-                    'name' => $data->userName?? null,
+                    'first_name' => $data->firstName?? null,
+                    'last_name' => $data->lastName?? null,
                     'user_name' => $data->userNik?? null,
                     'is_external' => $data->isExternal ?? false,
                     'invitation_status' => $data->invitationStatus ?? BookingHunterInvitation::STATUS_ACCEPTED,
