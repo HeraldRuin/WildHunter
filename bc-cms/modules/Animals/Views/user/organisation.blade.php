@@ -47,7 +47,7 @@
                             </table>
 
                             <button class="btn btn-primary"
-                                    @click="addPeriod({{ $animal->id }}, '{{ route('animal.vendor.period.create', ['animal' => $animal->id]) }}')">
+                                    @click="addPeriod({{ $animal->id }}, '{{ route('animal.period.create', ['animal' => $animal->id]) }}')">
                                 {{__("Add Period")}}
                             </button>
                         </div>
