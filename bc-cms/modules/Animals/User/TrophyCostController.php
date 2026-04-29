@@ -14,6 +14,7 @@ use Modules\FrontendController;
 class TrophyCostController extends FrontendController
 {
     protected Animal $animalClass;
+    protected string $indexView = 'Animals::user.trophy_cost';
 
     public function __construct(Animal $animalClass, protected AnimalService $animalService)
     {
@@ -36,16 +37,12 @@ class TrophyCostController extends FrontendController
         $this->checkPermission('animal_create_hunting');
         $userHotelId = get_user_hotel_id();
 
-        $list_animals = $this->animalClass
+        $rows = $this->animalClass
             ->forHotel($userHotelId)
-            ->withPreparationsForHotel($userHotelId);
-
-        if($request->query('s')){
-            $list_animals->where('bc_animals.title', 'like', '%'.$request->query('s').'%');
-        }
-
-        $list_animals->orderBy('bc_animals.id', 'desc');
-        $rows = $list_animals->paginate(15);
+            ->withPreparationsForHotel($userHotelId)
+            ->search($request->query('s'))
+            ->orderByDesc('bc_animals.id')
+            ->paginate(15);
 
         $breadcrumbs = [
             [
@@ -59,7 +56,7 @@ class TrophyCostController extends FrontendController
         ];
         $page_title = __('Trophy Cost');
 
-        return view('Animals::user.trophy_cost', compact('rows', 'userHotelId', 'breadcrumbs', 'page_title', 'request'));
+        return view($this->indexView, compact('rows', 'userHotelId', 'breadcrumbs', 'page_title', 'request'));
     }
 
     /**

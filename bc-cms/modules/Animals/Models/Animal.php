@@ -169,5 +169,13 @@ class Animal extends Bookable
                 }
             ]);
     }
+    public function scopeSearch($query, $search)
+    {
+        if ($search) {
+            $query->where('bc_animals.title', 'like', "%{$search}%");
+        }
+
+        return $query;
+    }
 }
 

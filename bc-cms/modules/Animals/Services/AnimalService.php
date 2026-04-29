@@ -2,7 +2,6 @@
 
 namespace Modules\Animals\Services;
 
-
 use App\Exceptions\BusinessException;
 use Modules\Animals\DTO\UpdateEntityData;
 
