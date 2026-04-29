@@ -167,11 +167,16 @@ var bookingCoreApp ={
         bootbox.alert(args);
     },
     showError:function (configs) {
-        var args = {};
+        let args = {};
+
         if(typeof configs == 'object')
         {
-            args = configs;
-        }else{
+            if (configs.responseJSON || configs.response || configs.message) {
+                args.message = this._extractErrorMessage(configs);
+            } else {
+                args = configs;
+            }
+        } else {
             args.message = configs;
         }
         if(!args.title){
@@ -180,8 +185,27 @@ var bookingCoreApp ={
         args.centerVertical = true;
         bootbox.alert(args);
     },
+    _extractErrorMessage: function (e) {
+        if (e?.responseJSON?.message) {
+            return e.responseJSON.message;
+        }
+
+        if (e?.responseJSON?.errors) {
+            return Object.values(e.responseJSON.errors).flat().join('\n');
+        }
+
+        if (e?.response?.data?.message) {
+            return e.response.data.message;
+        }
+
+        if (e?.message) {
+            return e.message;
+        }
+
+        return 'Unknown error';
+    },
     showAjaxError:function (e) {
-        var json = e.responseJSON;
+        const json = e.responseJSON;
         if(typeof json !='undefined'){
             if(typeof json.errors !='undefined'){
                 var html = '';

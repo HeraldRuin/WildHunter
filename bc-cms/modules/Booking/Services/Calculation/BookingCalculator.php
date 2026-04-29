@@ -360,7 +360,7 @@ class BookingCalculator
         }
 
         return [
-            'title_name' => 'Внесена предоплата:',
+            'title_name' => 'Внесена предоплата',
             'total_cost' => $this->basePrepaymentMade($booking),
             'my_cost' => $this->myPrepaymentMade($booking->total, $huntersCount),
         ];
