@@ -15,7 +15,7 @@ class DashboardService
             'recent_bookings'    => Booking::getRecentBookings(hotel_id: $hotelId),
             'top_cards'          => Booking::getTopCardsReport(hotel_id: $hotelId),
             'cards_report'       => $booking->getTopCardsReportForBaseAdmin($user->id),
-            'earning_chart_data' => $booking->getEarningChartDataForVendor(strtotime('monday this week'), time(), $user->id),
+            'earning_chart_data' => $booking->getEarningChartDataForBaseAdmin(strtotime('monday this week'), time(), $user->id),
         ];
     }
 

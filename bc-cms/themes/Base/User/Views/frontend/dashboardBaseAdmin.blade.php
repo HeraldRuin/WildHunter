@@ -32,10 +32,11 @@
                         <span></span> <i class="fa fa-caret-down"></i>
                     </div>
                 </div>
+                @dump($earning_chart_data)
                 <div class="panel-body">
                     <canvas id="earning_chart"></canvas>
                     <script>
-                        var earning_chart_data = {!! json_encode($earning_chart_data) !!};
+                        const earning_chart_data = {!! json_encode($earning_chart_data) !!};
                     </script>
                 </div>
             </div>
@@ -101,8 +102,9 @@
 @push('js')
     <script src="{{url('libs/chart_js/Chart.min.js')}}"></script>
     <script src="{{url('libs/daterange/moment.min.js')}}"></script>
+    <script src="{{url('libs/daterange/locale/ru.js')}}"></script>
     <script>
-        var ctx = document.getElementById('earning_chart').getContext('2d');
+        const ctx = document.getElementById('earning_chart').getContext('2d');
         window.myMixedChart = new Chart(ctx, {
             type: 'bar',
             data: earning_chart_data,
