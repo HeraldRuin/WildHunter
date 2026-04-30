@@ -2,7 +2,9 @@
 
 namespace Modules\Booking\Models;
 
+use App\User;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class BookingHunter extends Model
@@ -40,5 +42,9 @@ class BookingHunter extends Model
         $userId = $userId ?? auth()->id();
 
         return $this->invited_by === $userId;
+    }
+    public function hunter(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'hunter_id');
     }
 }
