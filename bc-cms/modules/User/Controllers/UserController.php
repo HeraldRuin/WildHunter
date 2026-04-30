@@ -70,7 +70,7 @@ class UserController extends FrontendController
 
         } elseif (is_vendor()) {
             $view = 'User::frontend.dashboardHunter';
-            $data = $this->dashboardService->getBaseHunterData($this->booking, $user);
+//            $data = $this->dashboardService->getBaseHunterData($this->booking, $user);
             $data['page_title'] = __("Vendor Dashboard");
 
         } else {
