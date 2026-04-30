@@ -28,12 +28,12 @@ $(document).ready(function () {
 
     function loadTrophyAnimals(block, bookingId) {
         return $.get(`/booking/${bookingId}/trophies/animals`).done(res => {
-            block.data('trophyAnimals', res.animals || [])
+            block.data('trophyAnimals', res.data.animals || [])
         });
     }
     function loadSavedTrophies(bookingId, container) {
         $.get(`/booking/${bookingId}/saved-services`, res => {
-            (res.trophies || []).forEach(trophy => {
+            (res.data.trophies || []).forEach(trophy => {
                 container.append(renderSavedTrophyRow(trophy, bookingId));
             });
         });
@@ -137,8 +137,8 @@ $(document).ready(function () {
                 count: $count.val(),
                 trophy_id: trophyId,
                 _token: $('meta[name="csrf-token"]').attr('content')
-            }).done(saved => {
-                $row.replaceWith(renderSavedTrophyRow(saved, bookingId));
+            }).done(res => {
+                $row.replaceWith(renderSavedTrophyRow(res.data, bookingId));
             });
         });
 
@@ -193,14 +193,14 @@ $(document).ready(function () {
 
     function loadPenaltyAnimals(block, bookingId) {
         return $.get(`/booking/${bookingId}/penalty/animals`).done(res => {
-            block.data('penaltyAnimals', res.animals || []);
-            block.data('hunters', res.hunters || []);
+            block.data('penaltyAnimals', res.data.animals || []);
+            block.data('hunters', res.data.hunters || []);
         });
     }
 
     function loadSavedPenalties(bookingId, container) {
         $.get(`/booking/${bookingId}/saved-services`, res => {
-            (res.penalties || []).forEach(penalty => {
+            (res.data.penalties || []).forEach(penalty => {
                 container.append(renderSavedPenaltyRow(penalty, bookingId));
             });
         });
@@ -311,8 +311,8 @@ $(document).ready(function () {
                 hunter_id: $hunter.val(),
                 penalty_id: fineId,
                 _token: $('meta[name="csrf-token"]').attr('content')
-            }).done(saved => {
-                $row.replaceWith(renderSavedPenaltyRow(saved, bookingId));
+            }).done(res => {
+                $row.replaceWith(renderSavedPenaltyRow(res.data, bookingId));
             });
         });
 
@@ -367,13 +367,13 @@ $(document).ready(function () {
 
     function loadPreparationAnimals(block, bookingId) {
         return $.get(`/booking/${bookingId}/preparation/animals`).done(res => {
-            block.data('preparationAnimals', res.animals || []);
+            block.data('preparationAnimals', res.data.animals || []);
         });
     }
 
     function loadSavedPreparations(bookingId, container) {
         $.get(`/booking/${bookingId}/saved-services`, res => {
-            (res.preparations || []).forEach(prep => {
+            (res.data.preparations || []).forEach(prep => {
                 container.append(renderSavedPreparationRow(prep, bookingId));
             });
         });
@@ -445,8 +445,8 @@ $(document).ready(function () {
                 preparation_id: preparationId,
                 count: $count.val(),
                 _token: $('meta[name="csrf-token"]').attr('content')
-            }).done(saved => {
-                $row.replaceWith(renderSavedPreparationRow(saved, bookingId));
+            }).done(res => {
+                $row.replaceWith(renderSavedPreparationRow(res.data, bookingId));
             });
         });
 
@@ -495,7 +495,7 @@ $(document).ready(function () {
 
     function loadSavedFoods(bookingId, container) {
         $.get(`/booking/${bookingId}/saved-services`, res => {
-            (res.foods || []).forEach(food => {
+            (res.data.foods || []).forEach(food => {
                 container.append(renderSavedFoodRow(food));
             });
         });
@@ -560,8 +560,8 @@ $(document).ready(function () {
             $.post(`/booking/${bookingId}/food`, {
                 count: $count.val(),
                 _token: $('meta[name="csrf-token"]').attr('content')
-            }).done(saved => {
-                $row.replaceWith(renderSavedFoodRow(saved));
+            }).done(res => {
+                $row.replaceWith(renderSavedFoodRow(res.data));
             });
         });
 
@@ -618,14 +618,14 @@ $(document).ready(function () {
     function loadOtherPrices(block, bookingId) {
         return $.get(`/booking/${bookingId}/addetional/services`)
             .done(res => {
-                block.data('otherPrices', res.addetionals || []);
-                block.data('hunters', res.hunters || []);
+                block.data('otherPrices', res.data.addetionals || []);
+                block.data('hunters', res.data.hunters || []);
             });
     }
 
     function loadSavedOthers(bookingId, container) {
         $.get(`/booking/${bookingId}/saved-services`, res => {
-            (res.addetionals || []).forEach(addetional => {
+            (res.data.addetionals || []).forEach(addetional => {
                 container.append(renderSavedOtherRow(addetional));
             });
         });
@@ -801,8 +801,8 @@ $(document).ready(function () {
                 count: count,
                 hunter_id: hunterId,
                 _token: $('meta[name="csrf-token"]').attr('content')
-            }).done(saved => {
-                $row.replaceWith(renderSavedOtherRow(saved));
+            }).done(res => {
+                $row.replaceWith(renderSavedOtherRow(res.data));
             });
         });
 
@@ -856,13 +856,13 @@ $(document).ready(function () {
 
     function loadSpendingUser(block, bookingId) {
         return $.get(`/booking/${bookingId}/spending/users`).done(res => {
-            block.data('hunters', res.hunters || []);
+            block.data('hunters', res.data.hunters || []);
         });
     }
 
     function loadSavedSpendings(bookingId, container) {
         $.get(`/booking/${bookingId}/saved-services`, res => {
-            (res.spendings || []).forEach(spending => {
+            (res.data.spendings || []).forEach(spending => {
                 container.append(renderSavedSpendingRow(spending));
             });
         });
@@ -942,8 +942,8 @@ $(document).ready(function () {
                 price: $count.val(),
                 comment: $comment.val(),
                 _token: $('meta[name="csrf-token"]').attr('content')
-            }).done(saved => {
-                $row.replaceWith(renderSavedSpendingRow(saved, bookingId));
+            }).done(res => {
+                $row.replaceWith(renderSavedSpendingRow(res.data, bookingId));
             });
         });
 
