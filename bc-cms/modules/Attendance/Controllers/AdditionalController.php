@@ -15,7 +15,7 @@ use DB;
 
 class AdditionalController extends Controller
 {
-    protected $indexView = 'Animal::frontend.user.organisation';
+    protected string $indexView = 'Attendance::user.additional';
 
     public function index(Request $request)
     {
@@ -36,7 +36,7 @@ class AdditionalController extends Controller
         ];
         $page_title = __('Additional services');
 
-        return view('Attendance::user.additional',compact('additionals','breadcrumbs','page_title'));
+        return view($this->indexView, compact('additionals','breadcrumbs','page_title'));
     }
 
     public function store(StoreAdditionalRequest $request)
