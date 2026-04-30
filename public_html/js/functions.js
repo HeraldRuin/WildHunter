@@ -225,7 +225,7 @@ var bookingCoreApp ={
     showAjaxMessage:function (json) {
         if(json.message)
         {
-            if(json.status){
+            if(json.status || json.success){
                 this.showSuccess(json);
             }else{
                 this.showError(json);
