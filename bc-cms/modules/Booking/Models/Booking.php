@@ -979,6 +979,66 @@ class Booking extends BaseModel
         return $res;
     }
 
+    public static function getEarningChartDataForBaseAdmin($from, $to, $user_id): array
+    {
+        $data = [
+            'labels'   => [],
+            'datasets' => [
+                [
+                    'label'           => __("Total Earning"),
+                    'data'            => [],
+                    'backgroundColor' => '#F06292'
+                ],
+                [
+                    'label'           => __("Total Pending"),
+                    'data'            => [],
+                    'backgroundColor' => '#8892d6'
+                ]
+            ]
+        ];
+        $sql_raw[] = 'sum( `total_before_fees` - `commission` + `vendor_service_fee_amount`) AS total_price';
+        $sql_raw[] = 'sum( CASE WHEN `status` = "completed" THEN `total_before_fees` - `commission` + `vendor_service_fee_amount` ELSE NULL END ) AS total_earning';
+        if (($to - $from) / DAY_IN_SECONDS > 90) {
+            $year = date("Y", $from);
+            // Report By Month
+            for ($month = 1; $month <= 12; $month++) {
+                $day_last_month = date("t", strtotime($year . "-" . $month . "-01"));
+                $data['labels'][] = date("F", strtotime($year . "-" . $month . "-01"));
+                $dataBooking = parent::selectRaw(implode(",", $sql_raw))->where("vendor_id", $user_id)->whereBetween('created_at', [
+                    $year . '-' . $month . '-01 00:00:00',
+                    $year . '-' . $month . '-' . $day_last_month . ' 23:59:59'
+                ])->whereNotIn('status',static::$notAcceptedStatus);
+                $dataBooking = $dataBooking->first();
+                $data['datasets'][1]['data'][] = $dataBooking->total_price - $dataBooking->total_earning;
+                $data['datasets'][0]['data'][] = $dataBooking->total_earning ?? 0;
+            }
+        } elseif (($to - $from) <= DAY_IN_SECONDS) {
+            // Report By Hours
+            for ($i = strtotime(date('Y-m-d', $from)); $i <= strtotime(date('Y-m-d 23:59:59', $to)); $i += HOUR_IN_SECONDS) {
+                $data['labels'][] = date('H:i', $i);
+                $dataBooking = parent::selectRaw(implode(",", $sql_raw))->where("vendor_id", $user_id)->whereBetween('created_at', [
+                    date('Y-m-d H:i:s', $i),
+                    date('Y-m-d H:i:s', $i + HOUR_IN_SECONDS - 1),
+                ])->whereNotIn('status',static::$notAcceptedStatus);
+                $dataBooking = $dataBooking->first();
+                $data['datasets'][1]['data'][] = $dataBooking->total_price - $dataBooking->total_earning;
+                $data['datasets'][0]['data'][] = $dataBooking->total_earning ?? 0;
+            }
+        } else {
+            // Report By Day
+            for ($i = strtotime(date('Y-m-d', $from)); $i <= strtotime(date('Y-m-d 23:59:59', $to)); $i += DAY_IN_SECONDS) {
+                $data['labels'][] = display_date($i);
+                $dataBooking = parent::selectRaw(implode(",", $sql_raw))->where("vendor_id", $user_id)->whereBetween('created_at', [
+                    date('Y-m-d 00:00:00', $i),
+                    date('Y-m-d 23:59:59', $i),
+                ])->whereNotIn('status',static::$notAcceptedStatus);
+                $dataBooking = $dataBooking->first();
+                $data['datasets'][1]['data'][] = $dataBooking->total_price - $dataBooking->total_earning;
+                $data['datasets'][0]['data'][] = $dataBooking->total_earning ?? 0;
+            }
+        }
+        return $data;
+    }
     public static function getEarningChartDataForVendor($from, $to, $user_id)
     {
         $data = [
