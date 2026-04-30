@@ -1267,6 +1267,14 @@ function clean_decimal($value): string
     $value = (float)$value;
     return rtrim(rtrim(sprintf('%.2f', $value), '0'), '.');
 }
+function translate_error(string $domain, string $key, array $params = []): string
+{
+    return __("{$domain}.errors.{$key}", $params);
+}
+function translate_successes(string $domain, string $key, array $params = []): string
+{
+    return __("{$domain}.successes.{$key}", $params);
+}
 
 
 
