@@ -2,6 +2,7 @@
 
 namespace Modules\Booking\Services;
 
+use App\Exceptions\NotFoundException;
 use App\Service\MailService;
 use App\User;
 use Illuminate\Support\Facades\DB;
@@ -144,12 +145,19 @@ class BookingInvitationService
     }
 
     // Удаляем все приглашения охотников, кроме мастера охотника (того, кто приглашал)
+
+    /**
+     * @throws NotFoundException
+     */
     public function deleteInvitations(Booking $booking): void
     {
         $masterHunter = $booking->masterHunter;
 
         if (!$masterHunter) {
-            throw new \DomainException('Не найден мастер охотник этой брони');
+            throw new NotFoundException(
+                errorCode: 'booking_invitation_not_found',
+                domain: 'booking'
+            );
         }
 
         $booking->getInvitationsExceptMaster()->each(fn($invitation) => $invitation->delete());
@@ -172,10 +180,8 @@ class BookingInvitationService
             ->whereNull('hunter_id')
             ->first();
 
-        $invitation = $invitationMaster;
-
         if (empty($invitationMaster)) {
-            $invitation = $this->createOrUpdateEmailInvitation($bookingHunter, $booking, $email);
+            $this->createOrUpdateEmailInvitation($bookingHunter, $booking, $email);
         }
 
         $this->sendEmailIfNeeded($booking, $email);
@@ -232,12 +238,18 @@ class BookingInvitationService
         return $user;
     }
 
+    /**
+     * @throws NotFoundException
+     */
     public function accept(Booking $booking, int $userId): array
     {
         $invitation = $booking->getCurrentUserInvitation();
 
         if (!$invitation) {
-            throw new \DomainException('Invitation not found');
+            throw new NotFoundException(
+                errorCode: 'booking_invitation_not_found',
+                domain: 'booking'
+            );
         }
 
         $invitation->status = 'accepted';
