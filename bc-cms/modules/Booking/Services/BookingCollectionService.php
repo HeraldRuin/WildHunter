@@ -60,6 +60,8 @@ readonly class BookingCollectionService
         $booking->status = Booking::CONFIRMED;
         $booking->save();
 
+        event(new BookingUpdatedEvent($booking));
+
         return [
             'code' => 'booking_confirmed',
         ];

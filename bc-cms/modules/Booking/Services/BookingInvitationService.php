@@ -30,10 +30,8 @@ class BookingInvitationService
             ->toArray();
 
         return [
-            'data' => [
-                'hunters' => $hunters,
-                'booking' => $booking,
-            ],
+            'hunters' => $hunters,
+            'booking' => $booking,
         ];
     }
 
@@ -184,9 +182,6 @@ class BookingInvitationService
 
         return [
             'code' => 'booking_invitation_sent',
-            'data' => [
-                'invitation_id' => $invitation->id,
-            ],
         ];
     }
     private function createOrUpdateEmailInvitation($bookingHunter, Booking $booking, string $email): BookingHunterInvitation

@@ -2,9 +2,11 @@
 
 namespace Modules\Booking\Controllers;
 
+use App\Exceptions\BusinessException;
 use App\Exceptions\ConflictException;
 use App\Exceptions\ForbiddenException;
 use App\Exceptions\NotFoundException;
+use App\Exceptions\ValidationException;
 use App\Helpers\ReCaptchaEngine;
 use App\Http\Responses\SuccessResponse;
 use App\Service\MailService;
@@ -851,7 +853,6 @@ class BookingController extends \App\Http\Controllers\Controller
     public function confirmBooking(Booking $booking): JsonResponse
     {
         $result = $this->bookingCollectionService->confirmBooking($booking);
-        event(new BookingUpdatedEvent($booking));
 
         return new SuccessResponse(code: $result['code'], domain: 'booking');
     }
@@ -914,7 +915,7 @@ class BookingController extends \App\Http\Controllers\Controller
 
         $result = $this->bookingInvitationService->inviteByEmail($booking, trim((string) $request->validated('email')));
 
-        return new SuccessResponse(code: $result['code'], domain: 'booking', data: $result['data']);
+        return new SuccessResponse(code: $result['code'], domain: 'booking');
     }
 
     public function getInvitedHunters(Booking $booking): JsonResponse
@@ -925,7 +926,7 @@ class BookingController extends \App\Http\Controllers\Controller
 
         $result = $this->bookingInvitationService->getInvitedHunters($booking, Auth::id());
 
-        return new SuccessResponse(data: $result['data']);
+        return new SuccessResponse(data: $result);
     }
 
     public function acceptInvitation(Booking $booking): JsonResponse
@@ -1198,10 +1199,22 @@ class BookingController extends \App\Http\Controllers\Controller
         return new SuccessResponse();
     }
 
-    //Калькуляция
+
+    /**
+     * Калькуляция
+     * @throws ValidationException
+     * @throws BusinessException
+     */
     public function getCalculating(Booking $booking): JsonResponse
     {
         $result = $this->bookingCalculatingService->calculate($booking, Auth::user());
+
+        if ($result && $result['success'] === false) {
+            throw new BusinessException(
+                errorCode: $result['message'],
+                domain: 'calculate'
+            );
+        }
 
         return new SuccessResponse(data: $result);
     }

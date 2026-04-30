@@ -3,13 +3,11 @@
 namespace Modules\Booking\Services;
 
 use App\Exceptions\ConflictException;
-use App\Exceptions\ForbiddenException;
 use App\Exceptions\NotFoundException;
 use App\User;
-use Illuminate\Support\Collection;
+use Illuminate\Database\Eloquent\Collection;
 use Modules\Booking\DTO\ReplaceHunterData;
 use Modules\Booking\Models\Booking;
-use Modules\Booking\Models\BookingHunter;
 use Modules\Booking\Models\BookingHunterInvitation;
 
 class BookingUserService
@@ -52,7 +50,7 @@ class BookingUserService
         ];
     }
 
-    public function searchHunters(string $query, int $bookingId = null)
+    public function searchHunters(string $query, int $bookingId = null): Collection
     {
         $users = User::query()
             ->whereNotIn('role_id', function ($q) {

@@ -248,16 +248,7 @@ class BookingServiceManager
     }
     public function createFood(Booking $booking, StoreFoodData $data): array
     {
-
         $price = AddetionalPrice::where('type', 'food')->where('hotel_id', $booking->hotel_id)->value('price');
-
-        if (!$price) {
-//            return response()->json([
-//                'status' => false,
-//                'message' => 'Цена питания не найдена'
-//            ], 400);
-        }
-
 
         $count = $data->count;
         $totalCost = $price * $count;
@@ -318,12 +309,10 @@ class BookingServiceManager
         ])->load('hunter');
 
         return [
-            'data' => [
                 'id'           => $service->id,
                 'count'        => $service->price,
                 'comment'      => $service->comment,
                 'hunter_name'  => $service->hunter->name ?? '—',
-            ],
         ];
     }
     public function getAnimalHunterData(Booking $booking): array
