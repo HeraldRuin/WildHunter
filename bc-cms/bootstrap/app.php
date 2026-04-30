@@ -56,8 +56,7 @@ return Application::configure(basePath: dirname(__DIR__))
                     'success' => false,
                     'message' => __($message),
                     'error_code' => $e->getErrorCode(),
-                    'trace_id' => $request->attributes->get('trace_id'),
-                    'context' => $e->getContext(),
+                    'trace_id' => $request->attributes->get('trace_id')
                 ], $e->getStatus());
             }
 
