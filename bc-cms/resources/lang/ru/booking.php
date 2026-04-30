@@ -13,6 +13,7 @@ return [
         'booking_access_denied' => 'Доступ запрещён',
         'booking_status_locked' => 'Статус бронирования заблокирован',
         'booking_invitation_not_found' => 'Для этой брони не найден приглашенный',
+        'not_all_hunters_confirmed' => 'Не все приглашённые участники подтвердили приглашение. Дождитесь ответа всех участников',
     ],
     'successes' => [
         'place_selected' => 'Выбранное место занято за вами',

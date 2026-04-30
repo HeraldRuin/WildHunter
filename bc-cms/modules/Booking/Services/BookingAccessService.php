@@ -13,9 +13,7 @@ class BookingAccessService
      */
     public function ensureCanAccessBooking(Booking $booking, Authenticatable $user): void
     {
-        $isBaseAdmin = is_baseAdmin();
-
-        if ($isBaseAdmin || $user->hasPermission('dashboard_vendor_access')) {
+        if (is_baseAdmin()) {
             return;
         }
 

@@ -2,6 +2,7 @@
 
 namespace Modules\Booking\Controllers;
 
+use App\Exceptions\BaseException;
 use App\Exceptions\BusinessException;
 use App\Exceptions\ConflictException;
 use App\Exceptions\ForbiddenException;
@@ -955,6 +956,7 @@ class BookingController extends \App\Http\Controllers\Controller
     /**
      * @throws ConflictException
      * @throws ForbiddenException
+     * @throws BaseException
      */
     public function cancelBooking(Booking $booking): JsonResponse
     {

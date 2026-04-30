@@ -2,23 +2,23 @@
 
 namespace Modules\Booking\Services;
 
+use App\Exceptions\BaseException;
 use App\Exceptions\ConflictException;
+use App\Exceptions\ForbiddenException;
 use App\Service\MailService;
 use App\User;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 use Modules\Animals\Models\Animal;
 use Modules\Booking\Emails\HunterMessageEmail;
 use Modules\Booking\Emails\StatusUpdatedEmail;
 use Modules\Booking\Events\BookingFinishEvent;
 use Modules\Booking\Events\BookingUpdatedEvent;
 use Modules\Booking\Models\Booking;
-use Modules\Booking\Models\BookingHunter;
 use Modules\Booking\Models\BookingHunterInvitation;
 
 readonly class BookingCollectionService
 {
-    public function __construct(private BookingTimerService $bookingTimerService, private BookingInvitationService $bookingInvitationService, protected MailService $mailService, private BookingStatusService $bookingStatusService)
+    public function __construct(private BookingTimerService $bookingTimerService, private BookingInvitationService $bookingInvitationService, protected MailService $mailService, private BookingStatusService $bookingStatusService, private BookingAccessService $bookingAccessService)
     {
     }
     public function checkPrepaymentAllPaid(Booking $booking, ?BookingHunterInvitation $invitation = null): void
@@ -67,6 +67,9 @@ readonly class BookingCollectionService
         ];
     }
 
+    /**
+     * @throws ConflictException
+     */
     public function finishCollection(Booking $booking, $user): array
     {
         $this->checkAccess($booking, $user);
@@ -136,6 +139,9 @@ readonly class BookingCollectionService
         ];
     }
 
+    /**
+     * @throws ForbiddenException
+     */
     public function cancelCollection(Booking $booking, $user): array
     {
         $this->checkAccess($booking, $user);
@@ -156,13 +162,12 @@ readonly class BookingCollectionService
         ];
     }
 
+    /**
+     * @throws ForbiddenException
+     */
     private function checkAccess(Booking $booking, User $user): void
     {
-        $isBaseAdmin = $user->hasRole('baseadmin')|| $user->hasPermission('baseAdmin_dashboard_access');
-
-        if (!$isBaseAdmin && $booking->create_user !== $user->id) {
-            throw new \DomainException(__("You don't have access."));
-        }
+        $this->bookingAccessService->ensureCanAccessBooking();
     }
     private function checkCollectionStatus(Booking $booking): void
     {
@@ -197,12 +202,7 @@ readonly class BookingCollectionService
 
             $this->mailService->send(
                 $hunter->email,
-                new HunterMessageEmail(
-                    $booking,
-                    $hunter,
-                    __('Сбор охотников для этой брони отменён.'),
-                    false
-                )
+                new HunterMessageEmail($booking, $hunter, translate_successes('booking', 'hunter_gathering_cancelled'), false)
             );
         }
     }
@@ -218,11 +218,7 @@ readonly class BookingCollectionService
 
                 $this->mailService->send(
                     $creator->email,
-                    new StatusUpdatedEmail(
-                        $booking,
-                        'customer',
-                        __('Сбор охотников для этой брони отменён.')
-                    )
+                    new StatusUpdatedEmail($booking, 'customer', translate_successes('booking', 'hunter_gathering_cancelled'))
                 );
         });
     }
@@ -243,6 +239,9 @@ readonly class BookingCollectionService
         }
     }
 
+    /**
+     * @throws ConflictException
+     */
     private function checkConfirmed($booking, $confirmed, int $requiredHunters): void
     {
         if ($booking->type === Booking::BookingTypeHotel)
@@ -251,8 +250,9 @@ readonly class BookingCollectionService
         }
 
         if ($confirmed->count() < $requiredHunters) {
-            throw new \DomainException(
-                __('Не все приглашённые участники подтвердили приглашение. Дождитесь ответа всех участников')
+            throw new ConflictException(
+                errorCode: 'not_all_hunters_confirmed',
+                domain: 'booking'
             );
         }
     }
@@ -276,6 +276,7 @@ readonly class BookingCollectionService
 
     /**
      * @throws ConflictException
+     * @throws BaseException
      */
     public function cancel(Booking $booking): array
     {
@@ -298,35 +299,19 @@ readonly class BookingCollectionService
         event(new BookingUpdatedEvent($booking));
     }
 
-    // Удаляем все приглашения охотников, кроме мастера охотника (того, кто приглашал)
+    /**
+     * Удаляем все приглашения охотников, кроме мастера охотника (того, кто приглашал)
+     * @throws BaseException
+     */
     private function cleanupHunterInvitations(Booking $booking): void
     {
-        try {
-            $ids = BookingHunter::where('booking_id', $booking->id)
-                ->where('is_master', false)
-                ->pluck('id');
+            $id = $booking->masterHunter()->pluck('id');
 
-            if ($ids->isEmpty()) {
-                Log::info('cancel: no non-master hunters', [
-                    'booking_id' => $booking->id,
-                ]);
+            if ($id->isEmpty()) {
                 return;
             }
 
-            $deleted = BookingHunterInvitation::whereIn('booking_hunter_id', $ids)
-                ->forceDelete();
-
-            Log::info('cancel: deleted invitations', [
-                'booking_id' => $booking->id,
-                'deleted' => $deleted,
-            ]);
-
-        } catch (\Throwable $e) {
-            Log::warning('cancel: failed to delete invitations', [
-                'booking_id' => $booking->id,
-                'error' => $e->getMessage(),
-            ]);
-        }
+            BookingHunterInvitation::whereIn('booking_hunter_id', $id)->forceDelete();
     }
 
     private function withLocale(Booking $booking, \Closure $callback): void
