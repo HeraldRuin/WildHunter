@@ -351,9 +351,9 @@ class UserController extends FrontendController
     public function searchUser(Request $request): JsonResponse
     {
         $query = trim($request->get('query'));
-        $result = $this->userService->searchUser($query);
+        $result = $this->userService->searchUserById($query);
 
-        return new SuccessResponse(data: $result['data']);
+        return new SuccessResponse(data: $result);
     }
 
     public function searchHunters(Request $request): JsonResponse
