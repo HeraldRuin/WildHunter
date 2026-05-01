@@ -24,8 +24,12 @@ final class SuccessResponse extends JsonResponse
 
     private function normalize(mixed $data): mixed
     {
-        if ($data instanceof Collection || $data instanceof Model) {
+        if ($data instanceof Collection) {
             return $data->values()->toArray();
+        }
+
+        if ($data instanceof Model) {
+            return $data->toArray();
         }
 
         return $data;
