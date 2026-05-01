@@ -3,13 +3,23 @@
 namespace Modules\User\Repositories;
 
 use App\User;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 
 class UserRepository
 {
-    public function searchHunters(string $query): Collection
+    private function query(): Builder
     {
-        return User::query()
+        return User::query();
+    }
+    public function findHunterById(int $userId): ?User
+    {
+        return $this->query()->find($userId);
+    }
+
+    public function searchHuntersByQuery(string $query): Collection
+    {
+        return $this->query()
             ->whereNotIn('role_id', function ($q) {
                 $q->select('id')
                     ->from('core_roles')
