@@ -19,7 +19,9 @@
                         style="background-color: #f8f9fa;">
                         <div>
                             <span>ID: @{{ user.id }}</span>
-                            <strong class="text-dark">@{{ user.user_name }}</strong><span>@{{ user.user_name ? '(ник)' : '(ник не задан)' }}</span>
+                            <strong class="text-dark">@{{ user.user_name }}</strong>
+                            <span>@{{ user.user_name ? '(ник)' : '(ник не задан)' }}</span>
+                            <strong class="text-dark">@{{ user.first_name }} @{{ user.last_name }}</strong>
                             <br>
                         </div>
                         <button v-if="!selectedUser || selectedUser.id !== user.id" class="btn btn-sm btn-primary"
