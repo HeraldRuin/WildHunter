@@ -49,7 +49,6 @@
                                     .join('\n');
 
                                 bookingCoreApp.showError({ message: messages });
-                                return;
                             }
                         }
                     });

@@ -182,16 +182,17 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
             },
             loadInvitedHunters(bookingId) {
-                fetch(`/booking/${bookingId}/invited-hunters`)
-                    .then(res => res.json())
-                    .then(data => {
-                        const allHunters = data.hunters || [];
+                apiFetch(`/booking/${bookingId}/invited-hunters`)
+                    .then(({ hunters, booking }) => {
+                        const allHunters = hunters || [];
                         const activeHunters = allHunters.filter(h => h.invitation_status !== 'declined');
                         const declinedHunters = allHunters.filter(h => h.invitation_status === 'declined');
-                        this.$set(this, 'declinedHunters', declinedHunters);
-                        this.invitedHunters = activeHunters
-                        this.booking = data.booking
-                        if (data.success && activeHunters.length > 0) {
+
+                        if (activeHunters.length > 0){
+                            this.$set(this, 'declinedHunters', declinedHunters);
+                            this.invitedHunters = activeHunters
+                            this.booking = booking
+
                             const updatedSlots = this.hunterSlots.map((slot, index) => {
                                 if (index < activeHunters.length) {
                                     const hunter = activeHunters[index];
@@ -296,10 +297,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
                 const bookingId = this.currentCollectionBookingId || '';
 
-                fetch(`/user/search-hunters?query=${encodeURIComponent(this.hunterSearchQuery)}&booking_id=${bookingId}`)
-                    .then(res => res.json())
+                apiFetch(`/user/search-hunters?query=${encodeURIComponent(this.hunterSearchQuery)}&booking_id=${bookingId}`)
                     .then(users => {
-                        // Инициализируем реактивные флаги для каждой записи
                         users.forEach(u => {
                             if (typeof u.invited === 'undefined') {
                                 u.invited = false;
@@ -349,40 +348,40 @@ document.addEventListener('DOMContentLoaded', function () {
                     success: (res) => {
                         bc_button_loading(btn, false);
 
-                            // Находим объект в массиве и обновляем его напрямую
-                            const index = this.hunterSearchResults.findIndex(h => h.id === hunter.id);
-                            if (index !== -1) {
-                                this.$set(this.hunterSearchResults[index], 'invited', true);
-                                this.$set(this.hunterSearchResults[index], 'invitation_status', 'pending');
-                                this.$set(this.hunterSearchResults[index], 'showEmailInput', false);
+                        // Находим объект в массиве и обновляем его напрямую
+                        const index = this.hunterSearchResults.findIndex(h => h.id === hunter.id);
+                        if (index !== -1) {
+                            this.$set(this.hunterSearchResults[index], 'invited', true);
+                            this.$set(this.hunterSearchResults[index], 'invitation_status', 'pending');
+                            this.$set(this.hunterSearchResults[index], 'showEmailInput', false);
+                        }
+
+                        // Обновляем также в слотах охотников
+                        this.hunterSlots.forEach(slot => {
+                            if (slot.hunter && slot.hunter.id === hunter.id) {
+                                this.$set(slot.hunter, 'invited', true);
+                                this.$set(slot.hunter, 'invitation_status', 'pending');
                             }
+                        });
 
-                            // Обновляем также в слотах охотников
-                            this.hunterSlots.forEach(slot => {
-                                if (slot.hunter && slot.hunter.id === hunter.id) {
-                                    this.$set(slot.hunter, 'invited', true);
-                                    this.$set(slot.hunter, 'invitation_status', 'pending');
-                                }
-                            });
+                        // Также обновляем переданный объект hunter
+                        Object.assign(hunter, {
+                            invited: true,
+                            invitation_status: 'pending',
+                            showEmailInput: false
+                        });
 
-                            // Также обновляем переданный объект hunter
-                            Object.assign(hunter, {
-                                invited: true,
-                                invitation_status: 'pending',
-                                showEmailInput: false
-                            });
+                        // Принудительно обновляем Vue для немедленного отображения
+                        this.$forceUpdate();
+                        this.$nextTick(() => {
+                            this.checkFinishCollectionButton(bookingId);
+                        });
 
-                            // Принудительно обновляем Vue для немедленного отображения
-                            this.$forceUpdate();
-                            this.$nextTick(() => {
-                                this.checkFinishCollectionButton(bookingId);
-                            });
-
-                            if (typeof bookingCoreApp !== 'undefined' && bookingCoreApp.showAjaxMessage) {
-                                bookingCoreApp.showAjaxMessage(res);
-                            } else if (res.message) {
-                                alert(res.message);
-                            }
+                        if (typeof bookingCoreApp !== 'undefined' && bookingCoreApp.showAjaxMessage) {
+                            bookingCoreApp.showAjaxMessage(res);
+                        } else if (res.message) {
+                            alert(res.message);
+                        }
                     },
                     error: function (e) {
                         bc_button_loading(btn, false);
@@ -391,6 +390,22 @@ document.addEventListener('DOMContentLoaded', function () {
                         }
                     }
                 });
+            },
+            getHunterName(hunter) {
+                if (!hunter) return '';
+
+                const userName = hunter.user_name;
+
+                const first = hunter.first_name || '';
+                const last = hunter.last_name || '';
+
+                const fullName = [first, last]
+                    .filter(v => typeof v === 'string' && v.trim())
+                    .map(v => v.trim())
+                    .join(' ')
+                    .trim();
+
+                return String(userName || '').trim()|| fullName|| String(hunter.email || '').trim()|| '';
             },
             searchHunterForSlot(slotIndex, bookingId) {
                 const slot = this.hunterSlots[slotIndex];
@@ -412,17 +427,13 @@ document.addEventListener('DOMContentLoaded', function () {
                     slot.showResults = true;
                     slot.noResults = false;
 
-                    fetch(`/user/search-hunters?query=${encodeURIComponent(slot.query)}&booking_id=${bookingId}`)
-                        .then(res => res.json())
+                    apiFetch(`/user/search-hunters?query=${encodeURIComponent(slot.query)}&booking_id=${bookingId}`)
                         .then(users => {
                             users.forEach(u => {
-                                if (typeof u.invited === 'undefined') {
-                                    u.invited = false;
-                                }
-                                if (typeof u.invitation_status === 'undefined') {
-                                    u.invitation_status = null;
-                                }
+                                if (typeof u.invited === 'undefined') u.invited = false;
+                                if (typeof u.invitation_status === 'undefined') u.invitation_status = null;
                             });
+
                             slot.results = users;
                             slot.noResults = users.length === 0 && slot.query.length >= 3;
                         })
@@ -431,22 +442,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         });
                 }, 300);
             },
-            handleHunterInputChange(slotIndex) {
-                const slot = this.hunterSlots[slotIndex];
-                if (!slot) return;
 
-                if (!slot.query || slot.query.trim() === '') {
-                    this.clearHunterSlot(slotIndex);
-                    return;
-                }
-
-                if (slot.hunter) {
-                    const hunterName = slot.hunter.user_name || (slot.hunter.name).trim();
-                    if (slot.query.trim() !== hunterName.trim()) {
-                        slot.hunter = null;
-                    }
-                }
-            },
             selectHunterForSlot(slotIndex, hunter, bookingId) {
                 const slot = this.hunterSlots[slotIndex];
                 if (!slot) return;
@@ -459,10 +455,31 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
 
                 slot.hunter = hunter;
-                slot.query = hunter.user_name || hunter.name;
+
+                slot.query = this.getHunterName(hunter) || hunter.email || '';
+
                 slot.showResults = false;
                 slot.results = [];
                 slot.noResults = false;
+            },
+            handleHunterInputChange(slotIndex) {
+                const slot = this.hunterSlots[slotIndex];
+                if (!slot) return;
+
+                const query = (slot.query || '').toString().trim();
+
+                if (!query) {
+                    this.clearHunterSlot(slotIndex);
+                    return;
+                }
+
+                if (slot.hunter) {
+                    const hunterName = this.getHunterName(slot.hunter);
+
+                    if (query !== hunterName) {
+                        slot.hunter = null;
+                    }
+                }
             },
             inviteHunterForSlot(slotIndex, bookingId, event) {
                 const slot = this.hunterSlots[slotIndex];
@@ -547,12 +564,12 @@ document.addEventListener('DOMContentLoaded', function () {
 
                 const query = slot.query ? slot.query.trim() : '';
                 if (!query) {
-                    alert('Введите email адрес охотника');
+                    bookingCoreApp.showError({ message: 'Введите email адрес охотника' });
                     return;
                 }
                 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
                 if (!emailPattern.test(query)) {
-                    alert('Введите корректный email адрес');
+                    bookingCoreApp.showError({ message: 'Введите корректный email адрес' });
                     return;
                 }
 
@@ -573,7 +590,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     success: (res) => {
                         bc_button_loading(btn, false);
 
-                        if (res.status) {
+                        if (res.success) {
                             const email = query.trim();
                             const hunterData = {
                                 id: null,
@@ -605,17 +622,11 @@ document.addEventListener('DOMContentLoaded', function () {
                                     this.loadInvitedHunters(bookingIdNum);
                                 }, 500);
                             });
-                        } else if (res.message) {
-                            if (typeof bookingCoreApp !== 'undefined' && bookingCoreApp.showAjaxMessage) {
-                                bookingCoreApp.showAjaxMessage(res);
-                            } else {
-                                alert(res.message);
-                            }
                         }
                     },
                     error: (e) => {
                         bc_button_loading(btn, false);
-                        bookingCoreApp.showError({ message: 'Произошла ошибка при отправке приглашения. Проверьте консоль для деталей.' });
+                        bookingCoreApp.showError({ message: 'Произошла ошибка при отправке приглашения' });
                     }
                 });
             },
@@ -633,6 +644,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 slot.emailAddress = '';
             },
             searchUserDebounced() {
+                this.userSearchQuery = this.userSearchQuery.replace(/\D/g, '');
                 if (this.userSearchQuery.length < 1) return;
 
                 clearTimeout(this.debounceTimeout);
@@ -651,12 +663,12 @@ document.addEventListener('DOMContentLoaded', function () {
                 this.isSearching = true;
                 this.noResults = false;
 
-                fetch(`/user/search?query=${encodeURIComponent(this.userSearchQuery)}`)
-                    .then(res => res.json())
-                    .then(users => {
-                        this.searchResults = users;
-                        this.isResults = users.length > 0;
-                        this.noResults = users.length === 0;
+                apiFetch(`/user/search?query=${encodeURIComponent(this.userSearchQuery)}`)
+                    .then(user => {
+                            this.searchResults = user;
+                            this.isResults = user.length > 0;
+                            this.noResults = user.length === 0;
+
                     })
                     .finally(() => {
                         this.isSearching = false;
@@ -664,8 +676,7 @@ document.addEventListener('DOMContentLoaded', function () {
             },
             selectUser(user) {
                 this.selectedUser = user;
-                this.userSearchQuery = user.user_name;
-                // this.searchResults = [];
+                this.userSearchQuery = user.id;
             },
             saveUserChange() {
                 const me = this;
@@ -677,9 +688,10 @@ document.addEventListener('DOMContentLoaded', function () {
                         user_id: this.selectedUser.id,
                     },
                     success: function (res) {
-                        if (res.status) {
+                        if (res.success) {
+                            this.userSearchQuery = ''
                             bookingCoreApp.showAjaxMessage(res);
-                            window.location.reload();
+                            setTimeout(function () {window.location.reload()}, 1200);
                         }
                     },
                     error: function (e) {
@@ -704,15 +716,15 @@ document.addEventListener('DOMContentLoaded', function () {
                                 _token: $('meta[name="csrf-token"]').attr('content') || ''
                             },
                             success: (res) => {
-                                if (res.status) {
+                                if (res.success) {
                                     if (btn) bc_button_loading(btn, false);
                                     bookingCoreApp.showAjaxMessage(res);
-                                    setTimeout(function () {window.location.reload()}, 1000);
+                                    setTimeout(function () {window.location.reload()}, 1200);
                                 }
                             },
                             error: function (e) {
                                 if (btn) bc_button_loading(btn, false);
-                                bookingCoreApp.showError({ message: 'Ошибка подтверждения брони' });
+                                bookingCoreApp.showError(e);
                             }
                         });
                     }
@@ -735,10 +747,10 @@ document.addEventListener('DOMContentLoaded', function () {
                                 _token: $('meta[name="csrf-token"]').attr('content') || ''
                             },
                             success: (res) => {
-                                if (res.status) {
+                                if (res.success) {
                                     if (btn) bc_button_loading(btn, false);
                                     bookingCoreApp.showAjaxMessage(res);
-                                    setTimeout(function () {window.location.reload()}, 1000);
+                                    setTimeout(function () {window.location.reload()}, 1200);
                                 }
                             },
                             error: function (e) {
@@ -766,9 +778,9 @@ document.addEventListener('DOMContentLoaded', function () {
                     success: function (res) {
                         bc_button_loading(btn, false);
 
-                        if (res.status) {
+                        if (res.success) {
                             bookingCoreApp.showAjaxMessage(res);
-                            setTimeout(function () {window.location.reload()}, 1000);
+                            setTimeout(function () {window.location.reload()}, 1200);
                         } else if (res.message) {
                             bookingCoreApp.showAjaxMessage(res);
                         }
@@ -803,11 +815,11 @@ document.addEventListener('DOMContentLoaded', function () {
                     success: function (res) {
                         bc_button_loading(btn, false);
 
-                        if (res.status) {
-                            window.closeModal('collectionModal', bookingId);
+                        if (res.success) {
+                            // window.closeModal('collectionModal', bookingId);
 
                             bookingCoreApp.showAjaxMessage(res);
-                            setTimeout(function () {window.location.reload()}, 500);
+                            setTimeout(function () {window.location.reload()}, 1200);
                         } else if (res.message) {
                             bookingCoreApp.showAjaxMessage(res);
                         }
@@ -941,12 +953,12 @@ document.addEventListener('DOMContentLoaded', function () {
                         _token: $('meta[name="csrf-token"]').attr('content') || ''
                     },
                     success: function (res) {
-                        if (res.status) {
-                                if (res?.payment_url) {
-                                    bc_button_loading(btn, false);
-                                    window.open(res.payment_url, '_blank');
-                                    window.closeModal('bookingPrepaymentModal', bookingId);
-                                }
+                        if (res.success) {
+                            if (res.data.payment_url) {
+                                bc_button_loading(btn, false);
+                                window.open(res.payment_url, '_blank');
+                                window.closeModal('bookingPrepaymentModal', bookingId);
+                            }
                         }
                     },
                     error: function (e) {
@@ -969,11 +981,10 @@ document.addEventListener('DOMContentLoaded', function () {
                 this.isSearchingReplace = true;
                 this.showReplaceResults = true;
 
-                clearTimeout(this.replaceDebounce);
+                // clearTimeout(this.replaceDebounce);
 
                 this.replaceDebounce = setTimeout(() => {
-                    fetch(`/user/search-hunters?query=${encodeURIComponent(this.replaceQuery)}&booking_id=${bookingId}`)
-                        .then(res => res.json())
+                    apiFetch(`/user/search-hunters?query=${encodeURIComponent(this.replaceQuery)}&booking_id=${bookingId}`)
                         .then(users => {
                             users.forEach(u => {
                                 if (typeof u.invited === 'undefined') u.invited = false;
@@ -997,6 +1008,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 this.selectedReplaceHunter = user;
                 this.showReplaceResults = false;
             },
+
             async confirmReplace(oldHunterId, bookingId) {
                 if (!this.selectedReplaceHunter) {
                     bookingCoreApp.showAjaxMessage({
@@ -1017,7 +1029,8 @@ document.addEventListener('DOMContentLoaded', function () {
                     },
                     success: (res) => {
                         if (res.success) {
-                            const newHunter = res.hunter;
+                            const newHunter = res.data.hunter;
+
                             const index = this.invitedHunters.findIndex(h => h.id === oldHunterId);
                             if (index !== -1) {
                                 this.$set(this.invitedHunters, index, newHunter);
@@ -1076,9 +1089,13 @@ document.addEventListener('DOMContentLoaded', function () {
                     }
                 });
             },
-            openBookingPlacesModal(booking, event) {
-                window.openModal('placeBookingModal', booking.id);
-                this.loadBookingPlaces(booking, event);
+            async openBookingPlacesModal(booking, event) {
+                const success = await this.loadBookingPlaces(booking, event);
+
+                if (success) {
+                    window.openModal('placeBookingModal', booking.id);
+                }
+
             },
             openPreFinalizeBookingModal(bookingId, event) {
                 bookingCoreApp.showConfirm({
@@ -1095,7 +1112,7 @@ document.addEventListener('DOMContentLoaded', function () {
                             },
                             success: (res) => {
                                 if (res.status) {
-                                window.location.reload()
+                                    window.location.reload()
 
                                 }
                             },
@@ -1121,7 +1138,7 @@ document.addEventListener('DOMContentLoaded', function () {
                             },
                             success: (res) => {
                                 if (res.status) {
-                                window.location.reload()
+                                    window.location.reload()
 
                                 }
                             },
@@ -1133,44 +1150,40 @@ document.addEventListener('DOMContentLoaded', function () {
                 });
             },
 
-            // Метод загрузки данных занятых мест
-            loadBookingPlaces(booking, event = null) {
+            async loadBookingPlaces(booking, event = null) {
                 const btn = event?.currentTarget || null;
                 if (btn) bc_button_loading(btn, true);
 
-                const self = this;
+                try {
+                    const res = await $.post(`/booking/${booking.id}/places`);
 
-                $.post(`/booking/${booking.id}/places`)
-                    .done(res => {
-                        bc_button_loading(btn, false);
+                    if (!res.data?.rooms || !res.data?.places) {
+                        bookingCoreApp.showError('Ошибка загрузки данных');
+                        return false;
+                    }
 
-                        if (!res.rooms || !res.places) {
-                            alert('Ошибка получения данных');
-                            return;
-                        }
+                    this.placesMap = res.data.places || {};
 
-                        self.placesMap = res.places || {};
-                        self.currentUserId = res.current_user_id || null;
+                    const modalEl = document.getElementById('placeBookingModal' + booking.id);
+                    if (!modalEl) return;
 
-                        const modalEl = document.getElementById('placeBookingModal' + booking.id);
-                        if (!modalEl) return;
+                    const contentEl = modalEl.querySelector('#booking-places-content-' + booking.id);
+                    if (!contentEl) return;
 
-                        const contentEl = modalEl.querySelector('#booking-places-content-' + booking.id);
-                        if (!contentEl) return;
+                    contentEl.innerHTML = '';
+                    this.renderBookingPlaces(booking, res.data.rooms, this.placesMap, contentEl);
 
-                        contentEl.innerHTML = '';
-                        self.renderBookingPlaces(booking, res.rooms, self.placesMap, contentEl);
+                    return true;
 
-                    })
-                    .fail((e) => {
-                        bc_button_loading(btn, false);
-                        if (e.responseJSON && e.responseJSON.message){
-                            bookingCoreApp.showError({ message: e.responseJSON.message });
-                        }
-                    });
+                } catch (e) {
+                    bookingCoreApp.showAjaxError(e);
+                    return false;
+
+                } finally {
+                    if (btn) bc_button_loading(btn, false);
+                }
             },
 
-            // Метод рендера комнат и мест
             renderBookingPlaces(booking, rooms, placesMap, contentEl) {
                 const self = this;
 
@@ -1277,21 +1290,21 @@ document.addEventListener('DOMContentLoaded', function () {
             },
 
             selectPlace(bookingId, roomId, placeNumber, roomIndex) {
-                 return $.post(`/booking/${bookingId}/select-place`, {
+                return $.post(`/booking/${bookingId}/select-place`, {
                     room_id: roomId,
                     place_number: placeNumber,
                     room_index: roomIndex
                 })
-                     .done(function(res) {
-                         // if (res.success) {
-                         //
-                         // }
-                     })
-                     .fail(function(e) {
-                         if (e.responseJSON && e.responseJSON.message){
-                             bookingCoreApp.showError({ message: e.responseJSON.message });
-                         }
-                     });
+                    .done(function(res) {
+                        // if (res.success) {
+                        //
+                        // }
+                    })
+                    .fail(function(e) {
+                        if (e.responseJSON && e.responseJSON.message){
+                            bookingCoreApp.showError({ message: e.responseJSON.message });
+                        }
+                    });
             },
 
             cancelSelectPlace(bookingId, placeId) {
@@ -1305,37 +1318,34 @@ document.addEventListener('DOMContentLoaded', function () {
                         self.loadBookingPlaces(booking);
                     })
                     .fail(function(e) {
-                        if (e.responseJSON && e.responseJSON.message){
-                            bookingCoreApp.showError({ message: e.responseJSON.message });
-                        }
+                            bookingCoreApp.showError(e);
                     });
             },
 
-            openCalculatingModal(booking, event) {
+            openCalculatingModal(booking) {
                 this.loadCalculatingData(booking);
             },
 
             loadCalculatingData(booking) {
-                const bookingIdNum = parseInt(booking.id, 10);
                 const self = this;
 
                 return $.get(`/booking/${booking.id}/calculating`)
-                    .done(res => {
-                        if (!res.status) {
-                            bookingCoreApp.showError({ message: res.message });
+                    .done(response => {
+                        if (!response.success) {
+                            bookingCoreApp.showError({ message: response.message });
                             return;
                         }
 
                         window.openModal('calculatingBookingModal', booking.id);
-                        self.calculatingData = res;
+                        self.calculatingData = response.data;
 
-                        const modalEl = document.getElementById('calculatingBookingModal' + bookingIdNum);
+                        const modalEl = document.getElementById('calculatingBookingModal' + booking.id);
                         if (!modalEl) return;
 
-                        const contentEl = modalEl.querySelector('#calculating-content-' + bookingIdNum);
+                        const contentEl = modalEl.querySelector('#calculating-content-' + booking.id);
                         if (!contentEl) return;
 
-                        self.renderCalculatingData(booking, contentEl, res);
+                        self.renderCalculatingData(booking, contentEl, response.data);
                     })
                     .fail((e) => {
                         if (e.responseJSON && e.responseJSON.message){
@@ -1396,15 +1406,15 @@ document.addEventListener('DOMContentLoaded', function () {
 
                 // === Штрафы ===
                 if (res.penalties_show) {
-                html += `<tr class="table-secondary"><td style="padding:5px;" colspan="3"><strong>Штрафы</strong></td></tr>`;
-                (res.penalties || []).forEach(item => {
-                    html += `
+                    html += `<tr class="table-secondary"><td style="padding:5px;" colspan="3"><strong>Штрафы</strong></td></tr>`;
+                    (res.penalties || []).forEach(item => {
+                        html += `
 <tr>
     <td>${item.name}</td>
     <td>${item.total_cost ?? 0}</td>
     <td>${item.my_cost ?? 0}</td>
 </tr>`;
-                });
+                    });
                 }
 
                 // === Дополнительные услуги ===
@@ -1496,7 +1506,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (modalEl && modalEl.id && modalEl.id.startsWith('collectionModal')) {
                     const bookingId = modalEl.dataset.bookingId;
                     if (bookingId) {
-                        setTimeout(() => {
+                        window.setTimeout(() => {
                             me.initializeHunterSlots(parseInt(bookingId, 10));
                         }, 50);
                     }
@@ -1651,9 +1661,9 @@ document.addEventListener('DOMContentLoaded', function () {
                     if (diffMs <= 0) {
 
                         if (extendBtn) {
-                              extendBtn.disabled = false;
-                              extendBtn.classList.remove('disabled');
-                            }
+                            extendBtn.disabled = false;
+                            extendBtn.classList.remove('disabled');
+                        }
 
                         buttons.forEach(btn => {
                             btn.disabled = true;
@@ -1661,7 +1671,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         });
 
                         if (el.dataset.collectionExpired === '1') return;
-                            el.dataset.collectionExpired = '1';
+                        el.dataset.collectionExpired = '1';
 
                         // Запрещаем приглашать охотников - нужно продлить сбор
                         const bookingKey = String(bookingId);
@@ -1677,11 +1687,11 @@ document.addEventListener('DOMContentLoaded', function () {
 
                     el.textContent = this.formatTimer(diffMs);
 
-                        // Пока таймер идет — кнопка продления должна быть неактивна
-                        if (extendBtn) {
-                            extendBtn.disabled = true;
-                            extendBtn.classList.add('disabled');
-                        }
+                    // Пока таймер идет — кнопка продления должна быть неактивна
+                    if (extendBtn) {
+                        extendBtn.disabled = true;
+                        extendBtn.classList.add('disabled');
+                    }
                     // buttons.forEach(btn => {
                     //     btn.disabled = false;
                     //     btn.classList.remove('disabled');
