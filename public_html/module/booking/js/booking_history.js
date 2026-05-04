@@ -1111,7 +1111,7 @@ document.addEventListener('DOMContentLoaded', function () {
                                 _token: $('meta[name="csrf-token"]').attr('content') || ''
                             },
                             success: (res) => {
-                                if (res.status) {
+                                if (res.success) {
                                     window.location.reload()
 
                                 }
@@ -1137,7 +1137,7 @@ document.addEventListener('DOMContentLoaded', function () {
                                 _token: $('meta[name="csrf-token"]').attr('content') || ''
                             },
                             success: (res) => {
-                                if (res.status) {
+                                if (res.success) {
                                     window.location.reload()
 
                                 }
@@ -1534,7 +1534,6 @@ document.addEventListener('DOMContentLoaded', function () {
             const userId = el ? el.dataset.userId : null;
 
             if (userId && window.LaravelEcho) {
-                //console.log('[HunterInvitation] Подписка на канал для пользователя:', userId);
 
                 try {
                     const channel = window.LaravelEcho.private(`user-channel-${userId}`);
@@ -1550,17 +1549,12 @@ document.addEventListener('DOMContentLoaded', function () {
                     });
 
                     channel.subscribed(() => {
-                        //console.log('[HunterInvitation] ✅ Успешно подписан на канал user-channel-' + userId);
                     });
 
                     channel.error((error) => {
-                        //console.error('[HunterInvitation] ❌ Ошибка подписки на канал:', error);
                     });
                 } catch (e) {
-                    //console.error('[HunterInvitation] ❌ Исключение при подписке:', e);
                 }
-            } else {
-                //console.warn('[HunterInvitation] ⚠️ Не удалось подписаться. userId:', userId, 'LaravelEcho:', !!window.LaravelEcho, 'Element:', !!el);
             }
 
             // Подписка на каналы бронирований для обновления счетчика в реальном времени
@@ -1577,7 +1571,6 @@ document.addEventListener('DOMContentLoaded', function () {
                         const channel = window.LaravelEcho.private(`booking-${bookingId}`);
 
                         channel.listen('.hunter.invitation.accepted', (e) => {
-                            // console.log('[HunterInvitationAccepted] Получено событие принятия приглашения:', e);
 
                             const targetRow = document.querySelector(`tr[data-booking-id="${bookingId}"]`);
                             if (targetRow) {
@@ -1590,21 +1583,17 @@ document.addEventListener('DOMContentLoaded', function () {
                                     const counterElement = statusCell.querySelector('.text-muted.mt-1');
                                     if (counterElement && e.accepted_count !== undefined && e.total_hunters_needed !== undefined) {
                                         counterElement.textContent = `Собранно ${e.accepted_count}/${e.total_hunters_needed}`;
-                                        //console.log('[HunterInvitationAccepted] Счетчик обновлен:', counterElement.textContent);
                                     }
                                 }
                             }
                         });
 
                         channel.subscribed(() => {
-                            //console.log(`[HunterInvitationAccepted] ✅ Успешно подписан на канал booking-${bookingId}`);
                         });
 
                         channel.error((error) => {
-                            //console.error(`[HunterInvitationAccepted] ❌ Ошибка подписки на канал booking-${bookingId}:`, error);
                         });
                     } catch (e) {
-                        //console.error(`[HunterInvitationAccepted] ❌ Исключение при подписке на booking-${bookingId}:`, e);
                     }
                 };
 
@@ -1652,12 +1641,8 @@ document.addEventListener('DOMContentLoaded', function () {
                     let diffMs = end - now;
 
                     const extendBtn = document.querySelector('.btn-extend-collection[data-booking-id="' + bookingId + '"]');
-                    // const buttons = document.querySelectorAll(`.accept-btn[data-booking-id="${bookingId}"]`);
-                    // const buttons = document.querySelectorAll('.accept-btn');
                     const buttons = document.querySelectorAll(`.accept-btn[data-booking-id="${bookingId}"]`);
 
-
-                    // Таймер закончился
                     if (diffMs <= 0) {
 
                         if (extendBtn) {
@@ -1692,10 +1677,6 @@ document.addEventListener('DOMContentLoaded', function () {
                         extendBtn.disabled = true;
                         extendBtn.classList.add('disabled');
                     }
-                    // buttons.forEach(btn => {
-                    //     btn.disabled = false;
-                    //     btn.classList.remove('disabled');
-                    // });
                 });
             };
 
@@ -1737,71 +1718,19 @@ document.addEventListener('DOMContentLoaded', function () {
                     },
                     success: function (res) {
 
-                        if (res.status) {
+                        if (res.success) {
 
-
-                            // if (typeof bookingCoreApp !== 'undefined' && bookingCoreApp.showAjaxMessage) {
-                            //     bookingCoreApp.showAjaxMessage(res);
-                            // } else if (res.message) {
-                            //     alert(res.message);
-                            // }
-
-                            // setTimeout(function () {
-                            //     window.location.reload();
-                            // }, 500);
-                        } else if (res.message) {
-                            // if (typeof bookingCoreApp !== 'undefined' && bookingCoreApp.showAjaxMessage) {
-                            //     bookingCoreApp.showAjaxMessage(res);
-                            // } else {
-                            //     alert(res.message);
-                            // }
                         }
                     },
-                    // error: function (e) {
-                    //
-                    //     if (e.status === 419) {
-                    //         alert('Сессия истекла, обновите страницу');
-                    //     } else if (e.responseJSON && e.responseJSON.message) {
-                    //         alert('Ошибка: ' + e.responseJSON.message);
-                    //     } else {
-                    //         alert('Произошла ошибка при отмене сбора охотников');
-                    //     }
-                    // }
+                    error: function (e) {
+
+                    }
                 });
             };
 
             const updateBedsTimers = () => {
                 const nodesWithEnd = document.querySelectorAll('.beds-timer[data-end]');
                 const now = Date.now();
-
-                // window.collectionState = window.collectionState || {};
-
-                // nodesWithEnd.forEach(el => {
-                //     const end = parseInt(el.dataset.end, 10);
-                //     if (!end) return;
-                //
-                //     const bookingId = el.dataset.bookingId;
-                //     if (!bookingId) return;
-                //
-                //     let diffMs = end - now;
-                //
-                //     // Таймер закончился
-                //     if (diffMs <= 0) {
-                //
-                //         if (el.dataset.collectionBedExpired === '1') return;
-                //         el.dataset.collectionBedExpired = '1';
-                //
-                //         // handleBookingBedTimerExpired(bookingId);
-                //         return;
-                //     }
-                //
-                //     if (el.dataset.collectionBedExpired) {
-                //         delete el.dataset.collectionBedExpired;
-                //         // delete window.collectionState[String(bookingId)];
-                //     }
-                //
-                //     el.textContent = this.formatTimer(diffMs);
-                // });
 
                 nodesWithEnd.forEach(el => {
                     const end = parseInt(el.dataset.end, 10);

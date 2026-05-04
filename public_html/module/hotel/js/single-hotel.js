@@ -1040,7 +1040,6 @@
                     dataType: 'json',
                     type: 'post',
                     success: function(res) {
-                        console.log('Validation response', res);
                         me.onValidateRooms = false;
                         if (!res.status) {
                             if (res.message) {
