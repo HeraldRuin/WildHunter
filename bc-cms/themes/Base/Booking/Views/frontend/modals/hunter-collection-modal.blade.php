@@ -11,7 +11,7 @@
                     @input="searchHunterForSlot(index, {{ $booking->id }})"
                     @change="handleHunterInputChange(index)"
                     @focus="hunterSlot.showResults = true"
-                    @blur="setTimeout(() => { hunterSlot.showResults = false; }, 200)">
+                    @blur="hunterSlot.showResults = false; hunterSlot.query=''; hunterSlot.results=''">
 
                 <!-- Результаты поиска для этого слота -->
                 <div v-if="hunterSlot.showResults" class="position-absolute w-100 bg-white border rounded shadow-sm mt-1" style="z-index: 1000; max-height: 300px; overflow-y: auto;">
@@ -40,8 +40,7 @@
                                                                     ID: @{{ hunter.id }} ( ник не задан )
                                                                 </template>
                                                             </span>
-                                        <span
-                                            class="text-muted ms-2">@{{ hunter.name }}</span>
+                                        <span class="text-muted ms-2">@{{ hunter.first_name }} @{{ hunter.last_name }}</span>
                                     </div>
                                     <div class="text-muted small">@{{ hunter.email }}</div>
                                     <div class="mt-1">
@@ -74,7 +73,10 @@
                 </div>
                 <!-- Информация о выбранном охотнике (показываем только если текст в поле соответствует выбранному охотнику) -->
                 <div
-                    v-if="hunterSlot.hunter && hunterSlot.query && ((hunterSlot.hunter.is_external && hunterSlot.query.trim() === hunterSlot.hunter.email) || (!hunterSlot.hunter.is_external && hunterSlot.query.trim() === ((hunterSlot.hunter.user_name || (hunterSlot.hunter.name)).trim())))"
+                    v-if="hunterSlot.hunter && hunterSlot.query && (
+                        (hunterSlot.hunter.is_external && (hunterSlot.query || '').trim() === (hunterSlot.hunter.email || '')) ||
+                        (!hunterSlot.hunter.is_external && (hunterSlot.query || '').trim() === getHunterName(hunterSlot.hunter))
+                    )"
                     class="mt-2">
                     <div class="d-flex align-items-center mb-1">
                         <span class="text-muted small">@{{ hunterSlot.hunter.email }}</span>
@@ -83,7 +85,10 @@
             </div>
             <div class="d-flex align-items-start">
                 <button
-                    v-if="hunterSlot.hunter && hunterSlot.query && ((hunterSlot.hunter.is_external && hunterSlot.query.trim() === hunterSlot.hunter.email) || (!hunterSlot.hunter.is_external && hunterSlot.query.trim() === ((hunterSlot.hunter.user_name || (hunterSlot.hunter.name)).trim())))"
+                    v-if="hunterSlot.hunter && hunterSlot.query && (
+                        (hunterSlot.hunter.is_external && (hunterSlot.query || '').trim() === (hunterSlot.hunter.email || '')) ||
+                        (!hunterSlot.hunter.is_external && (hunterSlot.query || '').trim() === getHunterName(hunterSlot.hunter))
+                    )"
                     type="button"
                     class="btn btn-sm me-2 ml-2"
                     :class="(hunterSlot.hunter && hunterSlot.hunter.invited && hunterSlot.hunter.invitation_status !== 'declined') ? 'btn-success' : 'btn-outline-primary'"
