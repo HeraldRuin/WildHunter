@@ -299,7 +299,7 @@ class BookingCalculator
     {
         $myAccommodationCost = $this->getMyAccommodationCost($booking, $user);
         $myOrganizationCost = $this->calculateMyOrganisationHunting($booking, $huntersCount);
-        $result = $this->getServiceCount($booking, $services, ['trophy', 'penalty', 'food', 'preparation', 'addetional']);
+        $result = $this->getServiceMyCount($booking, $user, $huntersCount, $services, ['trophy', 'penalty', 'food', 'preparation', 'addetional']);
         $myPrepaymentMade = $this->myPrepaymentMade($booking->total, $huntersCount);
 
         return ($myAccommodationCost + $myOrganizationCost + $result['total']) - $myPrepaymentMade;
