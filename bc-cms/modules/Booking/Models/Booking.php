@@ -2,6 +2,8 @@
 namespace Modules\Booking\Models;
 
 use App\BaseModel;
+use App\Exceptions\ConflictException;
+use App\Exceptions\NotFoundException;
 use Carbon\Carbon;
 use Eluceo\iCal\Component\Calendar;
 use Eluceo\iCal\Component\Event;
@@ -1668,8 +1670,8 @@ class Booking extends BaseModel
      */
     public function masterHunter(): HasOne
     {
-        return $this->hasOne(BookingHunter::class, 'booking_id', 'id')
-            ->where('is_master', true);
+        return $this->hasOne(BookingHunter::class, 'booking_id', 'id');
+//            ->where('is_master', true);
     }
 
     /**
@@ -1767,6 +1769,54 @@ class Booking extends BaseModel
         return BookingHunterInvitation::where('booking_hunter_id', $this->masterHunterRowId())
             ->where('hunter_id', $userId)
             ->first();
+    }
+
+    /**
+     * @throws ConflictException
+     * @throws NotFoundException
+     */
+    public function replaceHunter(int $oldHunterId, int $newHunterId, ?string $email): BookingHunterInvitation
+    {
+        if ($this->invitationUser($newHunterId)) {
+            throw new ConflictException(
+                errorCode: 'hunter_already_in_booking',
+                domain: 'booking'
+            );
+        }
+
+        $invitation = $this->invitationUser($oldHunterId);
+
+        if (!$invitation) {
+            throw new NotFoundException(
+                errorCode: 'booking_invitation_not_found',
+                domain: 'booking'
+            );
+        }
+
+        $invitation->replaceHunter($newHunterId, $email);
+
+        return $invitation;
+    }
+    public function changeCreator(User $user): void
+    {
+        $this->create_user = $user->id;
+    }
+
+    /**
+     * @throws NotFoundException
+     */
+    public function changeMasterHunterCreator(User $user): void
+    {
+        $hunter = $this->masterHunter;
+
+        if (!$hunter) {
+            throw new NotFoundException(
+                errorCode: 'master_not_found',
+                domain: 'booking'
+            );
+        }
+
+        $hunter->changeCreator($user);
     }
 
     public function getTypeTextAttribute()
