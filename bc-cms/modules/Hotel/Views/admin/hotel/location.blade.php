@@ -66,8 +66,15 @@
                 <label class="control-label">{{ __('The geographic coordinate') }}</label>
                 <div class="control-map-group">
                     <div id="map_content"></div>
-                    <input type="text" placeholder="{{ __('Search by name...') }}" class="bc_searchbox form-control"
-                        autocomplete="off" onkeydown="return event.key !== 'Enter';">
+                    <div class="input-group">
+                        <input type="text" placeholder="{{ __('Search by name...') }}" class="bc_searchbox form-control" autocomplete="off">
+                        <button type="button"
+                                id="clearSearch"
+                                class="btn btn-light d-none">
+                            очистить
+                        </button>
+                    </div>
+
                     <div class="g-control">
                         <div class="form-group">
                             <label>{{ __('Map Latitude') }}:</label>
@@ -90,3 +97,25 @@
         @endif
     </div>
 </div>
+
+@push('js')
+    <script>
+        jQuery(function($) {
+
+            var $input = $('.bc_searchbox');
+            var $clearBtn = $('#clearSearch');
+
+            $input.on('input', function () {
+                if ($(this).val().length > 0) {
+                    $clearBtn.removeClass('d-none');
+                } else {
+                    $clearBtn.addClass('d-none');
+                }
+            });
+
+            $clearBtn.on('click', function () {
+                $input.val('').trigger('input').focus();
+            });
+        })
+    </script>
+@endpush

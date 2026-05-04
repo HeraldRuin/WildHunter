@@ -457,6 +457,7 @@ window.BCInitMap = function () {
     }
 
     function YandexEngine(id,options){
+        console.log('jkh');
         this.defaults = {
             fitBounds:true
         };
@@ -474,45 +475,53 @@ window.BCInitMap = function () {
     }
 
     YandexEngine.prototype = new BaseMapEngine();
-    YandexEngine.prototype.initScripts = function (func) {
-        func();
-        return;
-        if(typeof window.bc_gmap_script_inited != 'undefined') return;
-        if(this.getOption('disableScripts')){
-            func();
-            return;
-        }
-
-        var head= document.getElementsByTagName('head')[0];
-        var script= document.createElement('script');
-        script.type= 'text/javascript';
-        script.src = 'https://api-maps.yandex.ru/2.1/?lang=ru_RU&apikey=' + '98746b15-4156-4225-98e7-c8293b0eeba2';
-        head.appendChild(script);
-
-        var script2 = document.createElement('script');
-        script2.type= 'text/javascript';
-        script2.src= bookingCore.url+'/libs/infobox.js';
-        head.appendChild(script2);
-
-        window.bc_gmap_script_inited = true;
-
-        script.onload = function(){
-            func();
-        }
-    };
 
     YandexEngine.prototype.init = function () {
         var me = this;
         this.el = $('#' + this.id);
 
         ymaps.ready(function () {
-            var center = me.getOption('center'); // [lat, lng]
+
+            var center = me.getOption('center');
             var zoom = me.getOption('zoom') || 10;
 
             me.map = new ymaps.Map(me.id, {
                 center: center,
                 zoom: zoom,
                 controls: ['zoomControl', 'geolocationControl']
+            });
+
+            me.placemark = null;
+
+            if (center && center.length === 2) {
+                me.placemark = new ymaps.Placemark(center, {}, {
+                    preset: 'islands#redDotIcon'
+                });
+                me.map.geoObjects.add(me.placemark);
+                me.getAddressFromCoords(center, function(address) {
+                    $("#customPlaceAddress").val(address);
+                });
+            }
+
+            me.map.events.add('click', function (e) {
+                var coords = e.get('coords');
+
+                if (me.placemark) {
+                    me.map.geoObjects.remove(me.placemark);
+                }
+
+                me.placemark = new ymaps.Placemark(coords, {}, {
+                    preset: 'islands#redDotIcon'
+                });
+
+                me.map.geoObjects.add(me.placemark);
+
+                $("input[name=map_lat]").val(coords[0]);
+                $("input[name=map_lng]").val(coords[1]);
+
+                me.getAddressFromCoords(coords, function(address) {
+                    $("#customPlaceAddress").val(address);
+                });
             });
 
             var rd = me.getOption('ready');
@@ -522,4 +531,67 @@ window.BCInitMap = function () {
         });
     };
 
+    YandexEngine.prototype.searchBox = function (classSearchBox, func) {
+        var me = this;
+        var input = classSearchBox[0];
+
+        if (!input) return;
+
+        input.addEventListener('keydown', function (e) {
+
+            if (e.key === 'Enter') {
+                e.preventDefault();
+
+                var value = input.value;
+                if (!value) return;
+
+                ymaps.geocode(value).then(function (res) {
+
+                    var geoObject = res.geoObjects.get(0);
+                    if (!geoObject) return;
+
+                    var coords = geoObject.geometry.getCoordinates();
+
+                    me.map.setCenter(coords, 15);
+
+                    func([
+                        coords[0],
+                        coords[1],
+                        me.map.getZoom()
+                    ]);
+                });
+            }
+
+        });
+    };
+
+    YandexEngine.prototype.addMarker = function (latLng, options) {
+        if (this.placemark) {
+            this.map.geoObjects.remove(this.placemark);
+        }
+
+        this.placemark = new ymaps.Placemark(latLng, {}, {
+            preset: 'islands#redDotIcon'
+        });
+
+        this.map.geoObjects.add(this.placemark);
+    };
+
+    YandexEngine.prototype.getAddressFromCoords = function (coords, callback) {
+        ymaps.geocode(coords).then(function (res) {
+
+            var firstGeoObject = res.geoObjects.get(0);
+            if (!firstGeoObject) return;
+
+            var address = firstGeoObject.getAddressLine();
+
+            if (typeof callback === 'function') {
+                callback(address);
+            }
+        });
+    };
+
+    YandexEngine.prototype.clearSearch = function () {
+        $('.bc_searchbox').val('');
+    };
 })(jQuery);
