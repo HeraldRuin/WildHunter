@@ -2,6 +2,8 @@
 
 namespace Modules\Booking\Services;
 
+use App\Exceptions\BusinessException;
+use Illuminate\Support\Facades\Auth;
 use Modules\Booking\Models\Booking;
 use App\Exceptions\ForbiddenException;
 use Illuminate\Contracts\Auth\Authenticatable;
@@ -25,5 +27,18 @@ class BookingAccessService
             errorCode: 'booking_access_denied',
             domain: 'booking'
         );
+    }
+
+    /**
+     * @throws BusinessException
+     */
+    public function ensureUserAuthenticated(): void
+    {
+        if (!Auth::user()) {
+            throw new BusinessException(
+                errorCode: 'auth_user_false',
+                domain: 'calculate'
+            );
+        }
     }
 }
