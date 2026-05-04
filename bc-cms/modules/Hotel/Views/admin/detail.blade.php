@@ -159,7 +159,7 @@
                     });
 
                     $('#clearSearch').on('click', function () {
-                        engineMap.clearSearch();
+                        engineMap.resetToInitial();
                     });
                 }
             });

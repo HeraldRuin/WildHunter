@@ -483,6 +483,11 @@ window.BCInitMap = function () {
             var center = me.getOption('center');
             var zoom = me.getOption('zoom') || 10;
 
+            me.initialCenter = [
+                Number(center[0]),
+                Number(center[1])
+            ];
+
             me.map = new ymaps.Map(me.id, {
                 center: center,
                 zoom: zoom,
@@ -589,7 +594,32 @@ window.BCInitMap = function () {
         });
     };
 
-    YandexEngine.prototype.clearSearch = function () {
+    YandexEngine.prototype.resetToInitial = function () {
+        var me = this;
+        if (!me.initialCenter) return;
+
+        var center = [
+            Number(me.initialCenter[0]),
+            Number(me.initialCenter[1])
+        ];
+
+        me.map.setCenter(center, me.getOption('zoom') || 10);
+
+        me.map.geoObjects.removeAll();
+
+        me.placemark = new ymaps.Placemark(center, {}, {
+            preset: 'islands#redDotIcon'
+        });
+
+        me.map.geoObjects.add(me.placemark);
+
+        $("input[name=map_lat]").val(center[0]);
+        $("input[name=map_lng]").val(center[1]);
+
+        me.getAddressFromCoords(center, function (address) {
+            $("#customPlaceAddress").val(address);
+        });
+
         $('.bc_searchbox').val('');
     };
 })(jQuery);
