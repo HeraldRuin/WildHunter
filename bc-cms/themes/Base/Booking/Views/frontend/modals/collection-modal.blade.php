@@ -160,9 +160,7 @@
                                                                    :placeholder="'{{ __('Ник / Фамилия / email / ID охотника') }}'"
                                                                    v-model="replaceQuery"
                                                                    @input="searchReplaceHunter({{ $booking->id }})"
-                                                                   @focus="showReplaceResults = true"
-                                                                   @blur="setTimeout(() => showReplaceResults = false, 200)">
-
+                                                                   @focus="showReplaceResults = true">
                                                             <button class="btn btn-sm btn-success me-2 mr-2"
                                                                     @click="confirmReplace(hunter.id, {{ $booking->id }})">
                                                                 Сохранить
@@ -187,7 +185,8 @@
                                                                          class="p-2 border-bottom cursor-pointer"
                                                                          @click="selectReplaceHunter(user)">
                                                                         <strong>ID: @{{ user.id }}</strong>
-                                                                        @{{ user.name }}
+                                                                        (ник @{{ user.user_name ? user.user_name : 'не задан' }})
+                                                                        <strong>@{{ user.first_name }} @{{ user.last_name }}</strong>
                                                                         <div class="text-muted small">@{{ user.email }}</div>
                                                                     </div>
                                                                 </div>
@@ -202,14 +201,12 @@
 
                                                 </div>
                                             </div>
-
                                         @endif
 
                                     </div>
 
                                 </div>
                             </div>
-
                         </template>
 
                         <template v-else>
