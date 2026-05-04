@@ -1206,7 +1206,7 @@ class BookingController extends \App\Http\Controllers\Controller
      */
     public function getCalculating(Booking $booking): JsonResponse
     {
-        $this->bookingAccessService->ensureUserAuthenticated();
+        $this->bookingAccessService->ensureUserAuthenticated('auth_user_false', 'calculate');
         $result = $this->bookingCalculatingService->calculate($booking, Auth::user());
 
         if ($result && $result['success'] === false) {

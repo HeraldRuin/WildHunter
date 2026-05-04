@@ -32,12 +32,12 @@ class BookingAccessService
     /**
      * @throws BusinessException
      */
-    public function ensureUserAuthenticated(): void
+    public function ensureUserAuthenticated(string $errorCode, string $domain): void
     {
         if (!Auth::user()) {
             throw new BusinessException(
-                errorCode: 'auth_user_false',
-                domain: 'calculate'
+                errorCode: $errorCode,
+                domain: $domain
             );
         }
     }
