@@ -55,6 +55,7 @@
                         <select name="map_provider" class="form-control" >
                             <option value="osm" {{ setting_item('map_provider') == 'osm' ? 'selected' : ''  }}>{{__("OpenStreetMap.org")}}</option>
                             <option value="gmap" {{setting_item('map_provider') == 'gmap' ? 'selected' : ''  }}>{{__('Google Map')}}</option>
+                            <option value="yandex" {{setting_item('map_provider') == 'yandex' ? 'selected' : ''  }}>{{__('Yandex Map')}}</option>
                         </select>
                     </div>
                 </div>
@@ -63,6 +64,13 @@
                     <div class="form-controls">
                         <input type="text" name="map_gmap_key" value="{{setting_item('map_gmap_key')}}" class="form-control">
                         <p><i><a href="https://developers.google.com/maps/documentation/javascript/get-api-key" target="blank">{{__("Learn how to get an api key")}}</a></i></p>
+                    </div>
+                </div>
+
+                <div class="form-group" data-condition="map_provider:is(yandex)">
+                    <label>{{__("Yandex API Key")}}</label>
+                    <div class="form-controls">
+                        <input type="text" name="map_gmap_key" value="{{setting_item('map_yandex_key')}}" class="form-control">
                     </div>
                 </div>
             </div>

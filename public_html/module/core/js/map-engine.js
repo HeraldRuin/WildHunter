@@ -457,7 +457,6 @@ window.BCInitMap = function () {
     }
 
     function YandexEngine(id,options){
-        console.log('jkh');
         this.defaults = {
             fitBounds:true
         };
@@ -471,7 +470,6 @@ window.BCInitMap = function () {
         this.infoboxs = [];
 
         return this;
-
     }
 
     YandexEngine.prototype = new BaseMapEngine();
