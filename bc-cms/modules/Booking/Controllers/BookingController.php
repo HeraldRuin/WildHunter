@@ -6,6 +6,7 @@ use App\Exceptions\BaseException;
 use App\Exceptions\BusinessException;
 use App\Exceptions\ConflictException;
 use App\Exceptions\ForbiddenException;
+use App\Exceptions\UnauthorizedException;
 use App\Exceptions\ValidationException;
 use App\Helpers\ReCaptchaEngine;
 use App\Http\Responses\SuccessResponse;
@@ -1202,11 +1203,12 @@ class BookingController extends \App\Http\Controllers\Controller
     /**
      * Калькуляция
      * @throws ValidationException
+     * @throws UnauthorizedException
      * @throws BusinessException
      */
     public function getCalculating(Booking $booking): JsonResponse
     {
-        $this->bookingAccessService->ensureUserAuthenticated('auth_user_false', 'calculate');
+        $this->bookingAccessService->ensureUserAuthenticated();
         $result = $this->bookingCalculatingService->calculate($booking, Auth::user());
 
         if ($result && $result['success'] === false) {

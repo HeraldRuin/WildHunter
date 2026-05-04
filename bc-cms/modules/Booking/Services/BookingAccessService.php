@@ -2,7 +2,7 @@
 
 namespace Modules\Booking\Services;
 
-use App\Exceptions\BusinessException;
+use App\Exceptions\UnauthorizedException;
 use Illuminate\Support\Facades\Auth;
 use Modules\Booking\Models\Booking;
 use App\Exceptions\ForbiddenException;
@@ -30,14 +30,14 @@ class BookingAccessService
     }
 
     /**
-     * @throws BusinessException
+     * @throws UnauthorizedException
      */
-    public function ensureUserAuthenticated(string $errorCode, string $domain): void
+    public function ensureUserAuthenticated(): void
     {
         if (!Auth::user()) {
-            throw new BusinessException(
-                errorCode: $errorCode,
-                domain: $domain
+            throw new UnauthorizedException(
+                errorCode: 'auth_user_false',
+                domain: 'user'
             );
         }
     }
