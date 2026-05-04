@@ -23,6 +23,7 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 use Modules\Animals\Models\Animal;
 use Modules\Animals\Models\AnimalTrophy;
+use Modules\Booking\Application\UseCases\Hunters\HunterResource;
 use Modules\Booking\DTO\ReplaceHunterData;
 use Modules\Booking\DTO\SelectPlaceData;
 use Modules\Booking\DTO\StoreAddetionalData;
@@ -838,9 +839,6 @@ class BookingController extends \App\Http\Controllers\Controller
         return view('Booking::frontend.detail.modal', ['booking' => $booking, 'service' => $booking->service]);
     }
 
-    /**
-     * @throws NotFoundException
-     */
     public function changeUserBooking(ChangeUserBookingRequest $request, Booking $booking): JsonResponse
     {
         $result = $this->bookingUserService->changeUser($booking, $request->input('user_id'));
@@ -1152,7 +1150,7 @@ class BookingController extends \App\Http\Controllers\Controller
         $data = ReplaceHunterData::fromRequest($request);
         $result = $this->bookingUserService->replaceHunter($booking, $data);
 
-        return new SuccessResponse(code: $result['code'], domain: 'booking', data: $result['data']);
+        return new SuccessResponse(code: 'hunter_replace', domain: 'booking', data: (new HunterResource($result))->toArray());
     }
     public function places(Booking $booking): SuccessResponse
     {
