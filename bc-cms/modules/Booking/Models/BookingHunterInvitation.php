@@ -90,6 +90,12 @@ class BookingHunterInvitation extends Model
         };
     }
 
+    public function replaceHunter(int $hunterId, ?string $email): void
+    {
+        $this->hunter_id = $hunterId;
+        $this->email = $email ?: null;
+    }
+
     public function bookingHunter(): BelongsTo
     {
         return $this->belongsTo(BookingHunter::class, 'booking_hunter_id');

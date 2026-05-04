@@ -25,6 +25,13 @@ class BookingHunter extends Model
         'is_master' => 'boolean',
     ];
 
+    public function changeCreator(User $user): void
+    {
+        $this->invited_by = $user->id;
+        $this->is_master = $user->hasRole('hunter');
+        $this->creator_role = $user->role->code ?? null;
+    }
+
     public function booking()
     {
         return $this->belongsTo(Booking::class, 'booking_id');
