@@ -2,7 +2,6 @@
 
 namespace Modules\Booking\Services\Calculation;
 
-use App\Exceptions\BusinessException;
 use App\Exceptions\ValidationException;
 use Modules\Booking\Models\Booking;
 use Modules\Booking\Services\Calculation\Strategies\BookingCalculationStrategyResolver;
@@ -13,7 +12,6 @@ readonly class BookingCalculatingService
 
     /**
      * @throws ValidationException
-     * @throws BusinessException
      */
     public function calculate(Booking $booking, $user): array
     {

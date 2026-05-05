@@ -31,7 +31,7 @@
             <div class="modal-header">
                 @if($booking->status === \Modules\Booking\Models\Booking::START_COLLECTION && !$isInvited)
                     <h5 class="modal-title">
-                        {{ __('Open collection for booking') }} #{{ $booking->id }}
+                        {{ __('Open collection for booking') }} #{{ $booking->booking_number }}
                     </h5>
                     <button type="button"
                             class="btn btn-sm btn-outline-primary"
