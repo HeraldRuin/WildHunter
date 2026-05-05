@@ -37,7 +37,6 @@
                 @else
                     <div class="">
                         <select name="location_id" class="form-control">
-                            <option value="">{{ __('-- Please Select --') }}</option>
                             <?php
                             $traverse = function ($locations, $prefix = '') use (&$traverse, $row) {
                                 foreach ($locations as $location) {
