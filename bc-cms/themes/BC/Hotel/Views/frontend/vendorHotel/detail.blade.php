@@ -83,45 +83,31 @@
     <script>
         jQuery(function($) {
             new BCMapEngine('map_content', {
-                fitBounds: true,
                 center: [{{ $row->map_lat ?? setting_item('map_lat_default', 51.505) }},
                     {{ $row->map_lng ?? setting_item('map_lng_default', -0.09) }}
                 ],
                 zoom: {{ $row->map_zoom ?? '8' }},
+
                 ready: function(engineMap) {
+
                     @if ($row->map_lat && $row->map_lng)
-                        engineMap.addMarker([{{ $row->map_lat }}, {{ $row->map_lng }}], {
-                            icon_options: {}
-                        });
+                    engineMap.addMarker([
+                        {{ $row->map_lat }},
+                        {{ $row->map_lng }}
+                    ], { icon_options: {} });
                     @endif
-                    engineMap.on('click', function(dataLatLng) {
-                        engineMap.clearMarkers();
-                        engineMap.addMarker(dataLatLng, {
-                            icon_options: {}
-                        });
-                        $("input[name=map_lat]").attr("value", dataLatLng[0]);
-                        $("input[name=map_lng]").attr("value", dataLatLng[1]);
-                    });
-                    engineMap.on('zoom_changed', function(zoom) {
-                        $("input[name=map_zoom]").attr("value", zoom);
-                    });
-                    if (bookingCore.map_provider === "gmap") {
-                        engineMap.searchBox($('#customPlaceAddress'), function(dataLatLng) {
-                            engineMap.clearMarkers();
-                            engineMap.addMarker(dataLatLng, {
-                                icon_options: {}
-                            });
-                            $("input[name=map_lat]").attr("value", dataLatLng[0]);
-                            $("input[name=map_lng]").attr("value", dataLatLng[1]);
-                        });
-                    }
+
                     engineMap.searchBox($('.bc_searchbox'), function(dataLatLng) {
+
                         engineMap.clearMarkers();
-                        engineMap.addMarker(dataLatLng, {
-                            icon_options: {}
-                        });
-                        $("input[name=map_lat]").attr("value", dataLatLng[0]);
-                        $("input[name=map_lng]").attr("value", dataLatLng[1]);
+                        engineMap.addMarker(dataLatLng, { icon_options: {} });
+
+                        $("input[name=map_lat]").val(dataLatLng[0]);
+                        $("input[name=map_lng]").val(dataLatLng[1]);
+                    });
+
+                    $('#clearSearch').on('click', function () {
+                        engineMap.resetToInitial();
                     });
                 }
             });

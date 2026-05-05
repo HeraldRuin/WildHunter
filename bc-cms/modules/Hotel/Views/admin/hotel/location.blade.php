@@ -65,7 +65,7 @@
                 <label class="control-label">{{ __('The geographic coordinate') }}</label>
                 <div class="control-map-group">
                     <div id="map_content"></div>
-                    <div class="input-group">
+                    <div class="input-group pt-3">
                         <input type="text" placeholder="{{ __('Search by name...') }}" class="bc_searchbox form-control" autocomplete="off">
                         <button type="button"
                                 id="clearSearch"

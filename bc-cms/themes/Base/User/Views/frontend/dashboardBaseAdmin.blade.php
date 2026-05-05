@@ -32,7 +32,6 @@
                         <span></span> <i class="fa fa-caret-down"></i>
                     </div>
                 </div>
-                @dump($earning_chart_data)
                 <div class="panel-body">
                     <canvas id="earning_chart"></canvas>
                     <script>

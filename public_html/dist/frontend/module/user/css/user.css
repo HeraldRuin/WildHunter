@@ -1396,10 +1396,6 @@
   display: inline-block;
 }
 .bc_wrap .bc_user_profile .control-map-group .bc_searchbox {
-  width: 250px;
-  position: absolute;
-  top: 10px;
-  left: 10px;
   border-radius: 0;
   height: 45px;
 }
