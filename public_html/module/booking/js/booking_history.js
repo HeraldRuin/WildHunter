@@ -956,7 +956,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         if (res.success) {
                             if (res.data.payment_url) {
                                 bc_button_loading(btn, false);
-                                window.open(res.payment_url, '_blank');
+                                window.open(res.data.payment_url, '_blank');
                                 window.closeModal('bookingPrepaymentModal', bookingId);
                             }
                         }
@@ -969,7 +969,7 @@ document.addEventListener('DOMContentLoaded', function () {
             },
             fetchPaymentStatus(bookingId) {
                 $.get(`/booking/${bookingId}/check/payment-status`, (res) => {
-                    this.$set(this.prepaymentPaidMap, bookingId, res.status);
+                    this.$set(this.prepaymentPaidMap, bookingId, res.data.status);
                 });
             },
             searchReplaceHunter(bookingId) {
@@ -1113,7 +1113,6 @@ document.addEventListener('DOMContentLoaded', function () {
                             success: (res) => {
                                 if (res.success) {
                                     window.location.reload()
-
                                 }
                             },
                             error: function() {
