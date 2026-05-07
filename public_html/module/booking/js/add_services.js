@@ -139,6 +139,8 @@ $(document).ready(function () {
                 _token: $('meta[name="csrf-token"]').attr('content')
             }).done(res => {
                 $row.replaceWith(renderSavedTrophyRow(res.data, bookingId));
+            }).fail(function(e) {
+                bookingCoreApp.showError(e);
             });
         });
 
@@ -313,6 +315,8 @@ $(document).ready(function () {
                 _token: $('meta[name="csrf-token"]').attr('content')
             }).done(res => {
                 $row.replaceWith(renderSavedPenaltyRow(res.data, bookingId));
+            }).fail(function(e) {
+                bookingCoreApp.showError(e);
             });
         });
 
@@ -447,6 +451,8 @@ $(document).ready(function () {
                 _token: $('meta[name="csrf-token"]').attr('content')
             }).done(res => {
                 $row.replaceWith(renderSavedPreparationRow(res.data, bookingId));
+            }).fail(function(e) {
+                bookingCoreApp.showError(e);
             });
         });
 
@@ -562,6 +568,8 @@ $(document).ready(function () {
                 _token: $('meta[name="csrf-token"]').attr('content')
             }).done(res => {
                 $row.replaceWith(renderSavedFoodRow(res.data));
+            }).fail(function(e) {
+                bookingCoreApp.showError(e);
             });
         });
 
@@ -803,6 +811,8 @@ $(document).ready(function () {
                 _token: $('meta[name="csrf-token"]').attr('content')
             }).done(res => {
                 $row.replaceWith(renderSavedOtherRow(res.data));
+            }).fail(function(e) {
+                bookingCoreApp.showError(e);
             });
         });
 
@@ -944,6 +954,8 @@ $(document).ready(function () {
                 _token: $('meta[name="csrf-token"]').attr('content')
             }).done(res => {
                 $row.replaceWith(renderSavedSpendingRow(res.data, bookingId));
+            }).fail(function(e) {
+                bookingCoreApp.showError(e);
             });
         });
 
