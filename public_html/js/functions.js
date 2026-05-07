@@ -169,6 +169,34 @@ var bookingCoreApp ={
     showError:function (configs) {
         let args = {};
 
+        const status =
+            configs?.status ||
+            configs?.response?.status ||
+            configs?.responseJSON?.status;
+
+        if (status === 419) {
+            args.message = this._extractErrorMessage(configs);
+            args.title = i18n.warning;
+            args.centerVertical = true;
+            bootbox.alert(args);
+            setTimeout(function () {window.location.reload()}, 2200);
+
+        }
+        if (status === 401) {
+            args.message = this._extractErrorMessage(configs);
+            args.title = i18n.warning;
+            args.centerVertical = true;
+            bootbox.alert(args);
+            setTimeout(function () {window.location.reload()}, 2200);
+
+        }
+        if (status === 500) {
+            args.message = 'Ошибка сервера. обратитесь к администратору';
+            args.title = i18n.warning;
+            args.centerVertical = true;
+            bootbox.alert(args);
+        }
+
         if(typeof configs == 'object')
         {
             if (configs.responseJSON || configs.response || configs.message) {
@@ -179,6 +207,7 @@ var bookingCoreApp ={
         } else {
             args.message = configs;
         }
+
         if(!args.title){
             args.title = i18n.warning;
         }
@@ -202,7 +231,7 @@ var bookingCoreApp ={
             return e.message;
         }
 
-        return 'Unknown error';
+        return 'Ошибка сервера. обратитесь к администратору';
     },
     showAjaxError:function (e) {
         const json = e.responseJSON;
@@ -273,13 +302,18 @@ function post_request(endpoint,data){
 
 window.apiFetch = function (url, options = {}) {
     return fetch(url, options)
-        .then(res => res.json())
-        .then(response => {
-            if (!response.success) {
-                throw response;
+        .then(async (res) => {
+            const data = await res.json().catch(() => ({}));
+
+            if (!res.ok) {
+                throw {
+                    status: res.status,
+                    responseJSON: data,
+                    message: data?.message || 'Error'
+                };
             }
 
-            return response.data;
+            return data.data;
         });
 };
 
