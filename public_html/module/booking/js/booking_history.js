@@ -109,9 +109,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     })
                     .fail((e) => {
                         bc_button_loading(btn, false);
-                        if (e.responseJSON && e.responseJSON.message){
-                            bookingCoreApp.showError({ message: e.responseJSON.message });
-                        }
+                        bookingCoreApp.showError(e);
                     });
             },
             // ТОЛЬКО ДЛЯ ПРИГЛАШЕННОГО
@@ -239,9 +237,8 @@ document.addEventListener('DOMContentLoaded', function () {
                                 this.checkFinishCollectionButton(bookingId);
                             });
                         }
-                    })
-                    .catch(error => {
-                        console.error('Ошибка при загрузке приглашенных охотников:', error);
+                    }).catch(e => {
+                        bookingCoreApp.showError(e)
                     });
             },
 
@@ -385,9 +382,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     },
                     error: function (e) {
                         bc_button_loading(btn, false);
-                        if (e.responseJSON && e.responseJSON.message){
-                            bookingCoreApp.showError({ message: e.responseJSON.message });
-                        }
+                        bookingCoreApp.showError(e);
                     }
                 });
             },
@@ -533,23 +528,22 @@ document.addEventListener('DOMContentLoaded', function () {
                     hunterId = slot.hunter.id;
                     emailAddress = slot.hunter.email || emailAddress;
                 } else if (!emailAddress) {
-                    alert('Необходимо выбрать охотника или указать email адрес');
+                    bookingCoreApp.showError({ message: 'Необходимо выбрать охотника или указать email адрес' });
                     return;
                 }
 
                 const message = slot.emailMessage || '';
                 if (!message.trim()) {
-                    alert('Введите текст сообщения');
+                    bookingCoreApp.showError({ message: 'ВВведите текст сообщения' });
                     return;
                 }
 
                 if (hunterId) {
-
                     const hunter = slot.hunter;
                     hunter.emailMessage = message;
                     this.sendHunterEmail(hunter, bookingId, event);
                 } else if (emailAddress) {
-                    alert('Для отправки email необходимо выбрать охотника из системы. Если охотник не в системе, его нужно сначала добавить.');
+                    bookingCoreApp.showError({ message: 'Для отправки email необходимо выбрать охотника из системы. Если охотник не в системе, его нужно сначала добавить' });
                     return;
                 }
                 if (!hunterId) {
@@ -626,7 +620,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     },
                     error: (e) => {
                         bc_button_loading(btn, false);
-                        bookingCoreApp.showError({ message: 'Произошла ошибка при отправке приглашения' });
+                        bookingCoreApp.showError(e);
                     }
                 });
             },
@@ -695,7 +689,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         }
                     },
                     error: function (e) {
-                        bookingCoreApp.showError({ message: 'Произошла ошибка при сохранении пользователя' });
+                        bookingCoreApp.showError(e);
                     }
                 });
             },
@@ -755,7 +749,7 @@ document.addEventListener('DOMContentLoaded', function () {
                             },
                             error: function (e) {
                                 if (btn) bc_button_loading(btn, false);
-                                bookingCoreApp.showError({ message: 'Ошибка отмены брони' });
+                                bookingCoreApp.showError(e);
                             }
                         });
                     }
@@ -787,7 +781,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     },
                     error: function (e) {
                         bc_button_loading(btn, false);
-                        bookingCoreApp.showError({ message: 'Произошла ошибка при завершении бронирования' });
+                        bookingCoreApp.showError(e);
                     }
                 });
             },
@@ -816,8 +810,6 @@ document.addEventListener('DOMContentLoaded', function () {
                         bc_button_loading(btn, false);
 
                         if (res.success) {
-                            // window.closeModal('collectionModal', bookingId);
-
                             bookingCoreApp.showAjaxMessage(res);
                             setTimeout(function () {window.location.reload()}, 1200);
                         } else if (res.message) {
@@ -826,7 +818,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     },
                     error: function (e) {
                         bc_button_loading(btn, false);
-                        bookingCoreApp.showError({ message: 'Произошла ошибка при начале сбора охотников' });
+                        bookingCoreApp.showError(e);
                     }
                 });
             },
@@ -870,7 +862,7 @@ document.addEventListener('DOMContentLoaded', function () {
                             },
                             error: function (e) {
                                 bc_button_loading(btn, false);
-                                bookingCoreApp.showError({ message: 'Произошла ошибка при отмене сбора охотников' });
+                                bookingCoreApp.showError(e);
                             }
                         });
                     }
@@ -903,7 +895,7 @@ document.addEventListener('DOMContentLoaded', function () {
                             },
                             error: function (e) {
                                 bc_button_loading(btn, false);
-                                bookingCoreApp.showError({ message: 'Произошла ошибка при завершении сбора охотников' });
+                                bookingCoreApp.showError(e);
                             }
                         });
                     }
@@ -931,7 +923,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     },
                     error: function (e) {
                         bc_button_loading(btn, false);
-                        bookingCoreApp.showError({ message: 'Произошла ошибка при отмене бронирования' });
+                        bookingCoreApp.showError(e);
                     }
                 });
             },
@@ -963,7 +955,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     },
                     error: function (e) {
                         bc_button_loading(btn, false);
-                        bookingCoreApp.showError({ message: 'Произошла ошибка при оплате' });
+                        bookingCoreApp.showError(e);
                     }
                 });
             },
@@ -1047,7 +1039,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         }
                     },
                     error: function(e) {
-                        bookingCoreApp.showError({ message: e.responseJSON.message });
+                        bookingCoreApp.showError(e);
                     }
                 });
             },
@@ -1082,8 +1074,8 @@ document.addEventListener('DOMContentLoaded', function () {
                                     bookingCoreApp.showAjaxMessage(res);
                                 }
                             },
-                            error: function() {
-                                bookingCoreApp.showError({ message: 'Ошибка удаления охотника' });
+                            error: function(e) {
+                                bookingCoreApp.showError(e);
                             }
                         });
                     }
@@ -1115,8 +1107,8 @@ document.addEventListener('DOMContentLoaded', function () {
                                     window.location.reload()
                                 }
                             },
-                            error: function() {
-                                bookingCoreApp.showError({ message: 'Ошибка перевода в статус Оплачено' });
+                            error: function(e) {
+                                bookingCoreApp.showError(e)
                             }
                         });
                     }
@@ -1141,8 +1133,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
                                 }
                             },
-                            error: function() {
-                                bookingCoreApp.showError({ message: 'Ошибка перевода в статус Оплачено' });
+                            error: function(e) {
+                                bookingCoreApp.showError(e)
                             }
                         });
                     }
@@ -1175,9 +1167,8 @@ document.addEventListener('DOMContentLoaded', function () {
                     return true;
 
                 } catch (e) {
-                    bookingCoreApp.showAjaxError(e);
+                    bookingCoreApp.showError(e);
                     return false;
-
                 } finally {
                     if (btn) bc_button_loading(btn, false);
                 }
@@ -1300,9 +1291,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         // }
                     })
                     .fail(function(e) {
-                        if (e.responseJSON && e.responseJSON.message){
-                            bookingCoreApp.showError({ message: e.responseJSON.message });
-                        }
+                        bookingCoreApp.showError(e);
                     });
             },
 
@@ -1347,9 +1336,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         self.renderCalculatingData(booking, contentEl, response.data);
                     })
                     .fail((e) => {
-                        if (e.responseJSON && e.responseJSON.message){
-                            bookingCoreApp.showError({ message: e.responseJSON.message });
-                        }
+                        bookingCoreApp.showError(e);
                     });
             },
             renderCalculatingData(booking, contentEl, res) {
