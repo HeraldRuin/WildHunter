@@ -72,6 +72,12 @@ return Application::configure(basePath: dirname(__DIR__))
                 ], 419);
             }
 
-            return null;
+            return response()->json([
+                'success' => false,
+                'message' => 'Ошибка сервера. обратитесь к администратору',
+                'error_code' => 'SERVER_ERROR',
+                'trace_id' => $request->attributes->get('trace_id'),
+            ], 500);
+
         });
     })->create();
