@@ -74,7 +74,7 @@ return Application::configure(basePath: dirname(__DIR__))
 
             return response()->json([
                 'success' => false,
-                'message' => 'Ошибка сервера. обратитесь к администратору',
+                'message' => 'Ошибка сервера. Обратитесь к администратору',
                 'error_code' => 'SERVER_ERROR',
                 'trace_id' => $request->attributes->get('trace_id'),
             ], 500);
