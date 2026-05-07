@@ -6,6 +6,7 @@ use App\Exceptions\BaseException;
 use App\Exceptions\BusinessException;
 use App\Exceptions\ConflictException;
 use App\Exceptions\ForbiddenException;
+use App\Exceptions\NotFoundException;
 use App\Exceptions\UnauthorizedException;
 use App\Exceptions\ValidationException;
 use App\Helpers\ReCaptchaEngine;
@@ -891,12 +892,11 @@ class BookingController extends \App\Http\Controllers\Controller
 
     /**
      * Сохраняет приглашение охотника для брони
+     * @throws UnauthorizedException
      */
     public function inviteHunter(InviteHunterRequest $request, Booking $booking): JsonResponse
     {
-        if (!Auth::check()) {
-            return $this->sendError('Необходима авторизация')->setStatusCode(401);
-        }
+        $this->bookingAccessService->ensureUserAuthenticated();
 
         $result = $this->bookingInvitationService->invite($booking, (int) $request->validated('hunter_id'));
 
@@ -905,46 +905,48 @@ class BookingController extends \App\Http\Controllers\Controller
 
     /**
      * Отправка приглашения охотнику по email (даже если пользователя нет в системе)
+     * @throws UnauthorizedException
      */
     public function inviteHunterByEmail(InviteHunterByEmailRequest $request, Booking $booking): JsonResponse
     {
-        if (!Auth::check()) {
-            return $this->sendError('Необходима авторизация')->setStatusCode(401);
-        }
+        $this->bookingAccessService->ensureUserAuthenticated();
 
         $result = $this->bookingInvitationService->inviteByEmail($booking, trim((string) $request->validated('email')));
 
         return new SuccessResponse(code: $result['code'], domain: 'booking');
     }
 
+    /**
+     * @throws UnauthorizedException
+     */
     public function getInvitedHunters(Booking $booking): JsonResponse
     {
-        if (!Auth::check()) {
-            return $this->sendError('Необходима авторизация')->setStatusCode(401);
-        }
+        $this->bookingAccessService->ensureUserAuthenticated();
 
         $result = $this->bookingInvitationService->getInvitedHunters($booking, Auth::id());
 
         return new SuccessResponse(data: $result);
     }
 
+    /**
+     * @throws NotFoundException
+     * @throws UnauthorizedException
+     */
     public function acceptInvitation(Booking $booking): JsonResponse
     {
-        if (!Auth::check()) {
-            return $this->sendError('Необходима авторизация')->setStatusCode(401);
-        }
+        $this->bookingAccessService->ensureUserAuthenticated();
 
         $result = $this->bookingInvitationService->accept($booking, Auth::id());
 
         return new SuccessResponse(code: $result['code'], domain: 'booking');
     }
 
+    /**
+     * @throws UnauthorizedException
+     */
     public function declineInvitation(Booking $booking): JsonResponse
     {
-        if (!Auth::check()) {
-            return $this->sendError('Необходима авторизация')->setStatusCode(401);
-        }
-
+        $this->bookingAccessService->ensureUserAuthenticated();
         $result = $this->bookingInvitationService->declineInvitation($booking);
 
         return new SuccessResponse(code: $result['code'], domain: 'booking');
@@ -952,16 +954,14 @@ class BookingController extends \App\Http\Controllers\Controller
 
 
     /**
+     * @throws UnauthorizedException
      * @throws ConflictException
      * @throws ForbiddenException
      * @throws BaseException
      */
     public function cancelBooking(Booking $booking): JsonResponse
     {
-        if (!Auth::check()) {
-            return $this->sendError('Необходима авторизация')->setStatusCode(401);
-        }
-
+        $this->bookingAccessService->ensureUserAuthenticated();
         $this->bookingAccessService->ensureCanAccessBooking($booking, Auth::user());
         $result = $this->bookingCollectionService->cancel($booking);
         $this->bookingNotificationService->sendCancelledEmail($booking);
@@ -972,12 +972,11 @@ class BookingController extends \App\Http\Controllers\Controller
     /**
      * @throws ForbiddenException
      * @throws ConflictException
+     * @throws UnauthorizedException
      */
     public function completeBooking(Booking $booking): JsonResponse
     {
-        if (!Auth::check()) {
-            return $this->sendError('Необходима авторизация')->setStatusCode(401);
-        }
+        $this->bookingAccessService->ensureUserAuthenticated();
 
         $this->bookingAccessService->ensureCanAccessBooking($booking, Auth::user());
         $result = $this->bookingCollectionService->complete($booking);
@@ -1183,16 +1182,20 @@ class BookingController extends \App\Http\Controllers\Controller
 
     public function markPaid(Booking $booking): JsonResponse
     {
-        $booking->update([
+        $booking->updateOrFail([
             'status' => Booking::PAID,
             'is_paid' => true,
         ]);
 
         return new SuccessResponse();
     }
+
+    /**
+     * @throws \Throwable
+     */
     public function markCompleted(Booking $booking): JsonResponse
     {
-        $booking->update([
+        $booking->updateOrFail([
             'status' => Booking::COMPLETED,
         ]);
 
