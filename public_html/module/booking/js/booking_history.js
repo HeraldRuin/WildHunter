@@ -180,7 +180,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
             },
             loadInvitedHunters(bookingId) {
-                apiFetch(`/booking/${bookingId}/invited-hunters`)
+                request(`/booking/${bookingId}/invited-hunters`)
                     .then(({ hunters, booking }) => {
                         const allHunters = hunters || [];
                         const activeHunters = allHunters.filter(h => h.invitation_status !== 'declined');
@@ -237,8 +237,6 @@ document.addEventListener('DOMContentLoaded', function () {
                                 this.checkFinishCollectionButton(bookingId);
                             });
                         }
-                    }).catch(e => {
-                        bookingCoreApp.showError(e)
                     });
             },
 
@@ -294,7 +292,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
                 const bookingId = this.currentCollectionBookingId || '';
 
-                apiFetch(`/user/search-hunters?query=${encodeURIComponent(this.hunterSearchQuery)}&booking_id=${bookingId}`)
+                request(`/user/search-hunters?query=${encodeURIComponent(this.hunterSearchQuery)}&booking_id=${bookingId}`)
                     .then(users => {
                         users.forEach(u => {
                             if (typeof u.invited === 'undefined') {
@@ -422,7 +420,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     slot.showResults = true;
                     slot.noResults = false;
 
-                    apiFetch(`/user/search-hunters?query=${encodeURIComponent(slot.query)}&booking_id=${bookingId}`)
+                    request(`/user/search-hunters?query=${encodeURIComponent(slot.query)}&booking_id=${bookingId}`)
                         .then(users => {
                             users.forEach(u => {
                                 if (typeof u.invited === 'undefined') u.invited = false;
@@ -657,7 +655,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 this.isSearching = true;
                 this.noResults = false;
 
-                apiFetch(`/user/search?query=${encodeURIComponent(this.userSearchQuery)}`)
+                request(`/user/search?query=${encodeURIComponent(this.userSearchQuery)}`)
                     .then(user => {
                             this.searchResults = user;
                             this.isResults = user.length > 0;
@@ -673,25 +671,14 @@ document.addEventListener('DOMContentLoaded', function () {
                 this.userSearchQuery = user.id;
             },
             saveUserChange() {
-                const me = this;
-                $.ajax({
-                    url: `/booking/${this.currentBookingId}/change-user`,
-                    type: 'POST',
-                    dataType: 'json',
-                    data: {
-                        user_id: this.selectedUser.id,
-                    },
-                    success: function (res) {
-                        if (res.success) {
-                            this.userSearchQuery = ''
-                            bookingCoreApp.showAjaxMessage(res);
-                            setTimeout(function () {window.location.reload()}, 1200);
-                        }
-                    },
-                    error: function (e) {
-                        bookingCoreApp.showError(e);
-                    }
-                });
+                postRequest(`/booking/${this.currentBookingId}/change-user`, {
+                    user_id: this.selectedUser.id,
+                })
+                    .then((res) => {
+                        this.userSearchQuery = '';
+                        bookingCoreApp.showAjaxMessage(res);
+                        setTimeout(() => { window.location.reload() }, 1200);
+                    });
             },
             openConfirmBookingModal($bookingId, event) {
                 const btn = event?.currentTarget || null;
@@ -702,25 +689,14 @@ document.addEventListener('DOMContentLoaded', function () {
                         if (!result) return;
                         if (btn) bc_button_loading(btn, true);
 
-                        $.ajax({
-                            url: `/booking/${$bookingId}/confirm`,
-                            type: 'POST',
-                            dataType: 'json',
-                            data: {
-                                _token: $('meta[name="csrf-token"]').attr('content') || ''
-                            },
-                            success: (res) => {
-                                if (res.success) {
-                                    if (btn) bc_button_loading(btn, false);
-                                    bookingCoreApp.showAjaxMessage(res);
-                                    setTimeout(function () {window.location.reload()}, 1200);
-                                }
-                            },
-                            error: function (e) {
-                                if (btn) bc_button_loading(btn, false);
-                                bookingCoreApp.showError(e);
-                            }
-                        });
+                        postRequest(`/booking/${$bookingId}/confirm`)
+                            .then((res) => {
+                                bookingCoreApp.showAjaxMessage(res);
+                                setTimeout(() => { window.location.reload() }, 1200);
+                            })
+                            .finally(() => {
+                                if (btn) { bc_button_loading(btn, false) }
+                            });
                     }
                 });
             },
@@ -733,25 +709,14 @@ document.addEventListener('DOMContentLoaded', function () {
                         if (!result) return;
                         if (btn) bc_button_loading(btn, true);
 
-                        $.ajax({
-                            url: `/booking/${$bookingId}/cancel`,
-                            type: 'POST',
-                            dataType: 'json',
-                            data: {
-                                _token: $('meta[name="csrf-token"]').attr('content') || ''
-                            },
-                            success: (res) => {
-                                if (res.success) {
-                                    if (btn) bc_button_loading(btn, false);
-                                    bookingCoreApp.showAjaxMessage(res);
-                                    setTimeout(function () {window.location.reload()}, 1200);
-                                }
-                            },
-                            error: function (e) {
-                                if (btn) bc_button_loading(btn, false);
-                                bookingCoreApp.showError(e);
-                            }
-                        });
+                        postRequest(`/booking/${$bookingId}/cancel`)
+                            .then((res) => {
+                                bookingCoreApp.showAjaxMessage(res);
+                                setTimeout(() => { window.location.reload() }, 1200);
+                            })
+                            .finally(() => {
+                                if (btn) { bc_button_loading(btn, false) }
+                            });
                     }
                 });
             },
@@ -762,28 +727,14 @@ document.addEventListener('DOMContentLoaded', function () {
                 const btn = event?.currentTarget || null;
                 if (btn) bc_button_loading(btn, true);
 
-                $.ajax({
-                    url: `/booking/${bookingIdNum}/complete`,
-                    type: 'POST',
-                    dataType: 'json',
-                    data: {
-                        _token: $('meta[name="csrf-token"]').attr('content') || ''
-                    },
-                    success: function (res) {
-                        bc_button_loading(btn, false);
-
-                        if (res.success) {
-                            bookingCoreApp.showAjaxMessage(res);
-                            setTimeout(function () {window.location.reload()}, 1200);
-                        } else if (res.message) {
-                            bookingCoreApp.showAjaxMessage(res);
-                        }
-                    },
-                    error: function (e) {
-                        bc_button_loading(btn, false);
-                        bookingCoreApp.showError(e);
-                    }
-                });
+                postRequest(`/booking/${bookingIdNum}/complete`)
+                    .then((res) => {
+                        bookingCoreApp.showAjaxMessage(res);
+                        setTimeout(() => { window.location.reload() }, 1200);
+                    })
+                    .finally(() => {
+                        if (btn) { bc_button_loading(btn, false) }
+                    });
             },
             copyBookingLink(link) {
                 navigator.clipboard.writeText(link)
@@ -801,26 +752,14 @@ document.addEventListener('DOMContentLoaded', function () {
                 const btn = event?.currentTarget || null;
                 if (btn) bc_button_loading(btn, true);
 
-                $.ajax({
-                    url: `/booking/${bookingId}/start-collection`,
-                    type: 'POST',
-                    dataType: 'json',
-                    data: {},
-                    success: function (res) {
-                        bc_button_loading(btn, false);
-
-                        if (res.success) {
-                            bookingCoreApp.showAjaxMessage(res);
-                            setTimeout(function () {window.location.reload()}, 1200);
-                        } else if (res.message) {
-                            bookingCoreApp.showAjaxMessage(res);
-                        }
-                    },
-                    error: function (e) {
-                        bc_button_loading(btn, false);
-                        bookingCoreApp.showError(e);
-                    }
-                });
+                postRequest(`/booking/${bookingId}/start-collection`)
+                    .then((res) => {
+                        bookingCoreApp.showAjaxMessage(res);
+                        setTimeout(function () {window.location.reload()}, 1200);
+                    })
+                    .finally(() => {
+                        if (btn) { bc_button_loading(btn, false) }
+                    });
             },
             cancelCollection(event, bookingId) {
                 const me = this;
@@ -877,27 +816,15 @@ document.addEventListener('DOMContentLoaded', function () {
                         if (!result) return;
                         if (btn) bc_button_loading(btn, true);
 
-                        $.ajax({
-                            url: `/booking/${bookingId}/finish-collection`,
-                            type: 'POST',
-                            dataType: 'json',
-                            data: {
-                                _token: $('meta[name="csrf-token"]').attr('content') || ''
-                            },
-                            success: function (res) {
-                                if (res.status) {
-                                    window.closeModal('collectionModal', bookingId)
-                                    bookingCoreApp.showAjaxMessage(res);
-                                    setTimeout(function () {window.location.reload()}, 500);
-                                } else if (res.message) {
-                                    bookingCoreApp.showAjaxMessage(res);
-                                }
-                            },
-                            error: function (e) {
-                                bc_button_loading(btn, false);
-                                bookingCoreApp.showError(e);
-                            }
-                        });
+                        postRequest(`/booking/${bookingId}/finish-collection`)
+                            .then((res) => {
+                                window.closeModal('collectionModal', bookingId)
+                                bookingCoreApp.showAjaxMessage(res);
+                                setTimeout(function () {window.location.reload()}, 500);
+                            })
+                            .finally(() => {
+                                if (btn) { bc_button_loading(btn, false) }
+                            });
                     }
                 });
             },
@@ -905,27 +832,15 @@ document.addEventListener('DOMContentLoaded', function () {
                 const btn = event?.currentTarget || null;
                 if (btn) bc_button_loading(btn, true);
 
-                $.ajax({
-                    url: `/booking/${bookingId}/cancel`,
-                    type: 'POST',
-                    dataType: 'json',
-                    data: {
-                        _token: $('meta[name="csrf-token"]').attr('content') || ''
-                    },
-                    success: function (res) {
-                        if (res.status) {
-                            window.closeModal('cancelBookingModal', bookingId)
-                            bookingCoreApp.showAjaxMessage(res);
-                            setTimeout(function () {window.location.reload()}, 500);
-                        } else if (res.message) {
-                            bookingCoreApp.showAjaxMessage(res);
-                        }
-                    },
-                    error: function (e) {
-                        bc_button_loading(btn, false);
-                        bookingCoreApp.showError(e);
-                    }
-                });
+                postRequest(`/booking/${bookingId}/cancel`)
+                    .then((res) => {
+                        window.closeModal('cancelBookingModal', bookingId)
+                        bookingCoreApp.showAjaxMessage(res);
+                        setTimeout(function () {window.location.reload()}, 500);
+                    })
+                    .finally(() => {
+                        if (btn) { bc_button_loading(btn, false) }
+                    });
             },
             openBookingPrepaymentPaid(bookingId, event) {
                 this.fetchPaymentStatus(bookingId);
@@ -937,27 +852,18 @@ document.addEventListener('DOMContentLoaded', function () {
                 const btn = event.currentTarget;
                 if (btn) bc_button_loading(btn, true);
 
-                $.ajax({
-                    url: `/booking/${bookingId}/prepayment-paid`,
-                    type: 'POST',
-                    dataType: 'json',
-                    data: {
-                        _token: $('meta[name="csrf-token"]').attr('content') || ''
-                    },
-                    success: function (res) {
-                        if (res.success) {
-                            if (res.data.payment_url) {
-                                bc_button_loading(btn, false);
-                                window.open(res.data.payment_url, '_blank');
-                                window.closeModal('bookingPrepaymentModal', bookingId);
-                            }
+                postRequest(`/booking/${bookingId}/prepayment-paid`)
+                    .then((res) => {
+
+                        if (res?.payment_url) {
+                            window.open(res.payment_url, '_blank');
+                            // window.open(res.data.payment_url, '_blank');
+                            window.closeModal('bookingPrepaymentModal', bookingId);
                         }
-                    },
-                    error: function (e) {
-                        bc_button_loading(btn, false);
-                        bookingCoreApp.showError(e);
-                    }
-                });
+                    })
+                    .finally(() => {
+                        if (btn) { bc_button_loading(btn, false) }
+                    });
             },
             fetchPaymentStatus(bookingId) {
                 $.get(`/booking/${bookingId}/check/payment-status`, (res) => {
@@ -973,10 +879,10 @@ document.addEventListener('DOMContentLoaded', function () {
                 this.isSearchingReplace = true;
                 this.showReplaceResults = true;
 
-                // clearTimeout(this.replaceDebounce);
+                clearTimeout(this.replaceDebounce);
 
                 this.replaceDebounce = setTimeout(() => {
-                    apiFetch(`/user/search-hunters?query=${encodeURIComponent(this.replaceQuery)}&booking_id=${bookingId}`)
+                    request(`/user/search-hunters?query=${encodeURIComponent(this.replaceQuery)}&booking_id=${bookingId}`)
                         .then(users => {
                             users.forEach(u => {
                                 if (typeof u.invited === 'undefined') u.invited = false;
@@ -1009,39 +915,28 @@ document.addEventListener('DOMContentLoaded', function () {
                     });
                     return;
                 }
+                postRequest(`/booking/${bookingId}/replace-hunter`, {
+                    old_hunter_id: oldHunterId,
+                    hunter: this.selectedReplaceHunter,
+                })
+                    .then((res) => {
+                         const newHunter = res.hunter;
+                         const index = this.invitedHunters.findIndex(h => h.id === oldHunterId);
 
-                $.ajax({
-                    url: `/booking/${bookingId}/replace-hunter`,
-                    type: 'POST',
-                    dataType: 'json',
-                    data: {
-                        old_hunter_id: oldHunterId,
-                        hunter: this.selectedReplaceHunter,
-                        _token: $('meta[name="csrf-token"]').attr('content') || ''
-                    },
-                    success: (res) => {
-                        if (res.success) {
-                            const newHunter = res.data.hunter;
+                         if (index !== -1) {
+                              this.$set(this.invitedHunters, index, newHunter);
+                         }
+                         const slotIndex = this.hunterSlots.findIndex(s => s.hunter && s.hunter.id === oldHunterId);
 
-                            const index = this.invitedHunters.findIndex(h => h.id === oldHunterId);
-                            if (index !== -1) {
-                                this.$set(this.invitedHunters, index, newHunter);
-                            }
-                            const slotIndex = this.hunterSlots.findIndex(s => s.hunter && s.hunter.id === oldHunterId);
-                            if (slotIndex !== -1) {
-                                this.$set(this.hunterSlots, slotIndex, {
-                                    ...this.hunterSlots[slotIndex],
-                                    hunter: newHunter,
-                                    query: newHunter.user_name || (newHunter.first_name + ' ' + newHunter.last_name).trim() || newHunter.email
-                                });
-                            }
-                            this.clearReplace();
-                        }
-                    },
-                    error: function(e) {
-                        bookingCoreApp.showError(e);
-                    }
-                });
+                         if (slotIndex !== -1) {
+                               this.$set(this.hunterSlots, slotIndex, {
+                               ...this.hunterSlots[slotIndex],
+                               hunter: newHunter,
+                               query: newHunter.user_name || (newHunter.first_name + ' ' + newHunter.last_name).trim() || newHunter.email
+                                        });
+                         }
+                         this.clearReplace();
+                    });
             },
             cancelReplace() {
                 this.clearReplace()
@@ -1058,26 +953,12 @@ document.addEventListener('DOMContentLoaded', function () {
                     callback: (result) => {
                         if (!result) return;
 
-                        $.ajax({
-                            url: `/booking/${bookingId}/remove/hunter`,
-                            type: 'DELETE',
-                            dataType: 'json',
-                            data: {
-                                hunter_id: hunterId,
-                                _token: $('meta[name="csrf-token"]').attr('content') || ''
-                            },
-                            success: (res) => {
-                                if (res.status) {
-                                    bookingCoreApp.showAjaxMessage(res);
-                                    this.invitedHunters = this.invitedHunters.filter(h => h.id !== hunterId);
-                                } else {
-                                    bookingCoreApp.showAjaxMessage(res);
-                                }
-                            },
-                            error: function(e) {
-                                bookingCoreApp.showError(e);
-                            }
-                        });
+                        deleteRequest(`/booking/${bookingId}/remove/hunter`, {
+                            hunter_id: hunterId,
+                        }).then((res) => {
+                                bookingCoreApp.showAjaxMessage(res);
+                                this.invitedHunters = this.invitedHunters.filter(h => h.id !== hunterId);
+                            });
                     }
                 });
             },
@@ -1095,22 +976,10 @@ document.addEventListener('DOMContentLoaded', function () {
                     callback: (result) => {
                         if (!result) return;
 
-                        $.ajax({
-                            url: `/booking/${bookingId}/mark-paid`,
-                            type: 'PATCH',
-                            dataType: 'json',
-                            data: {
-                                _token: $('meta[name="csrf-token"]').attr('content') || ''
-                            },
-                            success: (res) => {
-                                if (res.success) {
-                                    window.location.reload()
-                                }
-                            },
-                            error: function(e) {
-                                bookingCoreApp.showError(e)
-                            }
-                        });
+                        patchRequest(`/booking/${bookingId}/mark-paid`)
+                            .then((res) => {
+                                window.location.reload();
+                            });
                     }
                 });
             },
@@ -1120,23 +989,10 @@ document.addEventListener('DOMContentLoaded', function () {
                     callback: (result) => {
                         if (!result) return;
 
-                        $.ajax({
-                            url: `/booking/${bookingId}/mark-completed`,
-                            type: 'PATCH',
-                            dataType: 'json',
-                            data: {
-                                _token: $('meta[name="csrf-token"]').attr('content') || ''
-                            },
-                            success: (res) => {
-                                if (res.success) {
-                                    window.location.reload()
-
-                                }
-                            },
-                            error: function(e) {
-                                bookingCoreApp.showError(e)
-                            }
-                        });
+                        patchRequest(`/booking/${bookingId}/mark-completed`)
+                            .then((res) => {
+                                window.location.reload();
+                            });
                     }
                 });
             },
@@ -1694,23 +1550,8 @@ document.addEventListener('DOMContentLoaded', function () {
                 });
             };
             const handleBookingPaidTimerExpired = (bookingId) => {
-                $.ajax({
-                    url: `/booking/${bookingId}/check/prepayment-paid`,
-                    type: 'POST',
-                    dataType: 'json',
-                    data: {
-                        _token: $('meta[name="csrf-token"]').attr('content') || '',
-                        booking_id: bookingId
-                    },
-                    success: function (res) {
-
-                        if (res.success) {
-
-                        }
-                    },
-                    error: function (e) {
-
-                    }
+                postRequest(`/booking/${bookingId}/check/prepayment-paid`, {
+                    booking_id: bookingId
                 });
             };
 
