@@ -366,6 +366,17 @@ window.postRequest = function (url, data = {}, options = {}) {
         ...options
     });
 };
+window.patchRequest = function (url, data = {}, options = {}) {
+    return request(url, {
+        method: 'PATCH',
+        headers: {
+            'Content-Type': 'application/json',
+            ...(options.headers || {})
+        },
+        body: JSON.stringify(data),
+        ...options
+    });
+};
 window.deleteRequest = function (url) {
     return request(url, {
         method: 'DELETE'
