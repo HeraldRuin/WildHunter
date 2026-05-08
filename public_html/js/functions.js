@@ -166,53 +166,77 @@ var bookingCoreApp ={
         args.centerVertical = true;
         bootbox.alert(args);
     },
-    showError:function (configs) {
-        let args = {};
+    showError(configs) {
+        const status = this._getStatus(configs);
 
-        const status =
-            configs?.status ||
-            configs?.response?.status ||
-            configs?.responseJSON?.status;
+        let args = this._buildErrorArgs(configs);
 
-        if (status === 419) {
-            args.message = this._extractErrorMessage(configs);
-            args.title = i18n.warning;
-            args.centerVertical = true;
-            bootbox.alert(args);
-            setTimeout(function () {window.location.reload()}, 2200);
+        args = this._handleStatus(status, args);
 
-        }
-        if (status === 401) {
-            args.message = this._extractErrorMessage(configs);
-            args.title = i18n.warning;
-            args.centerVertical = true;
-            bootbox.alert(args);
-            setTimeout(function () {window.location.reload()}, 2200);
+        bootbox.alert(args);
 
-        }
-        if (status === 500) {
-            args.message = 'Ошибка сервера. обратитесь к администратору';
-            args.title = i18n.warning;
-            args.centerVertical = true;
-            bootbox.alert(args);
-        }
+        this._handleReload(status);
+    },
+    _getStatus(configs) {
+        return (
+            configs?.status ??
+            configs?.response?.status ??
+            configs?.responseJSON?.status
+        );
+    },
+    _buildErrorArgs(configs) {
+        const args = {
+            title: i18n.warning,
+            centerVertical: true,
+        };
 
-        if(typeof configs == 'object')
-        {
-            if (configs.responseJSON || configs.response || configs.message) {
+        if (typeof configs === 'object') {
+            if (
+                configs?.responseJSON ||
+                configs?.response ||
+                configs?.message
+            ) {
                 args.message = this._extractErrorMessage(configs);
             } else {
-                args = configs;
+                return {
+                    ...args,
+                    ...configs,
+                };
             }
         } else {
             args.message = configs;
         }
 
-        if(!args.title){
-            args.title = i18n.warning;
+        if (!args.message) {
+            args.message = 'Произошла ошибка';
         }
-        args.centerVertical = true;
-        bootbox.alert(args);
+
+        return args;
+    },
+    _handleStatus(status, args) {
+        switch (status) {
+            case 500:
+                return {
+                    ...args,
+                    message: 'Ошибка сервера. Обратитесь к администратору',
+                };
+            case 404:
+                return {
+                    ...args,
+                    message: 'Данные не найдены',
+                };
+
+            default:
+                return args;
+        }
+    },
+
+    _handleReload(status) {
+        const reloadStatuses = [401, 419];
+
+        if (reloadStatuses.includes(status)) {
+            setTimeout(() => window.location.reload(), 2200);
+        }
     },
     _extractErrorMessage: function (e) {
         if (e?.responseJSON?.message) {
@@ -231,7 +255,7 @@ var bookingCoreApp ={
             return e.message;
         }
 
-        return 'Ошибка сервера. обратитесь к администратору';
+        return 'Неизвестная ошибка';
     },
     showAjaxError:function (e) {
         const json = e.responseJSON;
