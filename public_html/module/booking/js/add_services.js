@@ -10,7 +10,7 @@ $(document).ready(function () {
 
         addTrophyHeader(trophiesList);
 
-        loadTrophyAnimals(block, bookingId).done(animals => {
+        loadTrophyAnimals(block, bookingId).then(() => {
             loadSavedTrophies(bookingId, trophiesList);
         });
     });
@@ -27,19 +27,19 @@ $(document).ready(function () {
     }
 
     function loadTrophyAnimals(block, bookingId) {
-        return $.get(`/booking/${bookingId}/trophies/animals`).done(res => {
-            block.data('trophyAnimals', res.data.animals || [])
-        });
+        return request(`/booking/${bookingId}/trophies/animals`)
+            .then(res => {
+                block.data('trophyAnimals', res.animals || []);
+            });
     }
     function loadSavedTrophies(bookingId, container) {
-        $.get(`/booking/${bookingId}/saved-services`, res => {
-            (res.data.trophies || []).forEach(trophy => {
-                container.append(renderSavedTrophyRow(trophy, bookingId));
+        getServices(bookingId, 'trophies')
+            .then(items => {
+                renderServiceList(items, container, renderSavedTrophyRow);
             });
-        });
     }
 
-    function renderSavedTrophyRow(trophy, bookingId) {
+    function renderSavedTrophyRow(trophy) {
         return $(`
         <div class="trophy-row border rounded p-2 mb-2 d-flex align-items-center"
              data-id="${trophy.id}">
@@ -54,7 +54,6 @@ $(document).ready(function () {
     }
 
     $(document).on('click', '.add-trophy-btn', function () {
-
         const block = $(this).closest('.service-block');
         const bookingId = block.data('bookingId');
         const animals = block.data('trophyAnimals') || [];
@@ -131,20 +130,16 @@ $(document).ready(function () {
 
         $save.on('click', function () {
             const trophyId = $type.val();
-            $.post(`/booking/${bookingId}/trophies`, {
+            postRequest(`/booking/${bookingId}/trophies`, {
                 animal_id: $animal.val(),
                 type: $type.find('option:selected').text(),
                 count: $count.val(),
                 trophy_id: trophyId,
-                _token: $('meta[name="csrf-token"]').attr('content')
-            }).done(res => {
-                $row.replaceWith(renderSavedTrophyRow(res.data, bookingId));
-            }).fail(function(e) {
-                bookingCoreApp.showError(e);
+            }).then(res => {
+                $row.replaceWith(renderSavedTrophyRow(res, bookingId));
             });
         });
 
-        // отмена
         $row.find('.cancel-new').on('click', () => $row.remove());
 
         return $row;
@@ -153,15 +148,13 @@ $(document).ready(function () {
     $(document).on('click', '.remove-saved-trophy', function () {
 
         const row = $(this).closest('.trophy-row');
-        const trophyId = row.data('id'); // id трофея
+        const trophyId = row.data('id');
         const bookingId = row.closest('.service-block').data('bookingId');
 
-        $.ajax({
-            url: `/booking/${bookingId}/trophy/${trophyId}`, // <-- используем id трофея
-            type: 'DELETE',
-            data: {_token: $('meta[name="csrf-token"]').attr('content')},
-            success: () => row.remove()
-        });
+        deleteRequest(`/booking/${bookingId}/trophy/${trophyId}`)
+            .then(() => {
+                row.remove();
+            });
     });
 });
 
@@ -176,7 +169,7 @@ $(document).ready(function () {
 
         addPenaltyHeader(penaltiesList);
 
-        loadPenaltyAnimals(block, bookingId).done(animals => {
+        loadPenaltyAnimals(block, bookingId).then(() => {
             loadSavedPenalties(bookingId, penaltiesList);
         });
     });
@@ -194,18 +187,18 @@ $(document).ready(function () {
 
 
     function loadPenaltyAnimals(block, bookingId) {
-        return $.get(`/booking/${bookingId}/penalty/animals`).done(res => {
-            block.data('penaltyAnimals', res.data.animals || []);
-            block.data('hunters', res.data.hunters || []);
-        });
+        return request(`/booking/${bookingId}/penalty/animals`)
+            .then(res => {
+                block.data('penaltyAnimals', res.animals || []);
+                block.data('hunters', res.hunters || []);
+            });
     }
 
     function loadSavedPenalties(bookingId, container) {
-        $.get(`/booking/${bookingId}/saved-services`, res => {
-            (res.data.penalties || []).forEach(penalty => {
-                container.append(renderSavedPenaltyRow(penalty, bookingId));
+        getServices(bookingId, 'penalties')
+            .then(items => {
+                renderServiceList(items, container, renderSavedPenaltyRow);
             });
-        });
     }
 
     function renderSavedPenaltyRow(penalty) {
@@ -223,7 +216,6 @@ $(document).ready(function () {
 
 
     $(document).on('click', '.add-penalty-btn', function () {
-
         const block = $(this).closest('.service-block');
         const bookingId = block.data('bookingId');
         const animals = block.data('penaltyAnimals') || [];
@@ -307,16 +299,13 @@ $(document).ready(function () {
 
         $save.on('click', function () {
             const fineId = $type.val();
-            $.post(`/booking/${bookingId}/penalty`, {
+            postRequest(`/booking/${bookingId}/penalty`, {
                 animal_id: $animal.val(),
                 type: $type.find('option:selected').text(),
                 hunter_id: $hunter.val(),
                 penalty_id: fineId,
-                _token: $('meta[name="csrf-token"]').attr('content')
-            }).done(res => {
-                $row.replaceWith(renderSavedPenaltyRow(res.data, bookingId));
-            }).fail(function(e) {
-                bookingCoreApp.showError(e);
+            }).then(res => {
+                $row.replaceWith(renderSavedPenaltyRow(res, bookingId));
             });
         });
 
@@ -331,12 +320,10 @@ $(document).ready(function () {
         const penaltyId = row.data('id');
         const bookingId = row.closest('.service-block').data('bookingId');
 
-        $.ajax({
-            url: `/booking/${bookingId}/penalty/${penaltyId}`,
-            type: 'DELETE',
-            data: {_token: $('meta[name="csrf-token"]').attr('content')},
-            success: () => row.remove()
-        });
+        deleteRequest(`/booking/${bookingId}/penalty/${penaltyId}`)
+            .then(() => {
+                row.remove();
+            });
     });
 
 });
@@ -354,7 +341,7 @@ $(document).ready(function () {
 
         addPreparationHeader(preparationsList);
 
-        loadPreparationAnimals(block, bookingId).done(animals => {
+        loadPreparationAnimals(block, bookingId).then(() => {
             loadSavedPreparations(bookingId, preparationsList);
         });
     });
@@ -370,17 +357,17 @@ $(document).ready(function () {
     }
 
     function loadPreparationAnimals(block, bookingId) {
-        return $.get(`/booking/${bookingId}/preparation/animals`).done(res => {
-            block.data('preparationAnimals', res.data.animals || []);
-        });
+        return request(`/booking/${bookingId}/preparation/animals`)
+            .then(res => {
+                block.data('preparationAnimals', res.animals || []);
+            });
     }
 
     function loadSavedPreparations(bookingId, container) {
-        $.get(`/booking/${bookingId}/saved-services`, res => {
-            (res.data.preparations || []).forEach(prep => {
-                container.append(renderSavedPreparationRow(prep, bookingId));
+        getServices(bookingId, 'preparations')
+            .then(items => {
+                renderServiceList(items, container, renderSavedPreparationRow);
             });
-        });
     }
 
     function renderSavedPreparationRow(prep, bookingId) {
@@ -444,15 +431,12 @@ $(document).ready(function () {
             const selectedAnimal = animals.find(a => a.id == $animal.val());
             const preparationId = selectedAnimal.preparations.length > 0 ? selectedAnimal.preparations[0].id : null;
 
-            $.post(`/booking/${bookingId}/preparation`, {
+            postRequest(`/booking/${bookingId}/preparation`, {
                 animal_id: $animal.val(),
                 preparation_id: preparationId,
                 count: $count.val(),
-                _token: $('meta[name="csrf-token"]').attr('content')
-            }).done(res => {
-                $row.replaceWith(renderSavedPreparationRow(res.data, bookingId));
-            }).fail(function(e) {
-                bookingCoreApp.showError(e);
+            }).then(res => {
+                $row.replaceWith(renderSavedPreparationRow(res, bookingId));
             });
         });
 
@@ -466,12 +450,10 @@ $(document).ready(function () {
         const prepId = row.data('id');
         const bookingId = row.closest('.service-block').data('bookingId');
 
-        $.ajax({
-            url: `/booking/${bookingId}/preparation/${prepId}`,
-            type: 'DELETE',
-            data: {_token: $('meta[name="csrf-token"]').attr('content')},
-            success: () => row.remove()
-        });
+        deleteRequest(`/booking/${bookingId}/preparation/${prepId}`)
+            .then(() => {
+                row.remove();
+            });
     });
 });
 
@@ -500,11 +482,10 @@ $(document).ready(function () {
     }
 
     function loadSavedFoods(bookingId, container) {
-        $.get(`/booking/${bookingId}/saved-services`, res => {
-            (res.data.foods || []).forEach(food => {
-                container.append(renderSavedFoodRow(food));
+        getServices(bookingId, 'foods')
+            .then(items => {
+                renderServiceList(items, container, renderSavedFoodRow);
             });
-        });
     }
 
     function renderSavedFoodRow(food) {
@@ -521,7 +502,6 @@ $(document).ready(function () {
     }
 
     $(document).on('click', '.add-food-btn', function () {
-
         const block = $(this).closest('.service-block');
         const bookingId = block.data('bookingId');
 
@@ -563,13 +543,10 @@ $(document).ready(function () {
         check();
 
         $save.on('click', function () {
-            $.post(`/booking/${bookingId}/food`, {
+            postRequest(`/booking/${bookingId}/food`, {
                 count: $count.val(),
-                _token: $('meta[name="csrf-token"]').attr('content')
-            }).done(res => {
-                $row.replaceWith(renderSavedFoodRow(res.data));
-            }).fail(function(e) {
-                bookingCoreApp.showError(e);
+            }).then(res => {
+                $row.replaceWith(renderSavedFoodRow(res, bookingId));
             });
         });
 
@@ -579,17 +556,14 @@ $(document).ready(function () {
     }
 
     $(document).on('click', '.remove-saved-food', function () {
-
         const row = $(this).closest('.food-row');
         const foodId = row.data('id');
         const bookingId = row.closest('.service-block').data('bookingId');
 
-        $.ajax({
-            url: `/booking/${bookingId}/food/${foodId}`,
-            type: 'DELETE',
-            data: {_token: $('meta[name="csrf-token"]').attr('content')},
-            success: () => row.remove()
-        });
+        deleteRequest(`/booking/${bookingId}/food/${foodId}`)
+            .then(() => {
+                row.remove();
+            });
     });
 
 });
@@ -607,7 +581,7 @@ $(document).ready(function () {
 
         addOthersHeader(list);
 
-        loadOtherPrices(block, bookingId).done(() => {
+        loadOtherPrices(block, bookingId).then(() => {
             loadSavedOthers(bookingId, list);
         });
     });
@@ -624,19 +598,18 @@ $(document).ready(function () {
     }
 
     function loadOtherPrices(block, bookingId) {
-        return $.get(`/booking/${bookingId}/addetional/services`)
-            .done(res => {
-                block.data('otherPrices', res.data.addetionals || []);
-                block.data('hunters', res.data.hunters || []);
+        return request(`/booking/${bookingId}/addetional/services`)
+            .then(res => {
+                block.data('otherPrices', res.addetionals || []);
+                block.data('hunters', res.hunters || []);
             });
     }
 
     function loadSavedOthers(bookingId, container) {
-        $.get(`/booking/${bookingId}/saved-services`, res => {
-            (res.data.addetionals || []).forEach(addetional => {
-                container.append(renderSavedOtherRow(addetional));
+        getServices(bookingId, 'addetionals')
+            .then(items => {
+                renderServiceList(items, container, renderSavedOtherRow);
             });
-        });
     }
 
     function renderSavedOtherRow(addetional) {
@@ -666,7 +639,6 @@ $(document).ready(function () {
     `);
     }
 
-    // Добавление новой строки
     $(document).on('click', '.add-other-btn', function () {
         const block = $(this).closest('.service-block');
         const bookingId = block.data('bookingId');
@@ -796,23 +768,19 @@ $(document).ready(function () {
             $(this).val(val);
         });
 
-        // Сохранение
         $save.one('click', function () {
             const selected = $select.find('option:selected');
             const addetionalId = selected.val();
             const count = parseInt($countInput.val(), 10);
             const hunterId = $row.find('.other-hunter').val();
 
-            $.post(`/booking/${bookingId}/addetional`, {
+            postRequest(`/booking/${bookingId}/addetional`, {
                 addetional: selected.text(),
                 addetional_id: addetionalId,
                 count: count,
                 hunter_id: hunterId,
-                _token: $('meta[name="csrf-token"]').attr('content')
-            }).done(res => {
-                $row.replaceWith(renderSavedOtherRow(res.data));
-            }).fail(function(e) {
-                bookingCoreApp.showError(e);
+            }).then(res => {
+                $row.replaceWith(renderSavedOtherRow(res, bookingId));
             });
         });
 
@@ -821,19 +789,15 @@ $(document).ready(function () {
         return $row;
     }
 
-
-    // Удаление сохраненной услуги
     $(document).on('click', '.remove-saved-other', function () {
         const row = $(this).closest('.other-row');
         const id = row.data('id');
         const bookingId = row.closest('.service-block').data('bookingId');
 
-        $.ajax({
-            url: `/booking/${bookingId}/addetional/${id}`,
-            type: 'DELETE',
-            data: {_token: $('meta[name="csrf-token"]').attr('content')},
-            success: () => row.remove()
-        });
+        deleteRequest(`/booking/${bookingId}/addetional/${id}`)
+            .then(() => {
+                row.remove();
+            });
     });
 });
 
@@ -848,7 +812,7 @@ $(document).ready(function () {
 
         addSpendingHeader(spendingList);
 
-        loadSpendingUser(block, bookingId).done(() => {
+        loadSpendingUser(block, bookingId).then(() => {
             loadSavedSpendings(bookingId, spendingList);
         });
     });
@@ -865,17 +829,17 @@ $(document).ready(function () {
     }
 
     function loadSpendingUser(block, bookingId) {
-        return $.get(`/booking/${bookingId}/spending/users`).done(res => {
-            block.data('hunters', res.data.hunters || []);
-        });
+        return request(`/booking/${bookingId}/spending/users`)
+            .then(res => {
+                block.data('hunters', res.hunters || []);
+            });
     }
 
     function loadSavedSpendings(bookingId, container) {
-        $.get(`/booking/${bookingId}/saved-services`, res => {
-            (res.data.spendings || []).forEach(spending => {
-                container.append(renderSavedSpendingRow(spending));
+        getServices(bookingId, 'spendings')
+            .then(items => {
+                renderServiceList(items, container, renderSavedSpendingRow);
             });
-        });
     }
 
     function renderSavedSpendingRow(spending) {
@@ -947,17 +911,14 @@ $(document).ready(function () {
         $comment.on('input', check);
 
         $save.on('click', function () {
-            $.post(`/booking/${bookingId}/spending`, {
+
+            postRequest(`/booking/${bookingId}/spending`, {
                 hunter_id: $hunter.val(),
                 price: $count.val(),
                 comment: $comment.val(),
-                _token: $('meta[name="csrf-token"]').attr('content')
-            }).done(res => {
-                $row.replaceWith(renderSavedSpendingRow(res.data, bookingId));
-            }).fail(function(e) {
-                bookingCoreApp.showError(e);
-            });
-        });
+            }).then(res => {
+                $row.replaceWith(renderSavedSpendingRow(res, bookingId));
+            });        });
 
         $row.find('.cancel-new').on('click', () => $row.remove());
 
@@ -970,17 +931,22 @@ $(document).ready(function () {
         const spendingId = row.data('id');
         const bookingId = row.closest('.service-block').data('bookingId');
 
-        $.ajax({
-            url: `/booking/${bookingId}/spending/${spendingId}`,
-            type: 'DELETE',
-            data: {_token: $('meta[name="csrf-token"]').attr('content')},
-            success: () => row.remove()
-        });
+        deleteRequest(`/booking/${bookingId}/spending/${spendingId}`)
+            .then(() => {
+                row.remove();
+            });
     });
 });
 
+window.getServices = function (bookingId, key) {
+    return request(`/booking/${bookingId}/saved-services`)
+        .then(res => res?.[key] || []);
+};
 
-
-
+window.renderServiceList = function (items, container, renderer) {
+    items.forEach(item => {
+        container.append(renderer(item));
+    });
+};
 
 

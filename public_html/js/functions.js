@@ -323,9 +323,20 @@ function post_request(endpoint,data){
         body: JSON.stringify(data) // body data type must match "Content-Type" header
     })
 }
+window.request = function (url, options = {}) {
+    const csrf = document.querySelector('meta[name="csrf-token"]')?.content;
+    const headers = {
+        'X-Requested-With': 'XMLHttpRequest',
+        'X-CSRF-TOKEN': csrf,
+        'Accept': 'application/json',
+        ...options.headers,
+    };
 
-window.apiFetch = function (url, options = {}) {
-    return fetch(url, options)
+    return fetch(url, {
+        credentials: 'same-origin',
+        ...options,
+        headers,
+    })
         .then(async (res) => {
             const data = await res.json().catch(() => ({}));
 
@@ -338,7 +349,27 @@ window.apiFetch = function (url, options = {}) {
             }
 
             return data.data;
+        })
+        .catch((e) => {
+            bookingCoreApp.showError(e);
+            throw e;
         });
+};
+window.postRequest = function (url, data = {}, options = {}) {
+    return request(url, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            ...(options.headers || {})
+        },
+        body: JSON.stringify(data),
+        ...options
+    });
+};
+window.deleteRequest = function (url) {
+    return request(url, {
+        method: 'DELETE'
+    });
 };
 
 // Merge object, same as _. if lodash
