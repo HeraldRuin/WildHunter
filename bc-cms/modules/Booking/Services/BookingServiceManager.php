@@ -15,6 +15,7 @@ use Modules\Booking\DTO\StorePreparationData;
 use Modules\Booking\DTO\StoreSpendingData;
 use Modules\Booking\DTO\StoreTrophyData;
 use Modules\Booking\Models\Booking;
+use Modules\Booking\Models\BookingHunterInvitation;
 use Modules\Booking\Models\BookingService;
 
 class BookingServiceManager
@@ -309,10 +310,12 @@ class BookingServiceManager
         ])->load('hunter');
 
         return [
+            'data' => [
                 'id'           => $service->id,
                 'count'        => $service->price,
                 'comment'      => $service->comment,
                 'hunter_name'  => $service->hunter->name ?? '—',
+            ],
         ];
     }
     public function getAnimalHunterData(Booking $booking): array
@@ -320,6 +323,12 @@ class BookingServiceManager
         $booking->load('bookingHunter.invitations');
 
         $animals = Animal::forHotelWithService($booking->hotel_id, Animal::SERVICE_FINES)->get();
+
+        $booking->load([
+            'bookingHunter.invitations' => function ($query) {
+                $query->where('status', BookingHunterInvitation::STATUS_ACCEPTED);
+            }
+        ]);
 
         $hunterIds = $booking->bookingHunter?->invitations?->pluck('hunter_id')->unique();
 
@@ -340,7 +349,11 @@ class BookingServiceManager
     }
     public function getAddetionalHunterData(Booking $booking): array
     {
-        $booking->load('bookingHunter.invitations');
+        $booking->load([
+            'bookingHunter.invitations' => function ($query) {
+                $query->where('status', BookingHunterInvitation::STATUS_ACCEPTED);
+            }
+        ]);
         $hunterIds = $booking->bookingHunter?->invitations?->pluck('hunter_id')->unique();
 
         $hunters = User::query()
