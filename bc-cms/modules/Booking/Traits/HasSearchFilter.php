@@ -18,7 +18,7 @@ trait HasSearchFilter
                 });
                 $query->join('bc_terms as term_'.$index, function($join2) use ($index,$terms){
                     $join2->on('term_'.$index.'.id', 'attr_'.$index.".term_id");
-                    $join2->whereIn('term_'.$index.'.slug', $terms);
+                    $join2->whereIn('term_'.$index.'.id', $terms);
                 });
             }
         }
