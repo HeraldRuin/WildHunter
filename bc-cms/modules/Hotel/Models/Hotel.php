@@ -1091,11 +1091,11 @@ class Hotel extends Bookable
             }
         }
 
-//        if (!empty($price_range = $request["price_range"] ?? "")) {
-//            $pri_from = Currency::convertPriceToMain(explode(";", $price_range)[0]);
-//            $pri_to =  Currency::convertPriceToMain(explode(";", $price_range)[1]);
-//            $model_hotel->whereBetween('bc_hotels.price', [$pri_from, $pri_to]);
-//        }
+        if (!empty($price_range = $request["price_range"] ?? "")) {
+            $pri_from = Currency::convertPriceToMain(explode(";", $price_range)[0]);
+            $pri_to =  Currency::convertPriceToMain(explode(";", $price_range)[1]);
+            $model_hotel->whereBetween('bc_hotels.price', [$pri_from, $pri_to]);
+        }
 
         if (!empty($star_rate = $request['star_rate'] ?? "")) {
             $model_hotel->WhereIn('star_rate', $star_rate);
