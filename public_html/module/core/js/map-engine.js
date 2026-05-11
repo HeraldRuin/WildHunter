@@ -460,13 +460,13 @@ window.BCInitMap = function () {
         this.defaults = {
             fitBounds:true
         };
-        var el = {};
+        const el = {};
         this.map = null;
         this.id = id;
         this.options = options;
         this.markersPositions = [];
         this.markers = [];
-        var bounds = null;
+        const bounds = null;
         this.infoboxs = [];
 
         return this;
@@ -492,7 +492,10 @@ window.BCInitMap = function () {
             me.map = new ymaps.Map(me.id, {
                 center: center,
                 zoom: zoom,
-                controls: ['zoomControl', 'geolocationControl']
+                controls: ['zoomControl', 'geolocationControl'],
+            }, {
+                minZoom: 3,
+                maxZoom: 15
             });
 
             me.placemark = null;
@@ -507,28 +510,28 @@ window.BCInitMap = function () {
                 });
             }
 
-        if (allowSetMarker) {
-            me.map.events.add('click', function (e) {
-                const coords = e.get('coords');
+            if (allowSetMarker) {
+                me.map.events.add('click', function (e) {
+                    const coords = e.get('coords');
 
-                if (me.placemark) {
-                    me.map.geoObjects.remove(me.placemark);
-                }
+                    if (me.placemark) {
+                        me.map.geoObjects.remove(me.placemark);
+                    }
 
-                me.placemark = new ymaps.Placemark(coords, {}, {
-                    preset: 'islands#redDotIcon'
+                    me.placemark = new ymaps.Placemark(coords, {}, {
+                        preset: 'islands#redDotIcon'
+                    });
+
+                    me.map.geoObjects.add(me.placemark);
+
+                    $("input[name=map_lat]").val(coords[0]);
+                    $("input[name=map_lng]").val(coords[1]);
+
+                    me.getAddressFromCoords(coords, function (address) {
+                        $("#customPlaceAddress").val(address);
+                    });
                 });
-
-                me.map.geoObjects.add(me.placemark);
-
-                $("input[name=map_lat]").val(coords[0]);
-                $("input[name=map_lng]").val(coords[1]);
-
-                me.getAddressFromCoords(coords, function (address) {
-                    $("#customPlaceAddress").val(address);
-                });
-            });
-        }
+            }
 
             const rd = me.getOption('ready');
             if (typeof rd === "function") {
