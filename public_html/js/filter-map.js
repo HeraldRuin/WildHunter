@@ -125,7 +125,5 @@ jQuery(function ($) {
         .on('click','.bc-pagination a',function (e) {
             e.preventDefault();
             reloadForm($(this).attr('href'));
-        })
-    ;
-
+        });
 });

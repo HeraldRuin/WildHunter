@@ -998,7 +998,7 @@ jQuery(function ($) {
             url: url ? url : bookingCore.url+'/location/search/searchForSelect2',
             dataDefault: default_list,
             textLoading: $this.attr("data-onLoad"),
-            iconItem: "icofont-location-pin",
+            iconItem: "",
             key: key ? key : 'id'
         };
         $this.bcAutocomplete(options);
