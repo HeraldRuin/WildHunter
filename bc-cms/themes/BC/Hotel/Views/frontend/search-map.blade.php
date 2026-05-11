@@ -37,7 +37,8 @@
 @push('js')
     {!! App\Helpers\MapEngine::scripts() !!}
     <script>
-        var bc_map_data = {
+
+        const bc_map_data = {
             markers: {!! json_encode($markers) !!},
             map_lat_default: {{ setting_item('hotel_map_lat_default', '0') }},
             map_lng_default: {{ setting_item('hotel_map_lng_default', '0') }},

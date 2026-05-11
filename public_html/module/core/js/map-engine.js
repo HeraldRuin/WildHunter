@@ -533,7 +533,50 @@ window.BCInitMap = function () {
             }
         });
     };
+    YandexEngine.prototype.addMarkers2 = function (markers) {
+        return this.addMarkers(markers);
+    };
+    YandexEngine.prototype.addMarkers = function (markers) {
+        const me = this;
 
+        me.map.geoObjects.removeAll();
+
+        me.markers = [];
+        me.markersPositions = [];
+
+        markers.forEach(function(marker) {
+
+            const coords = [
+                Number(marker.lat),
+                Number(marker.lng)
+            ];
+
+            const placemark = new ymaps.Placemark(coords, {
+                balloonContent: marker.title || ''
+            }, {
+                preset: 'islands#redDotIcon'
+            });
+
+            me.map.geoObjects.add(placemark);
+
+            me.markers.push(placemark);
+            me.markersPositions.push(coords);
+        });
+
+        if (me.getOption('fitBounds') && me.markersPositions.length) {
+            me.map.setBounds(
+                ymaps.util.bounds.fromPoints(me.markersPositions),
+                {
+                    checkZoomRange: true
+                }
+            );
+        }
+    };
+    YandexEngine.prototype.clearMarkers = function () {
+        this.map.geoObjects.removeAll();
+        this.markers = [];
+        this.markersPositions = [];
+    };
     YandexEngine.prototype.searchBox = function (classSearchBox, func) {
         var me = this;
         var input = classSearchBox[0];
