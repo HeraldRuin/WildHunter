@@ -475,13 +475,14 @@ window.BCInitMap = function () {
     YandexEngine.prototype = new BaseMapEngine();
 
     YandexEngine.prototype.init = function () {
-        var me = this;
+        const me = this;
         this.el = $('#' + this.id);
 
         ymaps.ready(function () {
 
-            var center = me.getOption('center');
-            var zoom = me.getOption('zoom') || 10;
+            const center = me.getOption('center');
+            const zoom = me.getOption('zoom') || 10;
+            const allowSetMarker = me.getOption('allowSetMarker');
 
             me.initialCenter = [
                 Number(center[0]),
@@ -501,13 +502,14 @@ window.BCInitMap = function () {
                     preset: 'islands#redDotIcon'
                 });
                 me.map.geoObjects.add(me.placemark);
-                me.getAddressFromCoords(center, function(address) {
+                me.getAddressFromCoords(center, function (address) {
                     $("#customPlaceAddress").val(address);
                 });
             }
 
+        if (allowSetMarker) {
             me.map.events.add('click', function (e) {
-                var coords = e.get('coords');
+                const coords = e.get('coords');
 
                 if (me.placemark) {
                     me.map.geoObjects.remove(me.placemark);
@@ -522,12 +524,13 @@ window.BCInitMap = function () {
                 $("input[name=map_lat]").val(coords[0]);
                 $("input[name=map_lng]").val(coords[1]);
 
-                me.getAddressFromCoords(coords, function(address) {
+                me.getAddressFromCoords(coords, function (address) {
                     $("#customPlaceAddress").val(address);
                 });
             });
+        }
 
-            var rd = me.getOption('ready');
+            const rd = me.getOption('ready');
             if (typeof rd === "function") {
                 rd(me);
             }
@@ -578,8 +581,8 @@ window.BCInitMap = function () {
         this.markersPositions = [];
     };
     YandexEngine.prototype.searchBox = function (classSearchBox, func) {
-        var me = this;
-        var input = classSearchBox[0];
+        const me = this;
+        const input = classSearchBox[0];
 
         if (!input) return;
 
@@ -588,15 +591,15 @@ window.BCInitMap = function () {
             if (e.key === 'Enter') {
                 e.preventDefault();
 
-                var value = input.value;
+                const value = input.value;
                 if (!value) return;
 
                 ymaps.geocode(value).then(function (res) {
 
-                    var geoObject = res.geoObjects.get(0);
+                    const geoObject = res.geoObjects.get(0);
                     if (!geoObject) return;
 
-                    var coords = geoObject.geometry.getCoordinates();
+                    const coords = geoObject.geometry.getCoordinates();
 
                     me.map.setCenter(coords, 15);
 
@@ -626,10 +629,10 @@ window.BCInitMap = function () {
     YandexEngine.prototype.getAddressFromCoords = function (coords, callback) {
         ymaps.geocode(coords).then(function (res) {
 
-            var firstGeoObject = res.geoObjects.get(0);
+            const firstGeoObject = res.geoObjects.get(0);
             if (!firstGeoObject) return;
 
-            var address = firstGeoObject.getAddressLine();
+            const address = firstGeoObject.getAddressLine();
 
             if (typeof callback === 'function') {
                 callback(address);
@@ -638,10 +641,10 @@ window.BCInitMap = function () {
     };
 
     YandexEngine.prototype.resetToInitial = function () {
-        var me = this;
+        const me = this;
         if (!me.initialCenter) return;
 
-        var center = [
+        const center = [
             Number(me.initialCenter[0]),
             Number(me.initialCenter[1])
         ];

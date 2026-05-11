@@ -3,6 +3,7 @@ var mapEngine = new BCMapEngine('bc_results_map',{
     center:[bc_map_data.map_lat_default, bc_map_data.map_lng_default ],
     zoom:bc_map_data.map_zoom_default,
     disableScripts:true,
+    allowSetMarker: false,
     markerClustering:bookingCore.map_options.map_clustering,
     ready: function (engineMap) {
         if(bc_map_data.markers){

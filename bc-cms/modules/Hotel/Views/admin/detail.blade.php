@@ -139,6 +139,7 @@
                     {{ $row->map_lng ?? setting_item('map_lng_default', -0.09) }}
                 ],
                 zoom: {{ $row->map_zoom ?? '8' }},
+                allowSetMarker: true,
 
                 ready: function(engineMap) {
 
