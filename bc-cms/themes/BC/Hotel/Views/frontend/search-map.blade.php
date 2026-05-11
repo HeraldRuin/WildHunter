@@ -9,6 +9,9 @@
         }
     </style>
 @endpush
+@php
+    $firstMarker = $markers[0] ?? null;
+@endphp
 @section('content')
     <div class="bc_search_tour bc_search_space">
         <h1 class="d-none">
@@ -37,13 +40,13 @@
 @push('js')
     {!! App\Helpers\MapEngine::scripts() !!}
     <script>
-
         const bc_map_data = {
             markers: {!! json_encode($markers) !!},
-            map_lat_default: {{ setting_item('hotel_map_lat_default', '0') }},
-            map_lng_default: {{ setting_item('hotel_map_lng_default', '0') }},
-            map_zoom_default: {{ setting_item('hotel_map_zoom_default', '0') }},
+            map_lat_default: {{ $firstMarker['lat'] ?? setting_item('hotel_map_lat_default', '0') }},
+            map_lng_default: {{ $firstMarker['lng'] ?? setting_item('hotel_map_lng_default', '0') }},
+            map_zoom_default: {{ setting_item('hotel_map_zoom_default', '3') }},
         };
+
     </script>
     <script type="text/javascript" src="{{ asset('libs/ion_rangeslider/js/ion.rangeSlider.min.js') }}"></script>
     <script type="text/javascript" src="{{ asset('js/filter-map.js?_ver=' . config('app.asset_version')) }}"></script>
