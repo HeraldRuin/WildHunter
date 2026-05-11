@@ -1,6 +1,8 @@
 @if(empty($hideMap))
 <div class="item">
-    <a href="{{ route($routeName,['_layout'=>'map']) }}">{{__("Show on the map")}}</a>
+    <a class="show-map-link" data-route="{{ route($routeName) }}">
+        {{ __("Show on the map") }}
+    </a>
 </div>
 @endif
 <div class="item orderby">
@@ -36,3 +38,30 @@
         </div>
     </div>
 </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+
+        document.addEventListener('click', function (e) {
+
+            const link = e.target.closest('.show-map-link');
+            if (!link) return;
+
+            e.preventDefault();
+
+            const currentUrl = new URL(window.location.href);
+            const baseUrl = link.dataset.route;
+
+            const newUrl = new URL(baseUrl, window.location.origin);
+
+            currentUrl.searchParams.forEach((value, key) => {
+                newUrl.searchParams.set(key, value);
+            });
+
+            newUrl.searchParams.set('_layout', 'map');
+
+            window.location.href = newUrl.toString();
+        });
+
+    });
+</script>
