@@ -985,6 +985,25 @@ jQuery(function ($) {
         $this.bcAutocomplete(options);
     });
 
+    $(".smart-search .smart-search-attr").each(function () {
+        var $this = $(this);
+        var string_list = $this.attr('data-default');
+        var default_list = [];
+        if(string_list.length > 0){
+            default_list = JSON.parse(string_list);
+        }
+        var url = $this.data('url');
+        var key = $this.data('key');
+        var options = {
+            url: url ? url : bookingCore.url+'/location/search/searchForSelect2',
+            dataDefault: default_list,
+            textLoading: $this.attr("data-onLoad"),
+            iconItem: "icofont-location-pin",
+            key: key ? key : 'id'
+        };
+        $this.bcAutocomplete(options);
+    });
+
     $(".smart-search .smart-search-animal").each(function () {
         var $this = $(this);
         var string_list = $this.attr('data-default');

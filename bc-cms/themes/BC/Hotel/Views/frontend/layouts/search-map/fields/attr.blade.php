@@ -21,7 +21,11 @@
                         @endphp
                     @endforeach
                     <div class="smart-search">
-                        <input type="text" class="smart-select parent_text form-control" readonly placeholder="{{__("All :name",['name'=>$attr_translate->name])}}" value="{{ $selected ? $selected->name ?? '' :'' }}" data-default="{{ json_encode($list_cat_json) }}">
+                        <input type="text" class="smart-search-attr parent_text form-control"
+                               readonly autocomplete="off" tabindex="-1" style="caret-color: transparent;"
+                               placeholder="{{__("All :name",['name'=>$attr_translate->name])}}"
+                               value="{{ $selected ? $selected->name ?? '' :'' }}"
+                               data-default="{{ json_encode($list_cat_json) }}">
                         <input type="hidden" class="child_id" name="attrs[{{$attr->id}}][]" value="{{$query_attrs[$attr->id][0] ?? ''}}">
                     </div>
                 </div>
