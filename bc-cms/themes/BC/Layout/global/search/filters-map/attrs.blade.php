@@ -18,7 +18,7 @@
                                 @if(in_array($term->slug,$selected[$item->id] ?? [])) checked
                                 @endif type="checkbox"
                                 name="attrs[{{$item->id}}][]"
-                                value="{{$term->slug}}"
+                                value="{{$term->id}}"
                             > {{$translate->name}}
                         </label>
                     </li>
