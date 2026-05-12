@@ -4,7 +4,7 @@
 @foreach ($attributes as $item)
     @if(empty($item['hide_in_filter_search']))
         @php
-            if(in_array($item->id,$usedAttrs)) continue;
+//            if(in_array($item->id,$usedAttrs)) continue;
             $translate = $item->translate();
         @endphp
         <div class="filter-item">
