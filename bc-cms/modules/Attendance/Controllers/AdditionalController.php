@@ -1,26 +1,29 @@
 <?php
 namespace Modules\Attendance\Controllers;
 
+use App\Exceptions\NotFoundException;
 use App\Http\Controllers\Controller;
+use App\Http\Responses\SuccessResponse;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
+use Modules\Attendance\Application\UseCases\Addetionals\AdditionalResource;
+use Modules\Attendance\DTO\StoreAdditionalData;
+use Modules\Attendance\DTO\UpdateAdditionalData;
 use Modules\Attendance\Models\AddetionalPrice;
-use Modules\Attendance\Models\Attendance;
-use Illuminate\Http\Request;
 use Modules\Attendance\Requests\StoreAdditionalRequest;
 use Modules\Attendance\Requests\UpdateAdditionalRequest;
-use Modules\Location\Models\Location;
-use Modules\Review\Models\Review;
-use Modules\Core\Models\Attributes;
-use DB;
+use Modules\Attendance\Services\AddetionalService;
 
 class AdditionalController extends Controller
 {
     protected string $indexView = 'Attendance::user.additional';
 
-    public function index(Request $request)
+    public function __construct(protected AddetionalService $addetionalService) {}
+
+    public function index()
     {
         $additionals = AddetionalPrice::query()
-            ->where('user_id', Auth::id())
+            ->forUser(Auth::id())
             ->orderByRaw("name = 'Питание' DESC")
             ->get();
 
@@ -39,61 +42,32 @@ class AdditionalController extends Controller
         return view($this->indexView, compact('additionals','breadcrumbs','page_title'));
     }
 
-    public function store(StoreAdditionalRequest $request)
+    public function store(StoreAdditionalRequest $request): JsonResponse
     {
-        $additional = AddetionalPrice::create([
-            ...$request->validated(),
-            'hotel_id' => get_user_hotel_id(),
-            'user_id'  => auth()->id(),
-        ]);
+        $data = StoreAdditionalData::fromRequest($request);
+        $addetional = $this->addetionalService->store($data, get_user_hotel_id(), Auth::id());
 
-        return response()->json([
-            'status' => true,
-            'html'   => view('Additional::frontend.partials.additional-row', [
-                'additional' => $additional
-            ])->render()
-        ]);
+        return new SuccessResponse(data: new AdditionalResource($addetional));
     }
 
-    public function update(UpdateAdditionalRequest $request, $id)
+    /**
+     * @throws NotFoundException
+     */
+    public function update(UpdateAdditionalRequest $request, $id): JsonResponse
     {
-        $additional = AddetionalPrice::where('id', $id)
-            ->where('user_id', auth()->id())
-            ->where('hotel_id', get_user_hotel_id())
-            ->first();
+        $data = UpdateAdditionalData::fromRequest($request);
+        $this->addetionalService->update($data, $id, get_user_hotel_id(), Auth::id());
 
-        if (!$additional) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Услуга не найдена',
-            ], 404);
-        }
-
-        $additional->update($request->validated());
-
-        return $this->sendSuccess([
-            'message' => __("Updated successfully!")
-        ]);
+        return new SuccessResponse();
     }
 
-    public function destroy($id)
+    /**
+     * @throws NotFoundException
+     */
+    public function destroy($id): JsonResponse
     {
-        $additional = AddetionalPrice::where('id', $id)
-            ->where('user_id', auth()->id())
-            ->where('hotel_id', get_user_hotel_id())
-            ->first();
+        $this->addetionalService->delete($id, get_user_hotel_id(), Auth::id());
 
-        if (!$additional) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Услуга не найдена',
-            ], 404);
-        }
-
-        $additional->delete();
-
-        return $this->sendSuccess([
-            'message' => __("Deleted Success")
-        ]);
+        return new SuccessResponse();
     }
 }

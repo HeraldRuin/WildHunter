@@ -34,4 +34,15 @@ class AddetionalPrice extends Model
     const PREPARATION = 'preparation';
     const PENALTY = 'penalty';
     const TROPHY = 'trophy';
+
+    public function scopeForUser($query, int $userId)
+    {
+        return $query->where('user_id', $userId);
+    }
+    public function scopeAccessible($query, int $hotelId, int $userId)
+    {
+        return $query
+            ->where('hotel_id', $hotelId)
+            ->where('user_id', $userId);
+    }
 }

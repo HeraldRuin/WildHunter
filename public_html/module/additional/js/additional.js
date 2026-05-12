@@ -9,48 +9,21 @@
                 additionals: [],
             },
             mounted() {
-                var vm = this;
-
                 $('#addetional-app').on('click', '.save-period', function () {
                     let row = $(this).closest('tr');
                     let additionalId = row.data('id');
+                    let url = additionalId ? '/additionals/' + additionalId + '/update' : '/additionals/store';
 
-                    let data = {
+                    postRequest(url, {
                         name: row.find('input[name="name"]').val(),
                         price: row.find('input[name="price"]').val(),
                         calculation_type: row.find('select[name="calculation_type"]').val(),
                         count: row.find('input[name="count"]').val(),
-                        _token: $('meta[name="csrf-token"]').attr('content')
-                    };
-
-                    let url = additionalId ? '/additionals/' + additionalId + '/update' : '/additionals/store';
-
-                    $.ajax({
-                        url: url,
-                        type: 'POST',
-                        dataType: 'json',
-                        data: data,
-                        success: function (res) {
-
-                            if (res.status) {
-                                bookingCoreApp.showAjaxMessage(res);
-
-                                if (!additionalId && res.html) {
-                                    row.replaceWith(res.html);
-                                }
+                    })
+                        .then(res => {
+                            if (!additionalId && res.html) {
+                                row.replaceWith(res.html);
                             }
-                        },
-                        error: function (e) {
-                            if (e.status === 422) {
-                                let errors = e.responseJSON.errors;
-
-                                let messages = Object.values(errors)
-                                    .flat()
-                                    .join('\n');
-
-                                bookingCoreApp.showError({ message: messages });
-                            }
-                        }
                     });
                 });
 
@@ -77,24 +50,10 @@
                         callback: (result) => {
                             if (!result) return;
 
-                            $.ajax({
-                                url: '/additionals/' + additionalId,
-                                type: 'DELETE',
-                                dataType: 'json',
-                                data: {
-                                    _token: $('meta[name="csrf-token"]').attr('content')
-                                },
-                                success: (res) => {
-                                    if (res.status) {
-                                        window.location.reload();
-                                    }
-                                },
-                                error: function (e) {
-                                     if (e.responseJSON && e.responseJSON.message) {
-                                         bookingCoreApp.showError({ message: e.responseJSON.message });
-                                    }
-                                }
-                            });
+                            deleteRequest(`/additionals/${additionalId}`)
+                                .then(() => {
+                                    window.location.reload();
+                                });
                         }
                     });
                 });
