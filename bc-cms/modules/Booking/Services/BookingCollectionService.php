@@ -140,6 +140,7 @@ readonly class BookingCollectionService
     }
 
     /**
+     * @throws ConflictException
      * @throws ForbiddenException
      */
     public function cancelCollection(Booking $booking, $user): array
@@ -169,16 +170,30 @@ readonly class BookingCollectionService
     {
         $this->bookingAccessService->ensureCanAccessBooking();
     }
+
+    /**
+     * @throws ConflictException
+     */
     private function checkCollectionStatus(Booking $booking): void
     {
         if ($booking->status !== Booking::START_COLLECTION) {
-            throw new \DomainException("Сбор охотников не начат или уже завершён");
+            throw new ConflictException(
+                errorCode: 'booking_hunter_gathering_not_started',
+                domain: 'booking'
+            );
         }
     }
+
+    /**
+     * @throws ConflictException
+     */
     private function checkCancelStatus(Booking $booking): void
     {
         if (in_array($booking->status, [Booking::CANCELLED, Booking::COMPLETED], true)) {
-            throw new \DomainException(__('This booking cannot be modified'));
+            throw new ConflictException(
+                errorCode: 'booking_not_confirmable',
+                domain: 'booking'
+            );
         }
     }
     private function rollbackStatusAndClearTimers(Booking $booking): void
