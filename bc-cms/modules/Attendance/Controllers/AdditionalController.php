@@ -6,12 +6,12 @@ use App\Http\Controllers\Controller;
 use App\Http\Responses\SuccessResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
-use Modules\Attendance\Application\UseCases\Addetionals\AdditionalResource;
 use Modules\Attendance\DTO\StoreAdditionalData;
 use Modules\Attendance\DTO\UpdateAdditionalData;
+use Modules\Attendance\Http\Requests\StoreAdditionalRequest;
+use Modules\Attendance\Http\Requests\UpdateAdditionalRequest;
+use Modules\Attendance\Http\Resources\AdditionalResource;
 use Modules\Attendance\Models\AddetionalPrice;
-use Modules\Attendance\Requests\StoreAdditionalRequest;
-use Modules\Attendance\Requests\UpdateAdditionalRequest;
 use Modules\Attendance\Services\AddetionalService;
 
 class AdditionalController extends Controller
