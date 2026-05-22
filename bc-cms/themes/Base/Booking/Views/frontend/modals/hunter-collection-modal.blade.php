@@ -10,8 +10,7 @@
                     :disabled="isCollectionTimerExpired({{ $booking->id }}) || (hunterSlot.hunter && hunterSlot.hunter.invited)"
                     @input="searchHunterForSlot(index, {{ $booking->id }})"
                     @change="handleHunterInputChange(index)"
-                    @focus="hunterSlot.showResults = true"
-                    @blur="hunterSlot.showResults = false; hunterSlot.query=''; hunterSlot.results=''">
+                    @focus="hunterSlot.showResults = true">
 
                 <!-- Результаты поиска для этого слота -->
                 <div v-if="hunterSlot.showResults" class="position-absolute w-100 bg-white border rounded shadow-sm mt-1" style="z-index: 1000; max-height: 300px; overflow-y: auto;">
@@ -95,7 +94,8 @@
                     :disabled="!hunterSlot.hunter || (hunterSlot.hunter.invited && hunterSlot.hunter.invitation_status !== 'declined') || hunterSlot.hunter.is_external"
                     @click="inviteHunterForSlot(index, {{ $booking->id }}, $event)">
                     <span
-                        v-text="(hunterSlot.hunter && hunterSlot.hunter.invited && hunterSlot.hunter.invitation_status === 'accepted') ? acceptedText : ((hunterSlot.hunter && hunterSlot.hunter.invited && hunterSlot.hunter.invitation_status !== 'declined') ? invitedText : inviteText)"></span>
+                        v-text="(hunterSlot.hunter && hunterSlot.hunter.invited && hunterSlot.hunter.invitation_status === 'accepted') ? acceptedText : ((hunterSlot.hunter && hunterSlot.hunter.invited && hunterSlot.hunter.invitation_status !== 'declined') ? invitedText : inviteText)">
+                    </span>
                 </button>
             </div>
         </div>
