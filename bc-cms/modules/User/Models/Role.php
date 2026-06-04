@@ -1,9 +1,6 @@
 <?php
 
-
 namespace Modules\User\Models;
-
-
 
 use App\BaseModel;
 use Illuminate\Support\Facades\Cache;
@@ -12,6 +9,9 @@ use Modules\User\Helpers\PermissionHelper;
 
 class Role extends BaseModel
 {
+    const SUPERADMIN = 'superadmin';
+    const ADMIN = 'baseadmin';
+    const CUSTOMER = 'hunter';
 
     protected $table = 'core_roles';
 

@@ -955,21 +955,21 @@ function _fixTextScanTranslations()
 function is_admin()
 {
     if (!auth()->check()) return false;
-    if(!auth()->user()->hasRole('administrator')) return false;
+    if(!auth()->user()->hasRole(\Modules\User\Models\Role::SUPERADMIN)) return false;
     if (auth()->user()->hasPermission('dashboard_access')) return true;
     return false;
 }
 function is_vendor()
 {
     if (!auth()->check()) return false;
-    if(!auth()->user()->hasRole('hunter')) return false;
+    if(!auth()->user()->hasRole(\Modules\User\Models\Role::CUSTOMER)) return false;
     if (auth()->user()->hasPermission('hunter_dashboard_access')) return true;
     return false;
 }
 function is_baseAdmin()
 {
     if (!auth()->check()) return false;
-    if(!auth()->user()->hasRole('baseadmin')) return false;
+    if(!auth()->user()->hasRole(\Modules\User\Models\Role::ADMIN)) return false;
     if (auth()->user()->hasPermission('baseAdmin_dashboard_access')) return true;
     return false;
 }
