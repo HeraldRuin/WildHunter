@@ -61,7 +61,7 @@ class WeaponController extends AdminController
 //        }
         $data = [
             'rows' => $query->paginate(20),
-            'animal_manage_others' => $this->hasPermission('animal_manage_others'),
+            'animal_manage_others' => $this->hasPermission('weapon_manage_others'),
             'breadcrumbs' => [
                 [
                     'name' => __('Weapon'),
@@ -79,7 +79,7 @@ class WeaponController extends AdminController
     }
     public function create(Request $request)
     {
-        $this->checkPermission('animal_create');
+        $this->checkPermission('weapon_create');
         $row = new $this->weaponType();
         $row->fill([
             'status' => 'publish'
@@ -112,18 +112,17 @@ class WeaponController extends AdminController
         }
 
         if ($id > 0) {
-
-//            $this->checkPermission('animal_update');
+            $this->checkPermission('weapon_update');
             $row = $this->weaponType::find($id);
 
             if (empty($row)) {
                 return redirect(route('weapon.admin.index'));
             }
-            if ($row->author_id != Auth::id() and !$this->hasPermission('animal_manage_others')) {
+            if ($row->author_id != Auth::id() and !$this->hasPermission('weapon_manage_others')) {
                 return redirect(route('weapon.admin.index'));
             }
         } else {
-//            $this->checkPermission('animal_create');
+            $this->checkPermission('weapon_create');
             $row = new $this->weaponType();
             $row->status = "publish";
         }
@@ -146,7 +145,7 @@ class WeaponController extends AdminController
             'default_state',
             'ical_import_url'
         ];
-        if ($this->hasPermission('animal_manage_others')) {
+        if ($this->hasPermission('weapon_manage_others')) {
             $dataKeys[] = 'author_id';
         }
         $row->fillByAttr($dataKeys, $request->input());
@@ -174,7 +173,7 @@ class WeaponController extends AdminController
     }
     public function edit(Request $request, $id)
     {
-//        $this->checkPermission('animal_update');
+        $this->checkPermission('weapon_update');
         $row = $this->weaponType::find($id);
         if (empty($row)) {
             return redirect(route('weapon.admin.index'));
@@ -194,17 +193,17 @@ class WeaponController extends AdminController
             'enable_multi_lang' => true,
             'breadcrumbs'       => [
                 [
-                    'name' => __('Animal'),
+                    'name' => __('Weapon'),
                     'url'  => route('weapon.admin.index')
                 ],
                 [
-                    'name'  => __('Edit Animal'),
+                    'name'  => __('Edit Weapon'),
                     'class' => 'active'
                 ],
             ],
             'page_title'        => __("Edit: :name", ['name' => $row->title])
         ];
-        return view('Animals::admin.detail', $data);
+        return view('Weapon::admin.detail', $data);
     }
 
     public function bulkEdit(Request $request)
@@ -222,9 +221,9 @@ class WeaponController extends AdminController
             case "delete":
                 foreach ($ids as $id) {
                     $query = $this->weaponType::where("id", $id);
-                    if (!$this->hasPermission('animal_manage_others')) {
+                    if (!$this->hasPermission('weapon_manage_others')) {
                         $query->where("create_user", Auth::id());
-                        $this->checkPermission('animal_delete');
+                        $this->checkPermission('weapon_delete');
                     }
                     $row = $query->first();
                     if (!empty($row)) {
@@ -237,9 +236,9 @@ class WeaponController extends AdminController
             case "permanently_delete":
                 foreach ($ids as $id) {
                     $query = $this->weaponType::where("id", $id);
-                    if (!$this->hasPermission('animal_manage_others')) {
+                    if (!$this->hasPermission('weapon_manage_others')) {
                         $query->where("create_user", Auth::id());
-                        $this->checkPermission('animal_delete');
+                        $this->checkPermission('weapon_delete');
                     }
                     $row = $query->withTrashed()->first();
                     if ($row) {
@@ -251,9 +250,9 @@ class WeaponController extends AdminController
             case "recovery":
                 foreach ($ids as $id) {
                     $query = $this->weaponType::withTrashed()->where("id", $id);
-                    if (!$this->hasPermission('animal_manage_others')) {
+                    if (!$this->hasPermission('weapon_manage_others')) {
                         $query->where("create_user", Auth::id());
-                        $this->checkPermission('animal_delete');
+                        $this->checkPermission('weapon_delete');
                     }
                     $row = $query->first();
                     if (!empty($row)) {
@@ -264,7 +263,7 @@ class WeaponController extends AdminController
                 return redirect()->back()->with('success', __('Recovery success!'));
                 break;
             case "clone":
-                $this->checkPermission('animal_create');
+                $this->checkPermission('weapon_create');
                 foreach ($ids as $id) {
                     (new $this->weaponType())->saveCloneByID($id);
                 }
@@ -274,9 +273,9 @@ class WeaponController extends AdminController
                 // Change status
                 foreach ($ids as $id) {
                     $query = $this->weaponType::where("id", $id);
-                    if (!$this->hasPermission('animal_manage_others')) {
+                    if (!$this->hasPermission('weapon_manage_others')) {
                         $query->where("create_user", Auth::id());
-                        $this->checkPermission('animal_update');
+                        $this->checkPermission('weapon_update');
                     }
                     $row = $query->first();
                     $row->status = $action;
