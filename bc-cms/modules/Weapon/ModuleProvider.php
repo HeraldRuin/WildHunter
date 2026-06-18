@@ -23,6 +23,7 @@ class ModuleProvider extends ModuleServiceProvider
             // weapon
             'weapon_view',
             'weapon_create',
+            'weapon_manage_others'
         ]);
     }
     /**

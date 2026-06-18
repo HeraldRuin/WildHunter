@@ -141,6 +141,7 @@ return [
     //Weapon
     'weapon_view',
     'weapon_create',
+    'weapon_manage_others',
 
     //Caliber
     'caliber_view',
