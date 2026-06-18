@@ -9,7 +9,7 @@ class DashboardService
 {
     public function getBaseAdminData($booking, Authenticatable $user): array
     {
-        $hotelId = $user->hotels->first()->id;
+        $hotelId = $user->hotels->first()?->id;
 
         return [
             'recent_bookings'    => Booking::getRecentBookings(hotel_id: $hotelId),

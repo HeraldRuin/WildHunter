@@ -1,6 +1,7 @@
 <?php
 namespace Modules\Hotel\Admin;
 
+use App\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Modules\AdminController;
@@ -13,6 +14,7 @@ use Modules\Hotel\Models\Hotel;
 use Modules\Hotel\Models\HotelTerm;
 use Modules\Hotel\Models\HotelTranslation;
 use Modules\Location\Models\LocationCategory;
+use Modules\User\Models\Role;
 
 class HotelController extends AdminController
 {
@@ -162,6 +164,22 @@ class HotelController extends AdminController
                 return redirect(route('hotel.admin.index'));
             }
         }
+        $users = User::whereHas('role', function ($query) {
+            $query->where('code', Role::ADMIN);
+        })
+            ->whereNotIn('id', function ($query) {
+                $query->select('admin_base')
+                    ->from('bc_hotels')
+                    ->whereNotNull('admin_base');
+            })
+            ->get();
+
+        $assignedAdmin = null;
+
+        if ($row->admin_base) {
+            $assignedAdmin = User::find($row->admin_base);
+        }
+
         $data = [
             'row'            => $row,
             'translation'    => $translation,
@@ -169,6 +187,9 @@ class HotelController extends AdminController
             'attributes'     => $this->attributesClass::where('service', 'hotel')->get(),
             'hotel_location'  => $this->locationClass::where('status', 'publish')->get()->toTree(),
             'location_category' => $this->locationCategoryClass::where('status', 'publish')->get(),
+            'can_assign_user' => is_null($row->admin_base),
+            'baseAdmins' => $users,
+            'assignedAdmin'  => $assignedAdmin,
             'enable_multi_lang'=>true,
             'breadcrumbs'    => [
                 [
@@ -185,8 +206,8 @@ class HotelController extends AdminController
         return view('Hotel::admin.detail', $data);
     }
 
-    public function store( Request $request, $id ){
-
+    public function store( Request $request, $id )
+    {
         if(is_demo_mode()){
             return redirect()->back()->with('danger',__("DEMO MODE: can not add data"));
         }
@@ -238,6 +259,7 @@ class HotelController extends AdminController
             'surrounding',
             'related_ids',
             'max_hunts_per_day',
+            'admin_base',
         ];
         if($this->hasPermission('hotel_manage_others')){
             $dataKeys[] = 'author_id';

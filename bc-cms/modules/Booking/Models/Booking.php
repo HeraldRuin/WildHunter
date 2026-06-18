@@ -877,7 +877,9 @@ class Booking extends BaseModel
             ->where('status', '!=', 'draft')
             ->orderBy('id', 'desc');
 
-        $list_booking->where('hotel_id', $hotel_id);
+        if ($hotel_id !== null) {
+            $list_booking->where('hotel_id', $hotel_id);
+        }
 
         if (!empty($booking_status)) {
             $list_booking->where('status', $booking_status);

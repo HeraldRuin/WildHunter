@@ -1,6 +1,7 @@
 <?php
 namespace Modules\User\Models;
 
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Modules\Agency\Models\Agency;
 use Modules\Agency\Models\AgencyAgent;
 use Modules\Booking\Models\Booking;
@@ -35,5 +36,10 @@ class User extends \App\User
             ->pluck('booking_id');
 
         return Booking::whereIn('id', $bookingHunterIds);
+    }
+
+    public function role(): BelongsTo
+    {
+        return $this->belongsTo(Role::class,'role_id');
     }
 }
