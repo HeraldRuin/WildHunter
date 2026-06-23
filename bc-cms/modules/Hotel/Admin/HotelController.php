@@ -94,12 +94,31 @@ class HotelController extends AdminController
         $row->fill([
             'status' => 'publish'
         ]);
+
+        $users = User::whereHas('role', function ($query) {
+            $query->where('code', Role::ADMIN);
+        })
+            ->whereNotIn('id', function ($query) {
+                $query->select('admin_base')
+                    ->from('bc_hotels')
+                    ->whereNotNull('admin_base');
+            })
+            ->get();
+
+        $assignedAdmin = null;
+
+        if ($row->admin_base) {
+            $assignedAdmin = User::find($row->admin_base);
+        }
+
         $data = [
             'row'            => $row,
             'attributes'     => $this->attributesClass::where('service', 'hotel')->get(),
             'hotel_location' => $this->locationClass::where('status', 'publish')->get()->toTree(),
             'location_category' => $this->locationCategoryClass::where('status', 'publish')->get(),
             'translation'    => new $this->hotelTranslationClass(),
+            'assignedAdmin'  => $assignedAdmin,
+            'baseAdmins' => $users,
             'breadcrumbs'    => [
                 [
                     'name' => __('Hotels'),
