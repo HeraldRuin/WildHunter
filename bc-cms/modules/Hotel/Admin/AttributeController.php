@@ -48,7 +48,7 @@ class AttributeController extends AdminController
                     'url'  => route('hotel.admin.index')
                 ],
                 [
-                    'name'  => __('Attributes'),
+                    'name'  => __('hotelAdmin.sidebar_name.services_hotel'),
                     'class' => 'active'
                 ],
             ]
