@@ -50,22 +50,22 @@ class ModuleProvider extends ModuleServiceProvider
                 'children'   => [
                     'add'=>[
                         'url'        => route('hotel.admin.index'),
-                        'title'      => __('All Hotels'),
+                        'title'      => __('hotelAdmin.sidebar_name.hotels'),
                         'permission' => 'hotel_view',
                     ],
                     'create'=>[
                         'url'        => route('hotel.admin.create'),
-                        'title'      => __('Add new Hotel'),
+                        'title'      => __('hotelAdmin.sidebar_name.add_new_hotel'),
                         'permission' => 'hotel_create',
                     ],
                     'attribute'=>[
                         'url'        => route('hotel.admin.attribute.index'),
-                        'title'      => __('Attributes'),
+                        'title'      => __('hotelAdmin.sidebar_name.services_hotel'),
                         'permission' => 'hotel_manage_attributes',
                     ],
                     'room_attribute'=>[
                         'url'        => route('hotel.admin.room.attribute.index'),
-                        'title'      => __('Room Attributes'),
+                        'title'      => __('hotelAdmin.sidebar_name.services_room'),
                         'permission' => 'hotel_manage_attributes',
                     ],
                     'recovery'=>[
