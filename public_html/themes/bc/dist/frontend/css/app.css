@@ -10098,7 +10098,9 @@ ul, ol {
 }
 
 .bc_wrap .bc_footer .copy-right {
-    border-top: 1px solid #EAEEF3
+    border-top: 1px solid #EAEEF3;
+    background-color: #1a2b47;
+    color: white;
 }
 
 .bc_wrap .bc_footer .copy-right p {
