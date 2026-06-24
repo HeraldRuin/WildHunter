@@ -326,6 +326,33 @@ class HotelController extends AdminController
         }
     }
 
+    public function unassignAdmin(Request $request, $id)
+    {
+        if (is_demo_mode()) {
+            return redirect()->back()->with('danger', __("DEMO MODE: can not add data"));
+        }
+
+        $this->checkPermission('hotel_update');
+        $row = $this->hotelClass::find($id);
+
+        if (empty($row)) {
+            return redirect(route('hotel.admin.index'));
+        }
+
+        if ($row->author_id != Auth::id() and !$this->hasPermission('hotel_manage_others')) {
+            return redirect(route('hotel.admin.index'));
+        }
+
+        if (!$row->admin_base) {
+            return back()->with('warning', __('hotelAdmin.errors.no_admin_assigned'));
+        }
+
+        $row->admin_base = null;
+        $row->save();
+
+        return back()->with('success', __('hotelAdmin.successes.admin_unassigned'));
+    }
+
     public function bulkEdit(Request $request)
     {
         $ids = $request->input('ids');

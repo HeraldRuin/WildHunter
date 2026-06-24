@@ -4,6 +4,7 @@ Route::get('/','HotelController@index')->name('hotel.admin.index');
 Route::get('/create','HotelController@create')->name('hotel.admin.create');
 Route::get('/edit/{id}','HotelController@edit')->name('hotel.admin.edit');
 Route::post('/store/{id}','HotelController@store')->name('hotel.admin.store');
+Route::post('/unassignAdmin/{id}','HotelController@unassignAdmin')->name('hotel.admin.unassignAdmin');
 Route::post('/bulkEdit','HotelController@bulkEdit')->name('hotel.admin.bulkEdit');
 Route::get('/recovery','HotelController@recovery')->name('hotel.admin.recovery');
 Route::get('/getForSelect2','HotelController@getForSelect2')->name('hotel.admin.getForSelect2');
