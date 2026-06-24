@@ -71,20 +71,26 @@ trait HasRoles
         }
         return $query->where('role_id',$role_id);
     }
-
-    public function hasRole($role_id){
-        if($role_id instanceof Role){
-           return $this->role_id == $role_id->id;
-        }
-        if(is_integer($role_id)){
-            return $this->role_id == $role_id;
-        }
-        $role = Role::query()->where('code',$role_id)->first();
-        if(empty($role)){
-            $role = Role::query()->where('name',$role_id)->first();
+    public function hasRole($role_id): bool
+    {
+        if (!$this) {
+            return false;
         }
 
-        return $this->role_id == $role->id;
+        if ($role_id instanceof Role) {
+            return ($this->role_id ?? null) == $role_id->id;
+        }
+
+        if (is_int($role_id)) {
+            return ($this->role_id ?? null) == $role_id;
+        }
+
+        $role = Role::query()
+            ->where('code', $role_id)
+            ->orWhere('name', $role_id)
+            ->first();
+
+        return $role ? (($this->role_id ?? null) == $role->id) : false;
     }
 
     public function scopeHasPermission($query,$permission){
