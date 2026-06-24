@@ -1,17 +1,18 @@
 <?php
+
 namespace Modules\Hotel\Admin;
 
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Modules\AdminController;
+use Modules\Hotel\Services\AddDataInView;
+use Modules\Hotel\Services\RoomAvailabilityService;
 
 class AvailabilityController extends \Modules\Hotel\Controllers\AvailabilityController
 {
     protected string $indexView = 'Hotel::admin.room.availability';
 
-    public function __construct()
+    public function __construct(AddDataInView $cabinetService, RoomAvailabilityService $roomAvailabilityService)
     {
-        parent::__construct();
+        parent::__construct($cabinetService, $roomAvailabilityService);
         $this->setActiveMenu(route('hotel.admin.index'));
         $this->middleware('dashboard');
     }
