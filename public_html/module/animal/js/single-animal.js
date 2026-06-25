@@ -1,9 +1,9 @@
 (function ($) {
     document.addEventListener('DOMContentLoaded', function () {
-        var el = document.getElementById('animal-app');
+        const el = document.getElementById('animal-app');
         if (!el) return;
 
-        var hotelAnimalForm = new Vue({
+        const hotelAnimalForm = new Vue({
             el: '#animal-app',
             data: {
                 id: '',
@@ -57,7 +57,7 @@
                                 }
                             }
                         },
-                        error: function(e) {
+                        error: function (e) {
                             bookingCoreApp.showAjaxError(e);
                         }
                     });
@@ -66,45 +66,27 @@
 
             methods: {
                 addPeriod(animalId, url) {
-                    $.ajax({
-                        url: url,
-                        data: {
-                            animal_id: animalId,
-                        },
-                        dataType: 'json',
-                        type: 'post',
-                        success: function (res) {
-                            if (res.success && res.html) {
-                                $('#periods-' + res.animal_id).append(res.html);
-                            }
-                        },
-                        error: function(e) {
-                            bookingCoreApp.showAjaxError(e);
-                        }
+                    postRequest(url, {
+                        animal_id: animalId,
                     })
+                        .then((res) => {
+                            if (res?.html) {
+                                $('#periods-' + animalId).append(res.html);
+                            }
+                        });
                 },
                 attachAnimal() {
                     if (!this.animalIdToAttach) return;
                     let url = $('#animal-app').data('bulk-url');
 
-                    $.ajax({
-                        url: url,
-                        type: 'POST',
-                        dataType: 'json',
-                        data: {
-                            action: 'add',
-                            animal_id: this.animalIdToAttach
-                        },
-                        success: function (res) {
-                            if (res.success) {
-                                this.animalIdToAttach = '';
-                                location.reload();
-                            }
-                        }.bind(this),
-                        error: function (e) {
-                            bookingCoreApp.showAjaxError(e);
-                        }
-                    });
+                    postRequest(url, {
+                        action: 'add',
+                        animal_id: this.animalIdToAttach
+                    })
+                        .then((res) => {
+                            this.animalIdToAttach = '';
+                            location.reload();
+                        });
                 }
             }
         });

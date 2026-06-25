@@ -13,7 +13,7 @@ class OrganisationService
             'animal_id' => $animalId,
             'start_date' => null,
             'end_date' => null,
-            'amount' => null,
+            'price' => null,
         ]);
 
         return [
