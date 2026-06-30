@@ -29,7 +29,7 @@ class AddDataInView
         return [
             'user' => $user,
             'AuthUser' => $AuthUser,
-            'isAdmin' => $AuthUser->hasRole('administrator'),
+            'isAdmin' => is_admin(),
             'viewAdminCabinet' => $viewAdminCabinet,
         ];
     }
@@ -38,7 +38,7 @@ class AddDataInView
         $viewAdminCabinet = $this->request->query('viewAdminCabinet');
         $AuthUser = Auth::user();
 
-        return $viewAdminCabinet && $AuthUser->hasRole('administrator');
+        return $viewAdminCabinet && is_admin();
     }
     public function getViewUserId(): int
     {

@@ -5,7 +5,7 @@
 <div class="container-fluid custom-container">
     <br>
     <div class="row">
-        @if(!empty($top_cards))
+        @if(!empty($top_cards ?? null))
             @foreach($top_cards as $card)
                 <div class="col-sm-{{$card['size']}} col-md-custom">
                     <div class="dashboard-report-card card {{$card['class']}}">
@@ -61,8 +61,9 @@
                             </tr>
                             </thead>
                             <tbody>
-                            @if(count($recent_bookings) > 0)
-                                @foreach($recent_bookings as $booking)
+                            @php($recentBookings = $recent_bookings ?? collect())
+                            @if($recentBookings->count() > 0)
+                                @foreach($recentBookings as $booking)
                                     <tr>
                                         <td>{{$booking->booking_number}}</td>
                                         <td>

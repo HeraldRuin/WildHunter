@@ -21,6 +21,7 @@ use Modules\Hotel\Models\HotelTerm;
 use Modules\Hotel\Models\HotelTranslation;
 use Modules\Location\Models\LocationCategory;
 use Modules\User\Models\Plan;
+use Modules\User\Services\DashboardService;
 
 class VendorController extends FrontendController
 {
@@ -37,8 +38,13 @@ class VendorController extends FrontendController
     private Booking $booking;
     protected AddDataInView $cabinetService;
 
-    public function __construct(Hotel $hotel,HotelTranslation $hotelTrans, Booking $booking, AddDataInView $cabinetService)
-    {
+    public function __construct(
+        Hotel $hotel,
+        HotelTranslation $hotelTrans,
+        Booking $booking,
+        AddDataInView $cabinetService,
+        protected DashboardService $dashboardService,
+    ) {
         parent::__construct();
         $this->hotelClass = $hotel;
         $this->hotelTranslationClass = $hotelTrans;
@@ -404,23 +410,24 @@ class VendorController extends FrontendController
         if (!$authUser) {
             return redirect()->back()->with('error', 'You are not logged in');
         }
+
         $user = User::find($id);
-        $view = 'User::frontend.dashboardBaseAdmin';
-        $data = $this->getBaseAdminDashboardData($user);
+        if (!$user) {
+            return redirect()->back()->with('error', __('User not found'));
+        }
+
+        $data = $this->dashboardService->getBaseAdminData($this->booking, $user);
+        $data['recent_bookings'] = $data['recent_bookings'] ?? collect();
+        $data['top_cards'] = $data['top_cards'] ?? [];
+        $data['earning_chart_data'] = $data['earning_chart_data'] ?? [];
         $data['user'] = $user;
-        $data['isAdmin'] = $authUser->hasRole('administrator');
+        $data['isAdmin'] = is_admin();
         $data['viewAdminCabinet'] = true;
-        return view($view, $data);
-    }
-    protected function getBaseAdminDashboardData($user)
-    {
-        return [
-            'cards_report'       => $this->booking->getTopCardsReportForBaseAdmin($user->id),
-            'earning_chart_data' => $this->booking->getEarningChartDataForVendor(strtotime('monday this week'), time(), $user->id),
-            'page_title'         => __("BaseAdmin Dashboard"),
-            'breadcrumbs'        => [
-                ['name' => __('Dashboard'), 'class' => 'active']
-            ]
+        $data['page_title'] = __("BaseAdmin Dashboard");
+        $data['breadcrumbs'] = [
+            ['name' => __('Dashboard'), 'class' => 'active']
         ];
+
+        return view('User::frontend.dashboardBaseAdmin', $data);
     }
 }
