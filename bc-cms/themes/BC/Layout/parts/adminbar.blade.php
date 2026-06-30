@@ -1,4 +1,4 @@
-<div class="admin-bar bg-dark py-2 px-3 sticky-top top-0 z-[1000]">
+<div class="admin-bar py-2 px-3 sticky-top top-0 z-[1000]">
     <div class="{{$containerClass ?? 'container'}}">
         <div class="d-flex justify-content-between">
             <div class="d-flex gap-3">

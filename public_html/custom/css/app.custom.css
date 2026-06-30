@@ -3397,4 +3397,33 @@ body .bravo_wrap .bravo_detail_tour .bravo_content .g-faq2 .item .desc {
 #clear-data{
     display: none;
 }
+
+.bc_wrap .admin-bar {
+    background: transparent !important;
+    border: none !important;
+}
+
+.bc_wrap .bc_topbar {
+    background: #fff !important;
+    border-bottom: 1px solid #EAEEF3;
+}
+
+.bc_wrap .bc_topbar .content .topbar-left,
+.bc_wrap .bc_topbar .content .topbar-left a,
+.bc_wrap .bc_topbar .content .topbar-items li a {
+    color: #1a2b48 !important;
+}
+
+.bc_wrap .bc_topbar .content .dropdown-menu {
+    background: #fff !important;
+}
+
+.bc_wrap .bc_topbar .content .dropdown-menu li a {
+    color: #1a2b48 !important;
+}
+
+.bc_wrap .bc_topbar .content .dropdown-menu li a:hover {
+    background: #dcdcdc !important;
+}
+
 /*# sourceMappingURL=app.custom.css.map */
