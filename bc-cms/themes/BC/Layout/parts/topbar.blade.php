@@ -34,16 +34,18 @@
                         @endif
                     @else
                         @include('Layout::parts.notification')
-                        <li class="login-item dropdown">
-                            <a href="#" id="user-dropdown-toggle" class="login">
-                                {{ __('Hi, :name', ['name' => Auth::user()->getDisplayName()]) }} <i class="fa fa-angle-down"></i>
-                            </a>
+                        @if (!is_admin())
+                            <li class="login-item dropdown">
+                                <a href="#" id="user-dropdown-toggle" class="login">
+                                    {{ __('Hi, :name', ['name' => Auth::user()->getDisplayName()]) }} <i class="fa fa-angle-down"></i>
+                                </a>
 
-                            <form id="logout-form-topbar" action="{{ route('logout') }}" method="POST"
-                                style="display: none;">
-                                {{ csrf_field() }}
-                            </form>
-                        </li>
+                                <form id="logout-form-topbar" action="{{ route('logout') }}" method="POST"
+                                    style="display: none;">
+                                    {{ csrf_field() }}
+                                </form>
+                            </li>
+                        @endif
                     @endif
                 </ul>
             </div>
