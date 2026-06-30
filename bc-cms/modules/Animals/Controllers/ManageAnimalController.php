@@ -1,7 +1,8 @@
 <?php
 namespace Modules\Animals\Controllers;
 
-use App\Notifications\AdminChannelServices;
+use App\Exceptions\BusinessException;
+use App\Http\Responses\SuccessResponse;
 use Modules\Animals\Models\Animal;
 use Modules\Animals\Models\AnimalTranslation;
 use Modules\Booking\Events\BookingUpdatedEvent;
@@ -16,7 +17,6 @@ use Illuminate\Support\Facades\DB;
 use Modules\Location\Models\Location;
 use Modules\Core\Models\Attributes;
 use Modules\Booking\Models\Booking;
-use Modules\User\Models\Plan;
 
 class ManageAnimalController extends FrontendController
 {
@@ -53,6 +53,27 @@ class ManageAnimalController extends FrontendController
         $userHotelId = get_user_hotel_id();
         $this->checkPermission('animal_view');
 
+        if (!$userHotelId) {
+            $data = [
+                'rows' => $this->animalClass::query()->whereRaw('1 = 0')->paginate(5),
+                'animal_list' => collect(),
+                'user_hotel_id' => null,
+                'breadcrumbs'        => [
+                    [
+                        'name' => __('Manage Animals'),
+                        'url'  => route('animal.vendor.index')
+                    ],
+                    [
+                        'name'  => __('All'),
+                        'class' => 'active'
+                    ],
+                ],
+                'page_title'         => __("Manage Animals"),
+            ];
+
+            return view('Animal::frontend.manageAnimal.index', $data);
+        }
+
         $list_animals = $this->animalClass::query()
             ->join('bc_hotel_animals as bha', function ($join) use ($userHotelId) {
                 $join->on('bha.animal_id', '=', 'bc_animals.id')
@@ -68,6 +89,7 @@ class ManageAnimalController extends FrontendController
         $data = [
             'rows' => $list_animals->paginate(5),
             'animal_list' =>  $this->animalClass::whereDoesntHave('hotels', function($q) use ($userHotelId) {$q->where('bc_hotel_animals.hotel_id', $userHotelId);})->get(),
+            'user_hotel_id' => $userHotelId,
             'breadcrumbs'        => [
                 [
                     'name' => __('Manage Animals'),
@@ -271,30 +293,27 @@ class ManageAnimalController extends FrontendController
     public function bulkEAttach(Request $request)
     {
         $this->checkPermission('animal_update');
+        $userHotelId = $this->requireUserHotelId();
         $animalId = $request->input('animal_id');
-        $userHotelId = get_user_hotel_id();
 
-        $animal = $this->animalClass::find($animalId);
-
-        if (!$animal) {
-            return redirect()->back()->with('error', __('Not Found'));
-        }
-
+        $animal = $this->animalClass::findOrFail($animalId);
         $animal->hotels()->syncWithoutDetaching([$userHotelId]);
-        return response()->json(['success' => true, 'message' => __('Attach success!')]);
+
+        return new SuccessResponse();
     }
 
+    /**
+     * @throws BusinessException
+     */
     public function bulkEDetach($id)
     {
         $this->checkPermission('animal_update');
-        $userHotelId = get_user_hotel_id();
-        $animal = $this->animalClass::find($id);
+        $userHotelId = $this->requireUserHotelId();
+        $animal = $this->animalClass::findOrFail($id);
 
-        if (!$animal) {
-            return redirect()->back()->with('error', __('Not Found'));
-        }
         $animal->hotels()->detach($userHotelId);
-        return redirect()->back()->with('success', __('Detach success!'));
+
+        return new SuccessResponse();
     }
 
     public function updateHuntersCount(Request $request, $id)
@@ -375,5 +394,22 @@ class ManageAnimalController extends FrontendController
             return redirect()->back()->with('error', __('Booking not found!'));
         }
         return redirect()->back()->with('error', __('Update fail!'));
+    }
+
+    /**
+     * @throws BusinessException
+     */
+    private function requireUserHotelId(): int
+    {
+        $userHotelId = get_user_hotel_id();
+
+        if (!$userHotelId) {
+            throw new BusinessException(
+                errorCode: 'hotel_required',
+                domain: 'animal'
+            );
+        }
+
+        return $userHotelId;
     }
 }

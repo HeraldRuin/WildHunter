@@ -2,7 +2,7 @@
 @section('content')
         <h2 class="title-bar">
             {{!empty($recovery) ?__('Recovery Animal') : __("Manage Animals")}}
-            @if(Auth::user()->hasPermission('animal_create') && empty($recovery))
+            @if(Auth::user()->hasPermission('animal_create') && empty($recovery) && !empty($user_hotel_id))
                 <div style="position:absolute; z-index:1000; background:#fff; width:460px; top:19px; right:30px;" id="animal-app" data-bulk-url="{{ route('animal.vendor.bulk_attach') }}">
                     <select v-model="animalIdToAttach" class="form-control" @change="attachAnimal">
                         <option value="" hidden>
@@ -21,6 +21,14 @@
             @endif
         </h2>
 
+        @if(empty($user_hotel_id) && empty($recovery))
+            <div class="alert alert-warning">
+                {{ __('animal.errors.hotel_required') }}
+                @if(Auth::user()->hasPermission('hotel_create'))
+                    <a href="{{ route('hotel.vendor.create') }}" class="alert-link">{{ __('Add Hotel') }}</a>
+                @endif
+            </div>
+        @else
         <div class="container-fluid list-animal-width custom-fluid">
         <div class="panel">
             <div class="panel-body">
@@ -77,6 +85,7 @@
             </div>
         </div>
     </div>
+        @endif
 @endsection
 
 

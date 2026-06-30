@@ -4,7 +4,7 @@ return [
         'trophy_not_found' => 'Трофей не найден',
         'fine_not_found' => 'Штраф не найден',
         'preparation_not_found' => 'Разделка не найдена',
-
+        'hotel_required' => 'Для добавления животного нужно сначала создать базу',
     ],
     'successes' => [
         'period_saved' => 'Период сохранен',
