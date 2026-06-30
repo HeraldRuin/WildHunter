@@ -96,10 +96,6 @@ class RoleController extends AdminController
         }
         $rules = [
             'name'=>'required',
-            'code'=>[
-                'required',
-                'alpha',
-            ]
         ];
         $this->checkPermission('role_manage');
         if($id>0){
@@ -107,14 +103,27 @@ class RoleController extends AdminController
             if (empty($row)) {
                 return redirect(route('user.admin.role.index'));
             }
-            $rules['code'][] = Rule::unique(Role::getTableName(),'code')->ignore($row->id);
+            if (!$row->hasFixedCode()) {
+                $rules['code'] = [
+                    'required',
+                    'alpha',
+                    Rule::unique(Role::getTableName(),'code')->ignore($row->id),
+                ];
+            }
         }else{
             $row = new Role();
-            $rules['code'][] = Rule::unique(Role::getTableName(),'code');
+            $rules['code'] = [
+                'required',
+                'alpha',
+                Rule::unique(Role::getTableName(),'code'),
+            ];
         }
         $this->validate($request,$rules);
 
-        $row->fill($request->input());
+        $row->name = $request->input('name');
+        if (!$row->exists || !$row->hasFixedCode()) {
+            $row->code = $request->input('code');
+        }
         $res = $row->save();
         if ($res) {
             if($id > 0 ){

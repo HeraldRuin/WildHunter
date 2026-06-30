@@ -13,6 +13,16 @@ class Role extends BaseModel
     const ADMIN = 'baseadmin';
     const CUSTOMER = 'hunter';
 
+    public static function fixedCodeRoles(): array
+    {
+        return [self::SUPERADMIN, self::ADMIN, self::CUSTOMER];
+    }
+
+    public function hasFixedCode(): bool
+    {
+        return in_array($this->code, self::fixedCodeRoles(), true);
+    }
+
     protected $table = 'core_roles';
 
     protected $fillable = [
