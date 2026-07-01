@@ -25,7 +25,7 @@
             </div>
             <div class="location">
                 <i class="icofont-ui-settings"></i>
-                {{__("Status")}}: <span class="badge badge-{{ $row->status }}">{{ $row->status }}</span>
+                {{__("Status")}}: <span class="badge badge-{{ $row->status }}">{{ $row->status_text }}</span>
             </div>
             <div class="location">
                 <i class="icofont-wall-clock"></i>
