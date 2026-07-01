@@ -86,8 +86,7 @@ class AvailabilityController extends FrontendController{
     public function index(Request $request, $hotelId)
     {
         $this->checkPermission('hotel_update');
-        $user = $this->cabinetService->getViewUser();
-        $viewAdminCabinet = $this->cabinetService->getCabinetData();
+        $cabinetData = $this->cabinetService->getCabinetData();
 
         if(!$this->hasHotelPermission($hotelId))
         {
@@ -129,10 +128,17 @@ class AvailabilityController extends FrontendController{
                 'class' => 'active'
             ],
         ];
-        $hotel = $this->currentHotel;
-        $page_title = __('Room Availability');
 
-        return view($this->indexView,compact('rows','breadcrumbs','current_month','page_title','request','hotel', 'user', 'viewAdminCabinet'));
+        $data = array_merge($cabinetData, [
+            'rows'          => $rows,
+            'breadcrumbs'   => $breadcrumbs,
+            'current_month' => $current_month,
+            'page_title'    => __('Room Availability'),
+            'request'       => $request,
+            'hotel'         => $this->currentHotel,
+        ]);
+
+        return view($this->indexView, $data);
     }
 
     public function loadDates(LoadDatesRequest $request, $hotelId): JsonResponse
