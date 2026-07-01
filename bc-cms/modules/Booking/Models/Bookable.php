@@ -447,9 +447,6 @@
                 case "draft":
                     return __("Draft");
                     break;
-                case "pending":
-                    return __("Pending");
-                    break;
                 default:
                     return ucfirst($this->status ?? '');
                     break;

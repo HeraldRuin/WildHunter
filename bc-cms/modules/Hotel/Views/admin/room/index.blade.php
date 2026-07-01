@@ -72,7 +72,7 @@
                                                 </td>
                                                 <td>{{$row->number}}</td>
                                                 <td>{{format_money($row->price)}}</td>
-                                                <td><span class="badge badge-{{ $row->status }}">{{ $row->status_text }}</span></td>
+                                                <td><span class="badge badge-{{ $row->status }}">@if($row->status == 'pending'){{ __('Pending') }}@else{{ $row->status }}@endif</span></td>
                                                 <td>
                                                     <a href="{{route('hotel.admin.room.edit',['id'=>$row->id,'hotel_id'=>$hotel->id])}}" class="btn btn-primary btn-sm"><i class="fa fa-edit"></i> {{__('Edit')}}
                                                     </a>

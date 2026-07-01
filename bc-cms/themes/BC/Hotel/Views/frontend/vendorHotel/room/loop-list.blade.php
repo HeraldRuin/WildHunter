@@ -25,7 +25,7 @@
             </div>
             <div class="location">
                 <i class="icofont-ui-settings"></i>
-                {{__("Status")}}: <span class="badge badge-{{ $row->status }}">{{ $row->status_text }}</span>
+                {{__("Status")}}: <span class="badge badge-{{ $row->status }}">@if($row->status == 'pending'){{ __('Pending') }}@else{{ $row->status }}@endif</span>
             </div>
             <div class="location">
                 <i class="icofont-wall-clock"></i>
