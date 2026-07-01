@@ -764,6 +764,30 @@
                         font-weight: bold;
                         color: #000;
                     }
+                    .item-footer {
+                        display: flex;
+                        align-items: center;
+                        flex-wrap: wrap;
+                        gap: 50px;
+                        padding-bottom: 10px;
+                        .location {
+                            flex: 0 1 auto;
+                            min-width: 0;
+                        }
+                        .control-action {
+                            position: static;
+                            right: auto;
+                            left: auto;
+                            bottom: auto;
+                            margin: 0;
+                            flex: 0 0 auto;
+                            text-align: right;
+                            @media(max-width: 766px){
+                                width: 100%;
+                                text-align: left;
+                            }
+                        }
+                    }
                     .control-action{
                         text-align: right;
                         margin-right: 15px;

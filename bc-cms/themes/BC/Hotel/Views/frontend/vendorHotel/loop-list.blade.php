@@ -45,6 +45,7 @@ use Illuminate\Support\Facades\URL;
                 <i class="icofont-ui-settings"></i>
                 {{__("Status")}}: <span class="badge badge-{{ $row->status }}">{{ $row->status_text }}</span>
             </div>
+            <div class="item-footer">
             <div class="location">
                 <i class="icofont-wall-clock"></i>
                 {{__("Last Updated")}}: <span>{{ display_datetime($row->updated_at ?? $row->created_at) }}</span>
@@ -93,6 +94,7 @@ use Illuminate\Support\Facades\URL;
                         >{{__("Make publish")}}</a>
                     @endif
                 @endif
+            </div>
             </div>
         </div>
     </div>

@@ -794,6 +794,10 @@ body.has-search-map {
   right: auto;
   left: 30px;
 }
+.bc_wrap .bc_user_profile .bc-list-item .list-item .item-list .item-footer .control-action {
+  right: auto;
+  left: auto;
+}
 
 .bc_wrap .bc_user_profile .badge {
   display: inline;
