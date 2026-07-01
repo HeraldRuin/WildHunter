@@ -144,6 +144,19 @@ class Hotel extends Bookable
         return $attribute ?? false;
     }
 
+    public function getUrlLocationSlug()
+    {
+        if (empty($this->location_id)) {
+            return null;
+        }
+
+        if (!$this->relationLoaded('location')) {
+            $this->load('location');
+        }
+
+        return $this->location->slug ?? null;
+    }
+
     public function getDetailUrl($include_param = true)
     {
         $param = [];
@@ -176,7 +189,13 @@ class Hotel extends Bookable
                 $param['animal_id'] = $animal_id;
             }
         }
-        $urlDetail = app_get_locale(false, false, '/') . config('hotel.hotel_route_prefix') . "/" . $this->slug;
+        $urlDetail = app_get_locale(false, false, '/') . config('hotel.hotel_route_prefix');
+        $locationSlug = $this->getUrlLocationSlug();
+        if (!empty($locationSlug)) {
+            $urlDetail .= "/" . $locationSlug . "/" . $this->slug;
+        } else {
+            $urlDetail .= "/" . $this->slug;
+        }
         if (!empty($param)) {
             $urlDetail .= "?" . http_build_query($param);
         }

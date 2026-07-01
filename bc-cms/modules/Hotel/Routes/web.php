@@ -3,7 +3,8 @@ use \Illuminate\Support\Facades\Route;
 
 Route::group(['prefix'=>config('hotel.hotel_route_prefix')],function(){
     Route::get('/','HotelController@index')->name('hotel.search'); // Search
-    Route::get('/{slug}','HotelController@detail')->name('hotel.detail');// Detail
+    Route::get('/{location_slug}/{slug}','HotelController@detail')->name('hotel.detail');// Detail
+    Route::get('/{slug}','HotelController@detailLegacy')->name('hotel.detail.legacy');// Legacy detail URL
 });
 
 Route::group(['prefix'=>'user/'.config('hotel.hotel_route_prefix'),'middleware' => ['auth','verified']],function(){

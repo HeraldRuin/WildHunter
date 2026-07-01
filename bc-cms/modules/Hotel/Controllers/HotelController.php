@@ -287,13 +287,38 @@ class HotelController extends Controller
         });
     }
 
-    public function detail(Request $request, $slug)
+    public function detail(Request $request, $location_slug, $slug)
     {
         $row = $this->hotelClass::where('slug', $slug)->with(['location','translation','hasWishList'])->first();
-        $hotelId = $row->id;
         if ( empty($row) or !$row->hasPermissionDetailView()) {
             return redirect('/');
         }
+
+        $expectedLocationSlug = $row->getUrlLocationSlug();
+        if (empty($expectedLocationSlug) || $location_slug !== $expectedLocationSlug) {
+            return redirect($row->getDetailUrl(false), 301);
+        }
+
+        return $this->renderDetail($request, $row);
+    }
+
+    public function detailLegacy(Request $request, $slug)
+    {
+        $row = $this->hotelClass::where('slug', $slug)->with(['location','translation','hasWishList'])->first();
+        if ( empty($row) or !$row->hasPermissionDetailView()) {
+            return redirect('/');
+        }
+
+        if (!empty($row->getUrlLocationSlug())) {
+            return redirect($row->getDetailUrl(false), 301);
+        }
+
+        return $this->renderDetail($request, $row);
+    }
+
+    protected function renderDetail(Request $request, $row)
+    {
+        $hotelId = $row->id;
 
         $adminbar_buttons = [];
 
