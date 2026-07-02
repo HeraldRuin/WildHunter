@@ -254,6 +254,11 @@
             padding: 2px 12px;
             margin-top: auto;
         }
+
+        /* Сводный: дни только для просмотра, кроме ссылок на брони */
+        .calendar-summary-view .fc-event {
+            cursor: default !important;
+        }
     </style>
 @endpush
 
@@ -268,9 +273,24 @@
 
     <script>
         var calendarEl, calendar, lastId, formModal;
+
+        function isSummaryTab(id) {
+            return id === 'summary';
+        }
+
+        function getActiveTabId() {
+            return $('#items_tab .nav-link.active').data('id');
+        }
+
+        function canOpenAvailabilityModal() {
+            return !isSummaryTab(lastId) && !isSummaryTab(getActiveTabId());
+        }
+
         $('#items_tab').on('show.bs.tab', function(e) {
             calendarEl = document.getElementById('dates-calendar');
-            lastId = $(e.target).data('id');
+            lastId = $(e.target).closest('.nav-link').data('id');
+            var summaryView = isSummaryTab(lastId);
+            $(calendarEl).toggleClass('calendar-summary-view', summaryView);
 
             if (calendar) {
                 calendar.destroy();
@@ -284,7 +304,7 @@
 
                 plugins: ['dayGrid', 'interaction'],
                 header: {},
-                selectable: true,
+                selectable: !summaryView,
                 selectMirror: false,
                 allDay: false,
                 editable: false,
@@ -304,13 +324,24 @@
                         $(calendarEl).addClass('loading');
                     }
                 },
+                dateClick: function() {
+                    if (!canOpenAvailabilityModal()) {
+                        return;
+                    }
+                },
                 select: function(arg) {
+                    if (!canOpenAvailabilityModal()) {
+                        return;
+                    }
                     formModal.show({
                         start_date: moment(arg.start).format('YYYY-MM-DD'),
                         end_date: moment(arg.end).format('YYYY-MM-DD'),
                     });
                 },
                 eventClick: function(info) {
+                    if (!canOpenAvailabilityModal() || info.event.extendedProps.is_summary) {
+                        return;
+                    }
                     // const maxNumber = info.event.extendedProps.max_number;
                     // const events = calendar.getEvents();
 
@@ -357,6 +388,13 @@
 
                     $(info.el).html(html);
 
+                    if (isSummary) {
+                        $(info.el).css({
+                            'pointer-events': 'none',
+                            'cursor': 'default'
+                        });
+                    }
+
                     $(info.el).find('.booking-id').each(function() {
                         const idText = $(this).text().replace('Б', '');
                         const bookingCode = $(this).data('code');
@@ -365,7 +403,8 @@
                             'color': '#2791fe',
                             'cursor': 'pointer',
                             'text-decoration': 'underline',
-                            'margin-right': '6px'
+                            'margin-right': '6px',
+                            'pointer-events': 'auto'
                         });
                         $(this).off('click').on('click', function(e) {
                             e.stopPropagation();
@@ -417,7 +456,12 @@
             window.calendar = calendar;
         });
 
-        $('.event-name:first-child a').trigger('click');
+        var $firstRoomTab = $('#items_tab a.nav-link[data-id!="summary"]').first();
+        if ($firstRoomTab.length) {
+            $firstRoomTab.trigger('click');
+        } else {
+            $('.event-name:first-child a').trigger('click');
+        }
 
         formModal = new Vue({
             el: '#bc_modal_calendar',
@@ -468,6 +512,9 @@
             },
             methods: {
                 show: function(form) {
+                    if (!canOpenAvailabilityModal()) {
+                        return;
+                    }
                     $(this.$el).modal('show');
                     this.lastResponse.message = '';
                     this.onSubmit = false;
@@ -501,10 +548,26 @@
                     this.person_types = [];
                 },
                 saveForm: function() {
-                    this.form.target_id = lastId;
                     var me = this;
                     me.lastResponse.message = '';
                     if (this.onSubmit) return;
+
+                    if (isSummaryTab(lastId)) {
+                        me.lastResponse = {
+                            status: false,
+                            message: '{{ __("Select a room type on the left to edit availability") }}'
+                        };
+                        return;
+                    }
+
+                    this.form.target_id = parseInt(lastId, 10);
+                    if (!this.form.target_id) {
+                        me.lastResponse = {
+                            status: false,
+                            message: '{{ __("Select a room type on the left to edit availability") }}'
+                        };
+                        return;
+                    }
 
                     if (!this.validateForm()) return;
 
@@ -538,6 +601,13 @@
                     });
                 },
                 validateForm: function() {
+                    if (isSummaryTab(lastId) || !parseInt(lastId, 10)) {
+                        this.lastResponse = {
+                            status: false,
+                            message: '{{ __("Select a room type on the left to edit availability") }}'
+                        };
+                        return false;
+                    }
                     if (!this.form.start_date) return false;
                     if (!this.form.end_date) return false;
 
