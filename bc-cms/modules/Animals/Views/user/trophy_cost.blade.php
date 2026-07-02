@@ -3,7 +3,14 @@
 @section('content')
     <h2 class="title-bar">{{ __('Trophy Cost') }}</h2>
 
-    @if($rows->count())
+    @if(empty($userHotelId))
+        <div class="alert alert-warning">
+            {{ __('animal.errors.hotel_required') }}
+            @if(Auth::user()->hasPermission('hotel_create'))
+                <a href="{{ route('hotel.vendor.create') }}" class="alert-link">{{ __('Add Hotel') }}</a>
+            @endif
+        </div>
+    @elseif($rows->count())
         <div id="trophy-cost-app" class="row mt-4 row-width">
 
             <div class="col-md-3">

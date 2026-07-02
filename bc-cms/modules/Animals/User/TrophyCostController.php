@@ -37,13 +37,6 @@ class TrophyCostController extends FrontendController
         $this->checkPermission('animal_create_hunting');
         $userHotelId = get_user_hotel_id();
 
-        $rows = $this->animalClass
-            ->forHotel($userHotelId)
-            ->withPreparationsForHotel($userHotelId)
-            ->search($request->query('s'))
-            ->orderByDesc('bc_animals.id')
-            ->paginate(15);
-
         $breadcrumbs = [
             [
                 'name' => __('Animal'),
@@ -55,6 +48,19 @@ class TrophyCostController extends FrontendController
             ],
         ];
         $page_title = __('Trophy Cost');
+
+        if (!$userHotelId) {
+            $rows = $this->animalClass::query()->whereRaw('1 = 0')->paginate(15);
+
+            return view($this->indexView, compact('rows', 'userHotelId', 'breadcrumbs', 'page_title', 'request'));
+        }
+
+        $rows = $this->animalClass
+            ->forHotel($userHotelId)
+            ->withPreparationsForHotel($userHotelId)
+            ->search($request->query('s'))
+            ->orderByDesc('bc_animals.id')
+            ->paginate(15);
 
         return view($this->indexView, compact('rows', 'userHotelId', 'breadcrumbs', 'page_title', 'request'));
     }
