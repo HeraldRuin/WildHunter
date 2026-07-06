@@ -28,13 +28,9 @@ import('./_notification');
 
 
 import TemplateDetail from '../module/template/admin/detail.js';
-import MediaManagement from '../module/media/admin/js/media-management';
 import CourseLectures from '../module/course/admin/lectures.js';
 
-// Template
-if (document.getElementById('media-management')) {
-    MediaManagement();
-}
+// Media management is loaded via dist/js/media-management.js on the media admin page.
 
 // Template
 if (document.getElementById('booking-core-template-detail')) {

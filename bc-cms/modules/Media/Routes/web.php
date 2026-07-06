@@ -13,11 +13,13 @@ Route::group(['middleware' => ['auth'],'prefix' => config('admin.admin_route_pre
     Route::post('/module/media/store', '\Modules\Media\Admin\MediaController@store')->name('media.store');
     Route::post('/module/media/getLists','\Modules\Media\Admin\MediaController@getLists');
     Route::post('/module/media/removeFiles','\Modules\Media\Admin\MediaController@removeFiles');
+    Route::post('/module/media/moveFiles','\Modules\Media\Admin\MediaController@moveFiles');
 
     Route::post('/media/folder','FolderController@index')->name('media.folder.index');
 });
 Route::group(['middleware' => ['auth'],'prefix' => 'media'],function(){
     Route::get('/folder','FolderController@index')->name('media.folder.index');
     Route::post('/folder/store','FolderController@store')->name('media.folder.store');
+    Route::post('/folder/move','FolderController@move')->name('media.folder.move');
     Route::post('/folder/delete','FolderController@delete')->name('media.folder.delete');
 });

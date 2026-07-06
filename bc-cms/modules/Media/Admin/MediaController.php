@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Modules\Media\Helpers\FileHelper;
 use Modules\Media\Models\MediaFile;
+use Modules\Media\Models\MediaFolder;
 use Modules\Media\Resources\MediaResource;
 use Modules\Media\Traits\HasUpload;
 
@@ -209,6 +210,48 @@ class MediaController extends Controller
             return $this->sendSuccess([],__("Delete the file success!"));
         }
         return $this->sendError(__("File not found!"));
+    }
+
+    public function moveFiles(Request $request)
+    {
+        if(is_demo_mode()){
+            return $this->sendError(__("Can not move!"));
+        }
+
+        if (!$this->hasPermissionMedia()) {
+            return $this->sendError(__("There is no permission upload"));
+        }
+
+        $request->validate([
+            'file_ids' => 'required|array',
+            'file_ids.*' => 'integer',
+            'folder_id' => 'nullable|integer',
+        ]);
+
+        $folderId = (int) $request->input('folder_id', 0);
+
+        if ($folderId) {
+            $folder = MediaFolder::query();
+            if (!Auth::user()->hasPermission("media_manage_others")) {
+                $folder->ofMine();
+            }
+            if (!$folder->find($folderId)) {
+                return $this->sendError(__("Folder not found. Please try again"));
+            }
+        }
+
+        $model = MediaFile::query()->whereIn('id', $request->input('file_ids'));
+        if (!Auth::user()->hasPermission("media_manage_others")) {
+            $model->where('author_id', Auth::id());
+        }
+
+        $updated = $model->update(['folder_id' => $folderId]);
+
+        if (!$updated) {
+            return $this->sendError(__("File not found!"));
+        }
+
+        return $this->sendSuccess([], __("Files moved"));
     }
 
     public function editImage(Request $request){

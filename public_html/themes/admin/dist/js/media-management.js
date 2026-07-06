@@ -18965,50 +18965,47 @@ var mediaMoveMixin = {
   }
 };
 
-// module/media/admin/js/browser.js
-(function($2) {
-  window.uploaderModalApp = createApp({
-    data() {
-      return {
-        files: [],
-        viewType: "grid",
-        total: 0,
-        totalPage: 0,
-        fileTypes: [],
-        selected: [],
-        selectedLists: [],
-        showUploader: false,
-        apiFinished: false,
-        modalEl: false,
-        multiple: false,
-        isLoading: false,
-        filter: {
-          page: 1
-        },
-        onSelect: function() {
-        },
-        uploadConfigs: {
-          file_type: "default"
-        },
-        currentFolder: {
-          id: 0,
-          onEdit: false
-        },
-        folders: [],
-        breadcrumbs: [],
-        accept_type: bookingCore.media.groups.default.mime.join(",")
-      };
-    },
+// module/media/admin/js/media-management.js
+function initMediaManagement() {
+  if (!document.getElementById("media-management")) {
+    return;
+  }
+  window.mediaManagement = createApp({
+    data: () => ({
+      files: [],
+      viewType: "grid",
+      total: 0,
+      totalPage: 0,
+      fileTypes: [],
+      selected: [],
+      selectedLists: [],
+      showUploader: false,
+      apiFinished: false,
+      modalEl: false,
+      multiple: true,
+      isLoading: false,
+      filter: {
+        page: 1
+      },
+      onSelect: function() {
+      },
+      uploadConfigs: {
+        file_type: "default"
+      },
+      currentFolder: {
+        id: 0,
+        onEdit: false
+      },
+      folders: [],
+      breadcrumbs: [],
+      accept_type: bookingCore.media.groups.default.mime.join(",")
+    }),
     mounted() {
       let me = this;
-      this.modalEl = $2("#cdn-browser-modal").modal({
-        show: false
-      }).on("show.bs.modal", function() {
-        me.reloadLists();
-        me.reloadFolder();
-      });
+      me.reloadLists();
+      me.reloadFolder();
       this.$nextTick(function() {
-        $2(this.$refs.files).change(function() {
+        $(this.$refs.files).change(function() {
           me.upload(this.files);
         });
       });
@@ -19037,7 +19034,7 @@ var mediaMoveMixin = {
         }
       },
       toggleEditFolder: function(index, val) {
-        this.folders[index]["onEdit"] = val;
+        this.folders[index].onEdit = val;
       },
       reloadAll: function() {
         this.filter.page = 1;
@@ -19096,7 +19093,7 @@ var mediaMoveMixin = {
       },
       reloadFolder: function() {
         var me = this;
-        $2.ajax({
+        $.ajax({
           url: bookingCore.url + "/media/folder",
           type: "get",
           data: {
@@ -19113,7 +19110,6 @@ var mediaMoveMixin = {
         this.resetSelected();
         this.uploadConfigs = configs;
         this.modalEl.modal("show");
-        this.accept_type = bookingCore.media.groups[configs.file_type]["mime"];
       },
       hide() {
         this.modalEl.modal("hide");
@@ -19144,7 +19140,7 @@ var mediaMoveMixin = {
           callback: function(result) {
             if (result) {
               me.isLoading = true;
-              $2.ajax({
+              $.ajax({
                 url: bookingCore.admin_url + "/module/media/removeFiles",
                 type: "POST",
                 data: {
@@ -19183,9 +19179,9 @@ var mediaMoveMixin = {
       },
       reloadLists() {
         var me = this;
-        $2("#cdn-browser .icon-loading").addClass("active");
+        $("#cdn-browser .icon-loading").addClass("active");
         me.isLoading = true;
-        $2.ajax({
+        $.ajax({
           url: bookingCore.admin_url + "/module/media/getLists",
           type: "POST",
           data: {
@@ -19208,13 +19204,14 @@ var mediaMoveMixin = {
       upload(files) {
         var me = this;
         if (!files.length) return;
+        console.log(files);
         for (var i = 0; i < files.length; i++) {
           var d = new FormData();
           d.append("file", files[i]);
           d.append("type", this.uploadConfigs.file_type);
           d.append("folder_id", this.currentFolder.id);
           me.isLoading = true;
-          $2.ajax({
+          $.ajax({
             url: bookingCore.admin_url + "/module/media/store",
             data: d,
             dataType: "json",
@@ -19229,11 +19226,11 @@ var mediaMoveMixin = {
               if (res.status === 0) {
                 bookingCoreApp.showError(res);
               }
-              $2(me.$refs.files).val("");
+              $(me.$refs.files).val("");
             },
             error: function(e) {
               bookingCoreApp.showAjaxError(e);
-              $2(me.$refs.files).val("");
+              $(me.$refs.files).val("");
               me.isLoading = false;
             }
           });
@@ -19254,8 +19251,9 @@ var mediaMoveMixin = {
       folderItem
     }
   });
-  window.uploaderModal = window.uploaderModalApp.mount("#cdn-browser");
-})(jQuery);
+  window.mediaManagement.mount("#media-management");
+}
+initMediaManagement();
 /*! Bundled license information:
 
 @vue/shared/dist/shared.esm-bundler.js:

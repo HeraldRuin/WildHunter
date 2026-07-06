@@ -12,6 +12,7 @@ class FolderResource extends JsonResource
         return [
             'id'=>$this->id,
             'name'=>$this->name,
+            'parent_id'=>$this->parent_id ?? 0,
             'created_at'=>$this->created_at ? display_datetime($this->created_at) : ''
         ];
     }

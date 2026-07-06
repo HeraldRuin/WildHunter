@@ -22,6 +22,7 @@
         warning: "{{__("Warning")}}",
         success: "{{__("Success")}}",
         confirm_delete: "{{__("Do you want to delete?")}}",
+        confirm_delete_folder: "{{__("Do you want to delete this folder and all files inside it?")}}",
         confirm_recovery: "{{__("Do you want to restore?")}}",
         confirm: "{{__("Confirm")}}",
         cancel: "{{__("Cancel")}}",

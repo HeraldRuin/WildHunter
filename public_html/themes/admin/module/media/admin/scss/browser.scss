@@ -145,8 +145,8 @@
 }
 .cdn-browser .no-files-text{
     padding: 20px;
-    font-size: 20px;
-    color:red;
+    font-size: 16px;
+    color: #6c757d;
 
 }
 
@@ -261,6 +261,33 @@
         .btn-edit{
             display: inline-block;
         }
+    }
+    &.is-drag-over{
+        .inner,
+        .row{
+            outline: 2px dashed #007bff;
+            outline-offset: -2px;
+            background: rgba(0, 123, 255, 0.08);
+        }
+    }
+    &[draggable="true"]{
+        cursor: grab;
+        &:active{
+            cursor: grabbing;
+        }
+    }
+}
+.file-item[draggable="true"],
+.file-list-item[draggable="true"]{
+    cursor: grab;
+    &:active{
+        cursor: grabbing;
+    }
+}
+.breadcrumb-item a{
+    &.drag-over,
+    &:hover{
+        text-decoration: underline;
     }
 }
 .hover\:bg-f5f5f5:hover,.bg-f5f5f5{

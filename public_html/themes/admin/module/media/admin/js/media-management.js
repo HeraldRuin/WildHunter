@@ -1,6 +1,12 @@
 import { createApp } from 'vue'
 import { fileItem, folderItem } from './components'
-export default function(){
+import { mediaMoveMixin } from './media-move-mixin'
+
+function initMediaManagement() {
+    if (!document.getElementById('media-management')) {
+        return;
+    }
+
     window.mediaManagement = createApp({
         data:()=>({
             files:[],
@@ -58,6 +64,7 @@ export default function(){
             }
         },
         methods:{
+            ...mediaMoveMixin.methods,
             deletedFolder:function (index){
                 this.folders.splice(index,1);
             },
@@ -85,17 +92,36 @@ export default function(){
                 this.reloadLists();
                 this.reloadFolder();
             },
-            showFolder:function (folder,index){
-                if(folder.id === this.currentFolder.id) return;
+            openFolder:function (folder){
+                if(!folder || !folder.id){
+                    return;
+                }
+                if(Number(folder.id) === Number(this.currentFolder.id)){
+                    return;
+                }
 
                 this.breadcrumbs.push(folder);
-                if(typeof index != 'undefined'){
-                    this.breadcrumbs.splice(index,this.breadcrumbs.length - 1 - index)
-                }
-                this.currentFolder = folder;
+                this.currentFolder = Object.assign({}, folder);
                 this.filter.page = 1;
                 this.reloadLists();
                 this.reloadFolder();
+            },
+            navigateBreadcrumb:function (folder,index){
+                if(!folder || !folder.id){
+                    return;
+                }
+                if(Number(folder.id) === Number(this.currentFolder.id)){
+                    return;
+                }
+
+                this.breadcrumbs = this.breadcrumbs.slice(0, index + 1);
+                this.currentFolder = Object.assign({}, folder);
+                this.filter.page = 1;
+                this.reloadLists();
+                this.reloadFolder();
+            },
+            showFolder:function (folder,index){
+                this.openFolder(folder);
             },
             updateFolder:function (index,folder){
                 this.folders[index] = Object.assign({},folder);
@@ -271,7 +297,8 @@ export default function(){
             folderItem
         }
     })
-    
-    //window.mediaManagement.mount('#media-management');
 
+    window.mediaManagement.mount('#media-management');
 }
+
+initMediaManagement();

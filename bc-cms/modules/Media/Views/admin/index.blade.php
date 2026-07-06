@@ -42,8 +42,8 @@
                 <div class="files-list">
                     <nav aria-label="breadcrumb">
                         <ol class="breadcrumb">
-                            <li class="breadcrumb-item"><a @click="toFolderRoot" href="#">{{__("Home")}}</a></li>
-                            <li v-for="(item,index) in breadcrumbs"  class="breadcrumb-item active" aria-current="page"><a @click.prevent="showFolder(item,index)" href="#">@{{ item.name }}</a></li>
+                            <li class="breadcrumb-item"><a @click="toFolderRoot" href="#" @dragover.prevent="allowMediaDrop" @drop.prevent="handleMediaDrop(0, $event)">{{__("Home")}}</a></li>
+                            <li v-for="(item,index) in breadcrumbs"  class="breadcrumb-item active" aria-current="page"><a @click.prevent="navigateBreadcrumb(item,index)" href="#" @dragover.prevent="allowMediaDrop" @drop.prevent="handleMediaDrop(item.id, $event)">@{{ item.name }}</a></li>
                         </ol>
                     </nav>
 
@@ -54,14 +54,14 @@
                             <div class="col-sm-2 py-2 border-bottom border-right">{{__("Created At")}}</div>
                             <div class="col-sm-2 py-2 border-bottom border-right">{{__("Size")}}</div>
                         </div>
-                        <folder-item @deleted="deletedFolder" @toggle-edit="toggleEditFolder" @dblclick="showFolder(folder)" @update="updateFolder" v-bind:view-type="viewType" v-for="(folder,index) in folders" v-bind:index="index" v-bind:key="'folder-'+index" v-bind:folder="folder"></folder-item>
+                        <folder-item @deleted="deletedFolder" @toggle-edit="toggleEditFolder" @open-folder="openFolder" @update="updateFolder" @media-drop="handleMediaDrop" v-bind:view-type="viewType" v-for="(folder,index) in folders" v-bind:index="index" v-bind:key="'folder-'+index" v-bind:folder="folder"></folder-item>
                         <file-item v-for="(file,index) in files" v-bind:key="index" v-bind:view-type="viewType" v-bind:selected="selected" v-bind:file="file" v-on:select-file="selectFile"></file-item>
                     </div>
                     <div class="files-wraps " v-if="viewType == 'grid'" v-bind:class="'view-'+viewType">
-                        <folder-item @deleted="deletedFolder" @toggle-edit="toggleEditFolder" @dblclick="showFolder(folder)" @update="updateFolder" v-for="(folder,index) in folders" v-bind:index="index" v-bind:key="'folder-'+index" v-bind:folder="folder"></folder-item>
+                        <folder-item @deleted="deletedFolder" @toggle-edit="toggleEditFolder" @open-folder="openFolder" @update="updateFolder" @media-drop="handleMediaDrop" v-for="(folder,index) in folders" v-bind:index="index" v-bind:key="'folder-'+index" v-bind:folder="folder"></folder-item>
                         <file-item v-for="(file,index) in files" v-bind:key="index" v-bind:view-type="viewType" v-bind:selected="selected" v-bind:file="file" v-on:select-file="selectFile"></file-item>
                     </div>
-                    <p class="no-files-text text-center" v-show="!total && apiFinished" style="display: none">{{__("No file found")}}</p>
+                    <p class="no-files-text text-center" v-show="!total && apiFinished && !folders.length">{{__("No files in this folder")}}</p>
                     <div class="text-center" v-if="totalPage > 1">
                         <nav aria-label="Page navigation example">
                             <ul class="pagination">
@@ -97,3 +97,7 @@
         </div>
     </div>
 @endsection
+
+@push('js')
+<script type="module" src="{{ asset('themes/admin/dist/js/media-management.js?_ver='.config('app.asset_version')) }}"></script>
+@endpush

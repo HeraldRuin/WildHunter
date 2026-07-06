@@ -1,5 +1,6 @@
 import { createApp } from 'vue'
 import { fileItem, folderItem } from './components'
+import { mediaMoveMixin } from './media-move-mixin'
 (function ($) {
     window.uploaderModalApp = createApp({
         data(){
@@ -65,6 +66,7 @@ import { fileItem, folderItem } from './components'
             }
         },
         methods:{
+            ...mediaMoveMixin.methods,
             deletedFolder:function (index){
                 this.folders.splice(index,1);
             },
@@ -92,17 +94,36 @@ import { fileItem, folderItem } from './components'
                 this.reloadLists();
                 this.reloadFolder();
             },
-            showFolder:function (folder,index){
-                if(folder.id === this.currentFolder.id) return;
+            openFolder:function (folder){
+                if(!folder || !folder.id){
+                    return;
+                }
+                if(Number(folder.id) === Number(this.currentFolder.id)){
+                    return;
+                }
 
                 this.breadcrumbs.push(folder);
-                if(typeof index != 'undefined'){
-                    this.breadcrumbs.splice(index,this.breadcrumbs.length - 1 - index)
-                }
-                this.currentFolder = folder;
+                this.currentFolder = Object.assign({}, folder);
                 this.filter.page = 1;
                 this.reloadLists();
                 this.reloadFolder();
+            },
+            navigateBreadcrumb:function (folder,index){
+                if(!folder || !folder.id){
+                    return;
+                }
+                if(Number(folder.id) === Number(this.currentFolder.id)){
+                    return;
+                }
+
+                this.breadcrumbs = this.breadcrumbs.slice(0, index + 1);
+                this.currentFolder = Object.assign({}, folder);
+                this.filter.page = 1;
+                this.reloadLists();
+                this.reloadFolder();
+            },
+            showFolder:function (folder,index){
+                this.openFolder(folder);
             },
             updateFolder:function (index,folder){
                 this.folders[index] = Object.assign({},folder);

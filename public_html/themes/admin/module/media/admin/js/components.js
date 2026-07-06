@@ -10,6 +10,24 @@ const fileItem = {
         selectFile(file){
             this.$emit('select-file',file);
         },
+        onDragStart(event){
+            if(!this.file || !this.file.id){
+                return;
+            }
+
+            event.stopPropagation();
+
+            let fileIds = [this.file.id];
+            if(this.selected.indexOf(this.file.id) !== -1){
+                fileIds = this.selected.slice();
+            }
+
+            event.dataTransfer.setData('application/json', JSON.stringify({
+                type: 'files',
+                ids: fileIds
+            }));
+            event.dataTransfer.effectAllowed = 'move';
+        },
         fileClass(file){
             var s = [];
             s.push(file.file_type);
@@ -81,7 +99,8 @@ const folderItem = {
     data: function () {
         return {
             folder_name: '',
-            saving:false
+            saving:false,
+            isDragOver:false
         }
     },
     props:{
@@ -104,7 +123,6 @@ const folderItem = {
     },
     watch:{
         folder:function (val){
-            console.log(val);
             var me = this;
             if(val.onEdit){
                 this.$nextTick(function (){
@@ -116,35 +134,56 @@ const folderItem = {
         }
     },
     methods:{
-        deleteFolder:function (){
-          const c = confirm('Do you want to delete folder and all files inside it?');
-          if(!c) return;
-            if(this.saving) return;
+        deleteFolder:function (event){
+          if(event){
+              event.preventDefault();
+              event.stopPropagation();
+          }
 
-            var me = this;
-            this.saving = true;
-            $.ajax({
-                url:bookingCore.url+'/media/folder/delete',
-                data:{
-                    id:this.folder.id,
-                },
-                type:'post',
-                dataType:'json',
-                success:function (json){
-                    me.saving = false;
-                    if(json.status){
-                        me.$emit('deleted',me.index);
-                        bookingCoreApp.showAjaxMessage(json)
+          if(!this.folder.id){
+              this.$emit('deleted', this.index);
+              return;
+          }
 
-                    }
-                },
-                error:function (e){
-                    me.saving = false;
-                    bookingCoreApp.showAjaxError(e)
-                }
-            })
+          if(this.saving) return;
+
+          var me = this;
+          bookingCoreApp.showConfirm({
+              message: i18n.confirm_delete_folder,
+              callback: function(result){
+                  if(!result) return;
+                  if(me.saving) return;
+
+                  me.saving = true;
+                  $.ajax({
+                      url:bookingCore.url+'/media/folder/delete',
+                      data:{
+                          id:me.folder.id,
+                      },
+                      type:'post',
+                      dataType:'json',
+                      success:function (json){
+                          me.saving = false;
+                          if(json.status){
+                              me.$emit('deleted',me.index);
+                              bookingCoreApp.showAjaxMessage(json)
+                          }else{
+                              bookingCoreApp.showAjaxMessage(json)
+                          }
+                      },
+                      error:function (e){
+                          me.saving = false;
+                          bookingCoreApp.showAjaxError(e)
+                      }
+                  })
+              }
+          });
         },
-        openEdit:function (){
+        openEdit:function (event){
+            if(event){
+                event.preventDefault();
+                event.stopPropagation();
+            }
             this.$emit('toggle-edit',this.index,true);
         },
         saveName:function(){
@@ -173,6 +212,42 @@ const folderItem = {
                 }
             })
         },
+        onDragStart:function(event){
+            if(!this.folder.id){
+                event.preventDefault();
+                return;
+            }
+
+            event.stopPropagation();
+            event.dataTransfer.setData('application/json', JSON.stringify({
+                type: 'folder',
+                id: this.folder.id
+            }));
+            event.dataTransfer.effectAllowed = 'move';
+        },
+        onDragOver:function(event){
+            if(!this.folder.id){
+                return;
+            }
+
+            event.preventDefault();
+            event.stopPropagation();
+            this.isDragOver = true;
+            if(event.dataTransfer){
+                event.dataTransfer.dropEffect = 'move';
+            }
+        },
+        onDragLeave:function(){
+            this.isDragOver = false;
+        },
+        onDrop:function(event){
+            this.isDragOver = false;
+            if(!this.folder.id){
+                return;
+            }
+
+            this.$emit('media-drop', this.folder.id, event);
+        }
     },
     mounted() {
         var me = this;
