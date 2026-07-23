@@ -59,6 +59,7 @@ class Hotel extends Bookable
         'extra_price' => 'array',
         'service_fee' => 'array',
         'surrounding' => 'array',
+        'star_rate' => 'float',
     ];
     protected $bookingClass;
     protected $reviewClass;

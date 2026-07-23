@@ -40,7 +40,7 @@
                 <div class="col-md-6">
                     <div class="form-group">
                         <label>{{__("Hotel rating standard")}}</label>
-                        <input type="number" value="{{$row->star_rate}}" placeholder="{{__("Eg: 5")}}" name="star_rate" class="form-control">
+                        <input type="number" step="0.1" min="0" value="{{$row->star_rate}}" placeholder="{{__("Eg: 4.9")}}" name="star_rate" class="form-control">
                     </div>
                 </div>
             </div>
