@@ -8022,7 +8022,8 @@ body .daterangepicker .full-book-event:before {
 }
 
 .bc_wrap .bc_topbar .content .topbar-right {
-    font-size: 12px
+    font-size: 12px;
+    padding-top: 20px;
 }
 
 .bc_wrap .bc_topbar .content .topbar-right .dropdown-notifications .dropdown-menu {
@@ -8077,7 +8078,7 @@ body .daterangepicker .full-book-event:before {
 }
 
 .bc_wrap .bc_header {
-    border-bottom: 1px solid #EAEEF3
+    /*border-bottom: 1px solid #EAEEF3*/
 }
 
 .bc_wrap .bc_header .content {
@@ -8561,6 +8562,7 @@ body .daterangepicker .full-book-event:before {
     .frontend-page.header-transparent .bc_wrap .bc_topbar {
         position: absolute;
         top: 0;
+        height: 109px;
         width: 100%;
         z-index: 1;
         background-color: white;
@@ -8585,10 +8587,10 @@ body .daterangepicker .full-book-event:before {
 
     .frontend-page.header-transparent .bc_wrap .bc_header {
         position: absolute;
-        top: 50px;
+        top: 40px;
         z-index: 10;
         width: 100%;
-        background-color: white;
+        /*background-color: white;*/
     }
 
     .frontend-page.header-transparent .bc_wrap .bc_header.is_sticky {
