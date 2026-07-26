@@ -1,3 +1,28 @@
+@php
+    $logo_id = setting_item('logo_id');
+    if (!empty($row->custom_logo)) {
+        $logo_id = $row->custom_logo;
+    }
+    $logo_width = (int) setting_item('logo_width');
+    $logo_wrap_height = $logo_width > 0 ? max(100, (int) round($logo_width * 0.85)) : 100;
+@endphp
+@if ($logo_width > 0)
+    <style>
+        .bc_wrap .bc_header .bc-logo img.bc-logo-img {
+            width: {{ $logo_width }}px !important;
+            height: auto !important;
+            max-width: none !important;
+        }
+        body:not(.header-transparent) .bc_wrap .bc_header {
+            height: auto !important;
+            min-height: {{ $logo_wrap_height }}px;
+        }
+        body:not(.header-transparent) .bc_wrap .bc_header .content,
+        body:not(.header-transparent) .bc_wrap .bc_header .header-left {
+            min-height: {{ $logo_wrap_height }}px;
+        }
+    </style>
+@endif
 <div class="bc_header {{ setting_item('enable_header_sticky', 0) == 1 ? 'has_sticky' : '' }}">
     <div class="{{ $container_class ?? 'container' }}">
         <div class="content">
@@ -11,22 +36,14 @@
                     ?>
                 </div>
 
-                <div class="logo-center-wrapper" style="position: relative; height: 100px;">
+                <div class="logo-center-wrapper" style="position: relative; height: {{ $logo_wrap_height }}px;">
                     <a href="{{ url(app_get_locale(false, '/')) }}" class="bc-logo"
                        style="position: absolute; left: 50%; top: 10%; transform: translate(-50%, -50%) translateX(-600px); z-index: 800;">
-                        @php
-                            $logo_id = setting_item('logo_id');
-                            if (!empty($row->custom_logo)) {
-                                $logo_id = $row->custom_logo;
-                            }
-                        @endphp
                         @if ($logo_id)
-                                <?php
-                                    $logo = get_file_url($logo_id, 'full');
-                                    $logo_width = (int) setting_item('logo_width');
-                                ?>
+                                <?php $logo = get_file_url($logo_id, 'full'); ?>
                             <img src="{{ $logo }}"
                                  alt="{{ setting_item('site_title') }}"
+                                 class="bc-logo-img"
                                  @if($logo_width > 0) style="width: {{ $logo_width }}px; height: auto; max-width: none;" @endif>
                         @endif
                     </a>
