@@ -3582,4 +3582,63 @@ body .bravo_wrap .bravo_detail_tour .bravo_content .g-faq2 .item .desc {
     }
 }
 
+/* Hotel detail: animal select as larger red button */
+.hotel_rooms_form .form-group .smart-search {
+    width: 320px;
+    max-width: 100%;
+}
+
+.hotel_rooms_form .form-group .smart-search .bc-autocomplete {
+    left: 0 !important;
+    right: 0 !important;
+    width: 100% !important;
+}
+
+.hotel_rooms_form .form-group .smart-search:after {
+    right: 18px;
+    top: 50%;
+    transform: translateY(-50%);
+    border-top-color: #fff;
+    border-top-width: 0.5em;
+    border-right-width: 0.4em;
+    border-left-width: 0.4em;
+}
+
+.hotel_rooms_form .form-group .smart-search .smart-search-booking-animal.parent_text,
+.hotel_rooms_form .form-group .smart-search .smart-search-booking-animal.form-control {
+    background: #d32f2f !important;
+    color: #fff !important;
+    width: 100% !important;
+    height: 48px !important;
+    min-height: 48px !important;
+    padding: 0 44px 0 20px !important;
+    border: none !important;
+    border-radius: 6px !important;
+    font-size: 18px !important;
+    font-weight: 600 !important;
+    line-height: 48px !important;
+    box-shadow: 0 2px 6px rgba(211, 47, 47, 0.35) !important;
+    cursor: pointer !important;
+}
+
+.hotel_rooms_form .form-group .smart-search .smart-search-booking-animal::placeholder {
+    color: #fff !important;
+    opacity: 1 !important;
+}
+
+.hotel_rooms_form .form-group .smart-search .smart-search-booking-animal::-moz-placeholder {
+    color: #fff !important;
+    opacity: 1 !important;
+}
+
+.hotel_rooms_form .form-group .smart-search .bc-autocomplete .item:hover {
+    background: #5191fa !important;
+    color: #fff !important;
+}
+
+.hotel_rooms_form .form-group .smart-search .bc-autocomplete .item:hover .h-line,
+.hotel_rooms_form .form-group .smart-search .bc-autocomplete .item:hover i {
+    color: #fff !important;
+}
+
 /*# sourceMappingURL=app.custom.css.map */
