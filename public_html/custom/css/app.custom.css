@@ -3403,6 +3403,25 @@ body .bravo_wrap .bravo_detail_tour .bravo_content .g-faq2 .item .desc {
     border: none !important;
 }
 
+.bc_wrap .page-template-content .bc-form-search-all.carousel_v2 .effect .item .sub-heading {
+    margin-top: 60px;
+}
+
+/* Header overlaps topbar on transparent pages and blocks login/register clicks */
+.frontend-page.header-transparent .bc_wrap .bc_header,
+.frontend-page.header-transparent .bc_wrap .bc_header .content,
+.frontend-page.header-transparent .bc_wrap .bc_header .header-left,
+.frontend-page.header-transparent .bc_wrap .bc_header .logo-center-wrapper {
+    pointer-events: none;
+}
+
+.frontend-page.header-transparent .bc_wrap .bc_header .bc-logo,
+.frontend-page.header-transparent .bc_wrap .bc_header .bc-menu,
+.frontend-page.header-transparent .bc_wrap .bc_header .header-right,
+.frontend-page.header-transparent .bc_wrap .bc_header .bc-more-menu {
+    pointer-events: auto;
+}
+
 .bc_wrap .bc_topbar {
     background: #fff !important;
 }
