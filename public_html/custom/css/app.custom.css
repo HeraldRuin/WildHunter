@@ -3458,4 +3458,39 @@ body .bravo_wrap .bravo_detail_tour .bravo_content .g-faq2 .item .desc {
     margin-top: -40px !important;
 }
 
+/* Center footer subscribe block after icon removal */
+.bc_wrap .bc_footer .mailchimp .mailchimp-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 16px 40px;
+}
+
+.bc_wrap .bc_footer .mailchimp .mailchimp-text {
+    flex: 0 1 auto;
+    text-align: center;
+}
+
+.bc_wrap .bc_footer .mailchimp .mailchimp-text .media-heading {
+    margin: 0;
+}
+
+.bc_wrap .bc_footer .mailchimp .mailchimp-form {
+    flex: 0 1 420px;
+    max-width: 100%;
+    width: 100%;
+}
+
+@media (max-width: 766px) {
+    .bc_wrap .bc_footer .mailchimp .mailchimp-row {
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .bc_wrap .bc_footer .mailchimp .mailchimp-form {
+        flex-basis: 100%;
+    }
+}
+
 /*# sourceMappingURL=app.custom.css.map */
