@@ -126,6 +126,6 @@ return [
     // Custom BC configs
 
     'version' => "4.0",
-    'asset_version' => env('APP_ASSET_VERSION', '7.0'),
+    'asset_version' => env('APP_ASSET_VERSION', '7.6'),
 
 ];

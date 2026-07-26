@@ -418,6 +418,10 @@
             }
             this.$nextTick(() => {
                 $(this.$refs.hotelStartDate).daterangepicker(options)
+                    .on('show.daterangepicker', (ev, picker) => {
+                        // Rooms calendar must never get animal-calendar styles
+                        picker.container.removeClass('animal-daterangepicker');
+                    })
                     .on('apply.daterangepicker', (ev, picker) => {
                         if(picker.endDate.diff(picker.startDate,'day') <= 0){
                             picker.endDate.add(1,'day');
@@ -454,13 +458,20 @@
                 const animalPickerElement = $(this.$refs.animalStartDate);
                 const me = this;
 
-                animalPickerElement.daterangepicker(animalOptions)
+                animalPickerElement.daterangepicker(animalOptions);
+                const animalPickerInstance = animalPickerElement.data('daterangepicker');
+                if (animalPickerInstance && animalPickerInstance.container) {
+                    animalPickerInstance.container.addClass('animal-daterangepicker');
+                }
+
+                animalPickerElement
                     .on('apply.daterangepicker', (ev, picker) => {
                         me.start_date_animal = picker.endDate.format('YYYY-MM-DD');
                         me.end_date_animal = me.start_date_animal;
                         me.start_date_animal_html = picker.endDate.format(bookingCore.date_format);
                     })
                     .on('show.daterangepicker', function(ev, picker) {
+                        picker.container.addClass('animal-daterangepicker');
                         if (!me.end_date || !me.start_date) return;
 
                         const startDay = moment(me.start_date, 'YYYY-MM-DD');
@@ -506,6 +517,11 @@
 
                         if (typeof picker.updateCalendars === 'function') {
                             picker.updateCalendars();
+                        }
+
+                        // Only visual: drop today highlight when no hunt date is selected
+                        if (!me.start_date_animal) {
+                            picker.container.find('td.today').removeClass('active start-date end-date');
                         }
                     });
             });

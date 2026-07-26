@@ -3582,6 +3582,28 @@ body .bravo_wrap .bravo_detail_tour .bravo_content .g-faq2 .item .desc {
     }
 }
 
+/* Animal calendar ONLY (not rooms): today gray; available dates highlighted */
+body .daterangepicker.animal-daterangepicker .drp-calendar .calendar-table tbody tr td.today:not(.available):not(.start-date):not(.end-date):not(.active) {
+    color: #d7dce3 !important;
+    border-color: transparent !important;
+    background: transparent !important;
+    font-weight: 400 !important;
+}
+
+body .daterangepicker.animal-daterangepicker .drp-calendar .calendar-table tbody tr td.available:not(.off):not(.disabled) {
+    color: #1a2b48 !important;
+    font-weight: 600 !important;
+    background: rgba(81, 145, 250, 0.15) !important;
+    border: 1px solid #5191fa !important;
+    border-radius: 4px !important;
+}
+
+body .daterangepicker.animal-daterangepicker .drp-calendar .calendar-table tbody tr td.available:not(.off):not(.disabled):hover {
+    background: #5191fa !important;
+    color: #fff !important;
+    border-color: #5191fa !important;
+}
+
 /* Hotel detail: animal select as larger red button */
 .hotel_rooms_form .form-group .smart-search {
     width: 320px;
