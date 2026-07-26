@@ -13,7 +13,7 @@
 
                 <div class="logo-center-wrapper" style="position: relative; height: 100px;">
                     <a href="{{ url(app_get_locale(false, '/')) }}" class="bc-logo"
-                       style="position: absolute; left: 50%; top: 10%; transform: translate(-50%, -50%) translateX(-600px); z-index: 9999;">
+                       style="position: absolute; left: 50%; top: 10%; transform: translate(-50%, -50%) translateX(-600px); z-index: 800;">
                         @php
                             $logo_id = setting_item('logo_id');
                             if (!empty($row->custom_logo)) {
