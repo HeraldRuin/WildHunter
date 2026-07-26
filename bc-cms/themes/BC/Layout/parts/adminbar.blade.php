@@ -1,7 +1,16 @@
+@php
+    $authUser = Auth::user();
+    $adminBarUserName = $authUser
+        ? trim(($authUser->first_name ?? '') . ' ' . ($authUser->last_name ?? ''))
+        : '';
+    if ($adminBarUserName === '' && $authUser) {
+        $adminBarUserName = $authUser->getDisplayName();
+    }
+@endphp
 <div class="admin-bar py-2 px-3 sticky-top top-0 z-[1000]">
     <div class="{{$containerClass ?? 'container'}}">
-        <div class="d-flex justify-content-between">
-            <div class="d-flex gap-3">
+        <div class="d-flex align-items-center admin-bar-inner">
+            <div class="d-flex align-items-center gap-3 admin-bar-left">
                 @if(is_admin())
                     <!-- Show all settings as dropdown -->
                     <div class="dropdown">
@@ -35,10 +44,11 @@
                     @endforeach
                 @endif
             </div>
-            <div class="b-flex b-gap-3">
+            <div class="admin-bar-right-cluster">
                 @if(is_admin())
                     <a
-                        class="btn btn-sm btn-secondary font-weight-normal" style="font-size: 12px"
+                        class="btn btn-sm btn-secondary font-weight-normal admin-bar-dashboard"
+                        style="font-size: 12px"
                         href="/admin"
                     >
                         <svg
@@ -58,6 +68,20 @@
                         </svg>
                         <span class="ml-1">{{ __('Admin Dashboard') }}</span>
                     </a>
+                @endif
+                @if($authUser && !is_admin())
+                    <ul class="topbar-items admin-bar-user mb-0">
+                        @include('Layout::parts.notification')
+                        <li class="login-item dropdown">
+                            <a href="#" id="user-dropdown-toggle" class="login">
+                                {{ __('Hi, :name', ['name' => $adminBarUserName]) }} <i class="fa fa-angle-down"></i>
+                            </a>
+                            <form id="logout-form-topbar" action="{{ route('logout') }}" method="POST"
+                                  style="display: none;">
+                                {{ csrf_field() }}
+                            </form>
+                        </li>
+                    </ul>
                 @endif
             </div>
         </div>

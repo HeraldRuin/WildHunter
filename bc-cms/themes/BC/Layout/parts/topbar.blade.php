@@ -33,8 +33,9 @@
                             </li>
                         @endif
                     @else
-                        @include('Layout::parts.notification')
+                        {{-- For admins, notification + name are shown in admin-bar --}}
                         @if (!is_admin())
+                            @include('Layout::parts.notification')
                             <li class="login-item dropdown">
                                 <a href="#" id="user-dropdown-toggle" class="login">
                                     {{ __('Hi, :name', ['name' => Auth::user()->getDisplayName()]) }} <i class="fa fa-angle-down"></i>

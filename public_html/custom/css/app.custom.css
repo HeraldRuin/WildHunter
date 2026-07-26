@@ -3403,6 +3403,54 @@ body .bravo_wrap .bravo_detail_tour .bravo_content .g-faq2 .item .desc {
     border: none !important;
 }
 
+/* Dashboard + user block stay on one line, to the right of the logo */
+.bc_wrap .admin-bar .admin-bar-inner {
+    position: relative;
+    justify-content: flex-start;
+    min-height: 32px;
+}
+
+.bc_wrap .admin-bar .admin-bar-right-cluster {
+    position: absolute;
+    left: 70%;
+    top: 50%;
+    transform: translate(70px, -50%);
+    display: flex;
+    align-items: center;
+    gap: 48px;
+    z-index: 2;
+    white-space: nowrap;
+}
+
+.bc_wrap .admin-bar .admin-bar-user {
+    display: flex;
+    align-items: center;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    gap: 24px;
+}
+
+.bc_wrap .admin-bar .admin-bar-user > li {
+    display: inline-flex;
+    align-items: center;
+    padding-right: 0;
+}
+
+.bc_wrap .admin-bar .admin-bar-user > li.dropdown-notifications {
+    margin-right: 8px;
+}
+
+.bc_wrap .admin-bar .admin-bar-user > li.dropdown-notifications .notification-icon {
+    margin-right: 4px;
+}
+
+.bc_wrap .admin-bar .admin-bar-user a {
+    color: #1a2b48 !important;
+    font-size: 12px;
+    text-decoration: none;
+}
+
 .bc_wrap .page-template-content .bc-form-search-all.carousel_v2 .effect .item .sub-heading {
     margin-top: 60px;
 }
