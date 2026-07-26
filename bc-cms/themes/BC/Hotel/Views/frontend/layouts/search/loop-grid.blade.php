@@ -2,11 +2,6 @@
     $translation = $row->translate();
 @endphp
 <div class="item-loop item-hotel {{$wrap_class ?? ''}}">
-    @if($row->is_featured == "1")
-        <div class="featured">
-            {{__("Featured")}}
-        </div>
-    @endif
     <div class="thumb-image ">
         <a @if(!empty($blank)) target="_blank" @endif href="{{$row->getDetailUrl()}}">
             @if($row->image_url)
