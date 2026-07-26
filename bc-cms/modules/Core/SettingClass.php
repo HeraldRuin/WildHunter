@@ -23,6 +23,7 @@
                         'home_page_id',
                         'topbar_left_text',
                         'logo_id',
+                        'logo_width',
                         'footer_text_left',
                         'footer_text_right',
                         'list_widget_footer',

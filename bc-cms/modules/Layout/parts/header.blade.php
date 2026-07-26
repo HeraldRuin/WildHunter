@@ -10,8 +10,13 @@
                         }
                     @endphp
                     @if ($logo_id)
-                        <?php $logo = get_file_url($logo_id, 'full'); ?>
-                        <img src="{{ $logo }}" alt="{{ setting_item('site_title') }}">
+                        <?php
+                            $logo = get_file_url($logo_id, 'full');
+                            $logo_width = (int) setting_item('logo_width');
+                        ?>
+                        <img src="{{ $logo }}"
+                             alt="{{ setting_item('site_title') }}"
+                             @if($logo_width > 0) style="width: {{ $logo_width }}px; height: auto; max-width: none;" @endif>
                     @endif
                 </a>
                 <div class="bc-menu">

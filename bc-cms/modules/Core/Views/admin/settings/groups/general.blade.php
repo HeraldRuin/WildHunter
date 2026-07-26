@@ -150,6 +150,18 @@
                             {!! \Modules\Media\Helpers\FileHelper::fieldUpload('logo_id',setting_item('logo_id')) !!}
                         </div>
                     </div>
+                    <div class="form-group">
+                        <label>{{__("Logo Width (px)")}}</label>
+                        <div class="form-controls">
+                            <input type="number" min="1" max="1000" step="1" class="form-control"
+                                   name="logo_width"
+                                   value="{{ setting_item('logo_width') }}"
+                                   placeholder="{{__('e.g. 120') }}">
+                            <p class="help-block" style="margin-top: 6px;">
+                                {{__('Leave empty for original logo size. Height scales automatically.')}}
+                            </p>
+                        </div>
+                    </div>
                 @endif
                 @php do_action(\Modules\Core\Hook::CORE_SETTING_AFTER_LOGO) @endphp
                 @if(is_default_lang())
