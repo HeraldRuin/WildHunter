@@ -3444,4 +3444,18 @@ body .bravo_wrap .bravo_detail_tour .bravo_content .g-faq2 .item .desc {
     background: #dcdcdc !important;
 }
 
+/* Hotel search: no banner title — only taller blue strip */
+.bc_wrap .bc_search_hotel .bc_banner {
+    min-height: 280px !important;
+    padding: 140px 0 80px !important;
+}
+
+.bc_wrap .bc_search_hotel .bc_banner h1 {
+    display: none !important;
+}
+
+.bc_wrap .bc_search_hotel .bc_form_search {
+    margin-top: -40px !important;
+}
+
 /*# sourceMappingURL=app.custom.css.map */

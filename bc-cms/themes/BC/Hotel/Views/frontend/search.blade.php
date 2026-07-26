@@ -7,11 +7,6 @@
     <div class="bc_search_hotel">
         <div class="bc_banner"
             @if ($bg = setting_item('hotel_page_search_banner')) style="background-image: url({{ get_file_url($bg, 'full') }})" @endif>
-            <div class="container">
-                <h1>
-                    {{ setting_item_with_lang('hotel_page_search_title') }}
-                </h1>
-            </div>
         </div>
         <div class="bc_form_search">
             <div class="container">

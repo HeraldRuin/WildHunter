@@ -14,9 +14,11 @@
             background-position: center;
             background-repeat: no-repeat;
             background-size: cover;
-            padding: 90px 0;
+            min-height: 220px;
+            padding: 100px 0;
             position: relative;
             h1 {
+                display: none;
                 font-size: 36px;
                 color: #FFFFFF;
                 letter-spacing: 0;
@@ -24,6 +26,7 @@
                 margin: 0;
             }
             @media(max-width: 766px){
+                min-height: 160px;
                 padding: 70px 0;
                 h1 {
                     font-size: 28px;
