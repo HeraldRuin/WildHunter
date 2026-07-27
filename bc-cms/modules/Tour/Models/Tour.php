@@ -95,7 +95,7 @@ class Tour extends Bookable
 
     public static function getModelName()
     {
-        return __("Охота");
+        return __("Охота без проживания");
     }
 
     protected $bookingClass;

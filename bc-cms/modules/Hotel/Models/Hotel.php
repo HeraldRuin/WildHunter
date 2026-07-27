@@ -94,7 +94,7 @@ class Hotel extends Bookable
 
     public static function getModelName()
     {
-        return __("Базы");
+        return __("Охота с проживанием");
     }
 
     public static function getTableName()
