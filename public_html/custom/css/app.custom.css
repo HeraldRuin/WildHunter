@@ -3663,4 +3663,20 @@ body .daterangepicker.animal-daterangepicker .drp-calendar .calendar-table tbody
     color: #fff !important;
 }
 
+/* List locations style_4: no underline on title; strip grows on card hover, more on title hover */
+.bc_wrap .page-template-content .bc-list-locations.style_4 .list-item .destination-item .content .title a,
+.bc_wrap .page-template-content .bc-list-locations.style_4 .list-item .destination-item .content .title a:hover,
+.bc_wrap .page-template-content .bc-list-locations.style_4 .list-item .destination-item .content .title a:focus {
+    color: #fff !important;
+    text-decoration: none !important;
+}
+
+.bc_wrap .page-template-content .bc-list-locations.style_4 .list-item .destination-item:hover .content .title:after {
+    width: 70px;
+}
+
+.bc_wrap .page-template-content .bc-list-locations.style_4 .list-item .destination-item .content .title:has(a:hover):after {
+    width: 140px;
+}
+
 /*# sourceMappingURL=app.custom.css.map */

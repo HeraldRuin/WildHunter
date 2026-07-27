@@ -2851,6 +2851,15 @@ Pricing Section
   transition: all 0.3s;
   margin-bottom: 5px;
 }
+.bc_wrap .page-template-content .bc-list-locations.style_4 .list-item .destination-item .content .title a {
+  color: #fff;
+  text-decoration: none;
+}
+.bc_wrap .page-template-content .bc-list-locations.style_4 .list-item .destination-item .content .title a:hover,
+.bc_wrap .page-template-content .bc-list-locations.style_4 .list-item .destination-item .content .title a:focus {
+  color: #fff;
+  text-decoration: none;
+}
 .bc_wrap .page-template-content .bc-list-locations.style_4 .list-item .destination-item .content .title:after {
   content: "";
   height: 2px;
@@ -2896,8 +2905,11 @@ Pricing Section
 .bc_wrap .page-template-content .bc-list-locations.style_4 .list-item .destination-item:hover .effect {
   opacity: 0.2;
 }
-.bc_wrap .page-template-content .bc-list-locations.style_4 .list-item .destination-item:hover .content h4:after {
+.bc_wrap .page-template-content .bc-list-locations.style_4 .list-item .destination-item:hover .content .title:after {
   width: 70px;
+}
+.bc_wrap .page-template-content .bc-list-locations.style_4 .list-item .destination-item .content .title:has(a:hover):after {
+  width: 140px;
 }
 .bc_wrap .page-template-content .bc-how-it-works {
   margin: 30px 0;

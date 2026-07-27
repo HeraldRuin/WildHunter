@@ -1057,6 +1057,17 @@
                                 transition: all .3s;
                                 margin-bottom: 5px;
 
+                                a {
+                                    color: #fff;
+                                    text-decoration: none;
+
+                                    &:hover,
+                                    &:focus {
+                                        color: #fff;
+                                        text-decoration: none;
+                                    }
+                                }
+
                                 &:after {
                                     content: "";
                                     height: 2px;
@@ -1121,10 +1132,12 @@
                             }
 
                             .content {
-                                h4 {
-                                    &:after {
-                                        width: 70px;
-                                    }
+                                .title:after {
+                                    width: 70px;
+                                }
+
+                                .title:has(a:hover):after {
+                                    width: 140px;
                                 }
                             }
                         }
