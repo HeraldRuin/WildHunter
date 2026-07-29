@@ -6,7 +6,9 @@
 @section('content')
     <div class="bc_search_hotel">
         <div class="bc_banner"
-            @if ($bg = setting_item('hotel_page_search_banner')) style="background-image: url({{ get_file_url($bg, 'full') }})" @endif>
+            @if ($bgUrl = get_hotel_search_banner_url())
+                style="background-image: linear-gradient(0deg,rgba(0, 0, 0, 0.2),rgba(0, 0, 0, 0.2)),url('{{ $bgUrl }}')"
+            @endif>
         </div>
         <div class="bc_form_search">
             <div class="container">

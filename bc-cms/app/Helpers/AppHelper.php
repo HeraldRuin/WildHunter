@@ -261,6 +261,77 @@ function display_date($time)
 }
 
 /**
+ * Banner image for hotel search page.
+ * Prefer hotel settings, otherwise reuse homepage Form Search background (incl. carousel slides).
+ */
+function get_hotel_search_banner_url(): string
+{
+    $bannerId = setting_item('hotel_page_search_banner');
+    if (!empty($bannerId)) {
+        $url = get_file_url($bannerId, 'full');
+        if (!empty($url)) {
+            return (string) $url;
+        }
+    }
+
+    return (string) Cache::remember('home_form_search_bg_image_url', HOUR_IN_SECONDS, function () {
+        $homePageId = setting_item('home_page_id');
+        if (empty($homePageId)) {
+            return '';
+        }
+
+        $page = \Modules\Page\Models\Page::query()->find($homePageId);
+        if (!$page || empty($page->template_id)) {
+            return '';
+        }
+
+        $template = \Modules\Template\Models\Template::query()->find($page->template_id);
+        if (!$template || empty($template->content)) {
+            return '';
+        }
+
+        $json = json_decode($template->content, true);
+        if (!is_array($json)) {
+            return '';
+        }
+
+        foreach ($json as $nodeId => $item) {
+            if ($nodeId === 'ROOT' || !is_array($item)) {
+                continue;
+            }
+
+            $type = $item['type'] ?? '';
+            if (!in_array($type, ['form_search_all_service', 'form_search_hotel'], true)) {
+                continue;
+            }
+
+            $model = $item['model'] ?? $item;
+
+            // carousel / carousel_v2: image is in list_slider
+            if (!empty($model['list_slider']) && is_array($model['list_slider'])) {
+                foreach ($model['list_slider'] as $slide) {
+                    if (!empty($slide['bg_image'])) {
+                        $url = get_file_url($slide['bg_image'], 'full');
+                        if (!empty($url)) {
+                            return (string) $url;
+                        }
+                    }
+                }
+            }
+
+            if (!empty($model['bg_image'])) {
+                $url = get_file_url($model['bg_image'], 'full');
+                if (!empty($url)) {
+                    return (string) $url;
+                }
+            }
+        }
+
+        return '';
+    });
+}
+
+/**
  * Member-since label: Russian genitive month after «с».
  * Example: "Июня 2026"
  */
