@@ -57,15 +57,17 @@
                     <textarea name="bio" rows="5" class="form-control">{{old('bio',$user->bio)}}</textarea>
                 </div>
                 <div class="form-group">
-                    <label>{{__("Avatar")}}</label>
                     <div class="upload-btn-wrapper">
-                        <div class="input-group">
-                            <span class="input-group-btn">
-                                <span class="btn btn-default btn-file">
-                                    {{__("Browse")}}… <input type="file">
+                        <div class="d-flex align-items-center" style="gap: 12px;">
+                            <label class="mb-0">{{__("Avatar")}}</label>
+                            <div class="input-group" style="width: auto;">
+                                <span class="input-group-btn">
+                                    <span class="btn btn-default btn-file">
+                                        {{__("Browse")}}… <input type="file">
+                                    </span>
                                 </span>
-                            </span>
-                            <input type="text" data-error="{{__("Error upload...")}}" data-loading="{{__("Loading...")}}" class="form-control text-view" readonly value="{{ get_file_url( old('avatar_id',$user->avatar_id) ) ?? $user->getAvatarUrl()?? __("No Image")}}">
+                                <input type="text" data-error="{{__("Error upload...")}}" data-loading="{{__("Loading...")}}" class="form-control text-view d-none" readonly value="{{ get_file_url( old('avatar_id',$user->avatar_id) ) ?? $user->getAvatarUrl()?? __("No Image")}}">
+                            </div>
                         </div>
                         <input type="hidden" class="form-control" name="avatar_id" value="{{ old('avatar_id',$user->avatar_id)?? ""}}">
                         <img class="image-demo" src="{{ get_file_url( old('avatar_id',$user->avatar_id) ) ??  $user->getAvatarUrl() ?? ""}}"/>
