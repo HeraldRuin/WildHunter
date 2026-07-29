@@ -3539,7 +3539,7 @@ body .bravo_wrap .bravo_detail_tour .bravo_content .g-faq2 .item .desc {
     }
 
     body:not(.header-transparent) .bc_wrap .bc_header .bc-logo {
-        top: 50% !important;
+        top: 46% !important;
         z-index: 950 !important;
         transform: translate(-50%, -50%) translateX(-600px) !important;
         pointer-events: auto;
