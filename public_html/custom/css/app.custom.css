@@ -3501,7 +3501,7 @@ body .bravo_wrap .bravo_detail_tour .bravo_content .g-faq2 .item .desc {
         top: 0;
         left: 0;
         width: 100%;
-        height: 100px;
+        height: 110px;
         z-index: 900;
         padding: 0 !important;
         background: transparent !important;
@@ -3530,11 +3530,11 @@ body .bravo_wrap .bravo_detail_tour .bravo_content .g-faq2 .item .desc {
         position: relative;
         z-index: 1;
         background: #fff;
-        min-height: 100px;
+        min-height: 110px;
     }
 
     body:not(.header-transparent) .bc_wrap .bc_header .logo-center-wrapper {
-        height: 100px !important;
+        height: 110px !important;
         overflow: visible;
     }
 
