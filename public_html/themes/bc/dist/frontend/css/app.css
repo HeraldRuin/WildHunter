@@ -8038,7 +8038,6 @@ body .daterangepicker .full-book-event:before {
 
 .bc_wrap .bc_topbar .content .topbar-right {
     font-size: 12px;
-    padding-top: 34px;
 }
 
 .bc_wrap .bc_topbar .content .topbar-right .dropdown-notifications .dropdown-menu {
@@ -8093,7 +8092,7 @@ body .daterangepicker .full-book-event:before {
 }
 
 .bc_wrap .bc_header {
-    height: 54px;
+    height: 60px;
     /*border-bottom: 1px solid #EAEEF3*/
 }
 

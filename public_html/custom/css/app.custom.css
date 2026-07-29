@@ -3480,6 +3480,72 @@ body .bravo_wrap .bravo_detail_tour .bravo_content .g-faq2 .item .desc {
     color: #1a2b48 !important;
 }
 
+/*
+ * Homepage (header-transparent): restore button offset that was removed from app.css.
+ * Hotel page uses the block below and must keep padding-top: 0.
+ */
+@media (min-width: 1023px) {
+    .frontend-page.header-transparent .bc_wrap .bc_topbar .content .topbar-right {
+        padding-top: 34px;
+    }
+}
+
+/*
+ * Non-transparent pages (hotel search etc.):
+ * topbar used to stack ABOVE header → logo looked dropped.
+ * Overlay buttons on the logo row; keep topbar transparent so logo stays visible.
+ */
+@media (min-width: 1023px) {
+    body:not(.header-transparent) .bc_wrap .bc_topbar {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100px;
+        z-index: 900;
+        padding: 0 !important;
+        background: transparent !important;
+        pointer-events: none;
+    }
+
+    /* .container must fill topbar height, otherwise % height on .content collapses */
+    body:not(.header-transparent) .bc_wrap .bc_topbar .container,
+    body:not(.header-transparent) .bc_wrap .bc_topbar .content {
+        height: 100%;
+    }
+
+    body:not(.header-transparent) .bc_wrap .bc_topbar .content {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+    }
+
+    body:not(.header-transparent) .bc_wrap .bc_topbar .content .topbar-right {
+        padding-top: 0 !important;
+        margin-left: auto;
+        pointer-events: auto;
+    }
+
+    body:not(.header-transparent) .bc_wrap .bc_header {
+        position: relative;
+        z-index: 1;
+        background: #fff;
+        min-height: 100px;
+    }
+
+    body:not(.header-transparent) .bc_wrap .bc_header .logo-center-wrapper {
+        height: 100px !important;
+        overflow: visible;
+    }
+
+    body:not(.header-transparent) .bc_wrap .bc_header .bc-logo {
+        top: 50% !important;
+        z-index: 950 !important;
+        transform: translate(-50%, -50%) translateX(-600px) !important;
+        pointer-events: auto;
+    }
+}
+
 .bc_wrap .bc_topbar .content .dropdown-menu {
     background: #fff !important;
 }
@@ -3676,6 +3742,15 @@ body .daterangepicker.animal-daterangepicker .drp-calendar .calendar-table tbody
 .hotel_rooms_form .form-group .smart-search .bc-autocomplete .item:hover .h-line,
 .hotel_rooms_form .form-group .smart-search .bc-autocomplete .item:hover i {
     color: #fff !important;
+}
+
+/* SEO about block: light paragraph spacing only */
+.bc-seo-about p {
+    margin: 0 0 0.75em;
+}
+
+.bc-seo-about p:last-child {
+    margin-bottom: 0;
 }
 
 /* List locations style_4: no underline on title; strip grows on card hover, more on title hover */
