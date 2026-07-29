@@ -3,6 +3,13 @@
     <link href="{{ asset('themes/bc/dist/frontend/module/hotel/css/hotel.css?_ver=' . config('app.asset_version')) }}" rel="stylesheet">
     <link rel="stylesheet" type="text/css" href="{{ asset('libs/ion_rangeslider/css/ion.rangeSlider.min.css') }}" />
     <link rel="stylesheet" type="text/css" href="{{ asset('libs/fotorama/fotorama.css') }}" />
+    <style>
+        @media (min-width: 1024px) {
+            .bc_detail_hotel .bc_content .g-all-attribute.is_pc .g-attributes:first-child {
+                margin-top: 15px;
+            }
+        }
+    </style>
 @endpush
 @section('content')
     <div class="bc_detail_hotel">
@@ -11,12 +18,15 @@
         <div class="bc_content">
             <div class="container">
                 <div class="row">
+                    <div class="col-12">
+                        @include('Hotel::frontend.layouts.details.hotel-header')
+                    </div>
+                </div>
+                <div class="row">
                     <div class="col-md-12 col-lg-9">
-                        @php $review_score = $row->review_data @endphp
                         @include('Hotel::frontend.layouts.details.hotel-detail')
                     </div>
                     <div class="col-md-12 col-lg-3">
-                        @include('Tour::frontend.layouts.details.vendor')
                         @include('Hotel::frontend.layouts.details.hotel-form-enquiry')
 {{--                        @include('Hotel::frontend.layouts.details.hotel-related-list')--}}
                         <div class="g-all-attribute is_pc">
