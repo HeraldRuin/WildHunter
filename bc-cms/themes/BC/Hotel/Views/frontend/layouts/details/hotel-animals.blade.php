@@ -1,9 +1,9 @@
 <div class="hotel_rooms_form" v-cloak="" v-bind:class="{'d-none':enquiry_type!='book'}">
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h3 class="heading-section ">{{__('Available Animals')}}</h3>
-
+        <div class="hotel-animal-select-wrap col-md-4 px-0">
             @include('Hotel::frontend.layouts.search.fields.booking_animals')
-
+        </div>
     </div>
     <div class="form-book">
         <div class="form-search-rooms">

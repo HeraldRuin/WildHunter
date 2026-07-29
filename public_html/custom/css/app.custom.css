@@ -3604,9 +3604,24 @@ body .daterangepicker.animal-daterangepicker .drp-calendar .calendar-table tbody
     border-color: #5191fa !important;
 }
 
-/* Hotel detail: animal select as larger red button */
+/* Hotel detail: animal select as larger red button, width matches Check Presence column */
+.hotel_rooms_form .hotel-animal-select-wrap {
+    flex: 0 0 33.333333%;
+    max-width: 33.333333%;
+}
+
+.hotel_rooms_form .hotel-animal-select-wrap .form-group {
+    margin-bottom: 0;
+}
+
+.hotel_rooms_form .hotel-animal-select-wrap .clear-animal-btn {
+    left: auto !important;
+    right: 36px;
+    z-index: 2;
+}
+
 .hotel_rooms_form .form-group .smart-search {
-    width: 320px;
+    width: 100%;
     max-width: 100%;
 }
 
