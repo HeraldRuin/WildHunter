@@ -202,7 +202,7 @@ foreach ($menus as $k => $menuItem) {
         <div class="info-new">
             <span class="role-name badge badge-info">{{$dataUser->role_name}}</span>
             <h5>{{$dataUser->getDisplayName()}}</h5>
-            <p>{{ __("Member Since :time",["time"=> date("M Y",strtotime($dataUser->created_at))]) }}</p>
+            <p>{{ __("Member Since :time",["time"=> display_member_since($dataUser->created_at)]) }}</p>
         </div>
     </div>
     <div class="user-profile-plan">

@@ -16,7 +16,7 @@
         @endif
     </h3>
 
-    <p class="profile-since">{{ __("Member Since :time",["time"=> date("M Y",strtotime($user->created_at))]) }}</p>
+    <p class="profile-since">{{ __("Member Since :time",["time"=> display_member_since($user->created_at)]) }}</p>
 
     @if($user->hasPermission('dashboard_vendor_access'))<hr>
     <ul class="meta-info style2">

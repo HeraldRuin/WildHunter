@@ -260,6 +260,36 @@ function display_date($time)
     return date(get_date_format(), $time);
 }
 
+/**
+ * Member-since label: Russian genitive month after «с».
+ * Example: "Июня 2026"
+ */
+function display_member_since($time): string
+{
+    if (empty($time)) {
+        return '';
+    }
+
+    static $monthsGenitive = [
+        1 => 'Января',
+        2 => 'Февраля',
+        3 => 'Марта',
+        4 => 'Апреля',
+        5 => 'Мая',
+        6 => 'Июня',
+        7 => 'Июля',
+        8 => 'Августа',
+        9 => 'Сентября',
+        10 => 'Октября',
+        11 => 'Ноября',
+        12 => 'Декабря',
+    ];
+
+    $date = \Carbon\Carbon::parse($time);
+
+    return $monthsGenitive[(int) $date->format('n')] . ' ' . $date->format('Y');
+}
+
 function display_datetime($time)
 {
 
