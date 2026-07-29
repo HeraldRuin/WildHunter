@@ -51,7 +51,7 @@
                 </ul>
             </div>
         </div> --}}
-        <div class="g-filter-item">
+        {{-- <div class="g-filter-item">
             <div class="item-title">
                 <h3>{{ __('Review Score') }}</h3>
                 <i class="fa fa-angle-up" aria-hidden="true"></i>
@@ -74,7 +74,7 @@
                     @endfor
                 </ul>
             </div>
-        </div>
+        </div> --}}
         @include('Layout::global.search.filters.attrs')
     </form>
 </div>
