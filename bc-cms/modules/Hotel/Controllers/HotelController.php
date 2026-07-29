@@ -62,27 +62,20 @@ class HotelController extends Controller
         $startInput = $request->input('start');
         $endInput   = $request->input('end');
 
+        // Always apply search filters (location_id, etc.). Dates only add availability checks.
+        $query = $this->hotelClass->search($request->input());
+        $hotelsCollection = collect($query->get());
+
         if ($startInput && $endInput) {
             $start = Carbon::parse($startInput)->startOfDay();
             $end   = Carbon::parse($endInput)->endOfDay();
 
-            $query = $this->hotelClass->search($request->input());
-            $hotelsCollection = collect($query->get());
-
             $hotelsCollection = $this->filterHotelsByAvailability($hotelsCollection, $start, $end);
-
-
-//            $roomCount = (int) $request->input('room');
-//            if ($roomCount > 0) {
-//                $hotelsCollection = $this->filterHotelsByRoomCount($hotelsCollection, $roomCount, $start, $end);
-//            }
 
             $guestCount = (int) $request->input('adults');
             if ($guestCount > 0) {
                $hotelsCollection = $this->filterHotelsByGuestCountAndAvailability($hotelsCollection, $guestCount, $start, $end);
             }
-        } else {
-            $hotelsCollection = collect($this->hotelClass::query()->get());
         }
 
 
