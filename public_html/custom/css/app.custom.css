@@ -3744,13 +3744,72 @@ body .daterangepicker.animal-daterangepicker .drp-calendar .calendar-table tbody
     color: #fff !important;
 }
 
-/* SEO about block: light paragraph spacing only */
+/* SEO about block — same structure on desktop and mobile */
+.bc-seo-about {
+    margin: 40px 0 24px;
+    max-width: 920px;
+    color: #1a2b48;
+    font-size: 16px;
+    line-height: 1.65;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+}
+
+.bc-seo-about__lead {
+    margin: 0 0 20px;
+    font-size: 17px;
+    line-height: 1.55;
+}
+
+.bc-seo-about__section {
+    margin: 0 0 22px;
+}
+
+.bc-seo-about__section:last-child {
+    margin-bottom: 0;
+}
+
+.bc-seo-about__subtitle {
+    margin: 0 0 10px !important;
+    font-size: 17px;
+    font-weight: 600;
+    line-height: 1.35;
+    color: #1a2b48;
+}
+
 .bc-seo-about p {
     margin: 0 0 0.75em;
 }
 
+.bc-seo-about__section > p:last-child,
 .bc-seo-about p:last-child {
     margin-bottom: 0;
+}
+
+@media (max-width: 766px) {
+    .bc-seo-about {
+        margin: 28px 0 16px;
+        font-size: 15px;
+        line-height: 1.6;
+    }
+
+    .bc-seo-about__lead {
+        margin-bottom: 16px;
+        font-size: 16px;
+    }
+
+    .bc-seo-about__section {
+        margin-bottom: 18px;
+    }
+
+    .bc-seo-about__subtitle {
+        margin-bottom: 8px !important;
+        font-size: 16px;
+    }
+
+    .bc-seo-about p {
+        margin-bottom: 0.7em;
+    }
 }
 
 /* List locations style_4: no underline on title; strip grows on card hover, more on title hover */
