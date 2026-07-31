@@ -3725,6 +3725,19 @@ body .daterangepicker.animal-daterangepicker .drp-calendar .calendar-table tbody
     max-width: 33.333333%;
 }
 
+/* Mobile: hide "Available Animals" title, keep only the select button above the form */
+@media (max-width: 767px) {
+    .hotel_animals_form .hotel-animals-heading {
+        display: none !important;
+    }
+
+    .hotel_animals_form .hotel-animal-select-wrap {
+        flex: 0 0 100%;
+        max-width: 100%;
+        width: 100%;
+    }
+}
+
 .hotel_rooms_form .hotel-animal-select-wrap .form-group {
     margin-bottom: 0;
 }
