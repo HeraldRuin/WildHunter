@@ -966,14 +966,10 @@ class Hotel extends Bookable
                 'gallery'         => $room->getGallery(),
                 'price_html'      => format_money($room->tmp_price) .
                     '<span class="unit">/' .
-                    ($room->tmp_nights
-                        ? __(':count nights', ['count' => $room->tmp_nights])
-                        : __(':count night', ['count' => $room->tmp_nights])) .
+                    plural_nights((int) ($room->tmp_nights ?? 0)) .
                     '</span>',
                 'price_text'      => format_money($room->tmp_price) . '/' .
-                    ($room->tmp_nights
-                        ? __(':count nights', ['count' => $room->tmp_nights])
-                        : __(':count night', ['count' => $room->tmp_nights])),
+                    plural_nights((int) ($room->tmp_nights ?? 0)),
                 'terms'           => $terms,
                 'term_features'   => $term_features
             ];

@@ -3546,6 +3546,55 @@ body .bravo_wrap .bravo_detail_tour .bravo_content .g-faq2 .item .desc {
     }
 }
 
+/*
+ * Mobile: logo is in markup but inline translateX(-600px) pushes it off-screen.
+ * Reset position for hotel search / non-transparent pages (and homepage).
+ */
+@media (max-width: 1022px) {
+    .bc_wrap .bc_header {
+        position: relative;
+    }
+
+    .bc_wrap .bc_header .content,
+    .bc_wrap .bc_header .header-left {
+        min-height: 52px !important;
+        height: 52px !important;
+        align-items: center;
+    }
+
+    .bc_wrap .bc_header .logo-center-wrapper {
+        flex: 1;
+        position: static !important;
+        height: 52px !important;
+        overflow: visible;
+        min-width: 0;
+    }
+
+    /* Position against .bc_header so logo stays inside the blue bar */
+    .bc_wrap .bc_header .bc-logo {
+        position: absolute !important;
+        left: 12px !important;
+        top: 50% !important;
+        transform: translateY(-50%) !important;
+        z-index: 800 !important;
+        pointer-events: auto;
+        line-height: 0;
+    }
+
+    .bc_wrap .bc_header .bc-logo img.bc-logo-img {
+        width: auto !important;
+        height: 32px !important;
+        max-width: none !important;
+        max-height: none !important;
+        display: block;
+    }
+
+    body:not(.header-transparent) .bc_wrap .bc_header {
+        background: #fff;
+        min-height: 52px;
+    }
+}
+
 .bc_wrap .bc_topbar .content .dropdown-menu {
     background: #fff !important;
 }

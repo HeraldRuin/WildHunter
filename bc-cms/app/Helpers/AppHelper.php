@@ -1353,6 +1353,25 @@ function plural_days(int $days): string
         default => $days . ' дней',
     };
 }
+
+function plural_nights(int $nights): string
+{
+    $nights = abs($nights);
+
+    $mod100 = $nights % 100;
+    $mod10  = $nights % 10;
+
+    if ($mod100 >= 11 && $mod100 <= 19) {
+        return $nights . ' ночей';
+    }
+
+    return match ($mod10) {
+        1       => $nights . ' ночь',
+        2, 3, 4 => $nights . ' ночи',
+        default => $nights . ' ночей',
+    };
+}
+
 function plural_sutki(int $count): string
 {
     $count = abs($count);

@@ -8,18 +8,34 @@
 @endphp
 @if ($logo_width > 0)
     <style>
-        .bc_wrap .bc_header .bc-logo img.bc-logo-img {
-            width: {{ $logo_width }}px !important;
-            height: auto !important;
-            max-width: none !important;
+        @media (min-width: 1023px) {
+            .bc_wrap .bc_header .bc-logo img.bc-logo-img {
+                width: {{ $logo_width }}px !important;
+                height: auto !important;
+                max-width: none !important;
+            }
+        }
+        @media (max-width: 1022px) {
+            .bc_wrap .bc_header .bc-logo img.bc-logo-img {
+                width: auto !important;
+                height: 36px !important;
+                max-width: none !important;
+                max-height: none !important;
+            }
         }
         body:not(.header-transparent) .bc_wrap .bc_header {
-            height: auto !important;
-            min-height: {{ $logo_wrap_height }}px;
+            {{--height: auto !important;--}}
+            {{--min-height: {{ $logo_wrap_height }}px;--}}
         }
         body:not(.header-transparent) .bc_wrap .bc_header .content,
         body:not(.header-transparent) .bc_wrap .bc_header .header-left {
             min-height: {{ $logo_wrap_height }}px;
+        }
+        @media (max-width: 1022px) {
+            body:not(.header-transparent) .bc_wrap .bc_header .content,
+            body:not(.header-transparent) .bc_wrap .bc_header .header-left {
+                min-height: 52px;
+            }
         }
     </style>
 @endif
@@ -44,7 +60,7 @@
                             <img src="{{ $logo }}"
                                  alt="{{ setting_item('site_title') }}"
                                  class="bc-logo-img"
-                                 @if($logo_width > 0) style="width: {{ $logo_width }}px; height: auto; max-width: none;" @endif>
+                                 @if($logo_width > 0) style="height: auto; max-width: none;" @endif>
                         @endif
                     </a>
                 </div>
