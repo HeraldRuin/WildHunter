@@ -1,10 +1,19 @@
 <div class="hotel_rooms_form hotel_animals_form" v-cloak="" v-bind:class="{'d-none':enquiry_type!='book'}">
     <div class="d-flex justify-content-between align-items-center mb-3 hotel-animals-header">
         <h3 class="heading-section hotel-animals-heading">{{__('Available Animals')}}</h3>
-        <div class="hotel-animal-select-wrap col-md-4 px-0">
-            @include('Hotel::frontend.layouts.search.fields.booking_animals')
-        </div>
+        @if($list_animals->isNotEmpty())
+            {{-- v-once: jQuery bcAutocomplete injects .bc-autocomplete after Vue mount;
+                 without this, Vue re-renders (e.g. after checkAvailability) wipe the dropdown --}}
+            <div class="hotel-animal-select-wrap col-md-4 px-0" v-once>
+                @include('Hotel::frontend.layouts.search.fields.booking_animals')
+            </div>
+        @endif
     </div>
+    @if($list_animals->isEmpty())
+        <div class="alert alert-warning">
+            {{__('This hotel has no animals available for hunting')}}
+        </div>
+    @endif
     <div class="form-book">
         <div class="form-search-rooms">
             <div class="d-flex form-search-row">
@@ -46,7 +55,7 @@
                 </div>
                 <div class="col-md-4 col-btn">
                     <div class="g-button-submit">
-                        <button class="btn btn-primary btn-search" @click="checkAvailabilityForAnimal" v-bind:class="{'loading':onLoadAvailability}" type="submit">
+                        <button class="btn btn-primary btn-search" @click="checkAvailabilityForAnimal" v-bind:class="{'loading':onLoadAvailability}" type="submit" @disabled($list_animals->isEmpty())>
                             {{__("Check Presence")}}
                             <i v-show="onLoadAnimalAvailability" class="fa fa-spinner fa-spin"></i>
                         </button>

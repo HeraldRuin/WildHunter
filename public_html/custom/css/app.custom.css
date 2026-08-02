@@ -3723,6 +3723,8 @@ body .daterangepicker.animal-daterangepicker .drp-calendar .calendar-table tbody
 .hotel_rooms_form .hotel-animal-select-wrap {
     flex: 0 0 33.333333%;
     max-width: 33.333333%;
+    position: relative;
+    z-index: 30; /* keep dropdown above .form-search-rooms below */
 }
 
 /* Mobile: title above the animal select button */
