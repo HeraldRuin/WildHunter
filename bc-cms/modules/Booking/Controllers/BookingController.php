@@ -321,7 +321,9 @@ class BookingController extends \App\Http\Controllers\Controller
         }
 
         // Normal Checkout
-        $booking->booking_number = $this->bookingNumberService->generate($booking->hotel_id);
+        if (empty($booking->booking_number)) {
+            $booking->booking_number = $this->bookingNumberService->generate($booking->hotel_id);
+        }
         $booking->first_name = $request->input('first_name', $user->first_name);
         $booking->last_name = $request->input('last_name', $user->last_name);
         $booking->email = $request->input('email', $user->email);
