@@ -23,7 +23,7 @@ class AddDataInView
         $userId = $this->request->query('user');
         $viewAdminCabinet = $this->request->query('viewAdminCabinet');
 
-        $user = User::find($userId);
+        $user = ($userId ? User::find($userId) : null) ?? Auth::user();
         $AuthUser = Auth::user();
 
         return [

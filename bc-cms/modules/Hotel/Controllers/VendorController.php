@@ -101,16 +101,20 @@ class VendorController extends FrontendController
     public function recovery(Request $request)
     {
         $this->checkPermission('hotel_view');
+        $cabinetData = $this->cabinetService->getCabinetData();
 
         $list_hotel = $this->hotelClass::onlyTrashed()->where("author_id", Auth::id())->orderBy('id', 'desc');
 
-        $data = [
+        $data = array_merge($cabinetData, [
             'rows' => $list_hotel->paginate(5),
             'recovery'           => 1,
             'breadcrumbs'        => [
                 [
                     'name' => __('Manage Hotels'),
-                    'url'  => route('hotel.vendor.index')
+                    'url'  => route('hotel.vendor.index', [
+                        'user' => $this->cabinetService->getViewUser(),
+                        'viewAdminCabinet' => $this->cabinetService->getViewAdminCabinet(),
+                    ])
                 ],
                 [
                     'name'  => __('Recovery'),
@@ -118,7 +122,7 @@ class VendorController extends FrontendController
                 ],
             ],
             'page_title'         => __("Recovery Hotels"),
-        ];
+        ]);
         return view('Hotel::frontend.vendorHotel.index', $data);
     }
 
@@ -138,7 +142,10 @@ class VendorController extends FrontendController
             'breadcrumbs'        => [
                 [
                     'name' => __('Manage Hotels'),
-                    'url'  => route('hotel.vendor.index')
+                    'url'  => route('hotel.vendor.index', [
+                        'user' => $this->cabinetService->getViewUser(),
+                        'viewAdminCabinet' => $this->cabinetService->getViewAdminCabinet(),
+                    ])
                 ],
                 [
                     'name'  => __('Create'),
@@ -274,7 +281,7 @@ class VendorController extends FrontendController
         $row = $row->find($id);
 
         if (empty($row)) {
-            return redirect(route('hotel.vendor.index'))->with('warning', __('Space not found!'));
+            return redirect(route('hotel.vendor.index', ['user' => $this->cabinetService->getViewUser(), 'viewAdminCabinet' => $this->cabinetService->getViewAdminCabinet()]))->with('warning', __('Space not found!'));
         }
         $translation = $row->translate($request->query('lang'));
         $data = array_merge($cabinetData, [
@@ -287,7 +294,10 @@ class VendorController extends FrontendController
             'breadcrumbs'        => [
                 [
                     'name' => __('Manage Hotels'),
-                    'url'  => route('hotel.vendor.index')
+                    'url'  => route('hotel.vendor.index', [
+                        'user' => $this->cabinetService->getViewUser(),
+                        'viewAdminCabinet' => $this->cabinetService->getViewAdminCabinet(),
+                    ])
                 ],
                 [
                     'name'  => __('Edit'),
