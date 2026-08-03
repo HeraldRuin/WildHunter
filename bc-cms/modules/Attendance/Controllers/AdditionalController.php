@@ -23,7 +23,7 @@ class AdditionalController extends Controller
     public function index()
     {
         $additionals = AddetionalPrice::query()
-            ->forUser(Auth::id())
+            ->accessible(get_user_hotel_id(), Auth::id())
             ->orderByRaw("name = 'Питание' DESC")
             ->get();
 
