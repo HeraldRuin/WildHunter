@@ -22,10 +22,14 @@ class AdditionalController extends Controller
 
     public function index()
     {
-        $additionals = AddetionalPrice::query()
-            ->accessible(get_user_hotel_id(), Auth::id())
-            ->orderByRaw("name = 'Питание' DESC")
-            ->get();
+        $hotelId = get_user_hotel_id();
+
+        $additionals = $hotelId
+            ? AddetionalPrice::query()
+                ->accessible($hotelId, Auth::id())
+                ->orderByRaw("name = 'Питание' DESC")
+                ->get()
+            : collect();
 
         $breadcrumbs = [
             [
