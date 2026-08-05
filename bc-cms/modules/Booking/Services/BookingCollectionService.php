@@ -168,7 +168,7 @@ readonly class BookingCollectionService
      */
     private function checkAccess(Booking $booking, User $user): void
     {
-        $this->bookingAccessService->ensureCanAccessBooking();
+        $this->bookingAccessService->ensureCanAccessBooking($booking, $user);
     }
 
     /**
