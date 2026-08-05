@@ -88,7 +88,7 @@
                 <div class="col-md-6">
                     <div class="control-book">
                         <div class="total-room-price">
-                            <span> {{__("Total Price")}}:</span> @{{(animalPrice * hunting_adults).toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.') + ' руб'}}
+                            <span> {{__("Total Price")}}:</span> @{{'₽' + animalPrice * hunting_adults}}
                         </div>
 {{--                        <div v-if="is_deposit_ready" class="total-room-price">--}}
 {{--                            <span>{{__("Pay now")}}</span>--}}

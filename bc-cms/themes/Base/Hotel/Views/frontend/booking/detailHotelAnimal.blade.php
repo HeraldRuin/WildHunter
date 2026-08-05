@@ -108,17 +108,17 @@
 				<li class="final-total d-block">
 					<div class="d-flex justify-content-between">
 						<div class="label">{{__("Total:")}}</div>
-						<div class="val">{{number_format((float)$booking->total, 0, ',', '.')}} руб</div>
+						<div class="val">{{format_money($booking->total)}}</div>
 					</div>
 					@if($booking->status !='draft')
 						<div class="d-flex justify-content-between">
 							<div class="label">{{__("Paid:")}}</div>
-							<div class="val">{{number_format((float)$booking->paid, 0, ',', '.')}} руб</div>
+							<div class="val">{{format_money($booking->paid)}}</div>
 						</div>
 						@if($booking->paid < $booking->total )
 							<div class="d-flex justify-content-between">
 								<div class="label">{{__("Remain:")}}</div>
-								<div class="val">{{number_format((float)($booking->total - $booking->paid), 0, ',', '.')}} руб</div>
+								<div class="val">{{format_money($booking->total - $booking->paid)}}</div>
 							</div>
 						@endif
 					@endif
