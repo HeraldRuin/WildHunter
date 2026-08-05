@@ -8,7 +8,7 @@
             <div id="bc-checkout-page">
                 <div class="row">
                     <div class="col-md-8">
-                        <h3 class="form-title">{{ __('Booking Submission') }}</h3>
+                        <h3 class="form-title">{{ __('Preliminary booking of your event') }}</h3>
                         <div class="booking-form">
                             @include ($service->checkout_form_file ?? 'Booking::frontend/booking/checkout-form')
                             @if (!empty(($token = request()->input('token'))))
