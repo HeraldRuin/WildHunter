@@ -12,7 +12,7 @@
                 <div class="col-md-8">
                     @include ($service->booking_customer_info_file ?? 'Booking::frontend/booking/booking-customer-info', ['ifAdminBase' => $ifAdminBase])
                     <div class="text-center">
-                        <a href="{{route('user.booking_history')}}" class="btn btn-primary">{{__('Booking History')}}</a>
+                        <a href="{{route('user.booking_history')}}" class="btn btn-primary btn-lg px-5 py-3" style="font-size:1.35rem;">{{__('My Bookings')}}</a>
                     </div>
                 </div>
                 <div class="col-md-4">
