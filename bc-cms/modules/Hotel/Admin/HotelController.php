@@ -101,7 +101,8 @@ class HotelController extends AdminController
             ->whereNotIn('id', function ($query) {
                 $query->select('admin_base')
                     ->from('bc_hotels')
-                    ->whereNotNull('admin_base');
+                    ->whereNotNull('admin_base')
+                    ->whereNull('deleted_at');
             })
             ->get();
 
@@ -189,7 +190,8 @@ class HotelController extends AdminController
             ->whereNotIn('id', function ($query) {
                 $query->select('admin_base')
                     ->from('bc_hotels')
-                    ->whereNotNull('admin_base');
+                    ->whereNotNull('admin_base')
+                    ->whereNull('deleted_at');
             })
             ->get();
 
