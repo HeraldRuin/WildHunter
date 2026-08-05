@@ -160,7 +160,7 @@
                 })->filter()->values();
             @endphp
 
-{{$booking->statusNameForUser}}
+<span @if($booking->status_for_user === \Modules\Booking\Models\Booking::PROCESSING) style="color:#dc3545;" @endif>{{$booking->statusNameForUser}}</span>
 
 @if($booking->status === \Modules\Booking\Models\Booking::START_COLLECTION && $booking->hotel && $booking->hotel->collection_timer_hours)
 ({{$booking->hotel->collection_timer_hours}} {{ __('ч') }})
@@ -333,7 +333,7 @@
             @if($booking->is_master_hunter && in_array($booking->status, [\Modules\Booking\Models\Booking::PROCESSING, \Modules\Booking\Models\Booking::CONFIRMED, \Modules\Booking\Models\Booking::START_COLLECTION, \Modules\Booking\Models\Booking::PREPAYMENT_COLLECTION, \Modules\Booking\Models\Booking::FINISHED_PREPAYMENT, \Modules\Booking\Models\Booking::BED_COLLECTION, \Modules\Booking\Models\Booking::FINISHED_BED]))
                 <button
                     type="button"
-                    class="btn btn-danger btn-sm mt-2"
+                    class="btn btn-secondary btn-sm mt-2"
                     @click="openCancelBookingModal({{ $booking->id }}, $event)">
                     {{__("Cancele booking")}}
                 </button>
