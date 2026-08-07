@@ -56,6 +56,7 @@ return [
     // Dashboard
     'dashboard_access',
     'dashboard_vendor_access',
+    'baseAdmin_dashboard_access',
 
     // Settings
     'setting_update',
