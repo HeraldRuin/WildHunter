@@ -93,16 +93,16 @@ class Currency
 
             switch ($currency_format) {
                 case "right_space";
-                    return $s . ' ' . $currency['symbol'];
+                    return $s . ' ' . ' руб';
                     break;
                 case "left";
-                    return $currency['symbol'] . $s;
+                    return 'руб ' . $s;
                     break;
                 case "left_space";
-                    return $currency['symbol'] . ' ' . $s;
+                    return 'руб ' . ' ' . $s;
                     break;
                 default:
-                    return $s . $currency['symbol'];
+                    return $s . ' руб ';
                     break;
             }
         }
