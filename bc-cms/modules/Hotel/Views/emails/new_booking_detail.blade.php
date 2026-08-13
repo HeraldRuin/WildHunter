@@ -8,7 +8,8 @@ $lang_local = app()->getLocale();
         @if($booking->gatewayObj)
             <tr>
                 <td class="label">{{__('Payment method')}}</td>
-                <td class="val">{{$booking->gatewayObj->getOption('name')}}</td>
+{{--                <td class="val">{{$booking->gatewayObj->getOption('name')}}</td>--}}
+                <td class="val">{{__('Payment_method')}}</td>
             </tr>
         @endif
         @if($booking->gatewayObj and $note = $booking->gatewayObj->getOption('payment_note'))
@@ -67,7 +68,7 @@ $lang_local = app()->getLocale();
             </tr>
         @endif
         <tr>
-            <td class="label">{{__('Pricing')}}</td>
+            <td class="label">{{__('Pricing_type')}}</td>
             <td class="val">
                 <table class="pricing-list" width="100%">
                     @php $rooms = \Modules\Hotel\Models\HotelRoomBooking::getByBookingId($booking->id) @endphp
