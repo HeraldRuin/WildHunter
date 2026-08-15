@@ -96,6 +96,7 @@ class BookingInvitationService
                     'hunter_id' => $hunterId,
                 ],
                 [
+                    'email' => $hunter->email,
                     'invited' => true,
                     'status' => 'pending',
                     'invited_at' => now(),
@@ -282,6 +283,7 @@ class BookingInvitationService
                     BookingHunterInvitation::create([
                         'booking_hunter_id' => $masterBookingHunter->id,
                         'hunter_id' => $authUser->id,
+                        'email' => $authUser->email,
                         'invited' => true
                     ]);
                 }

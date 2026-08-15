@@ -31,7 +31,11 @@
                     continue;
                 }
 
-                $email = $invitation->email;
+                $email = $invitation->email ?: optional($invitation->hunter)->email;
+
+                if (empty($email)) {
+                    continue;
+                }
 
                 Mail::to($email)->send(new StatusFinishCollectionEmail($booking, 'customer', $invitation->hunter));
             }
