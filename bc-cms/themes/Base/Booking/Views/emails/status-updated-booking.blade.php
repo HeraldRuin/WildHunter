@@ -4,17 +4,18 @@
     <div class="b-container">
         <div class="b-panel">
             @switch($to)
+                @case ('admin')
                 @case ('BaseAdmin')
                     @php
-                        $adminName = __('Administrator');
+                        $adminName = '';
                         if(!empty($baseAdmin)) {
                             $adminName = trim(($baseAdmin->first_name ?? '') . ' ' . ($baseAdmin->last_name ?? ''));
-                            if(empty($adminName)) {
-                                $adminName = $baseAdmin->display_name ?? $baseAdmin->email ?? __('Administrator');
-                            }
+                        }
+                        if(empty($adminName)) {
+                            $adminName = __('Administrator');
                         }
                     @endphp
-                    <h3 class="email-headline"><strong>{{__('Hello :name',['name'=>'Administrator'])}}</strong></h3>
+                    <h3 class="email-headline"><strong>{{__('Hello :name',['name'=>$adminName])}}</strong></h3>
                     <p>{{__('The booking status has been updated')}}</p>
                     <div class="b-table-wrap mb-4">
                         <table class="b-table" cellspacing="0" cellpadding="0">
