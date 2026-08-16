@@ -208,10 +208,17 @@ readonly class BookingCollectionService
     }
     private function notifyHunters(Booking $booking): void
     {
-        foreach ($booking->getAllInvitations() as $invitation) {
+        $creatorId = (int) ($booking->create_user ?? 0);
+        $masterHunterId = (int) ($booking->master_hunter_id ?? 0);
+
+        foreach ($booking->getInvitationsExceptMaster() as $invitation) {
             $hunter = $invitation->hunter;
 
             if (!$hunter || empty($hunter->email)) {
+                continue;
+            }
+
+            if ($hunter->id === $creatorId || $hunter->id === $masterHunterId) {
                 continue;
             }
 
