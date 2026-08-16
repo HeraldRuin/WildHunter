@@ -12,7 +12,7 @@
         {
             $booking = $event->booking;
 
-            if (empty($booking->skip_status_email)) {
+            if (empty($event->skipStatusEmail) && empty($booking->skip_status_email)) {
                 $booking->sendStatusUpdatedEmails();
             }
 
