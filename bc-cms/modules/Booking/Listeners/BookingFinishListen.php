@@ -14,8 +14,10 @@
 
             // Уведомляем участников (но не создателя брони)
             $booking_hunter = $booking->masterHunter()->first();
-            $BaseAdmin = $booking->hotel->adminBase;
-            Mail::to($BaseAdmin->email)->send(new StatusFinishCollectionEmail($booking, 'BaseAdmin', $BaseAdmin));
+            $BaseAdmin = $booking->hotel?->adminBase;
+            if ($BaseAdmin && !empty($BaseAdmin->email)) {
+                Mail::to($BaseAdmin->email)->send(new StatusFinishCollectionEmail($booking, 'BaseAdmin', $BaseAdmin));
+            }
 
             if (!$booking_hunter) {
                 return;
