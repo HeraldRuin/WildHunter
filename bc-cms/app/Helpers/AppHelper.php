@@ -81,6 +81,85 @@ function setting_update_item($item, $val)
     return $s;
 }
 
+function mail_site_title(): string
+{
+    return (string) (setting_item('site_title') ?: config('app.name') ?: 'Wild Hunter');
+}
+
+function mail_from_display_name(): string
+{
+    $fromName = setting_item('email_from_name');
+    if (!empty($fromName)) {
+        return (string) $fromName;
+    }
+
+    return (string) __('Team :name', ['name' => mail_site_title()]);
+}
+
+function mail_public_host(): string
+{
+    $fromAddress = setting_item('email_from_address');
+    $fromHost = '';
+    if (is_string($fromAddress) && str_contains($fromAddress, '@')) {
+        $fromHost = strtolower((string) substr((string) strrchr($fromAddress, '@'), 1));
+    }
+
+    $candidates = [
+        setting_item('site_url'),
+        $fromHost,
+        config('app.url'),
+    ];
+
+    foreach ($candidates as $url) {
+        if (empty($url)) {
+            continue;
+        }
+
+        $host = parse_url((string) $url, PHP_URL_HOST);
+        if (!$host) {
+            $host = preg_replace('#^https?://#', '', rtrim((string) $url, '/'));
+        }
+
+        $host = preg_replace('/^www\./', '', strtolower((string) $host));
+        if (
+            $host
+            && !in_array($host, ['localhost', '127.0.0.1', '0.0.0.0'], true)
+            && !str_ends_with($host, '.local')
+            && !str_contains($host, 'bookingcore')
+        ) {
+            return $host;
+        }
+    }
+
+    return '';
+}
+
+function mail_footer_html(): string
+{
+    $footer = setting_item_with_lang('email_footer');
+    if (!empty($footer)) {
+        return (string) $footer;
+    }
+
+    $year = date('Y');
+    $title = e(mail_site_title());
+    $reserved = e(__('All rights reserved.'));
+
+    return '<p style="text-align: center">&copy; ' . $year . ' ' . $title . '. ' . $reserved . '</p>';
+}
+
+function mail_footer_text(): string
+{
+    $text = trim(html_entity_decode(strip_tags(mail_footer_html()), ENT_QUOTES | ENT_HTML5, 'UTF-8'));
+    $text = preg_replace('/\s+/u', ' ', $text) ?: '';
+
+    if ($text !== '') {
+        return $text;
+    }
+
+    return '© ' . date('Y') . ' ' . mail_site_title() . '. ' . __('All rights reserved.');
+}
+
 function app_get_locale($locale = false, $before = false, $after = false)
 {
     if (setting_item('site_enable_multi_lang') and app()->getLocale() != setting_item('site_locale')) {
