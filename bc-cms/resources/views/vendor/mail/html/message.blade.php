@@ -2,12 +2,12 @@
 {{-- Header --}}
 <x-slot:header>
 <x-mail::header :url="config('app.url')">
-Wild Hunter
+Wild-hunter.ru
 </x-mail::header>
 </x-slot:header>
 
 {{-- Body --}}
-{!! $slot !!}
+    {!! $slot !!}
 
 {{-- Subcopy --}}
 @isset($subcopy)
