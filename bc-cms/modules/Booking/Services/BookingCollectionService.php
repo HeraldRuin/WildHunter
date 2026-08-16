@@ -155,6 +155,7 @@ readonly class BookingCollectionService
             $this->bookingInvitationService->deleteInvitations($booking);
             $this->notifyCreator($booking);
 
+            $booking->skip_status_email = true;
             event(new BookingUpdatedEvent($booking));
         });
 
