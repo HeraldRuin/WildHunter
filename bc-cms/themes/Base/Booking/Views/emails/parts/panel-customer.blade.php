@@ -39,6 +39,7 @@
                 <div class="label">{{__('Last name')}}</div>
                 <div class="val">{{$customerLastName}}</div>
             </div>
+            @if(!($to === 'admin' && !empty($isNewBooking)))
             <div class="info-email b-tr">
                 <div class="label">{{__('Email')}}</div>
                 <div class="val">{{$customerEmail}}</div>
@@ -47,6 +48,7 @@
                 <div class="label">{{__('Phone')}}</div>
                 <div class="val">{{$customerPhone}}</div>
             </div>
+            @endif
 {{--            @if(isset($to) && $to === 'customer')--}}
 {{--            <div class="info-address b-tr">--}}
 {{--                <div class="label">{{__('Address line 1')}}</div>--}}
