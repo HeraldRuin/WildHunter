@@ -495,7 +495,7 @@ class Booking extends BaseModel
         }
     }
 
-    public function sendStatusUpdatedEmails(){
+    public function sendStatusUpdatedEmails(bool $skipCustomer = false){
         // Try to update locale
         $old = app()->getLocale();
 
@@ -581,7 +581,7 @@ class Booking extends BaseModel
                 $customerEmail = $this->email;
             }
 
-            if($customerEmail) {
+            if($customerEmail && !$skipCustomer) {
                 Mail::to($customerEmail)->send(new StatusUpdatedEmail($this,'customer'));
             }
 

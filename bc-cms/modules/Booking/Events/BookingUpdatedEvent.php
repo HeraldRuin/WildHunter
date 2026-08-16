@@ -8,11 +8,11 @@ class BookingUpdatedEvent
 {
     use SerializesModels;
     public $booking;
-    public bool $skipStatusEmail;
+    public bool $skipCustomerStatusEmail;
 
-    public function __construct(Booking $booking, bool $skipStatusEmail = false)
+    public function __construct(Booking $booking, bool $skipCustomerStatusEmail = false)
     {
         $this->booking = $booking;
-        $this->skipStatusEmail = $skipStatusEmail;
+        $this->skipCustomerStatusEmail = $skipCustomerStatusEmail;
     }
 }

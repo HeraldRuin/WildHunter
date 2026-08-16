@@ -12,8 +12,8 @@
         {
             $booking = $event->booking;
 
-            if (empty($event->skipStatusEmail) && empty($booking->skip_status_email)) {
-                $booking->sendStatusUpdatedEmails();
+            if (empty($booking->skip_status_email)) {
+                $booking->sendStatusUpdatedEmails((bool) $event->skipCustomerStatusEmail);
             }
 
             //case guest checkout
