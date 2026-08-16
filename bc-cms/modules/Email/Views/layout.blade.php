@@ -73,7 +73,9 @@ $main_color =setting_item('style_main_color','#5291fa')
             }
             .b-table .b-tr{
                 clear: both;
+                overflow: hidden;
                 border-bottom: 1px solid #EAEEF3;
+                padding: 8px 10px 6px;
             }
             .b-table .b-tr:after{
                 display: table;
@@ -105,6 +107,8 @@ $main_color =setting_item('style_main_color','#5291fa')
             .b-table .b-tr .val{
                 float: left;
                 width: 50%;
+                padding-bottom: 2px;
+                line-height: 1.4;
             }
             .pricing-list{
                 text-align: left;
