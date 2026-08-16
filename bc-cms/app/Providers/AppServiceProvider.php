@@ -2,7 +2,9 @@
 
 namespace App\Providers;
 
+use Illuminate\Auth\Notifications\VerifyEmail;
 use Illuminate\Http\Request;
+use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Config;
@@ -59,6 +61,7 @@ class AppServiceProvider extends ServiceProvider
 
         if (is_installed()) {
             $this->initConfigFromDB();
+            $this->configureAuthMailNotifications();
 
 
             // set default pagination template for admin router
@@ -205,6 +208,18 @@ class AppServiceProvider extends ServiceProvider
                 Config::set('fortify.features', array_values($features));
             }
         }
+    }
+
+    protected function configureAuthMailNotifications(): void
+    {
+        VerifyEmail::toMailUsing(function ($notifiable, $url) {
+            return (new MailMessage)
+                ->subject(__('Verify Email Address'))
+                ->line(__('Please click the button below to verify your email address.'))
+                ->action(__('Verify Email Address'), $url)
+                ->line(__('If you did not create an account, no further action is required.'))
+                ->salutation("С уважением,<br>Команда Wild Hunter<br>www.wild-hunter.ru");
+        });
     }
 
     protected function setLang()
