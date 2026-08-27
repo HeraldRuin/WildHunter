@@ -91,7 +91,7 @@
                                             {{__("[Author Deleted]")}}
                                         @endif
                                     </td>
-                                    <td><span class="badge badge-{{ $row->status }}">{{ $row->status }}</span></td>
+                                    <td><span class="badge badge-{{ $row->status }}">{{ $row->status_text }}</span></td>
 {{--                                    <td>--}}
 {{--                                        <a target="_blank" href="{{ route('review.admin.index',['service_id'=>$row->id]) }}" class="review-count-approved">--}}
 {{--                                            {{ $row->getNumberReviewsInService() }}--}}
