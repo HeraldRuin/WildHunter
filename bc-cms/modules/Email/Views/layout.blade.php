@@ -24,8 +24,9 @@ $main_color =setting_item('style_main_color','#5291fa')
             }
             .b-header{
                 background: {{$main_color}};
+                background-color: {{$main_color}} !important;
                 padding: 30px;
-                color: white;
+                color: #ffffff !important;
             }
             .b-header .site-title,
             .b-header h1,
@@ -38,6 +39,30 @@ $main_color =setting_item('style_main_color','#5291fa')
                 margin:0px;
                 display: block;
                 text-align: center;
+                color: #ffffff !important;
+                -webkit-text-fill-color: #ffffff !important;
+                text-decoration: none !important;
+            }
+            .b-header a,
+            .b-header a:link,
+            .b-header a:visited,
+            .b-header a:hover,
+            .b-header a:active,
+            .b-header a span,
+            .b-header a h1 {
+                color: #ffffff !important;
+                text-decoration: none !important;
+                -webkit-text-fill-color: #ffffff !important;
+            }
+            .b-header a[x-apple-data-detectors],
+            .b-header a[x-apple-data-detectors]:link,
+            .b-header a[x-apple-data-detectors]:visited {
+                color: #ffffff !important;
+                text-decoration: none !important;
+                font-size: inherit !important;
+                font-family: inherit !important;
+                font-weight: inherit !important;
+                line-height: inherit !important;
             }
             .b-container{
                 max-width: 600px;
