@@ -109,7 +109,7 @@ $theme = \Modules\Theme\ThemeManager::currentProvider();
                                                   @if($avatar)
                                                     <img class="image-responsive" src="{{$avatar}}" alt="{{$name}}">
                                                   @else
-                                                      <span class="avatar-text">{{ucfirst($name[0])}}</span>
+                                                      <span class="avatar-text">{{ !empty($name) ? ucfirst(mb_substr($name, 0, 1, 'UTF-8')) : '?' }}</span>
                                                   @endif
                                               </div>
                                             </div>
@@ -136,7 +136,7 @@ $theme = \Modules\Theme\ThemeManager::currentProvider();
                      @if($avatar_url = $user->getAvatarUrl())
                         <div class="avatar avatar-cover" style="background-image: url('{{$user->getAvatarUrl()}}')"></div>
                     @else
-                        <span class="avatar-text">{{ucfirst($user->getDisplayName()[0])}}</span>
+                        <span class="avatar-text">{{ $user->getFirstCharacterDisplayName() }}</span>
                     @endif
                 </span>
                 <div class="user-info flex-grow-1">
