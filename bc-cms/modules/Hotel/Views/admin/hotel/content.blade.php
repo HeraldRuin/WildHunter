@@ -5,11 +5,15 @@
             <label class="control-label">{{__("Title")}}</label>
             <input type="text" value="{{$translation->title}}" placeholder="{{__("Name of the hotel")}}" name="title" class="form-control">
         </div>
-        <div class="form-group magic-field" data-id="content" data-type="content" data-editor="1">
+        {{-- <div class="form-group magic-field" data-id="content" data-type="content" data-editor="1">
             <label class="control-label" data->{{__("Content")}}</label>
             <div class="">
                 <textarea name="content" class="d-none has-ckeditor" id="content" cols="30" rows="10">{{$translation->content}}</textarea>
             </div>
+        </div> --}}
+        <div class="form-group">
+            <label class="control-label">{{__("Content")}}</label>
+            <textarea name="content" class="form-control" id="content" cols="30" rows="10">{{$translation->content}}</textarea>
         </div>
 {{--        @if(is_default_lang())--}}
 {{--            <div class="form-group">--}}
