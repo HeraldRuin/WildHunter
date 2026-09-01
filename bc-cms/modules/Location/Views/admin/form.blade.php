@@ -25,9 +25,13 @@
         </select>
     </div>
 @endif
-<div class="form-group">
+{{-- <div class="form-group">
     <label class="control-label">{{__("Description")}}</label>
     <div class="">
         <textarea name="content" class="d-none has-ckeditor" cols="30" rows="10">{{$translation->content}}</textarea>
     </div>
+</div> --}}
+<div class="form-group">
+    <label class="control-label">{{__("Description")}}</label>
+    <textarea name="content" class="form-control" cols="30" rows="10">{{$translation->content}}</textarea>
 </div>
