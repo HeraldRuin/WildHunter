@@ -30,7 +30,7 @@
                                     @if($avatar)
                                         <img class="image-responsive" src="{{$avatar}}" alt="{{$name}}">
                                     @else
-                                        <span class="avatar-text">{{ucfirst($name[0])}}</span>
+                                        <span class="avatar-text">{{ ucfirst(mb_substr((string) ($name ?? ''), 0, 1) ?: '?') }}</span>
                                     @endif
                                 </div>
                             </div>
