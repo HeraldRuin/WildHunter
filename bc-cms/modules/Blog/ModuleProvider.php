@@ -15,7 +15,7 @@ class ModuleProvider extends ModuleServiceProvider
         return [
             'blog' => [
                 'position'   => 30,
-                'url'        => route('blog.admin.create'),
+                'url'        => route('blog.admin.index'),
                 'title'      => __('Blog'),
                 'icon'       => 'fa fa-newspaper-o',
                 'permission' => 'page_view',
