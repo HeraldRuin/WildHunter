@@ -313,7 +313,7 @@ class ManageAnimalController extends FrontendController
 
         $animal->hotels()->detach($userHotelId);
 
-        return new SuccessResponse();
+        return new SuccessResponse(code: 'animal_detached', domain: 'animal');
     }
 
     public function updateHuntersCount(Request $request, $id)

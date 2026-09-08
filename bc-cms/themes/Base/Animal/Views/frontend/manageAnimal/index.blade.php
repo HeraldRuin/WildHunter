@@ -69,7 +69,7 @@
                                         </form>
                                     </td>
                                     <td>
-                                        <a href="{{ route("animal.vendor.bulk_detach",[$row->id]) }}" class="btn btn-danger btn-sm">{{__("Delete")}}</a>
+                                        <a href="{{ route("animal.vendor.bulk_detach",[$row->id]) }}" class="btn btn-danger btn-sm js-detach-animal">{{__("Delete")}}</a>
                                     </td>
                                 </tr>
                             @endforeach

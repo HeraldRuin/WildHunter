@@ -10,6 +10,7 @@ return [
         'period_saved' => 'Период сохранен',
         'period_updated' => 'Период обновлен',
         'period_deleted' => 'Период удален',
+        'animal_detached' => 'Животное успешно удалено',
         'trophy_saved' => 'Трофей сохранен',
         'fine_saved' => 'Штраф сохранен',
         'preparation_saved' => 'Разделка сохранена',

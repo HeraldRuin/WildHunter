@@ -1,5 +1,41 @@
 (function ($) {
     document.addEventListener('DOMContentLoaded', function () {
+        $(document).on('click', '.js-detach-animal', function (e) {
+            e.preventDefault();
+
+            const url = $(this).attr('href');
+            if (!url) return;
+
+            bookingCoreApp.showConfirm({
+                message: i18n.confirm_delete,
+                callback: (result) => {
+                    if (!result) return;
+
+                    $.ajax({
+                        url: url,
+                        type: 'get',
+                        dataType: 'json',
+                        success: function (res) {
+                            if (!res.success) {
+                                bookingCoreApp.showAjaxError({responseJSON: res});
+                                return;
+                            }
+
+                            bookingCoreApp.showSuccess({
+                                message: res.message || i18n.success,
+                                callback: function () {
+                                    location.reload();
+                                }
+                            });
+                        },
+                        error: function (e) {
+                            bookingCoreApp.showAjaxError(e);
+                        }
+                    });
+                }
+            });
+        });
+
         const el = document.getElementById('animal-app');
         if (!el) return;
 
