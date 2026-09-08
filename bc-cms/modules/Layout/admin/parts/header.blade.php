@@ -55,7 +55,7 @@ $theme = \Modules\Theme\ThemeManager::currentProvider();
             </div>
         </div>
         @endif
-        <div class="dropdown header-widget widget-user pt-2 dropdown-notifications flex-shrink-0" style="min-width: 0">
+        <div class="dropdown header-widget widget-user pt-2 dropdown-notifications flex-shrink-0" style="min-width: 70px">
             <div data-toggle="dropdown" class="user-dropdown d-flex align-items-center" aria-haspopup="true" aria-expanded="false">
                 <i class="fa fa-lg fa-bell m-1 p-1"></i>
                 <span class="badge badge-danger notification-icon">{{$countUnread}}</span>
