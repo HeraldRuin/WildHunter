@@ -2219,7 +2219,7 @@ h1, h2, h3, h4, h5, h6, .h1, .h2, .h3, .h4, .h5, .h6 {
 }
 
 .main-header .header-widgets .widget-user:last-child {
-    border-right: 1px solid #dddee0
+    border-right: none
 }
 
 .main-header .header-widgets .widget-user:hover, .main-header .header-widgets .widget-user.show {

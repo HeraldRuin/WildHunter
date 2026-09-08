@@ -120,7 +120,7 @@ $theme = \Modules\Theme\ThemeManager::currentProvider();
                 </div>
             </div>
         </div>
-        <div class="dropdown header-widget widget-user flex-shrink-0">
+        <div class="dropdown header-widget widget-user flex-shrink-0" style="border-right: none;">
             <div data-toggle="dropdown" class="user-dropdown d-flex align-items-center" aria-haspopup="true" aria-expanded="false">
                 <span class="user-avatar flex-shrink-0">
                      @if($avatar_url = $user->getAvatarUrl())

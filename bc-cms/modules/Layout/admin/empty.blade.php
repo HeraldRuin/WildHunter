@@ -33,7 +33,7 @@
     <link rel="stylesheet" href="{{url('libs/daterange/daterangepicker.css')}}"/>
     <link href="{{ asset('themes/admin/libs/bootstrap-4.6.2-dist/css/bootstrap.min.css') }}" rel="stylesheet">
     <link href="{{ asset('themes/admin/libs/font-awesome/css/font-awesome.min.css') }}" rel="stylesheet">
-    <link href="{{ asset('themes/admin/dist/css/style.css') }}" rel="stylesheet">
+    <link href="{{ asset('themes/admin/dist/css/style.css?_ver='.config('app.asset_version')) }}" rel="stylesheet">
     {!! \App\Helpers\Assets::css() !!}
     {!! \App\Helpers\Assets::js() !!}
     @include('Layout::admin.parts.global-script')
