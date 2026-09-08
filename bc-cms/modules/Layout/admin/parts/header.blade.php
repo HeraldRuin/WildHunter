@@ -26,16 +26,6 @@ $theme = \Modules\Theme\ThemeManager::currentProvider();
         </div>
     </div>
     <div class="widgets-right flex-shrink-0 d-flex">
-        @if(!isPro())
-            <div class="mr-3">
-                <a href="#" data-toggle="modal" data-target="#upgrade-pro" class="btn btn-info">
-                    <img width="22px" class="mr-3" src="{{asset('/images/premium.png')}}" alt="Upgrade">{{__("Upgrade")}}</a>
-            </div>
-        @else
-            <div class="mr-3  d-flex align-items-center">
-                <span class="badge text-18 badge-warning">PRO {{config('pro.version')}}</span>
-            </div>
-        @endif
         @if(!empty($languages) and is_enable_multi_lang())
         <div class="dropdown header-widget widget-user widget-language flex-shrink-0">
             <div data-toggle="dropdown" class="user-dropdown d-flex align-items-center" aria-haspopup="true" aria-expanded="false">
