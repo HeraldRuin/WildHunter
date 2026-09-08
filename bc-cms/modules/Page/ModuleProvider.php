@@ -50,6 +50,14 @@ class ModuleProvider extends ModuleServiceProvider
                 'permission' => 'page_view',
                 'group'      => 'content'
             ],
+            'blog'=>[
+                "position"=>30,
+                'url'   => '#',
+                'title' => __("Blog"),
+                'icon'  => 'fa fa-newspaper-o',
+                'permission' => 'page_view',
+                'group'      => 'content'
+            ],
         ];
     }
 
