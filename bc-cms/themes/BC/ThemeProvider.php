@@ -30,6 +30,7 @@ class ThemeProvider extends \Themes\Base\ThemeProvider
         'media'     => \Modules\Media\ModuleProvider::class,
         'news'      => \Modules\News\ModuleProvider::class,
         'page'      => \Modules\Page\ModuleProvider::class,
+        'blog'      => \Modules\Blog\ModuleProvider::class,
         'user'      => \Modules\User\ModuleProvider::class,
         'template'  => \Modules\Template\ModuleProvider::class,
         'report'    => \Modules\Report\ModuleProvider::class,
