@@ -27,8 +27,8 @@ $theme = \Modules\Theme\ThemeManager::currentProvider();
     </div>
     <div class="widgets-right flex-shrink-0 d-flex">
         @if(!empty($languages) and is_enable_multi_lang())
-        <div class="dropdown header-widget widget-user widget-language flex-shrink-0">
-            <div data-toggle="dropdown" class="user-dropdown d-flex align-items-center" aria-haspopup="true" aria-expanded="false">
+        <div class="header-widget widget-user widget-language flex-shrink-0">
+            <div class="user-dropdown d-flex align-items-center">
                 @foreach($languages as $language)
                     @if($locale == $language->locale)
                         <div class="user-info flex-grow-1 d-flex">
@@ -38,19 +38,6 @@ $theme = \Modules\Theme\ThemeManager::currentProvider();
                             {{$language->name}}
                         </div>
                     @endif
-                @endforeach
-                <i class="fa fa-angle-down"></i>
-            </div>
-            <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-                @foreach($languages as $language)
-                    @php if($language->locale == $locale) continue; @endphp
-
-                    <a class="dropdown-item" href="{{route('language.set-admin-lang',['locale'=>$language->locale])}}">
-                        @if($language->flag)
-                            <span class="flag-icon flag-icon-{{$language->flag}}"></span>
-                        @endif
-                        {{$language->name}}
-                    </a>
                 @endforeach
             </div>
         </div>
