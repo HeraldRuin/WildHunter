@@ -35,4 +35,29 @@ class ModuleProvider extends ModuleServiceProvider
             ],
         ];
     }
+
+    public static function getUserMenu()
+    {
+        return [
+            'blog' => [
+                'url'        => route('blog.admin.index'),
+                'title'      => __('Blog'),
+                'icon'       => 'fa fa-newspaper-o',
+                'position'   => 21,
+                'permission' => 'blog_view',
+                'children'   => [
+                    [
+                        'url'        => route('blog.admin.create'),
+                        'title'      => __('Add Blog'),
+                        'permission' => 'blog_create',
+                    ],
+                    [
+                        'url'        => route('blog.admin.index'),
+                        'title'      => __('Edit Blogs'),
+                        'permission' => 'blog_view',
+                    ],
+                ],
+            ],
+        ];
+    }
 }
