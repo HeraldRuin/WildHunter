@@ -28,6 +28,7 @@ use Modules\Space\Models\Space;
 use Modules\Tour\Models\Tour;
 use Modules\User\Events\NewVendorRegistered;
 use Modules\User\Events\UserSubscriberSubmit;
+use Modules\User\Models\Role;
 use Modules\User\Models\Subscriber;
 use Modules\User\Models\User;
 use Modules\User\Models\UserWeapon;
@@ -211,9 +212,13 @@ class UserController extends FrontendController
 
     public function bookingHistory(Request $request)
     {
-        $cabinetData = $this->cabinetService->getCabinetData();
-
         $authUser = Auth::user();
+
+        if ($authUser->hasRole(Role::BLOG_EDITOR)) {
+            return redirect(route('user.profile.index'));
+        }
+
+        $cabinetData = $this->cabinetService->getCabinetData();
         $bookingId = $request->input('booking_id');
         $code = $request->input('code');
 

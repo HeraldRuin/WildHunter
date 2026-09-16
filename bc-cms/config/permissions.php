@@ -41,6 +41,12 @@ return [
     'news_delete',
     'news_manage_others',
 
+    // Blog
+    'blog_view',
+    'blog_create',
+    'blog_update',
+    'blog_delete',
+
     // Roles
     'role_manage',
     'role_view',

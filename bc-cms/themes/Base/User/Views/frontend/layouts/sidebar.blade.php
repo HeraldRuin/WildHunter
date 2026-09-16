@@ -55,6 +55,11 @@ if ($isAdmin) {
     unset($menus['admin']);
 }
 
+if ($dataUser->hasRole(\Modules\User\Models\Role::BLOG_EDITOR)) {
+    unset($menus['booking-history']);
+    unset($menus['dashboard']);
+}
+
 // Modules
 $custom_modules = \Modules\ServiceProvider::getActivatedModules();
 
@@ -175,7 +180,7 @@ foreach ($menus as $k => $menuItem) {
 
             $childParams = $menuItem2['params'] ?? [];
             $childParams['user'] = $dataUser->id;
-            $params['viewAdminCabinet'] = $viewAdminCabinet;
+            $childParams['viewAdminCabinet'] = $viewAdminCabinet;
 
             if (Route::has($menuItem2['url'])) {
                 $childUrl = route($menuItem2['url'], $childParams);

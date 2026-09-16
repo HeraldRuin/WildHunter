@@ -23,6 +23,7 @@ class RolesAndPermissionsSeeder extends Seeder
 
         // this can be done as separate statements
         $this->initVendor();
+        $this->initBlogEditor();
 
         // this can be done as separate statements
         $customer = Role::firstOrCreate(['name'=>'customer','code'=>'customer']);
@@ -63,5 +64,22 @@ class RolesAndPermissionsSeeder extends Seeder
         $vendor->givePermission('news_create');
         $vendor->givePermission('news_update');
         $vendor->givePermission('news_delete');
+    }
+
+    public function initBlogEditor()
+    {
+        $blogEditor = Role::firstOrCreate([
+            'name' => 'Редактор блога',
+            'code' => Role::BLOG_EDITOR,
+        ]);
+
+        $blogEditor->givePermission([
+            'dashboard_access',
+            'blog_view',
+            'blog_create',
+            'blog_update',
+            'blog_delete',
+            'media_upload',
+        ]);
     }
 }

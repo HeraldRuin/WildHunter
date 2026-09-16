@@ -12,10 +12,11 @@ class Role extends BaseModel
     const SUPERADMIN = 'superadmin';
     const ADMIN = 'baseadmin';
     const CUSTOMER = 'hunter';
+    const BLOG_EDITOR = 'blogeditor';
 
     public static function fixedCodeRoles(): array
     {
-        return [self::SUPERADMIN, self::ADMIN, self::CUSTOMER];
+        return [self::SUPERADMIN, self::ADMIN, self::CUSTOMER, self::BLOG_EDITOR];
     }
 
     public function hasFixedCode(): bool

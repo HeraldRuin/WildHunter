@@ -1154,6 +1154,13 @@ function is_baseAdmin()
     return false;
 }
 
+function is_blogEditor()
+{
+    if (!auth()->check()) return false;
+
+    return auth()->user()->hasRole(\Modules\User\Models\Role::BLOG_EDITOR);
+}
+
 function get_link_detail_services($services, $id, $action = 'edit')
 {
     if (\Route::has($services . '.admin.' . $action)) {
