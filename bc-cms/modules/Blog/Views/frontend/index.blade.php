@@ -1,15 +1,15 @@
 @extends('Layout::user')
 
 @section('content')
-    <div class="container-fluid">
-        <div class="d-flex justify-content-between mb20">
-            <h2 class="title-bar">{{ __('Edit Blogs') }}</h2>
+    <div class="container-fluid list-animal-width custom-fluid">
+        <h2 class="title-bar">
+            {{ __('Edit Blogs') }}
             @if(Auth::user()->hasPermission('blog_create'))
-                <a href="{{ route('blog.vendor.create') }}" class="btn btn-primary">
+                <a href="{{ route('blog.vendor.create') }}" class="btn-change-password">
                     <i class="fa fa-plus"></i> {{ __('Add Blog') }}
                 </a>
             @endif
-        </div>
+        </h2>
         @include('admin.message')
         <div class="filter-div d-flex justify-content-between mb-3">
             <div class="col-left">
@@ -49,22 +49,16 @@
                                     </div>
                                 @endif
                                 <span class="blog-card-status badge badge-{{ $row->status === 'publish' ? 'success' : 'secondary' }}">
-                                    {{ $row->status === 'publish' ? __('Publish') : __('Draft') }}
+                                    {{ $row->status === 'publish' ? __('Published') : __('Draft') }}
                                 </span>
                             </div>
                             <div class="blog-card-body panel-body">
-                                <label class="blog-card-check">
-                                    <input type="checkbox" name="ids[]" class="check-item" value="{{ $row->id }}" form="bulk-form">
-                                </label>
                                 <h5 class="blog-card-title">
                                     <a href="{{ route('blog.vendor.edit', ['id' => $row->id]) }}">{{ $row->title ?: __('Untitled') }}</a>
                                 </h5>
                                 <p class="blog-card-date text-muted mb-2">
                                     <i class="fa fa-clock-o"></i> {{ display_date($row->updated_at) }}
                                 </p>
-                                @if($row->excerpt)
-                                    <p class="blog-card-excerpt text-muted">{{ \Illuminate\Support\Str::limit(strip_tags($row->excerpt), 80) }}</p>
-                                @endif
                                 <div class="blog-card-actions mt-auto">
                                     <a href="{{ route('blog.vendor.edit', ['id' => $row->id]) }}" class="btn btn-primary btn-sm btn-block">
                                         <i class="fa fa-edit"></i> {{ __('Edit') }}
@@ -90,8 +84,13 @@
     </div>
 @endsection
 
+@include('Blog::partials.vendor-user-layout')
+
 @push('css')
     <style>
+        .user-form-settings .title-bar {
+            width: 100% !important;
+        }
         .blog-cards-grid .blog-card {
             display: flex;
             flex-direction: column;
@@ -132,16 +131,9 @@
             position: relative;
             padding-top: 16px;
         }
-        .blog-card-check {
-            position: absolute;
-            top: 8px;
-            left: 12px;
-            margin: 0;
-        }
         .blog-card-title {
             font-size: 15px;
             margin-bottom: 8px;
-            padding-left: 24px;
         }
         .blog-card-title a {
             color: #333;
@@ -151,6 +143,5 @@
             color: #007bff;
         }
         .blog-card-date { font-size: 12px; }
-        .blog-card-excerpt { font-size: 13px; flex: 1; }
     </style>
 @endpush

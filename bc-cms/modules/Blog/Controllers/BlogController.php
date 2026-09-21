@@ -25,6 +25,7 @@ class BlogController extends FrontendController
         return view('Blog::frontend.index', [
             'rows'       => $query->paginate(20),
             'page_title' => __('Edit Blogs'),
+            'body_class' => 'blog-vendor-page',
         ]);
     }
 
@@ -148,7 +149,7 @@ class BlogController extends FrontendController
         return [
             'row'         => $row,
             'page_title'  => $pageTitle,
-            'body_class'  => 'blog-editor-page',
+            'body_class'  => 'blog-vendor-page blog-editor-page',
             'index_route' => route('blog.vendor.index'),
             'save_url'    => route('blog.vendor.store', ['id' => $row->id ?? 0]),
         ];

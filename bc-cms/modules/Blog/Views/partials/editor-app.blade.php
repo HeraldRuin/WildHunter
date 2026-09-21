@@ -1,4 +1,4 @@
-<div class="blog-editor-root">
+<div class="blog-editor-root list-animal-width custom-fluid">
 <div id="blog-editor" class="flex-column overflow-auto" v-cloak>
     <div class="blog-topbar flex-shrink-0 d-flex justify-content-between align-items-center py-3 px-3">
         <div class="d-flex align-items-center">
@@ -212,8 +212,8 @@
                     <textarea class="form-control" rows="3" v-model="excerpt" placeholder="{{ __('Short description for cards') }}"></textarea>
                 </div>
                 <div class="blog-form-field">
-                    <label>{{ __('Slug') }}</label>
-                    <input type="text" class="form-control" v-model="slug" placeholder="{{ __('auto-from-title') }}">
+                    <label>{{ __('Blog name') }}</label>
+                    <input type="text" class="form-control" v-model="title" placeholder="{{ __('Blog name') }}">
                 </div>
             </div>
         </div>

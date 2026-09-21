@@ -1,56 +1,19 @@
+@include('Blog::partials.vendor-user-layout')
+
 @push('css')
     <link rel="stylesheet" href="{{ asset('themes/admin/dist/css/blogEditor.css?_v='.config('app.asset_version')) }}">
     @if(!empty($user_editor))
         <style>
-            /*
-             * user.css: .container_col { width: 130% } + .col-md-9 { flex-shrink: 0; 75% }
-             * → контент шире окна, правая колонка обрезается.
-             * На странице редактора — нормальная сетка 100vw: сайдбар + остаток под редактор.
-             */
-            .user-page.blog-editor-page .bc_user_profile > .container-fluid.container_col {
-                width: 100% !important;
-                max-width: 100vw !important;
-                padding-left: 0 !important;
-                padding-right: 0 !important;
-            }
-
-            .user-page.blog-editor-page .bc_user_profile > .container-fluid > .row.row-col {
-                margin-left: 0 !important;
-                margin-right: 0 !important;
-                width: 100% !important;
-                max-width: 100vw !important;
-                flex-wrap: nowrap;
-            }
-
-            .user-page.blog-editor-page .bc_user_profile > .container-fluid > .row-eq-height > .col-md-3.sidebar-col {
-                flex: 0 0 220px !important;
-                width: 220px !important;
-                max-width: 220px !important;
-            }
-
-            .user-page.blog-editor-page .bc_user_profile > .container-fluid > .row-eq-height > .col-md-9 {
-                flex: 1 1 0 !important;
-                width: auto !important;
-                max-width: calc(100vw - 220px) !important;
-                min-width: 0 !important;
-                padding-left: 0;
-                padding-right: 0;
-            }
-
             .user-page.blog-editor-page .user-form-settings {
                 padding: 0;
-                min-width: 0;
-                max-width: 100%;
-                overflow: hidden;
             }
 
-            .user-page.blog-editor-page .blog-editor-root,
-            .user-page.blog-editor-page .blog-editor-root #blog-editor,
-            .user-page.blog-editor-page .blog-editor-root .blog-editor-workspace {
-                width: 100%;
-                max-width: 100%;
-                min-width: 0;
-                box-sizing: border-box;
+            .user-page.blog-editor-page .blog-editor-root.list-animal-width {
+                width: 100% !important;
+                max-width: 100% !important;
+                margin-left: 0 !important;
+                padding-left: 0;
+                padding-right: 0;
             }
 
             .user-page.blog-editor-page .blog-editor-root #blog-editor {
@@ -59,6 +22,8 @@
                 height: calc(100vh - 60px);
                 min-height: 600px;
                 overflow: hidden;
+                width: 100%;
+                max-width: 100%;
             }
 
             .user-page.blog-editor-page .blog-editor-root .blog-left-zone {
@@ -76,7 +41,6 @@
             .user-page.blog-editor-page .blog-editor-root .blog-editor-main {
                 flex: 1 1 auto !important;
                 min-width: 0 !important;
-                width: auto !important;
             }
 
             .user-page.blog-editor-page .blog-editor-root .blog-content-zone {
@@ -102,34 +66,6 @@
             .user-page.blog-editor-page .blog-editor-root .blog-topbar > .d-flex:first-child {
                 flex: 1 1 0;
                 min-width: 0;
-            }
-
-            /* Синий сайдбар профиля: контент на всю высоту, выход/главная внизу */
-            .user-page.blog-editor-page .bc_user_profile > .container-fluid > .row-eq-height {
-                align-items: stretch;
-            }
-
-            .user-page.blog-editor-page .bc_user_profile .sidebar-user {
-                display: flex;
-                flex-direction: column;
-                min-height: 100vh;
-                height: 100%;
-                box-sizing: border-box;
-            }
-
-            .user-page.blog-editor-page .bc_user_profile .sidebar-menu {
-                flex: 1 1 0;
-                min-height: 0;
-                overflow-y: auto;
-            }
-
-            .user-page.blog-editor-page .bc_user_profile .sidebar-user > .logout:first-of-type {
-                margin-top: auto;
-                flex-shrink: 0;
-            }
-
-            .user-page.blog-editor-page .bc_user_profile .sidebar-user > .logout {
-                flex-shrink: 0;
             }
         </style>
     @endif
