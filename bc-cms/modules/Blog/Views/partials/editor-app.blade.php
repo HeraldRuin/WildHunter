@@ -115,10 +115,6 @@
         </div>
 
         <div class="blog-block-settings-zone overflow-auto" v-if="selectedBlock">
-            <div class="blog-zone-header">
-                <h5 class="mb-0">{{ __('Settings') }}</h5>
-                <small class="text-muted">@{{ blockLabel(selectedBlock) }}</small>
-            </div>
                 <div class="blog-settings-body">
                     <template v-if="selectedBlock.type === 'text'">
                         <div class="blog-form-field blog-text-editor-wrap">
