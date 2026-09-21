@@ -46,13 +46,12 @@
                             </div>
                         </div>
                         <div class="blog-card-body panel-body">
-                            <textarea
-                                class="form-control blog-card-title-input"
+                            <div
+                                class="blog-card-title-input"
+                                contenteditable="true"
                                 data-id="0"
-                                placeholder="{{ __('Blog name') }}"
-                                maxlength="255"
-                                rows="1"
-                            ></textarea>
+                                data-placeholder="{{ __('Blog name') }}"
+                            ></div>
                             <div class="blog-card-actions mt-auto">
                                 <button type="button" class="btn btn-primary btn-sm btn-block" id="blog-create-save">
                                     {{ __('Save') }}
@@ -80,13 +79,12 @@
                             </span>
                         </div>
                         <div class="blog-card-body panel-body">
-                            <textarea
-                                class="form-control blog-card-title-input"
+                            <div
+                                class="blog-card-title-input"
+                                contenteditable="true"
                                 data-id="{{ $row->id }}"
-                                placeholder="{{ __('Blog name') }}"
-                                maxlength="255"
-                                rows="1"
-                            >{{ $row->title }}</textarea>
+                                data-placeholder="{{ __('Blog name') }}"
+                            >{{ $row->title }}</div>
                             <div class="blog-card-actions mt-auto">
                                 <a href="{{ route('blog.vendor.edit', ['id' => $row->id]) }}" class="btn btn-primary btn-sm btn-block">
                                     <i class="fa fa-edit"></i> {{ __('Edit') }}
@@ -113,7 +111,7 @@
         .blog-cards-grid .blog-card {
             display: flex;
             flex-direction: column;
-            overflow: hidden;
+            overflow: visible;
             transition: box-shadow 0.2s;
         }
         .blog-cards-grid .blog-card:hover {
@@ -147,23 +145,26 @@
             font-size: 13px;
         }
         .blog-card-title-input {
-            border: none;
-            box-shadow: none !important;
-            padding: 0;
+            display: block;
+            width: 100%;
+            padding: 0 0 8px;
             font-size: 15px;
             font-weight: 600;
-            height: auto !important;
-            min-height: 0;
             line-height: 1.35;
+            color: #1a2b48;
             background: transparent;
-            resize: none;
-            overflow: hidden;
-            white-space: pre-wrap;
+            outline: none;
+            white-space: normal;
+            overflow-wrap: anywhere;
             word-break: break-word;
+        }
+        .blog-card-title-input:empty:before {
+            content: attr(data-placeholder);
+            color: #999;
+            font-weight: 500;
         }
         .blog-card-title-input:focus {
             border-bottom: 1px solid #ced4da;
-            border-radius: 0;
         }
         .blog-card-date {
             position: absolute;
@@ -253,18 +254,12 @@
                 });
             }
 
-            function fitTitle(el) {
-                el.style.height = 'auto';
-                el.style.height = el.scrollHeight + 'px';
+            function titleValue($el) {
+                return $.trim($el.text().replace(/\s+/g, ' '));
             }
 
             $('.blog-card-title-input').each(function () {
-                $(this).data('saved', $.trim($(this).val()));
-                fitTitle(this);
-            });
-
-            $(document).on('input', '.blog-card-title-input', function () {
-                fitTitle(this);
+                $(this).data('saved', titleValue($(this)));
             });
 
             $('#blog-add-card-btn').on('click', function (e) {
@@ -277,10 +272,10 @@
                 pickCover($(this));
             });
 
-            $(document).on('change blur', '.blog-card-title-input', function () {
+            $(document).on('blur', '.blog-card-title-input', function () {
                 var $input = $(this);
                 var id = $input.data('id') || 0;
-                var title = $.trim($input.val());
+                var title = titleValue($input);
                 if (!id && !title) return;
                 if (id && title === $input.data('saved')) return;
                 saveMeta(id, { title: title }, function (res) {
@@ -293,7 +288,7 @@
 
             $('#blog-create-save').on('click', function () {
                 var $card = $('#blog-create-card');
-                var title = $.trim($card.find('.blog-card-title-input').val());
+                var title = titleValue($card.find('.blog-card-title-input'));
                 saveMeta(0, { title: title }, function () {
                     window.location.reload();
                 });
