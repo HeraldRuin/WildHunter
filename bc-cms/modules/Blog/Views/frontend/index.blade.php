@@ -16,7 +16,6 @@
                 <form id="bulk-form" method="post" action="{{ route('blog.vendor.bulkEdit') }}" class="filter-form filter-form-left d-flex justify-content-start">
                     {{ csrf_field() }}
                     <select name="action" class="form-control mr-2">
-                        <option value="">{{ __(' Bulk Actions ') }}</option>
                         <option value="publish">{{ __(' Publish ') }}</option>
                         <option value="draft">{{ __(' Move to Draft ') }}</option>
                         <option value="delete">{{ __(' Delete ') }}</option>
@@ -74,9 +73,12 @@
                                 </div>
                             @endif
                             <span class="blog-card-date">{{ display_date($row->updated_at) }}</span>
-                            <span class="blog-card-status badge badge-{{ $row->status === 'publish' ? 'success' : 'secondary' }}">
-                                {{ $row->status === 'publish' ? __('Published') : __('Draft') }}
-                            </span>
+                            <label class="blog-card-status-wrap" onclick="event.stopPropagation()">
+                                <input type="checkbox" name="ids[]" class="check-item" value="{{ $row->id }}" form="bulk-form">
+                                <span class="blog-card-status badge badge-{{ $row->status === 'publish' ? 'success' : 'secondary' }}">
+                                    {{ $row->status === 'publish' ? __('Published') : __('Draft') }}
+                                </span>
+                            </label>
                         </div>
                         <div class="blog-card-body panel-body">
                             <div
@@ -178,10 +180,19 @@
             padding: 3px 8px;
             border-radius: 4px;
         }
-        .blog-card-status {
+        .blog-card-status-wrap {
             position: absolute;
             top: 8px;
             right: 8px;
+            z-index: 1;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin: 0;
+            cursor: pointer;
+        }
+        .blog-card-status-wrap input {
+            margin: 0;
         }
         .blog-card-body {
             display: flex;
