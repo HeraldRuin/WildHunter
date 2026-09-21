@@ -59,7 +59,11 @@
                                                     class="icon ion-md-analytics"></i> {{ __('Vendor Dashboard') }}</a>
                                         </li>
                                     @endif
-                                    <li class="@if (Auth::user()->hasPermission('dashboard_vendor_access')) menu-hr @endif">
+                                    @if (Auth::user()->hasPermission('blog_view'))
+                                        <li class="@if (Auth::user()->hasPermission('dashboard_vendor_access')) menu-hr @endif"><a href="{{ route('blog.vendor.index') }}"><i
+                                                    class="fa fa-newspaper-o"></i> {{ __('Blog') }}</a></li>
+                                    @endif
+                                    <li class="@if (Auth::user()->hasPermission('dashboard_vendor_access') || Auth::user()->hasPermission('blog_view')) menu-hr @endif">
                                         <a href="{{ route('user.profile.index') }}"><i
                                                 class="icon ion-md-construct"></i> {{ __('My profile') }}</a>
                                     </li>
