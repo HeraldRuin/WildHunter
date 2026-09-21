@@ -9,11 +9,9 @@
             }
 
             .user-page.blog-editor-page .blog-editor-root.list-animal-width {
-                width: 100% !important;
-                max-width: 100% !important;
-                margin-left: 0 !important;
                 padding-left: 0;
                 padding-right: 0;
+                overflow-x: hidden;
             }
 
             .user-page.blog-editor-page .blog-editor-root #blog-editor {
@@ -61,6 +59,37 @@
                 margin: 0;
                 padding: 16px;
                 box-sizing: border-box;
+                overflow-x: hidden;
+            }
+
+            .user-page.blog-editor-page .blog-editor-root .blog-preview-text,
+            .user-page.blog-editor-page .blog-editor-root .blog-preview-text * {
+                max-width: 100%;
+                overflow-wrap: anywhere;
+                word-break: break-word;
+            }
+
+            .user-page.blog-editor-page .blog-editor-root .blog-block-settings-zone,
+            .user-page.blog-editor-page .blog-editor-root .blog-text-editor-wrap,
+            .user-page.blog-editor-page .blog-editor-root .blog-text-editor,
+            .user-page.blog-editor-page .blog-editor-root .tox,
+            .user-page.blog-editor-page .blog-editor-root .tox-tinymce {
+                max-width: 100%;
+                min-width: 0;
+                box-sizing: border-box;
+            }
+
+            .user-page.blog-editor-page .blog-editor-root .blog-columns {
+                display: flex;
+                gap: 24px;
+                align-items: flex-start;
+                width: 100%;
+                max-width: 100%;
+            }
+
+            .user-page.blog-editor-page .blog-editor-root .blog-columns-col {
+                flex: 1 1 0;
+                min-width: 0;
             }
 
             .user-page.blog-editor-page .blog-editor-root .blog-topbar > .d-flex:first-child {

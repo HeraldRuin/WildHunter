@@ -8,10 +8,6 @@
             <span class="blog-title-input">{{ $row->title ?: __('Untitled') }}</span>
         </div>
         <div class="d-flex align-items-center">
-            <select class="form-control form-control-sm mr-2" v-model="status" style="width:120px">
-                <option value="draft">{{ __('Draft') }}</option>
-                <option value="publish">{{ __('Publish') }}</option>
-            </select>
             <span
                 class="alert-text mr-3"
                 v-show="message.content"
@@ -32,17 +28,37 @@
             <div class="blog-blocks-list overflow-auto">
                 <draggable v-model="blocks" item-key="id" handle=".drag-handler" @change="onSort">
                     <template #item="{ element, index }">
-                        <div
-                            class="blog-block-item"
-                            :class="{ selected: selectedBlockId === element.id }"
-                            @click="selectBlock(element.id)"
-                        >
-                            <span class="drag-handler"><i class="fa fa-bars"></i></span>
-                            <span class="block-icon"><i :class="blockIcon(element.type)"></i></span>
-                            <span class="block-label">@{{ blockLabel(element) }}</span>
-                            <button class="btn btn-sm btn-link text-danger block-delete" @click.stop="deleteBlock(index)">
-                                <i class="fa fa-trash"></i>
-                            </button>
+                        <div>
+                            <div
+                                class="blog-block-item"
+                                :class="{ selected: selectedBlockId === element.id }"
+                                @click="selectBlock(element.id)"
+                            >
+                                <span class="drag-handler"><i class="fa fa-bars"></i></span>
+                                <span class="block-icon"><i :class="blockIcon(element.type)"></i></span>
+                                <span class="block-label">@{{ blockLabel(element) }}</span>
+                                <button class="btn btn-sm btn-link text-danger block-delete" @click.stop="deleteBlock(index)">
+                                    <i class="fa fa-trash"></i>
+                                </button>
+                            </div>
+                            <div v-if="element.type === 'columns'" class="blog-block-children">
+                                <template v-for="(col, ci) in element.columns" :key="col.id">
+                                    <div class="blog-block-col-label">{{ __('Column') }} @{{ ci + 1 }}</div>
+                                    <div
+                                        v-for="child in col.blocks"
+                                        :key="child.id"
+                                        class="blog-block-item blog-block-item--nested"
+                                        :class="{ selected: selectedBlockId === child.id }"
+                                        @click="selectBlock(child.id)"
+                                    >
+                                        <span class="block-icon"><i :class="blockIcon(child.type)"></i></span>
+                                        <span class="block-label">@{{ blockLabel(child) }}</span>
+                                        <button class="btn btn-sm btn-link text-danger block-delete" @click.stop="deleteNestedBlock(element, ci, child.id)">
+                                            <i class="fa fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </template>
+                            </div>
                         </div>
                     </template>
                 </draggable>
@@ -56,8 +72,11 @@
                 <button class="btn btn-sm btn-outline-secondary btn-block mb-1" @click="addBlock('image')">
                     <i class="fa fa-image"></i> {{ __('Image') }}
                 </button>
-                <button class="btn btn-sm btn-outline-secondary btn-block" @click="addBlock('table')">
+                <button class="btn btn-sm btn-outline-secondary btn-block mb-1" @click="addBlock('table')">
                     <i class="fa fa-table"></i> {{ __('Table') }}
+                </button>
+                <button class="btn btn-sm btn-outline-secondary btn-block" @click="addBlock('columns')">
+                    <i class="fa fa-columns"></i> {{ __('Columns layout') }}
                 </button>
             </div>
         </div>
@@ -100,6 +119,60 @@
                                 </tr>
                             </tbody>
                         </table>
+                    </div>
+                    <div
+                        v-else-if="block.type === 'columns'"
+                        class="blog-columns"
+                        :data-ratio="block.settings?.ratio || '50-50'"
+                    >
+                        <div
+                            v-for="(col, ci) in block.columns"
+                            :key="col.id"
+                            class="blog-columns-col"
+                        >
+                            <div
+                                v-for="(child, cidx) in col.blocks"
+                                :key="child.id"
+                                class="blog-preview-block blog-preview-block--nested"
+                                :class="{ selected: selectedBlockId === child.id }"
+                                @click.stop="selectBlock(child.id)"
+                            >
+                                <div v-if="child.type === 'text'" class="blog-preview-text" v-html="child.content || '<p>{{ __('Empty text block') }}</p>'"></div>
+                                <div v-else-if="child.type === 'image'" class="blog-preview-image" :style="{ textAlign: child.settings?.align || 'center' }">
+                                    <img v-if="child.image_url" :src="child.image_url" :alt="child.caption || ''" :style="{ maxWidth: child.settings?.width || '100%' }">
+                                    <div v-else class="blog-preview-image-placeholder">
+                                        <i class="fa fa-image fa-3x"></i>
+                                        <p>{{ __('Select an image') }}</p>
+                                    </div>
+                                    <p v-if="child.caption" class="blog-image-caption">@{{ child.caption }}</p>
+                                </div>
+                                <div v-else-if="child.type === 'table'" class="blog-preview-table">
+                                    <table class="table table-bordered">
+                                        <thead v-if="child.settings?.headerRow && child.rows.length">
+                                            <tr>
+                                                <th v-for="(cell, cci) in child.rows[0]" :key="cci" v-html="cell || '&nbsp;'"></th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr v-for="(row, ri) in (child.settings?.headerRow ? child.rows.slice(1) : child.rows)" :key="ri">
+                                                <td v-for="(cell, cci) in row" :key="cci" v-html="cell || '&nbsp;'"></td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                            <div class="blog-columns-add">
+                                <button type="button" class="btn btn-sm btn-outline-secondary" @click.stop="addBlockToColumn(block, ci, 'text')">
+                                    <i class="fa fa-font"></i>
+                                </button>
+                                <button type="button" class="btn btn-sm btn-outline-secondary" @click.stop="addBlockToColumn(block, ci, 'image')">
+                                    <i class="fa fa-image"></i>
+                                </button>
+                                <button type="button" class="btn btn-sm btn-outline-secondary" @click.stop="addBlockToColumn(block, ci, 'table')">
+                                    <i class="fa fa-table"></i>
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 <div v-if="!blocks.length" class="blog-preview-empty">
@@ -181,6 +254,25 @@
                         <label class="form-check-label" :for="'header-' + selectedBlock.id">{{ __('First row is header') }}</label>
                     </div>
                 </template>
+                    <template v-if="selectedBlock.type === 'columns'">
+                        <div class="blog-form-field">
+                            <label>{{ __('Columns') }}</label>
+                            <select class="form-control" :value="selectedBlock.settings.count" @change="setColumnCount(parseInt($event.target.value, 10))">
+                                <option :value="2">2</option>
+                                <option :value="3">3</option>
+                            </select>
+                        </div>
+                        <div class="blog-form-field" v-if="selectedBlock.settings.count !== 3">
+                            <label>{{ __('Column ratio') }}</label>
+                            <select class="form-control" v-model="selectedBlock.settings.ratio">
+                                <option value="50-50">50 / 50</option>
+                                <option value="40-60">40 / 60</option>
+                                <option value="60-40">60 / 40</option>
+                                <option value="33-67">33 / 67</option>
+                                <option value="67-33">67 / 33</option>
+                            </select>
+                        </div>
+                    </template>
             </div>
         </div>
         </div>
@@ -206,6 +298,7 @@
         text: @json(__('Text')),
         image: @json(__('Image')),
         table: @json(__('Table')),
+        columns_layout: @json(__('Columns layout')),
         untitled: @json(__('Untitled')),
         saved: @json(__('Saved')),
         error: @json(__('Error saving')),

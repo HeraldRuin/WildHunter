@@ -7,6 +7,10 @@ function makeId() {
   return "blk_" + Math.random().toString(36).substring(2, 11);
 }
 
+function emptyColumn() {
+  return { id: makeId(), blocks: [] };
+}
+
 function normalizeBlock(block) {
   if (block.type === "image" && !block.settings) {
     block.settings = { width: "100%", align: "center" };
@@ -16,6 +20,21 @@ function normalizeBlock(block) {
   }
   if (block.type === "table" && !block.rows) {
     block.rows = [["", ""]];
+  }
+  if (block.type === "columns") {
+    if (!block.settings) {
+      block.settings = { count: 2, ratio: "50-50" };
+    }
+    if (!block.settings.ratio) {
+      block.settings.ratio = block.settings.count === 3 ? "33-33-33" : "50-50";
+    }
+    if (!Array.isArray(block.columns) || !block.columns.length) {
+      const count = block.settings.count === 3 ? 3 : 2;
+      block.columns = Array.from({ length: count }, emptyColumn);
+    }
+    block.columns.forEach((col) => {
+      col.blocks = (col.blocks || []).map((child) => normalizeBlock(child));
+    });
   }
   return block;
 }
@@ -44,6 +63,13 @@ function defaultBlock(type) {
         ],
         settings: { headerRow: true },
       };
+    case "columns":
+      return {
+        id,
+        type: "columns",
+        settings: { count: 2, ratio: "50-50" },
+        columns: [emptyColumn(), emptyColumn()],
+      };
     default:
       return { id, type: "text", content: "" };
   }
@@ -70,7 +96,7 @@ const app = createApp({
   },
   computed: {
     selectedBlock() {
-      return this.blocks.find((b) => b.id === this.selectedBlockId) || null;
+      return this.findBlockById(this.selectedBlockId);
     },
   },
   mounted() {
@@ -106,11 +132,26 @@ const app = createApp({
       this.image_id = null;
       this.coverUrl = null;
     },
+    findBlockById(id, list) {
+      if (!id) return null;
+      const items = list || this.blocks;
+      for (const block of items) {
+        if (block.id === id) return block;
+        if (block.type === "columns") {
+          for (const col of block.columns || []) {
+            const found = this.findBlockById(id, col.blocks || []);
+            if (found) return found;
+          }
+        }
+      }
+      return null;
+    },
     blockIcon(type) {
       const icons = {
         text: "fa fa-font",
         image: "fa fa-image",
         table: "fa fa-table",
+        columns: "fa fa-columns",
       };
       return icons[type] || "fa fa-cube";
     },
@@ -119,6 +160,7 @@ const app = createApp({
         text: blogEditorI18n.text,
         image: blogEditorI18n.image,
         table: blogEditorI18n.table,
+        columns: blogEditorI18n.columns_layout,
       };
       const base = labels[block.type] || block.type;
       if (block.type === "text" && block.content) {
@@ -148,6 +190,46 @@ const app = createApp({
       this.blocks.splice(index, 1);
       if (this.selectedBlockId === block.id) {
         this.selectedBlockId = null;
+      }
+    },
+    addBlockToColumn(parent, colIndex, type) {
+      if (!parent || parent.type !== "columns") return;
+      const col = parent.columns[colIndex];
+      if (!col) return;
+      const block = defaultBlock(type);
+      col.blocks.push(block);
+      this.selectedBlockId = block.id;
+    },
+    deleteNestedBlock(parent, colIndex, childId) {
+      if (!parent || parent.type !== "columns") return;
+      const col = parent.columns[colIndex];
+      if (!col) return;
+      const i = col.blocks.findIndex((b) => b.id === childId);
+      if (i < 0) return;
+      col.blocks.splice(i, 1);
+      if (this.selectedBlockId === childId) {
+        this.selectedBlockId = parent.id;
+      }
+    },
+    setColumnCount(count) {
+      const block = this.selectedBlock;
+      if (!block || block.type !== "columns") return;
+      count = count === 3 ? 3 : 2;
+      block.settings.count = count;
+      while (block.columns.length < count) {
+        block.columns.push(emptyColumn());
+      }
+      while (block.columns.length > count) {
+        const removed = block.columns.pop();
+        const last = block.columns[block.columns.length - 1];
+        if (last && removed?.blocks?.length) {
+          last.blocks.push(...removed.blocks);
+        }
+      }
+      if (count === 3) {
+        block.settings.ratio = "33-33-33";
+      } else if (block.settings.ratio === "33-33-33") {
+        block.settings.ratio = "50-50";
       }
     },
     onSort() {
