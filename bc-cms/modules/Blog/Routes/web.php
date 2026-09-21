@@ -10,5 +10,6 @@ Route::prefix('user/' . config('blog.blog_route_prefix'))
         Route::get('/create', 'BlogController@create')->name('create');
         Route::get('/edit/{id}', 'BlogController@edit')->name('edit');
         Route::post('/store/{id}', 'BlogController@store')->name('store');
+        Route::post('/store-meta/{id?}', 'BlogController@storeMeta')->name('storeMeta');
         Route::post('/bulkEdit', 'BlogController@bulkEdit')->name('bulkEdit');
     });

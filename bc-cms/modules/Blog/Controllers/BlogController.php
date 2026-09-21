@@ -100,6 +100,48 @@ class BlogController extends FrontendController
         ]);
     }
 
+    public function storeMeta(Request $request, $id = 0)
+    {
+        if (is_demo_mode()) {
+            return response()->json(['success' => false, 'message' => __('DEMO MODE: Disable update')], 403);
+        }
+
+        if ($id > 0) {
+            $this->checkPermission('blog_update');
+            $row = Blog::find($id);
+            if (empty($row)) {
+                return response()->json(['success' => false, 'message' => __('Blog not found')], 404);
+            }
+        } else {
+            $this->checkPermission('blog_create');
+            $row = new Blog();
+            $row->status = 'draft';
+            $row->author_id = Auth::id();
+            $row->content_json = ['blocks' => []];
+        }
+
+        if ($request->exists('title')) {
+            $row->title = $request->input('title', '');
+        }
+
+        if ($request->exists('image_id')) {
+            $row->image_id = $request->input('image_id') ?: null;
+        }
+
+        $row->save();
+
+        return response()->json([
+            'success'   => true,
+            'message'   => $id > 0 ? __('Blog updated') : __('Blog created'),
+            'id'        => $row->id,
+            'title'     => $row->title,
+            'cover_url' => $row->getCoverUrl(),
+            'edit_url'  => route('blog.vendor.edit', ['id' => $row->id]),
+            'date'      => display_date($row->updated_at),
+            'status'    => $row->status,
+        ]);
+    }
+
     public function bulkEdit(Request $request)
     {
         if (is_demo_mode()) {

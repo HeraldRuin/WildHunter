@@ -5,12 +5,7 @@
             <a href="{{ $index_route }}" class="px-3 lh-26 text-26 text-black border-right-1 border-right-solid border-right-gray mr-3">
                 <i class="ion ion-ios-close-circle-outline"></i>
             </a>
-            <input
-                type="text"
-                class="form-control blog-title-input"
-                v-model="title"
-                placeholder="{{ __('Blog title') }}"
-            >
+            <span class="blog-title-input">{{ $row->title ?: __('Untitled') }}</span>
         </div>
         <div class="d-flex align-items-center">
             <select class="form-control form-control-sm mr-2" v-model="status" style="width:120px">
@@ -188,34 +183,6 @@
                 </template>
             </div>
         </div>
-        </div>
-
-        <div class="blog-right-zone overflow-auto" v-if="!selectedBlock">
-            <div class="blog-zone-header">
-                <h5 class="mb-0">{{ __('Blog settings') }}</h5>
-            </div>
-            <div class="blog-settings-body">
-                <div class="blog-form-field">
-                    <label>{{ __('Cover image') }}</label>
-                    <div v-if="coverUrl" class="blog-cover-preview mb-2">
-                        <img :src="coverUrl" class="img-fluid rounded" alt="">
-                    </div>
-                    <div class="blog-cover-actions">
-                        <button type="button" class="btn btn-sm btn-secondary" @click="pickCover">
-                            <i class="fa fa-folder-open"></i> {{ __('Choose file') }}
-                        </button>
-                        <button v-if="image_id" type="button" class="btn btn-sm btn-outline-danger" @click="clearCover">{{ __('Clear') }}</button>
-                    </div>
-                </div>
-                <div class="blog-form-field">
-                    <label>{{ __('Excerpt') }}</label>
-                    <textarea class="form-control" rows="3" v-model="excerpt" placeholder="{{ __('Short description for cards') }}"></textarea>
-                </div>
-                <div class="blog-form-field">
-                    <label>{{ __('Blog name') }}</label>
-                    <input type="text" class="form-control" v-model="title" placeholder="{{ __('Blog name') }}">
-                </div>
-            </div>
         </div>
     </div>
 </div>
