@@ -4,7 +4,8 @@ import path from 'path';
 
 const modulesMap = {
     builder: '../../module/page/admin/scss/builder.scss',
-    live:'module/template/admin/scss/live.scss'
+    live:'module/template/admin/scss/live.scss',
+    blogEditor: 'module/blog/admin/scss/blog-editor.scss',
 }
 
 export default defineConfig((mode) => ({
@@ -21,6 +22,7 @@ export default defineConfig((mode) => ({
       input: {
         app:'js/app.js',
         templateLive:'module/template/admin/live/index.js',
+        blogEditor:'module/blog/admin/editor/index.js',
         style: 'scss/app.scss',
         ...modulesMap,
       },

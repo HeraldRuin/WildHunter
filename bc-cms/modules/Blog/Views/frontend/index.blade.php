@@ -1,21 +1,21 @@
-@extends('admin.layouts.app')
+@extends('Layout::user')
 
 @section('content')
     <div class="container-fluid">
         <div class="d-flex justify-content-between mb20">
-            <h1 class="title-bar">{{ __('All Blogs') }}</h1>
-            <div class="title-actions">
-                <a href="{{ route('blog.admin.create') }}" class="btn btn-primary">
+            <h2 class="title-bar">{{ __('Edit Blogs') }}</h2>
+            @if(Auth::user()->hasPermission('blog_create'))
+                <a href="{{ route('blog.vendor.create') }}" class="btn btn-primary">
                     <i class="fa fa-plus"></i> {{ __('Add Blog') }}
                 </a>
-            </div>
+            @endif
         </div>
         @include('admin.message')
         <div class="filter-div d-flex justify-content-between mb-3">
             <div class="col-left">
-                <form id="bulk-form" method="post" action="{{ route('blog.admin.bulkEdit') }}" class="filter-form filter-form-left d-flex justify-content-start">
+                <form id="bulk-form" method="post" action="{{ route('blog.vendor.bulkEdit') }}" class="filter-form filter-form-left d-flex justify-content-start">
                     {{ csrf_field() }}
-                    <select name="action" class="form-control">
+                    <select name="action" class="form-control mr-2">
                         <option value="">{{ __(' Bulk Actions ') }}</option>
                         <option value="publish">{{ __(' Publish ') }}</option>
                         <option value="draft">{{ __(' Move to Draft ') }}</option>
@@ -25,9 +25,9 @@
                 </form>
             </div>
             <div class="col-left">
-                <form method="get" action="{{ route('blog.admin.index') }}" class="filter-form filter-form-right d-flex justify-content-end" role="search">
-                    <input type="text" name="s" value="{{ request()->s }}" placeholder="{{ __('Search by name') }}" class="form-control">
-                    <button class="btn-info btn btn-icon btn_search ml-2" type="submit">{{ __('Search') }}</button>
+                <form method="get" action="{{ route('blog.vendor.index') }}" class="filter-form filter-form-right d-flex justify-content-end" role="search">
+                    <input type="text" name="s" value="{{ request()->s }}" placeholder="{{ __('Search by name') }}" class="form-control mr-2">
+                    <button class="btn-info btn btn-icon btn_search" type="submit">{{ __('Search') }}</button>
                 </form>
             </div>
         </div>
@@ -57,7 +57,7 @@
                                     <input type="checkbox" name="ids[]" class="check-item" value="{{ $row->id }}" form="bulk-form">
                                 </label>
                                 <h5 class="blog-card-title">
-                                    <a href="{{ route('blog.admin.edit', ['id' => $row->id]) }}">{{ $row->title ?: __('Untitled') }}</a>
+                                    <a href="{{ route('blog.vendor.edit', ['id' => $row->id]) }}">{{ $row->title ?: __('Untitled') }}</a>
                                 </h5>
                                 <p class="blog-card-date text-muted mb-2">
                                     <i class="fa fa-clock-o"></i> {{ display_date($row->updated_at) }}
@@ -66,7 +66,7 @@
                                     <p class="blog-card-excerpt text-muted">{{ \Illuminate\Support\Str::limit(strip_tags($row->excerpt), 80) }}</p>
                                 @endif
                                 <div class="blog-card-actions mt-auto">
-                                    <a href="{{ route('blog.admin.edit', ['id' => $row->id]) }}" class="btn btn-primary btn-sm btn-block">
+                                    <a href="{{ route('blog.vendor.edit', ['id' => $row->id]) }}" class="btn btn-primary btn-sm btn-block">
                                         <i class="fa fa-edit"></i> {{ __('Edit') }}
                                     </a>
                                 </div>
@@ -81,7 +81,9 @@
                 <div class="panel-body text-center py-5">
                     <i class="fa fa-newspaper-o fa-3x text-muted mb-3"></i>
                     <p class="text-muted">{{ __('No blogs found') }}</p>
-                    <a href="{{ route('blog.admin.create') }}" class="btn btn-primary">{{ __('Create your first blog') }}</a>
+                    @if(Auth::user()->hasPermission('blog_create'))
+                        <a href="{{ route('blog.vendor.create') }}" class="btn btn-primary">{{ __('Create your first blog') }}</a>
+                    @endif
                 </div>
             </div>
         @endif
@@ -148,12 +150,7 @@
         .blog-card-title a:hover {
             color: #007bff;
         }
-        .blog-card-date {
-            font-size: 12px;
-        }
-        .blog-card-excerpt {
-            font-size: 13px;
-            flex: 1;
-        }
+        .blog-card-date { font-size: 12px; }
+        .blog-card-excerpt { font-size: 13px; flex: 1; }
     </style>
 @endpush

@@ -3,7 +3,8 @@
     "type": "module",
     "scripts": {
         "watch": "vite build --watch --mode development --sourcemap",
-        "prod": "vite build"
+        "prod": "vite build",
+        "blog": "vite build --config vite.blog.config.mjs"
     },
     "devDependencies": {
         "pug": "^3.0.3",

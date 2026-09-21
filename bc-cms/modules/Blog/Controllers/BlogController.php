@@ -1,18 +1,13 @@
 <?php
-namespace Modules\Blog\Admin;
+namespace Modules\Blog\Controllers;
 
 use Illuminate\Http\Request;
-use Modules\AdminController;
+use Illuminate\Support\Facades\Auth;
 use Modules\Blog\Models\Blog;
-use Modules\Core\Helpers\AdminMenuManager;
+use Modules\FrontendController;
 
-class BlogController extends AdminController
+class BlogController extends FrontendController
 {
-    public function __construct()
-    {
-        AdminMenuManager::setActive('blog');
-    }
-
     public function index(Request $request)
     {
         $this->checkPermission('blog_view');
@@ -27,22 +22,10 @@ class BlogController extends AdminController
             $query->where('status', $status);
         }
 
-        $data = [
-            'rows'        => $query->paginate(20),
-            'page_title'  => __('All Blogs'),
-            'breadcrumbs' => [
-                [
-                    'name' => __('Blog'),
-                    'url'  => route('blog.admin.index'),
-                ],
-                [
-                    'name'  => __('All'),
-                    'class' => 'active',
-                ],
-            ],
-        ];
-
-        return view('Blog::admin.index', $data);
+        return view('Blog::frontend.index', [
+            'rows'       => $query->paginate(20),
+            'page_title' => __('Edit Blogs'),
+        ]);
     }
 
     public function create()
@@ -55,7 +38,7 @@ class BlogController extends AdminController
             'content_json' => ['blocks' => []],
         ]);
 
-        return view('Blog::admin.editor', $this->editorData($row, __('Add Blog')));
+        return view('Blog::frontend.editor', $this->editorData($row, __('Add Blog')));
     }
 
     public function edit(Request $request, $id)
@@ -64,14 +47,14 @@ class BlogController extends AdminController
 
         $row = Blog::find($id);
         if (empty($row)) {
-            return redirect(route('blog.admin.index'));
+            return redirect(route('blog.vendor.index'));
         }
 
         if (empty($row->content_json)) {
             $row->content_json = ['blocks' => []];
         }
 
-        return view('Blog::admin.editor', $this->editorData($row, __('Edit Blog')));
+        return view('Blog::frontend.editor', $this->editorData($row, __('Edit Blog')));
     }
 
     public function store(Request $request, $id)
@@ -90,7 +73,7 @@ class BlogController extends AdminController
             $this->checkPermission('blog_create');
             $row = new Blog();
             $row->status = 'draft';
-            $row->author_id = auth()->id();
+            $row->author_id = Auth::id();
         }
 
         $row->title = $request->input('title', '');
@@ -111,8 +94,8 @@ class BlogController extends AdminController
             'success'  => true,
             'message'  => $id > 0 ? __('Blog updated') : __('Blog created'),
             'id'       => $row->id,
-            'url'      => route('blog.admin.edit', ['id' => $row->id]),
-            'save_url' => route('blog.admin.store', ['id' => $row->id]),
+            'url'      => route('blog.vendor.edit', ['id' => $row->id]),
+            'save_url' => route('blog.vendor.store', ['id' => $row->id]),
         ]);
     }
 
@@ -165,18 +148,9 @@ class BlogController extends AdminController
         return [
             'row'         => $row,
             'page_title'  => $pageTitle,
-            'index_route' => route('blog.admin.index'),
-            'save_url'    => route('blog.admin.store', ['id' => $row->id ?? 0]),
-            'breadcrumbs' => [
-                [
-                    'name' => __('Blog'),
-                    'url'  => route('blog.admin.index'),
-                ],
-                [
-                    'name'  => $pageTitle,
-                    'class' => 'active',
-                ],
-            ],
+            'body_class'  => 'blog-editor-page',
+            'index_route' => route('blog.vendor.index'),
+            'save_url'    => route('blog.vendor.store', ['id' => $row->id ?? 0]),
         ];
     }
 }

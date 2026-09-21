@@ -7,7 +7,8 @@ class ModuleProvider extends ModuleServiceProvider
 {
     public function register()
     {
-        $this->app->register(RouterServiceProvider::class);
+        $this->mergeConfigFrom(__DIR__ . '/Config/blog.php', 'blog');
+        $this->app->register(RouteServiceProvider::class);
     }
 
     public static function getAdminMenu()
@@ -40,19 +41,19 @@ class ModuleProvider extends ModuleServiceProvider
     {
         return [
             'blog' => [
-                'url'        => route('blog.admin.index'),
+                'url'        => route('blog.vendor.index'),
                 'title'      => __('Blog'),
                 'icon'       => 'fa fa-newspaper-o',
                 'position'   => 21,
                 'permission' => 'blog_view',
                 'children'   => [
                     [
-                        'url'        => route('blog.admin.create'),
+                        'url'        => route('blog.vendor.create'),
                         'title'      => __('Add Blog'),
                         'permission' => 'blog_create',
                     ],
                     [
-                        'url'        => route('blog.admin.index'),
+                        'url'        => route('blog.vendor.index'),
                         'title'      => __('Edit Blogs'),
                         'permission' => 'blog_view',
                     ],
