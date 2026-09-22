@@ -38,7 +38,10 @@ class FileExtRule implements ValidationRule
      */
     public function validate(string $attribute, mixed $value, Closure $fail): void
     {
-        if (!in_array($value->getClientOriginalExtension(), $this->acceptedExt)) {
+        $extension = strtolower((string) $value->getClientOriginalExtension());
+        $accepted = array_map('strtolower', $this->acceptedExt);
+
+        if (!in_array($extension, $accepted, true)) {
             $fail($this->message());
         }
     }
