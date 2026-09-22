@@ -210,6 +210,7 @@
     </div>
 </div>
 
+@if (Auth::check())
 <ul id="user-dropdown-menu" class="dropdown-menu dropdown-menu-user text-left" style="z-index: 9999; display:none;">
     @if (is_baseAdmin())
         <li class="menu-hr"><a href="{{ route('vendor.dashboard') }}" class="menu-hr"><i
@@ -239,4 +240,5 @@
                 class="fa fa-sign-out"></i> {{ __('Logout') }}</a>
     </li>
 </ul>
+@endif
 
