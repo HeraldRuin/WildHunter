@@ -41,6 +41,13 @@ class Animal extends Bookable
         'status',
         'faqs',
         'hotel_id',
+        'hunt_individual',
+        'hunt_group',
+    ];
+
+    protected $casts = [
+        'hunt_individual' => 'boolean',
+        'hunt_group' => 'boolean',
     ];
 
     public function addToCart(Request $request)
