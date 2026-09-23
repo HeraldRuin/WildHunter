@@ -50,6 +50,10 @@ class Animal extends Bookable
         'hunt_group' => 'boolean',
     ];
 
+    protected $attributes = [
+        'hunt_group' => true,
+    ];
+
     public function addToCart(Request $request)
     {
 //        $res = $this->addToCartValidate($request);

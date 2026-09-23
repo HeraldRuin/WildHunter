@@ -42,15 +42,18 @@
     <div class="panel-title"><strong>{{__("Hunt Type")}}</strong></div>
     <div class="panel-body">
         @if(is_default_lang())
+            @php
+                $huntType = ($row->hunt_individual && !$row->hunt_group) ? 'individual' : 'group';
+            @endphp
             <div class="form-group">
                 <label>
-                    <input type="checkbox" name="hunt_individual" value="1" @if($row->hunt_individual) checked @endif>
+                    <input type="radio" name="hunt_type" value="individual" @if($huntType === 'individual') checked @endif>
                     {{__("Individual hunt")}}
                 </label>
             </div>
             <div class="form-group">
                 <label>
-                    <input type="checkbox" name="hunt_group" value="1" @if($row->hunt_group) checked @endif>
+                    <input type="radio" name="hunt_type" value="group" @if($huntType === 'group') checked @endif>
                     {{__("Group hunt")}}
                 </label>
             </div>

@@ -240,8 +240,9 @@ class AnimalController extends AdminController
         }
         $row->fillByAttr($dataKeys, $request->input());
         if (!$request->input('lang') or is_default_lang($request->input('lang'))) {
-            $row->hunt_individual = $request->boolean('hunt_individual');
-            $row->hunt_group = $request->boolean('hunt_group');
+            $isIndividual = $request->input('hunt_type') === 'individual';
+            $row->hunt_individual = $isIndividual;
+            $row->hunt_group = !$isIndividual;
         }
         if ($request->input('slug')) {
             $row->slug = $request->input('slug');
