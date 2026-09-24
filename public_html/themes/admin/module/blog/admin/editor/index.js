@@ -156,6 +156,8 @@ const app = createApp({
       blocks: (contentJson.blocks || []).map((b) => normalizeBlock(b)),
       selectedBlockId: null,
       draggingColumnId: null,
+      draggingParentId: null,
+      dropHover: null,
       saving: false,
       lastSaved: blogEditorData.last_saved || "",
       message: { content: "", type: false },
@@ -170,6 +172,12 @@ const app = createApp({
     if (!this.coverUrl && this.image_id) {
       this.loadCoverUrl(this.image_id);
     }
+    this._onColumnPointerMove = (event) => this.onColumnPointerMove(event);
+    this._onColumnPointerUp = () => this.onColumnPointerUp();
+  },
+  beforeUnmount() {
+    window.removeEventListener("mousemove", this._onColumnPointerMove);
+    window.removeEventListener("mouseup", this._onColumnPointerUp);
   },
   methods: {
     loadCoverUrl(id) {
@@ -267,9 +275,36 @@ const app = createApp({
     isColumnSelected(col) {
       return col.blocks.some((child) => child.id === this.selectedBlockId);
     },
+    dropGridCols(block) {
+      return Math.max(2, maxGridCols(block.columns));
+    },
+    dropGridRows(block) {
+      const maxRow = Math.max(0, ...block.columns.map((col) => col.row ?? 0));
+      return maxRow + 2;
+    },
+    columnDropSlots(block) {
+      const cols = this.dropGridCols(block);
+      const rows = this.dropGridRows(block);
+      const slots = [];
+      for (let row = 0; row < rows; row++) {
+        for (let col = 0; col < cols; col++) {
+          slots.push({ row, col });
+        }
+      }
+      return slots;
+    },
     columnsGridStyle(block) {
+      const cols = this.draggingParentId === block.id ? this.dropGridCols(block) : maxGridCols(block.columns);
       return {
-        gridTemplateColumns: ratioToGridTemplate(block.settings?.ratio, maxGridCols(block.columns)),
+        gridTemplateColumns: ratioToGridTemplate(block.settings?.ratio, cols),
+      };
+    },
+    dropGridStyle(block) {
+      const cols = this.dropGridCols(block);
+      const rows = this.dropGridRows(block);
+      return {
+        gridTemplateColumns: ratioToGridTemplate(block.settings?.ratio, cols),
+        gridTemplateRows: `repeat(${rows}, minmax(88px, 1fr))`,
       };
     },
     columnCellStyle(col) {
@@ -278,54 +313,48 @@ const app = createApp({
         gridRow: (col.row ?? 0) + 1,
       };
     },
-    startColumnDrag(col, event) {
+    startColumnPointerDrag(parent, col, event) {
+      event.preventDefault();
       this.draggingColumnId = col.id;
-      event.dataTransfer.effectAllowed = "move";
-      event.dataTransfer.setData("text/plain", col.id);
+      this.draggingParentId = parent.id;
+      this.dropHover = { row: col.row ?? 0, col: col.col ?? 0 };
+      window.addEventListener("mousemove", this._onColumnPointerMove);
+      window.addEventListener("mouseup", this._onColumnPointerUp);
     },
-    endColumnDrag() {
-      this.draggingColumnId = null;
+    onColumnPointerMove(event) {
+      const el = document.elementFromPoint(event.clientX, event.clientY);
+      const slot = el && el.closest ? el.closest("[data-drop-row]") : null;
+      if (!slot) return;
+      this.dropHover = {
+        row: parseInt(slot.dataset.dropRow, 10),
+        col: parseInt(slot.dataset.dropCol, 10),
+      };
     },
-    draggedColumn(parent, event) {
-      const id = this.draggingColumnId || event.dataTransfer.getData("text/plain");
-      return parent.columns.find((col) => col.id === id) || null;
-    },
-    dropColumnBelow(parent, target, event) {
-      event.preventDefault();
-      const dragged = this.draggedColumn(parent, event);
-      if (!dragged || dragged.id === target.id) {
-        this.draggingColumnId = null;
-        return;
+    onColumnPointerUp() {
+      window.removeEventListener("mousemove", this._onColumnPointerMove);
+      window.removeEventListener("mouseup", this._onColumnPointerUp);
+      const parent = this.blocks.find((block) => block.id === this.draggingParentId);
+      const dragged = parent && parent.columns.find((col) => col.id === this.draggingColumnId);
+      if (parent && dragged && this.dropHover) {
+        this.placeColumnAt(parent, dragged, this.dropHover.row, this.dropHover.col);
       }
+      this.draggingColumnId = null;
+      this.draggingParentId = null;
+      this.dropHover = null;
+    },
+    placeColumnAt(parent, dragged, row, col) {
+      const occupant = parent.columns.find(
+        (item) => item.id !== dragged.id && (item.row ?? 0) === row && (item.col ?? 0) === col
+      );
       const fromRow = dragged.row ?? 0;
-      dragged.row = (target.row ?? 0) + 1;
-      dragged.col = target.col ?? 0;
-      if (fromRow !== dragged.row) {
-        compactRowCols(parent.columns, fromRow);
+      const fromCol = dragged.col ?? 0;
+      if (occupant) {
+        occupant.row = fromRow;
+        occupant.col = fromCol;
       }
+      dragged.row = row;
+      dragged.col = col;
       compactColumnRows(parent.columns);
-      this.draggingColumnId = null;
-    },
-    dropColumnBeside(parent, target, event) {
-      event.preventDefault();
-      const dragged = this.draggedColumn(parent, event);
-      if (!dragged || dragged.id === target.id) {
-        this.draggingColumnId = null;
-        return;
-      }
-      const fromRow = dragged.row ?? 0;
-      dragged.row = target.row ?? 0;
-      dragged.col = (target.col ?? 0) + 1;
-      parent.columns.forEach((col) => {
-        if (col.id !== dragged.id && (col.row ?? 0) === dragged.row && (col.col ?? 0) >= dragged.col) {
-          col.col += 1;
-        }
-      });
-      if (fromRow !== dragged.row) {
-        compactRowCols(parent.columns, fromRow);
-      }
-      compactColumnRows(parent.columns);
-      this.draggingColumnId = null;
     },
     selectColumn(parent, col) {
       if (col.blocks[0]) {

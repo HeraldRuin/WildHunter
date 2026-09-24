@@ -126,24 +126,19 @@
                     </div>
                     <div
                         v-else-if="block.type === 'columns'"
-                        class="blog-columns"
-                        :class="{ 'is-dragging': draggingColumnId }"
-                        :style="columnsGridStyle(block)"
-                        @dragend="endColumnDrag"
+                        class="blog-columns-wrap"
+                        :class="{ 'is-dragging': draggingParentId === block.id }"
                     >
+                        <div class="blog-columns" :style="columnsGridStyle(block)">
                         <div
                             v-for="(col, ci) in block.columns"
                             :key="col.id"
                             class="blog-columns-col"
                             :style="columnCellStyle(col)"
-                            @dragover.prevent
-                            @drop.stop="dropColumnBeside(block, col, $event)"
                         >
                             <div
                                 class="blog-columns-drag"
-                                draggable="true"
-                                @dragstart="startColumnDrag(col, $event)"
-                                @click.stop
+                                @mousedown.stop.prevent="startColumnPointerDrag(block, col, $event)"
                             >
                                 <i class="fa fa-bars"></i>
                             </div>
@@ -189,10 +184,21 @@
                                     <i class="fa fa-table"></i>
                                 </button>
                             </div>
+                        </div>
+                        </div>
+                        <div
+                            v-if="draggingParentId === block.id"
+                            class="blog-columns-dropgrid"
+                            :style="dropGridStyle(block)"
+                        >
                             <div
-                                class="blog-columns-drop-below"
-                                @dragover.prevent.stop
-                                @drop.stop="dropColumnBelow(block, col, $event)"
+                                v-for="slot in columnDropSlots(block)"
+                                :key="slot.row + '-' + slot.col"
+                                class="blog-columns-slot"
+                                :class="{ active: dropHover && dropHover.row === slot.row && dropHover.col === slot.col }"
+                                :style="{ gridRow: slot.row + 1, gridColumn: slot.col + 1 }"
+                                :data-drop-row="slot.row"
+                                :data-drop-col="slot.col"
                             ></div>
                         </div>
                     </div>
