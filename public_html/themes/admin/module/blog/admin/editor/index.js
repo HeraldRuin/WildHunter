@@ -11,6 +11,25 @@ function emptyColumn() {
   return { id: makeId(), blocks: [] };
 }
 
+function clampColumnCount(count) {
+  return Math.max(1, Math.min(5, parseInt(count, 10) || 2));
+}
+
+function defaultColumnRatio(count) {
+  switch (clampColumnCount(count)) {
+    case 1:
+      return "100";
+    case 3:
+      return "33-33-33";
+    case 4:
+      return "25-25-25-25";
+    case 5:
+      return "20-20-20-20-20";
+    default:
+      return "50-50";
+  }
+}
+
 function normalizeBlock(block) {
   if (block.type === "image" && !block.settings) {
     block.settings = { width: "100%", align: "center" };
@@ -26,10 +45,10 @@ function normalizeBlock(block) {
       block.settings = { count: 2, ratio: "50-50" };
     }
     if (!block.settings.ratio) {
-      block.settings.ratio = block.settings.count === 3 ? "33-33-33" : "50-50";
+      block.settings.ratio = defaultColumnRatio(block.settings.count);
     }
     if (!Array.isArray(block.columns) || !block.columns.length) {
-      const count = block.settings.count === 3 ? 3 : 2;
+      const count = clampColumnCount(block.settings.count);
       block.columns = Array.from({ length: count }, emptyColumn);
     }
     block.columns.forEach((col) => {
@@ -214,7 +233,7 @@ const app = createApp({
     setColumnCount(count) {
       const block = this.selectedBlock;
       if (!block || block.type !== "columns") return;
-      count = Math.max(2, Math.min(4, parseInt(count, 10) || 2));
+      count = clampColumnCount(count);
       block.settings.count = count;
       while (block.columns.length < count) {
         block.columns.push(emptyColumn());
@@ -226,23 +245,7 @@ const app = createApp({
           last.blocks.push(...removed.blocks);
         }
       }
-      if (count === 2 && (block.settings.ratio === "33-33-33" || block.settings.ratio === "25-25-25-25")) {
-        block.settings.ratio = "50-50";
-      } else if (count === 3) {
-        block.settings.ratio = "33-33-33";
-      } else if (count === 4) {
-        block.settings.ratio = "25-25-25-25";
-      }
-    },
-    addColumn() {
-      const block = this.selectedBlock;
-      if (!block || block.type !== "columns") return;
-      this.setColumnCount((block.columns?.length || 2) + 1);
-    },
-    removeColumn() {
-      const block = this.selectedBlock;
-      if (!block || block.type !== "columns") return;
-      this.setColumnCount((block.columns?.length || 2) - 1);
+      block.settings.ratio = defaultColumnRatio(count);
     },
     onSort() {
       // blocks reordered via v-model
