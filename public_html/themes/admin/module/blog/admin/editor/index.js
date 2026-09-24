@@ -26,6 +26,21 @@ function compactColumnRows(columns) {
   });
 }
 
+function renumberRowsByColumn(columns) {
+  const groups = {};
+  columns.forEach((col) => {
+    const key = col.col ?? 0;
+    (groups[key] ||= []).push(col);
+  });
+  Object.values(groups).forEach((items) => {
+    items
+      .sort((a, b) => (a.row ?? 0) - (b.row ?? 0))
+      .forEach((col, index) => {
+        col.row = index;
+      });
+  });
+}
+
 function compactRowCols(columns, row) {
   columns
     .filter((col) => (col.row ?? 0) === row)
@@ -278,20 +293,16 @@ const app = createApp({
     dropGridCols(block) {
       return Math.max(2, maxGridCols(block.columns));
     },
-    dropGridRows(block) {
-      const maxRow = Math.max(0, ...block.columns.map((col) => col.row ?? 0));
-      return maxRow + 2;
-    },
-    columnDropSlots(block) {
-      const cols = this.dropGridCols(block);
-      const rows = this.dropGridRows(block);
-      const slots = [];
-      for (let row = 0; row < rows; row++) {
-        for (let col = 0; col < cols; col++) {
-          slots.push({ row, col });
-        }
+    columnStacks(block) {
+      const count = this.draggingParentId === block.id ? this.dropGridCols(block) : maxGridCols(block.columns);
+      const stacks = [];
+      for (let col = 0; col < count; col++) {
+        const items = block.columns
+          .filter((item) => (item.col ?? 0) === col)
+          .sort((a, b) => (a.row ?? 0) - (b.row ?? 0));
+        stacks.push({ col, items });
       }
-      return slots;
+      return stacks;
     },
     columnsGridStyle(block) {
       const cols = this.draggingParentId === block.id ? this.dropGridCols(block) : maxGridCols(block.columns);
@@ -299,19 +310,11 @@ const app = createApp({
         gridTemplateColumns: ratioToGridTemplate(block.settings?.ratio, cols),
       };
     },
-    dropGridStyle(block) {
-      const cols = this.dropGridCols(block);
-      const rows = this.dropGridRows(block);
-      return {
-        gridTemplateColumns: ratioToGridTemplate(block.settings?.ratio, cols),
-        gridTemplateRows: `repeat(${rows}, minmax(88px, 1fr))`,
-      };
+    columnIndex(parent, col) {
+      return parent.columns.findIndex((item) => item.id === col.id);
     },
-    columnCellStyle(col) {
-      return {
-        gridColumn: (col.col ?? 0) + 1,
-        gridRow: (col.row ?? 0) + 1,
-      };
+    isDropActive(row, col) {
+      return this.dropHover && this.dropHover.row === row && this.dropHover.col === col;
     },
     startColumnPointerDrag(parent, col, event) {
       event.preventDefault();
@@ -343,18 +346,14 @@ const app = createApp({
       this.dropHover = null;
     },
     placeColumnAt(parent, dragged, row, col) {
-      const occupant = parent.columns.find(
-        (item) => item.id !== dragged.id && (item.row ?? 0) === row && (item.col ?? 0) === col
-      );
-      const fromRow = dragged.row ?? 0;
-      const fromCol = dragged.col ?? 0;
-      if (occupant) {
-        occupant.row = fromRow;
-        occupant.col = fromCol;
-      }
+      parent.columns.forEach((item) => {
+        if (item.id !== dragged.id && (item.col ?? 0) === col && (item.row ?? 0) >= row) {
+          item.row += 1;
+        }
+      });
       dragged.row = row;
       dragged.col = col;
-      compactColumnRows(parent.columns);
+      renumberRowsByColumn(parent.columns);
     },
     selectColumn(parent, col) {
       if (col.blocks[0]) {
@@ -414,6 +413,7 @@ const app = createApp({
       parent.settings.count = parent.columns.length;
       parent.settings.ratio = defaultColumnRatio(parent.settings.count);
       compactColumnRows(parent.columns);
+      renumberRowsByColumn(parent.columns);
     },
     deleteNestedBlock(parent, colIndex, childId) {
       if (!parent || parent.type !== "columns") return;

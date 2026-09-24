@@ -355,10 +355,6 @@
     .blog-columns-wrap {
         position: relative;
         width: 100%;
-
-        &.is-dragging {
-            padding-bottom: 120px;
-        }
     }
 
     .blog-columns {
@@ -366,6 +362,13 @@
         gap: 24px;
         align-items: start;
         width: 100%;
+    }
+
+    .blog-columns-stack {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        min-width: 0;
     }
 
     .blog-columns-col {
@@ -376,33 +379,16 @@
         position: relative;
     }
 
-    .blog-columns-dropgrid {
-        position: absolute;
-        left: 0;
-        right: 0;
-        top: 0;
-        bottom: 0;
-        z-index: 4;
-        display: grid;
-        gap: 24px;
-        width: 100%;
-    }
-
     .blog-columns-slot {
-        min-height: 88px;
+        min-height: 72px;
         border: 2px dashed #c5d8f3;
         border-radius: 6px;
-        background: rgba(38, 128, 235, 0.04);
+        background: rgba(38, 128, 235, 0.06);
 
         &.active {
             border-color: rgb(38, 128, 235);
-            background: rgba(38, 128, 235, 0.12);
+            background: rgba(38, 128, 235, 0.16);
         }
-    }
-
-    .blog-columns-wrap.is-dragging .blog-columns {
-        pointer-events: none;
-        opacity: 0.35;
     }
 
     .blog-columns-drag {

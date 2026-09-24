@@ -130,76 +130,81 @@
                         :class="{ 'is-dragging': draggingParentId === block.id }"
                     >
                         <div class="blog-columns" :style="columnsGridStyle(block)">
-                        <div
-                            v-for="(col, ci) in block.columns"
-                            :key="col.id"
-                            class="blog-columns-col"
-                            :style="columnCellStyle(col)"
-                        >
                             <div
-                                class="blog-columns-drag"
-                                @mousedown.stop.prevent="startColumnPointerDrag(block, col, $event)"
+                                v-for="stack in columnStacks(block)"
+                                :key="'stack-' + stack.col"
+                                class="blog-columns-stack"
                             >
-                                <i class="fa fa-bars"></i>
-                            </div>
-                            <div
-                                v-for="(child, cidx) in col.blocks"
-                                :key="child.id"
-                                class="blog-preview-block blog-preview-block--nested"
-                                :class="{ selected: selectedBlockId === child.id }"
-                                @click.stop="selectBlock(child.id)"
-                            >
-                                <div v-if="child.type === 'text'" class="blog-preview-text" v-html="child.content || '<p>{{ __('Empty text block') }}</p>'"></div>
-                                <div v-else-if="child.type === 'image'" class="blog-preview-image" :style="{ textAlign: child.settings?.align || 'center' }">
-                                    <img v-if="child.image_url" :src="child.image_url" :alt="child.caption || ''" :style="{ maxWidth: child.settings?.width || '100%' }">
-                                    <div v-else class="blog-preview-image-placeholder">
-                                        <i class="fa fa-image fa-3x"></i>
-                                        <p>{{ __('Select an image') }}</p>
+                                <div
+                                    v-if="draggingParentId === block.id"
+                                    class="blog-columns-slot"
+                                    :class="{ active: isDropActive(0, stack.col) }"
+                                    :data-drop-row="0"
+                                    :data-drop-col="stack.col"
+                                ></div>
+                                <template v-for="(col, si) in stack.items" :key="col.id">
+                                    <div
+                                        v-show="col.id !== draggingColumnId"
+                                        class="blog-columns-col"
+                                    >
+                                        <div
+                                            class="blog-columns-drag"
+                                            @mousedown.stop.prevent="startColumnPointerDrag(block, col, $event)"
+                                        >
+                                            <i class="fa fa-bars"></i>
+                                        </div>
+                                        <div
+                                            v-for="(child, cidx) in col.blocks"
+                                            :key="child.id"
+                                            class="blog-preview-block blog-preview-block--nested"
+                                            :class="{ selected: selectedBlockId === child.id }"
+                                            @click.stop="selectBlock(child.id)"
+                                        >
+                                            <div v-if="child.type === 'text'" class="blog-preview-text" v-html="child.content || '<p>{{ __('Empty text block') }}</p>'"></div>
+                                            <div v-else-if="child.type === 'image'" class="blog-preview-image" :style="{ textAlign: child.settings?.align || 'center' }">
+                                                <img v-if="child.image_url" :src="child.image_url" :alt="child.caption || ''" :style="{ maxWidth: child.settings?.width || '100%' }">
+                                                <div v-else class="blog-preview-image-placeholder">
+                                                    <i class="fa fa-image fa-3x"></i>
+                                                    <p>{{ __('Select an image') }}</p>
+                                                </div>
+                                                <p v-if="child.caption" class="blog-image-caption">@{{ child.caption }}</p>
+                                            </div>
+                                            <div v-else-if="child.type === 'table'" class="blog-preview-table">
+                                                <table class="table table-bordered">
+                                                    <thead v-if="child.settings?.headerRow && child.rows.length">
+                                                        <tr>
+                                                            <th v-for="(cell, cci) in child.rows[0]" :key="cci" v-html="cell || '&nbsp;'"></th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        <tr v-for="(row, ri) in (child.settings?.headerRow ? child.rows.slice(1) : child.rows)" :key="ri">
+                                                            <td v-for="(cell, cci) in row" :key="cci" v-html="cell || '&nbsp;'"></td>
+                                                        </tr>
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                        <div class="blog-columns-add" v-if="!col.blocks.length">
+                                            <button type="button" class="btn btn-sm btn-outline-secondary" @click.stop="addBlockToColumn(block, columnIndex(block, col), 'text')">
+                                                <i class="fa fa-font"></i>
+                                            </button>
+                                            <button type="button" class="btn btn-sm btn-outline-secondary" @click.stop="addBlockToColumn(block, columnIndex(block, col), 'image')">
+                                                <i class="fa fa-image"></i>
+                                            </button>
+                                            <button type="button" class="btn btn-sm btn-outline-secondary" @click.stop="addBlockToColumn(block, columnIndex(block, col), 'table')">
+                                                <i class="fa fa-table"></i>
+                                            </button>
+                                        </div>
                                     </div>
-                                    <p v-if="child.caption" class="blog-image-caption">@{{ child.caption }}</p>
-                                </div>
-                                <div v-else-if="child.type === 'table'" class="blog-preview-table">
-                                    <table class="table table-bordered">
-                                        <thead v-if="child.settings?.headerRow && child.rows.length">
-                                            <tr>
-                                                <th v-for="(cell, cci) in child.rows[0]" :key="cci" v-html="cell || '&nbsp;'"></th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <tr v-for="(row, ri) in (child.settings?.headerRow ? child.rows.slice(1) : child.rows)" :key="ri">
-                                                <td v-for="(cell, cci) in row" :key="cci" v-html="cell || '&nbsp;'"></td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
-                                </div>
+                                    <div
+                                        v-if="draggingParentId === block.id"
+                                        class="blog-columns-slot"
+                                        :class="{ active: isDropActive(si + 1, stack.col) }"
+                                        :data-drop-row="si + 1"
+                                        :data-drop-col="stack.col"
+                                    ></div>
+                                </template>
                             </div>
-                            <div class="blog-columns-add" v-if="!col.blocks.length">
-                                <button type="button" class="btn btn-sm btn-outline-secondary" @click.stop="addBlockToColumn(block, ci, 'text')">
-                                    <i class="fa fa-font"></i>
-                                </button>
-                                <button type="button" class="btn btn-sm btn-outline-secondary" @click.stop="addBlockToColumn(block, ci, 'image')">
-                                    <i class="fa fa-image"></i>
-                                </button>
-                                <button type="button" class="btn btn-sm btn-outline-secondary" @click.stop="addBlockToColumn(block, ci, 'table')">
-                                    <i class="fa fa-table"></i>
-                                </button>
-                            </div>
-                        </div>
-                        </div>
-                        <div
-                            v-if="draggingParentId === block.id"
-                            class="blog-columns-dropgrid"
-                            :style="dropGridStyle(block)"
-                        >
-                            <div
-                                v-for="slot in columnDropSlots(block)"
-                                :key="slot.row + '-' + slot.col"
-                                class="blog-columns-slot"
-                                :class="{ active: dropHover && dropHover.row === slot.row && dropHover.col === slot.col }"
-                                :style="{ gridRow: slot.row + 1, gridColumn: slot.col + 1 }"
-                                :data-drop-row="slot.row"
-                                :data-drop-col="slot.col"
-                            ></div>
                         </div>
                     </div>
                 </div>
