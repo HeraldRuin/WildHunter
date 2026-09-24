@@ -214,7 +214,7 @@ const app = createApp({
     setColumnCount(count) {
       const block = this.selectedBlock;
       if (!block || block.type !== "columns") return;
-      count = count === 3 ? 3 : 2;
+      count = Math.max(2, Math.min(4, parseInt(count, 10) || 2));
       block.settings.count = count;
       while (block.columns.length < count) {
         block.columns.push(emptyColumn());
@@ -226,11 +226,23 @@ const app = createApp({
           last.blocks.push(...removed.blocks);
         }
       }
-      if (count === 3) {
-        block.settings.ratio = "33-33-33";
-      } else if (block.settings.ratio === "33-33-33") {
+      if (count === 2 && (block.settings.ratio === "33-33-33" || block.settings.ratio === "25-25-25-25")) {
         block.settings.ratio = "50-50";
+      } else if (count === 3) {
+        block.settings.ratio = "33-33-33";
+      } else if (count === 4) {
+        block.settings.ratio = "25-25-25-25";
       }
+    },
+    addColumn() {
+      const block = this.selectedBlock;
+      if (!block || block.type !== "columns") return;
+      this.setColumnCount((block.columns?.length || 2) + 1);
+    },
+    removeColumn() {
+      const block = this.selectedBlock;
+      if (!block || block.type !== "columns") return;
+      this.setColumnCount((block.columns?.length || 2) - 1);
     },
     onSort() {
       // blocks reordered via v-model

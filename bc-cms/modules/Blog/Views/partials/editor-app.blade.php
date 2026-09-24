@@ -204,10 +204,6 @@
                         </div>
                     </div>
                         <div class="blog-form-field">
-                            <label>{{ __('Caption') }}</label>
-                            <input type="text" class="form-control" v-model="selectedBlock.caption">
-                        </div>
-                        <div class="blog-form-field">
                             <label>{{ __('Width') }}</label>
                             <select class="form-control" v-model="selectedBlock.settings.width">
                             <option value="100%">100%</option>
@@ -257,12 +253,17 @@
                     <template v-if="selectedBlock.type === 'columns'">
                         <div class="blog-form-field">
                             <label>{{ __('Columns') }}</label>
-                            <select class="form-control" :value="selectedBlock.settings.count" @change="setColumnCount(parseInt($event.target.value, 10))">
-                                <option :value="2">2</option>
-                                <option :value="3">3</option>
-                            </select>
+                            <div class="d-flex align-items-center">
+                                <select class="form-control mr-2" v-model.number="selectedBlock.settings.count" @change="setColumnCount(selectedBlock.settings.count)">
+                                    <option :value="2">2</option>
+                                    <option :value="3">3</option>
+                                    <option :value="4">4</option>
+                                </select>
+                                <button type="button" class="btn btn-sm btn-outline-secondary mr-1" :disabled="selectedBlock.columns.length >= 4" @click="addColumn">+</button>
+                                <button type="button" class="btn btn-sm btn-outline-secondary" :disabled="selectedBlock.columns.length <= 2" @click="removeColumn">−</button>
+                            </div>
                         </div>
-                        <div class="blog-form-field" v-if="selectedBlock.settings.count !== 3">
+                        <div class="blog-form-field" v-if="selectedBlock.settings.count === 2">
                             <label>{{ __('Column ratio') }}</label>
                             <select class="form-control" v-model="selectedBlock.settings.ratio">
                                 <option value="50-50">50 / 50</option>
