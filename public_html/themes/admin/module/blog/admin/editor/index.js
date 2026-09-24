@@ -7,8 +7,54 @@ function makeId() {
   return "blk_" + Math.random().toString(36).substring(2, 11);
 }
 
-function emptyColumn() {
-  return { id: makeId(), blocks: [] };
+function emptyColumn(row = 0, col = 0) {
+  return { id: makeId(), blocks: [], row, col };
+}
+
+function ensureColumnPositions(columns) {
+  columns.forEach((col, index) => {
+    if (col.row == null) col.row = 0;
+    if (col.col == null) col.col = index;
+  });
+}
+
+function compactColumnRows(columns) {
+  const used = [...new Set(columns.map((col) => col.row ?? 0))].sort((a, b) => a - b);
+  const map = Object.fromEntries(used.map((row, index) => [row, index]));
+  columns.forEach((col) => {
+    col.row = map[col.row ?? 0];
+  });
+}
+
+function compactRowCols(columns, row) {
+  columns
+    .filter((col) => (col.row ?? 0) === row)
+    .sort((a, b) => (a.col ?? 0) - (b.col ?? 0))
+    .forEach((col, index) => {
+      col.col = index;
+    });
+}
+
+function nextColumnSlot(columns) {
+  const row0 = columns.filter((col) => (col.row ?? 0) === 0);
+  const col = row0.length ? Math.max(...row0.map((item) => item.col ?? 0)) + 1 : 0;
+  return { row: 0, col };
+}
+
+function maxGridCols(columns) {
+  return Math.max(1, ...columns.map((col) => (col.col ?? 0) + 1));
+}
+
+function ratioToGridTemplate(ratio, maxCols) {
+  const map = {
+    "40-60": "2fr 3fr",
+    "60-40": "3fr 2fr",
+    "33-67": "1fr 2fr",
+    "67-33": "2fr 1fr",
+    "50-50": "1fr 1fr",
+  };
+  if (maxCols === 2 && map[ratio]) return map[ratio];
+  return `repeat(${maxCols}, minmax(0, 1fr))`;
 }
 
 function clampColumnCount(count) {
@@ -49,8 +95,9 @@ function normalizeBlock(block) {
     }
     if (!Array.isArray(block.columns) || !block.columns.length) {
       const count = clampColumnCount(block.settings.count);
-      block.columns = Array.from({ length: count }, emptyColumn);
+      block.columns = Array.from({ length: count }, (_, index) => emptyColumn(0, index));
     }
+    ensureColumnPositions(block.columns);
     block.columns.forEach((col) => {
       col.blocks = (col.blocks || []).map((child) => normalizeBlock(child));
     });
@@ -87,7 +134,7 @@ function defaultBlock(type) {
         id,
         type: "columns",
         settings: { count: 2, ratio: "50-50" },
-        columns: [emptyColumn(), emptyColumn()],
+        columns: [emptyColumn(0, 0), emptyColumn(0, 1)],
       };
     default:
       return { id, type: "text", content: "" };
@@ -108,6 +155,7 @@ const app = createApp({
       excerpt: blogEditorData.excerpt || "",
       blocks: (contentJson.blocks || []).map((b) => normalizeBlock(b)),
       selectedBlockId: null,
+      draggingColumnId: null,
       saving: false,
       lastSaved: blogEditorData.last_saved || "",
       message: { content: "", type: false },
@@ -219,6 +267,66 @@ const app = createApp({
     isColumnSelected(col) {
       return col.blocks.some((child) => child.id === this.selectedBlockId);
     },
+    columnsGridStyle(block) {
+      return {
+        gridTemplateColumns: ratioToGridTemplate(block.settings?.ratio, maxGridCols(block.columns)),
+      };
+    },
+    columnCellStyle(col) {
+      return {
+        gridColumn: (col.col ?? 0) + 1,
+        gridRow: (col.row ?? 0) + 1,
+      };
+    },
+    startColumnDrag(col, event) {
+      this.draggingColumnId = col.id;
+      event.dataTransfer.effectAllowed = "move";
+      event.dataTransfer.setData("text/plain", col.id);
+    },
+    endColumnDrag() {
+      this.draggingColumnId = null;
+    },
+    draggedColumn(parent, event) {
+      const id = this.draggingColumnId || event.dataTransfer.getData("text/plain");
+      return parent.columns.find((col) => col.id === id) || null;
+    },
+    dropColumnBelow(parent, target, event) {
+      event.preventDefault();
+      const dragged = this.draggedColumn(parent, event);
+      if (!dragged || dragged.id === target.id) {
+        this.draggingColumnId = null;
+        return;
+      }
+      const fromRow = dragged.row ?? 0;
+      dragged.row = (target.row ?? 0) + 1;
+      dragged.col = target.col ?? 0;
+      if (fromRow !== dragged.row) {
+        compactRowCols(parent.columns, fromRow);
+      }
+      compactColumnRows(parent.columns);
+      this.draggingColumnId = null;
+    },
+    dropColumnBeside(parent, target, event) {
+      event.preventDefault();
+      const dragged = this.draggedColumn(parent, event);
+      if (!dragged || dragged.id === target.id) {
+        this.draggingColumnId = null;
+        return;
+      }
+      const fromRow = dragged.row ?? 0;
+      dragged.row = target.row ?? 0;
+      dragged.col = (target.col ?? 0) + 1;
+      parent.columns.forEach((col) => {
+        if (col.id !== dragged.id && (col.row ?? 0) === dragged.row && (col.col ?? 0) >= dragged.col) {
+          col.col += 1;
+        }
+      });
+      if (fromRow !== dragged.row) {
+        compactRowCols(parent.columns, fromRow);
+      }
+      compactColumnRows(parent.columns);
+      this.draggingColumnId = null;
+    },
     selectColumn(parent, col) {
       if (col.blocks[0]) {
         this.selectBlock(col.blocks[0].id);
@@ -276,6 +384,7 @@ const app = createApp({
       }
       parent.settings.count = parent.columns.length;
       parent.settings.ratio = defaultColumnRatio(parent.settings.count);
+      compactColumnRows(parent.columns);
     },
     deleteNestedBlock(parent, colIndex, childId) {
       if (!parent || parent.type !== "columns") return;
@@ -294,7 +403,8 @@ const app = createApp({
       count = clampColumnCount(count);
       block.settings.count = count;
       while (block.columns.length < count) {
-        block.columns.push(emptyColumn());
+        const slot = nextColumnSlot(block.columns);
+        block.columns.push(emptyColumn(slot.row, slot.col));
       }
       while (block.columns.length > count) {
         const removed = block.columns.pop();

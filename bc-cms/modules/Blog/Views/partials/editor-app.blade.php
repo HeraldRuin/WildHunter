@@ -124,17 +124,27 @@
                             </tbody>
                         </table>
                     </div>
-                    <draggable
+                    <div
                         v-else-if="block.type === 'columns'"
-                        v-model="block.columns"
-                        item-key="id"
-                        handle=".blog-columns-drag"
                         class="blog-columns"
-                        :data-ratio="block.settings?.ratio || '50-50'"
+                        :class="{ 'is-dragging': draggingColumnId }"
+                        :style="columnsGridStyle(block)"
+                        @dragend="endColumnDrag"
                     >
-                        <template #item="{ element: col, index: ci }">
-                        <div class="blog-columns-col">
-                            <div class="blog-columns-drag" @click.stop>
+                        <div
+                            v-for="(col, ci) in block.columns"
+                            :key="col.id"
+                            class="blog-columns-col"
+                            :style="columnCellStyle(col)"
+                            @dragover.prevent
+                            @drop.stop="dropColumnBeside(block, col, $event)"
+                        >
+                            <div
+                                class="blog-columns-drag"
+                                draggable="true"
+                                @dragstart="startColumnDrag(col, $event)"
+                                @click.stop
+                            >
                                 <i class="fa fa-bars"></i>
                             </div>
                             <div
@@ -179,9 +189,13 @@
                                     <i class="fa fa-table"></i>
                                 </button>
                             </div>
+                            <div
+                                class="blog-columns-drop-below"
+                                @dragover.prevent.stop
+                                @drop.stop="dropColumnBelow(block, col, $event)"
+                            ></div>
                         </div>
-                        </template>
-                    </draggable>
+                    </div>
                 </div>
                 <div v-if="!blocks.length" class="blog-preview-empty">
                     <i class="fa fa-plus-circle fa-3x text-muted mb-3"></i>

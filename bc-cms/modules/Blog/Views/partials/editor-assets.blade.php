@@ -80,15 +80,14 @@
             }
 
             .user-page.blog-editor-page .blog-editor-root .blog-columns {
-                display: flex;
+                display: grid;
                 gap: 24px;
-                align-items: flex-start;
+                align-items: start;
                 width: 100%;
                 max-width: 100%;
             }
 
             .user-page.blog-editor-page .blog-editor-root .blog-columns-col {
-                flex: 1 1 0;
                 min-width: 0;
             }
 
