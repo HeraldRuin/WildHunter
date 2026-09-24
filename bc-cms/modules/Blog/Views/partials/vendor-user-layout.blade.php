@@ -8,3 +8,8 @@
         }
     </style>
 @endpush
+
+@push('js')
+    {{-- Тот же Vue 3 медиа-браузер, что в админке: Vue 2-версия на странице редактора не рисует файлы и папки --}}
+    <script type="module" src="{{ asset('themes/admin/dist/js/browser.js?_ver=' . config('app.asset_version')) }}"></script>
+@endpush

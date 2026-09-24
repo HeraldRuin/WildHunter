@@ -114,7 +114,7 @@
 <script src="{{ asset('libs/vue/vue' . (!env('APP_DEBUG') ? '.min' : '') . '.js') }}"></script>
 <script src="{{ asset('libs/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
 <script src="{{ asset('libs/bootbox/bootbox.min.js') }}"></script>
-@if (Auth::check() and !empty($is_user_page))
+@if (Auth::check() and !empty($is_user_page) and !str_contains($body_class ?? '', 'blog-vendor-page'))
     <script src="{{ asset('module/media/js/browser.js?_ver=' . config('app.asset_version')) }}"></script>
 @endif
 <script src="{{ asset('libs/carousel-2/owl.carousel.min.js') }}"></script>
