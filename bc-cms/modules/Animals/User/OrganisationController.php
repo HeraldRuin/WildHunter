@@ -63,7 +63,7 @@ class OrganisationController extends FrontendController
         }
 
         $list_animals->orderBy('bc_animals.id', 'desc');
-        $rows = $list_animals->paginate(15);
+        $rows = $list_animals->get();
 
         $current_month = strtotime(date('Y-m-01',time()));
 
