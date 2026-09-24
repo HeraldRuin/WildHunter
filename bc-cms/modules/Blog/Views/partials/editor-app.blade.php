@@ -42,27 +42,19 @@
                                 </button>
                             </div>
                             <div v-if="element.type === 'columns'" class="blog-block-children">
-                                <template v-for="(col, ci) in element.columns" :key="col.id">
-                                    <div class="blog-block-col-label">
-                                        <span>{{ __('Column') }} @{{ ci + 1 }}</span>
-                                        <button class="btn btn-sm btn-link text-danger block-delete" @click.stop="deleteColumn(element, ci)">
-                                            <i class="fa fa-trash"></i>
-                                        </button>
-                                    </div>
-                                    <div
-                                        v-for="child in col.blocks"
-                                        :key="child.id"
-                                        class="blog-block-item blog-block-item--nested"
-                                        :class="{ selected: selectedBlockId === child.id }"
-                                        @click="selectBlock(child.id)"
-                                    >
-                                        <span class="block-icon"><i :class="blockIcon(child.type)"></i></span>
-                                        <span class="block-label">@{{ blockLabel(child) }}</span>
-                                        <button class="btn btn-sm btn-link text-danger block-delete" @click.stop="deleteNestedBlock(element, ci, child.id)">
-                                            <i class="fa fa-trash"></i>
-                                        </button>
-                                    </div>
-                                </template>
+                                <div
+                                    v-for="(col, ci) in element.columns"
+                                    :key="col.id"
+                                    class="blog-block-item blog-block-item--nested"
+                                    :class="{ selected: isColumnSelected(col) }"
+                                    @click="selectColumn(element, col)"
+                                >
+                                    <span class="block-icon"><i :class="columnIcon(col)"></i></span>
+                                    <span class="block-label">{{ __('Column') }} @{{ ci + 1 }}<template v-if="col.blocks[0]"> — @{{ blockLabel(col.blocks[0]) }}</template></span>
+                                    <button class="btn btn-sm btn-link text-danger block-delete" @click.stop="deleteColumn(element, ci)">
+                                        <i class="fa fa-trash"></i>
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </template>
@@ -166,7 +158,7 @@
                                     </table>
                                 </div>
                             </div>
-                            <div class="blog-columns-add">
+                            <div class="blog-columns-add" v-if="!col.blocks.length">
                                 <button type="button" class="btn btn-sm btn-outline-secondary" @click.stop="addBlockToColumn(block, ci, 'text')">
                                     <i class="fa fa-font"></i>
                                 </button>

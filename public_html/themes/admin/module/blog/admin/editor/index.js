@@ -194,7 +194,46 @@ const app = createApp({
     selectBlock(id) {
       this.selectedBlockId = id;
     },
+    findColumnContext(blockId) {
+      for (const block of this.blocks) {
+        if (block.type !== "columns") continue;
+        if (block.id === blockId) {
+          return { parent: block, colIndex: this.firstEmptyColumnIndex(block) };
+        }
+        for (let ci = 0; ci < block.columns.length; ci++) {
+          if (block.columns[ci].blocks.some((child) => child.id === blockId)) {
+            return { parent: block, colIndex: this.firstEmptyColumnIndex(block) };
+          }
+        }
+      }
+      return null;
+    },
+    firstEmptyColumnIndex(parent) {
+      const empty = parent.columns.findIndex((col) => !col.blocks.length);
+      return empty >= 0 ? empty : parent.columns.length - 1;
+    },
+    columnIcon(col) {
+      const child = col.blocks[0];
+      return child ? this.blockIcon(child.type) : "fa fa-square-o";
+    },
+    isColumnSelected(col) {
+      return col.blocks.some((child) => child.id === this.selectedBlockId);
+    },
+    selectColumn(parent, col) {
+      if (col.blocks[0]) {
+        this.selectBlock(col.blocks[0].id);
+        return;
+      }
+      this.selectBlock(parent.id);
+    },
     addBlock(type) {
+      if (type !== "columns") {
+        const ctx = this.findColumnContext(this.selectedBlockId);
+        if (ctx) {
+          this.addBlockToColumn(ctx.parent, ctx.colIndex, type);
+          return;
+        }
+      }
       const block = defaultBlock(type);
       this.blocks.push(block);
       this.selectedBlockId = block.id;
@@ -218,6 +257,9 @@ const app = createApp({
       const block = defaultBlock(type);
       col.blocks.push(block);
       this.selectedBlockId = block.id;
+      if (type === "image") {
+        this.$nextTick(() => this.pickImage());
+      }
     },
     deleteColumn(parent, colIndex) {
       if (!parent || parent.type !== "columns") return;
