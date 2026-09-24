@@ -334,11 +334,22 @@
     }
 
     .blog-block-col-label {
+        display: flex;
+        align-items: center;
         padding: 6px 12px 2px 28px;
         font-size: 11px;
         color: #888;
         text-transform: uppercase;
         letter-spacing: 0.03em;
+
+        span {
+            flex: 1;
+        }
+
+        .block-delete {
+            padding: 0 4px;
+            font-size: 12px;
+        }
     }
 
     .blog-columns {

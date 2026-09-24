@@ -219,6 +219,22 @@ const app = createApp({
       col.blocks.push(block);
       this.selectedBlockId = block.id;
     },
+    deleteColumn(parent, colIndex) {
+      if (!parent || parent.type !== "columns") return;
+      const removed = parent.columns[colIndex];
+      if (!removed) return;
+      parent.columns.splice(colIndex, 1);
+      if (removed.blocks.some((b) => b.id === this.selectedBlockId)) {
+        this.selectedBlockId = parent.id;
+      }
+      if (!parent.columns.length) {
+        const index = this.blocks.findIndex((b) => b.id === parent.id);
+        if (index >= 0) this.deleteBlock(index);
+        return;
+      }
+      parent.settings.count = parent.columns.length;
+      parent.settings.ratio = defaultColumnRatio(parent.settings.count);
+    },
     deleteNestedBlock(parent, colIndex, childId) {
       if (!parent || parent.type !== "columns") return;
       const col = parent.columns[colIndex];

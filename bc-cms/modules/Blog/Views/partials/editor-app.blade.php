@@ -43,7 +43,12 @@
                             </div>
                             <div v-if="element.type === 'columns'" class="blog-block-children">
                                 <template v-for="(col, ci) in element.columns" :key="col.id">
-                                    <div class="blog-block-col-label">{{ __('Column') }} @{{ ci + 1 }}</div>
+                                    <div class="blog-block-col-label">
+                                        <span>{{ __('Column') }} @{{ ci + 1 }}</span>
+                                        <button class="btn btn-sm btn-link text-danger block-delete" @click.stop="deleteColumn(element, ci)">
+                                            <i class="fa fa-trash"></i>
+                                        </button>
+                                    </div>
                                     <div
                                         v-for="child in col.blocks"
                                         :key="child.id"
