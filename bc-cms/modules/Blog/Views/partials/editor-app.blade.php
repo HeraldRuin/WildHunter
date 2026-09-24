@@ -41,21 +41,28 @@
                                     <i class="fa fa-trash"></i>
                                 </button>
                             </div>
-                            <div v-if="element.type === 'columns'" class="blog-block-children">
+                            <draggable
+                                v-if="element.type === 'columns'"
+                                v-model="element.columns"
+                                item-key="id"
+                                handle=".column-drag-handler"
+                                class="blog-block-children"
+                            >
+                                <template #item="{ element: col, index: ci }">
                                 <div
-                                    v-for="(col, ci) in element.columns"
-                                    :key="col.id"
                                     class="blog-block-item blog-block-item--nested"
                                     :class="{ selected: isColumnSelected(col) }"
                                     @click="selectColumn(element, col)"
                                 >
+                                    <span class="column-drag-handler drag-handler"><i class="fa fa-bars"></i></span>
                                     <span class="block-icon"><i :class="columnIcon(col)"></i></span>
                                     <span class="block-label">{{ __('Column') }} @{{ ci + 1 }}<template v-if="col.blocks[0]"> — @{{ blockLabel(col.blocks[0]) }}</template></span>
                                     <button class="btn btn-sm btn-link text-danger block-delete" @click.stop="deleteColumn(element, ci)">
                                         <i class="fa fa-trash"></i>
                                     </button>
                                 </div>
-                            </div>
+                                </template>
+                            </draggable>
                         </div>
                     </template>
                 </draggable>
@@ -117,16 +124,19 @@
                             </tbody>
                         </table>
                     </div>
-                    <div
+                    <draggable
                         v-else-if="block.type === 'columns'"
+                        v-model="block.columns"
+                        item-key="id"
+                        handle=".blog-columns-drag"
                         class="blog-columns"
                         :data-ratio="block.settings?.ratio || '50-50'"
                     >
-                        <div
-                            v-for="(col, ci) in block.columns"
-                            :key="col.id"
-                            class="blog-columns-col"
-                        >
+                        <template #item="{ element: col, index: ci }">
+                        <div class="blog-columns-col">
+                            <div class="blog-columns-drag" @click.stop>
+                                <i class="fa fa-bars"></i>
+                            </div>
                             <div
                                 v-for="(child, cidx) in col.blocks"
                                 :key="child.id"
@@ -170,7 +180,8 @@
                                 </button>
                             </div>
                         </div>
-                    </div>
+                        </template>
+                    </draggable>
                 </div>
                 <div v-if="!blocks.length" class="blog-preview-empty">
                     <i class="fa fa-plus-circle fa-3x text-muted mb-3"></i>

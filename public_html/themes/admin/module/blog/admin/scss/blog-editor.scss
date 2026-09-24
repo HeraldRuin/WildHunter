@@ -376,6 +376,21 @@
         gap: 12px;
     }
 
+    .blog-columns-drag {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 22px;
+        color: #bbb;
+        cursor: grab;
+        border-radius: 4px;
+
+        &:hover {
+            background: #f3f3f3;
+            color: #666;
+        }
+    }
+
     .blog-columns-add {
         display: flex;
         gap: 6px;
