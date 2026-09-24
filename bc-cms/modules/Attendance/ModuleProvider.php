@@ -1,10 +1,12 @@
 <?php
 namespace Modules\Attendance;
+use Illuminate\Support\Facades\Auth;
 use Modules\Attendance\Models\Attendance;
 use Modules\Attendance\RouterServiceProvider;
 use Modules\Core\Helpers\SitemapHelper;
 use Modules\ModuleServiceProvider;
 use Modules\User\Helpers\PermissionHelper;
+use Modules\User\Models\Role;
 
 class ModuleProvider extends ModuleServiceProvider
 {
@@ -25,6 +27,10 @@ class ModuleProvider extends ModuleServiceProvider
             'attendance_delete',
             'attendance_manage_others',
             'attendance_manage_attributes',
+            'additional_system_view',
+            'additional_system_create',
+            'additional_system_update',
+            'additional_system_delete',
         ]);
     }
     /**
@@ -39,8 +45,32 @@ class ModuleProvider extends ModuleServiceProvider
 
     public static function getAdminMenu()
     {
-//        if(!Animal::isEnableForAdmin()) return [];
-        return [];
+        $user = Auth::user();
+        if (!$user || (!$user->hasRole(Role::SUPERADMIN) && !$user->hasPermission('additional_system_view'))) {
+            return [];
+        }
+
+        return [
+            'additional_system' => [
+                'position' => 51,
+                'url' => route('additional_system.admin.index'),
+                'title' => __('System services'),
+                'icon' => 'ion-ios-list',
+                'group' => 'catalog',
+                'children' => [
+                    'all' => [
+                        'url' => route('additional_system.admin.index'),
+                        'title' => __('All system services'),
+                        'position' => 10,
+                    ],
+                    'create' => [
+                        'url' => route('additional_system.admin.create'),
+                        'title' => __('Add system service'),
+                        'position' => 20,
+                    ],
+                ],
+            ],
+        ];
     }
 
     public static function getBookableServices()

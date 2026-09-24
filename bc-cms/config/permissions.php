@@ -156,6 +156,12 @@ return [
     'caliber_view',
     'caliber_create',
 
+    // System services
+    'additional_system_view',
+    'additional_system_create',
+    'additional_system_update',
+    'additional_system_delete',
+
     //Attendance
     'attendance_view',
     'attendance_create',

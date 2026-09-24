@@ -82,7 +82,7 @@ class RouterServiceProvider extends ServiceProvider
     {
         Route::middleware(['web','dashboard'])
             ->namespace($this->adminModuleNamespace)
-            ->prefix(config('attendance.attendance_route_prefix').'/module/attendance')
+            ->prefix(config('admin.admin_route_prefix').'/module/attendance')
             ->group(__DIR__ . '/Routes/admin.php');
     }
 
