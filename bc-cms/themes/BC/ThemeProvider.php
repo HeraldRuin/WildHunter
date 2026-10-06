@@ -17,7 +17,6 @@ class ThemeProvider extends \Themes\Base\ThemeProvider
         'booking'   => \Modules\Booking\ModuleProvider::class,
         'hotel'     => \Modules\Hotel\ModuleProvider::class,
         'space'     => \Modules\Space\ModuleProvider::class,
-        'car'       => \Modules\Car\ModuleProvider::class,
         'event'     => \Modules\Event\ModuleProvider::class,
         'tour'      => \Modules\Tour\ModuleProvider::class,
         'flight'    => \Modules\Flight\ModuleProvider::class,
@@ -53,7 +52,6 @@ class ThemeProvider extends \Themes\Base\ThemeProvider
         $this->app->register(\Themes\BC\Core\ModuleProvider::class);
         $this->app->register(\Themes\BC\Tour\ModuleProvider::class);
         $this->app->register(\Themes\BC\Boat\ModuleProvider::class);
-        $this->app->register(\Themes\BC\Car\ModuleProvider::class);
     }
     public function boot(Kernel $kernel)
     {
