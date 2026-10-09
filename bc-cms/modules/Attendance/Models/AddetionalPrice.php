@@ -8,6 +8,10 @@ class AddetionalPrice extends Model
 {
     protected $table = 'bc_addetional_prices';
 
+    protected $casts = [
+        'is_visible' => 'boolean',
+    ];
+
     protected $fillable = [
         'user_id',
         'hotel_id',
@@ -16,6 +20,7 @@ class AddetionalPrice extends Model
         'end_date',
         'price',
         'type',
+        'is_visible',
         'calculation_type',
         'count',
     ];
