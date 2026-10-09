@@ -24,7 +24,7 @@ class LocationController extends AdminController
         if (!empty($search = $request->query('s'))) {
             $listLocation->where('name', 'LIKE', '%' . $search . '%');
         }
-        $listLocation->orderBy('created_at', 'asc');
+        $listLocation->orderBy('name', 'asc');
         $data = [
             'rows'        => $listLocation->get()->toTree(),
             'row'         => $this->location,
