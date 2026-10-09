@@ -68,6 +68,11 @@ class ModuleProvider extends ModuleServiceProvider
                         'title' => __('Add system service'),
                         'position' => 20,
                     ],
+                    'meals' => [
+                        'url' => route('meal.admin.index'),
+                        'title' => __('Питание'),
+                        'position' => 30,
+                    ],
                 ],
             ],
         ];

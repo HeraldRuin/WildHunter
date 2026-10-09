@@ -7,6 +7,11 @@ Route::get('/services/edit/{id}', 'AdditionalSystemController@edit')->name('addi
 Route::post('/services/store/{id}', 'AdditionalSystemController@store')->name('additional_system.admin.store');
 Route::post('/services/bulkEdit', 'AdditionalSystemController@bulkEdit')->name('additional_system.admin.bulkEdit');
 
+Route::get('/meals', 'MealController@index')->name('meal.admin.index');
+Route::get('/meals/create', 'MealController@create')->name('meal.admin.create');
+Route::get('/meals/edit/{id}', 'MealController@edit')->name('meal.admin.edit');
+Route::post('/meals/store/{id}', 'MealController@store')->name('meal.admin.store');
+
 //Route::get('/','AnimalController@index')->name('animal.admin.index');
 //Route::get('/create','AnimalController@create')->name('animal.admin.create');
 //Route::get('/edit/{id}','AnimalController@edit')->name('animal.admin.edit');
