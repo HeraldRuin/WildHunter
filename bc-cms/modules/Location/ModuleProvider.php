@@ -36,14 +36,14 @@ class ModuleProvider extends ModuleServiceProvider
             'location' => [
                 "position" => 30,
                 'url'        => route('location.admin.index'),
-                'title'      => __("Location"),
+                'title'      => __("Regions"),
                 'icon'       => 'icon ion-md-compass',
                 'permission' => 'location_view',
                 'group'      => 'catalog',
                 'children'   => [
                     'location_view' => [
                         'url'        => route('location.admin.index'),
-                        'title'      => __('All Location'),
+                        'title'      => __('All Regions'),
                         'icon'       => 'icon ion-md-compass',
                         'permission' => 'location_view',
                     ],
