@@ -31,7 +31,7 @@ class LocationController extends AdminController
             'translation' => new ($this->location->getTranslationModelName()),
             'breadcrumbs' => [
                 [
-                    'name' => __('Location'),
+                    'name' => __('Region'),
                     'url'  => route('location.admin.index')
                 ],
                 [
@@ -58,7 +58,7 @@ class LocationController extends AdminController
             'parents'     => $this->location::get()->toTree(),
             'breadcrumbs' => [
                 [
-                    'name' => __('Location'),
+                    'name' => __('Region'),
                     'url'  => route('location.admin.index')
                 ],
                 [
