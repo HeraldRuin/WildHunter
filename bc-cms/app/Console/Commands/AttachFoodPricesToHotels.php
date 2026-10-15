@@ -11,13 +11,14 @@ class AttachFoodPricesToHotels extends Command
 {
     protected $signature = 'hotels:attach-food-prices';
 
-    protected $description = 'Привязывает доп. цены с типом food к отелям, у которых их ещё нет';
+    protected $description = 'Создаёт для каждого админа базы копии всех записей с типом food';
 
     public function handle(): int
     {
         $foodPrices = AddetionalPrice::query()
             ->where('type', AddetionalPrice::FOOD)
-            ->whereNull('hotel_id')
+            ->orderByRaw('hotel_id is null desc')
+            ->orderBy('id')
             ->get()
             ->unique('name')
             ->values();
@@ -28,26 +29,31 @@ class AttachFoodPricesToHotels extends Command
             return CommandAlias::SUCCESS;
         }
 
-        $attached = 0;
+        $created = 0;
 
-        Hotel::query()->orderBy('id')->each(function (Hotel $hotel) use ($foodPrices, &$attached) {
-            $existingNames = AddetionalPrice::query()
-                ->where('hotel_id', $hotel->id)
-                ->where('type', AddetionalPrice::FOOD)
-                ->pluck('name');
+        Hotel::query()
+            ->whereNotNull('admin_base')
+            ->orderBy('id')
+            ->each(function (Hotel $hotel) use ($foodPrices, &$created) {
+                $existingNames = AddetionalPrice::query()
+                    ->where('hotel_id', $hotel->id)
+                    ->where('type', AddetionalPrice::FOOD)
+                    ->pluck('name');
 
-            foreach ($foodPrices as $foodPrice) {
-                if ($existingNames->contains($foodPrice->name)) {
-                    continue;
+                foreach ($foodPrices as $foodPrice) {
+                    if ($existingNames->contains($foodPrice->name)) {
+                        continue;
+                    }
+
+                    $copy = $foodPrice->replicate();
+                    $copy->hotel_id = $hotel->id;
+                    $copy->user_id = $hotel->admin_base;
+                    $copy->save();
+                    $created++;
                 }
+            });
 
-                $foodPrice->hotel_id = $hotel->id;
-                $foodPrice->save();
-                $attached++;
-            }
-        });
-
-        $this->info("Привязано записей: {$attached}.");
+        $this->info("Создано записей: {$created}.");
 
         return CommandAlias::SUCCESS;
     }
