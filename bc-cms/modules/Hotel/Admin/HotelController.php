@@ -282,6 +282,9 @@ class HotelController extends AdminController
             'max_hunts_per_day',
             'admin_base',
         ];
+        if ($id > 0 && !$request->filled('admin_base') && $row->admin_base) {
+            $dataKeys = array_values(array_diff($dataKeys, ['admin_base']));
+        }
         if($this->hasPermission('hotel_manage_others')){
             $dataKeys[] = 'author_id';
         }

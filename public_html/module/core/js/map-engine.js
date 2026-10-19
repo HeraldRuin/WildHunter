@@ -527,8 +527,9 @@ window.BCInitMap = function () {
                     $("input[name=map_lat]").val(coords[0]);
                     $("input[name=map_lng]").val(coords[1]);
 
-                    me.getAddressFromCoords(coords, function (address) {
+                    me.getAddressFromCoords(coords, function (address, geoObject) {
                         $("#customPlaceAddress").val(address);
+                        me.applyLocationFromGeoObject(geoObject);
                     });
                 });
             }
@@ -606,6 +607,12 @@ window.BCInitMap = function () {
 
                     me.map.setCenter(coords, 15);
 
+                    const address = geoObject.getAddressLine();
+                    if (address) {
+                        $("#customPlaceAddress").val(address);
+                    }
+                    me.applyLocationFromGeoObject(geoObject);
+
                     func([
                         coords[0],
                         coords[1],
@@ -638,9 +645,96 @@ window.BCInitMap = function () {
             const address = firstGeoObject.getAddressLine();
 
             if (typeof callback === 'function') {
-                callback(address);
+                callback(address, firstGeoObject);
             }
         });
+    };
+
+    YandexEngine.prototype.applyLocationFromGeoObject = function (geoObject) {
+        if (!geoObject) {
+            return;
+        }
+
+        const candidates = [];
+
+        if (typeof geoObject.getAdministrativeAreas === 'function') {
+            const areas = geoObject.getAdministrativeAreas() || [];
+            areas.forEach(function (area) {
+                if (area) {
+                    candidates.push(area);
+                }
+            });
+        }
+
+        const address = typeof geoObject.getAddressLine === 'function'
+            ? geoObject.getAddressLine()
+            : '';
+
+        if (address) {
+            candidates.push(address);
+        }
+
+        const options = [];
+        const $select = $('select[name=location_id]');
+
+        if ($select.length) {
+            $select.find('option').each(function () {
+                options.push({
+                    id: $(this).val(),
+                    title: $(this).text()
+                });
+            });
+        } else {
+            const $smart = $('.smart-search-location');
+            if ($smart.length) {
+                try {
+                    const parsed = JSON.parse($smart.attr('data-default') || '[]');
+                    parsed.forEach(function (item) {
+                        options.push({
+                            id: item.id,
+                            title: item.title
+                        });
+                    });
+                } catch (e) {
+                }
+            }
+        }
+
+        function normalize(value) {
+            return String(value || '')
+                .toLowerCase()
+                .replace(/ё/g, 'е')
+                .replace(/\s+/g, ' ')
+                .trim();
+        }
+
+        let best = null;
+        let bestLength = 0;
+
+        candidates.forEach(function (candidate) {
+            const normalizedCandidate = normalize(candidate);
+
+            options.forEach(function (option) {
+                const title = normalize(option.title).replace(/^[-–\s]+/, '');
+
+                if (title.length >= 4 && normalizedCandidate.indexOf(title) !== -1 && title.length > bestLength) {
+                    best = option;
+                    bestLength = title.length;
+                }
+            });
+        });
+
+        if (!best || !best.id) {
+            return;
+        }
+
+        if ($select.length) {
+            $select.val(String(best.id)).trigger('change');
+        }
+
+        const visibleTitle = String(best.title || '').replace(/^[-–\s]+/, '').trim();
+        $('.smart-search-location').val(visibleTitle);
+        $('input.child_id[name=location_id]').val(best.id);
     };
 
     YandexEngine.prototype.resetToInitial = function () {

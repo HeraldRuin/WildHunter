@@ -32,9 +32,14 @@
         <div class="form-group">
             <div class="">
                 <select id="usersSelect" name="admin_base" class="form-control">
-                    <option value="" hidden>
+                    <option value="" hidden @if(empty($assignedAdmin)) selected @endif>
                         {{ __('hotelAdmin.name.user_search') }}
                     </option>
+                    @if($assignedAdmin)
+                        <option value="{{ $assignedAdmin->id }}" selected>
+                            {{ $assignedAdmin->first_name }} {{ $assignedAdmin->last_name }} ({{ $assignedAdmin->email }})
+                        </option>
+                    @endif
                     @foreach($baseAdmins as $user)
                         <option value="{{ $user->id }}">
                             {{ $user->first_name }} {{ $user->last_name }} ({{ $user->email }})
