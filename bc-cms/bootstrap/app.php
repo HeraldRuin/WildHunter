@@ -1,6 +1,5 @@
 <?php
 
-use Illuminate\Auth\AuthenticationException;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -62,14 +61,19 @@ return Application::configure(basePath: dirname(__DIR__))
                 ], $e->getStatus());
             }
 
-            if ($e instanceof \Symfony\Component\HttpKernel\Exception\HttpException
-                && $e->getStatusCode() === 419) {
+            if ($e instanceof TokenMismatchException
+                || ($e instanceof \Symfony\Component\HttpKernel\Exception\HttpException
+                    && $e->getStatusCode() === 419)) {
 
-                return response()->json([
-                    'success' => false,
-                    'message' => translate_error('user', 'auth_token_mismatch'),
-                    'error_code' => 'CSRF_TOKEN_MISMATCH',
-                ], 419);
+                if ($request->expectsJson() || $request->ajax()) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => translate_error('user', 'auth_token_mismatch'),
+                        'error_code' => 'CSRF_TOKEN_MISMATCH',
+                    ], 419)->header('X-CSRF-TOKEN', csrf_token());
+                }
+
+                return redirect()->back(fallback: url('/'));
             }
 
             return null;
