@@ -674,6 +674,35 @@ window.BCInitMap = function () {
             candidates.push(address);
         }
 
+        const meta = geoObject.properties && geoObject.properties.get
+            ? geoObject.properties.get('metaDataProperty.GeocoderMetaData.Address.Components')
+            : null;
+
+        if (Array.isArray(meta)) {
+            meta.forEach(function (component) {
+                if (component && component.name) {
+                    candidates.push(component.name);
+                }
+            });
+        }
+
+        function normalize(value) {
+            return String(value || '')
+                .toLowerCase()
+                .replace(/ё/g, 'е')
+                .replace(/\s+/g, ' ')
+                .trim();
+        }
+
+        const isMoscowCity = candidates.some(function (candidate) {
+            const value = normalize(candidate);
+            return value === 'москва' || value.indexOf('москва,') === 0 || value.indexOf('москва ') === 0;
+        });
+
+        if (isMoscowCity) {
+            candidates.push('Московская область');
+        }
+
         const options = [];
         const $select = $('select[name=location_id]');
 
@@ -698,14 +727,6 @@ window.BCInitMap = function () {
                 } catch (e) {
                 }
             }
-        }
-
-        function normalize(value) {
-            return String(value || '')
-                .toLowerCase()
-                .replace(/ё/g, 'е')
-                .replace(/\s+/g, ' ')
-                .trim();
         }
 
         let best = null;
