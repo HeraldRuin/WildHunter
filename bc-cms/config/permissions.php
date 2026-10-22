@@ -155,6 +155,8 @@ return [
     //Caliber
     'caliber_view',
     'caliber_create',
+    'caliber_update',
+    'caliber_delete',
 
     // System services
     'additional_system_view',
