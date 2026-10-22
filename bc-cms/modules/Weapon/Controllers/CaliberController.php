@@ -8,7 +8,6 @@
 namespace Modules\Weapon\Controllers;
 
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Modules\AdminController;
 use Modules\Animals\Hook;
 use Modules\Core\Events\CreatedServicesEvent;
@@ -83,7 +82,7 @@ class CaliberController extends AdminController
 
     public function create(Request $request)
     {
-//        $this->checkPermission('animal_create');
+        $this->checkPermission('caliber_create');
         $row = new $this->caliber();
         $row->fill([
             'status' => 'publish'
@@ -116,18 +115,14 @@ class CaliberController extends AdminController
         }
 
         if ($id > 0) {
-
-//            $this->checkPermission('animal_update');
+            $this->checkPermission('caliber_update');
             $row = $this->caliber::find($id);
 
             if (empty($row)) {
                 return redirect(route('caliber.admin.index'));
             }
-            if ($row->author_id != Auth::id() and !$this->hasPermission('animal_manage_others')) {
-                return redirect(route('caliber.admin.index'));
-            }
         } else {
-//            $this->checkPermission('animal_create');
+            $this->checkPermission('caliber_create');
             $row = new $this->caliber();
             $row->status = "publish";
         }
@@ -179,17 +174,12 @@ class CaliberController extends AdminController
 
     public function edit(Request $request, $id)
     {
-//        $this->checkPermission('animal_update');
+        $this->checkPermission('caliber_update');
         $row = $this->caliber::find($id);
         if (empty($row)) {
             return redirect(route('caliber.admin.index'));
         }
         $translation = $row->translate($request->query('lang',get_main_lang()));
-        if (!$this->hasPermission('caliber')) {
-            if ($row->author_id != Auth::id()) {
-                return redirect(route('caliber.admin.index'));
-            }
-        }
         $data = [
             'row'               => $row,
             'translation'       => $translation,
@@ -225,13 +215,9 @@ class CaliberController extends AdminController
         }
         switch ($action) {
             case "delete":
+                $this->checkPermission('caliber_delete');
                 foreach ($ids as $id) {
-                    $query = $this->caliber::where("id", $id);
-                    if (!$this->hasPermission('animal_manage_others')) {
-                        $query->where("create_user", Auth::id());
-                        $this->checkPermission('animal_delete');
-                    }
-                    $row = $query->first();
+                    $row = $this->caliber::where("id", $id)->first();
                     if (!empty($row)) {
                         $row->delete();
                         event(new UpdatedServiceEvent($row));
@@ -240,13 +226,9 @@ class CaliberController extends AdminController
                 return redirect()->back()->with('success', __('Deleted success!'));
                 break;
             case "permanently_delete":
+                $this->checkPermission('caliber_delete');
                 foreach ($ids as $id) {
-                    $query = $this->caliber::where("id", $id);
-                    if (!$this->hasPermission('animal_manage_others')) {
-                        $query->where("create_user", Auth::id());
-                        $this->checkPermission('animal_delete');
-                    }
-                    $row = $query->withTrashed()->first();
+                    $row = $this->caliber::where("id", $id)->withTrashed()->first();
                     if ($row) {
                         $row->forceDelete();
                     }
@@ -254,13 +236,9 @@ class CaliberController extends AdminController
                 return redirect()->back()->with('success', __('Permanently delete success!'));
                 break;
             case "recovery":
+                $this->checkPermission('caliber_delete');
                 foreach ($ids as $id) {
-                    $query = $this->caliber::withTrashed()->where("id", $id);
-                    if (!$this->hasPermission('animal_manage_others')) {
-                        $query->where("create_user", Auth::id());
-                        $this->checkPermission('animal_delete');
-                    }
-                    $row = $query->first();
+                    $row = $this->caliber::withTrashed()->where("id", $id)->first();
                     if (!empty($row)) {
                         $row->restore();
                         event(new UpdatedServiceEvent($row));
@@ -269,21 +247,16 @@ class CaliberController extends AdminController
                 return redirect()->back()->with('success', __('Recovery success!'));
                 break;
             case "clone":
-                $this->checkPermission('animal_create');
+                $this->checkPermission('caliber_create');
                 foreach ($ids as $id) {
                     (new $this->caliber())->saveCloneByID($id);
                 }
                 return redirect()->back()->with('success', __('Clone success!'));
                 break;
             default:
-                // Change status
+                $this->checkPermission('caliber_update');
                 foreach ($ids as $id) {
-                    $query = $this->caliber::where("id", $id);
-                    if (!$this->hasPermission('animal_manage_others')) {
-                        $query->where("create_user", Auth::id());
-                        $this->checkPermission('animal_update');
-                    }
-                    $row = $query->first();
+                    $row = $this->caliber::where("id", $id)->first();
                     $row->status = $action;
                     $row->save();
                     event(new UpdatedServiceEvent($row));
