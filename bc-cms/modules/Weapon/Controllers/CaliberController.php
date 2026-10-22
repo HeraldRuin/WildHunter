@@ -85,7 +85,7 @@ class CaliberController extends AdminController
         $this->checkPermission('caliber_create');
         $row = new $this->caliber();
         $row->fill([
-            'status' => 'publish'
+            'status' => 'draft'
         ]);
         $data = [
             'row'          => $row,
@@ -124,7 +124,7 @@ class CaliberController extends AdminController
         } else {
             $this->checkPermission('caliber_create');
             $row = new $this->caliber();
-            $row->status = "publish";
+            $row->status = "draft";
         }
         $dataKeys = [
             'title',
@@ -149,6 +149,9 @@ class CaliberController extends AdminController
 //            $dataKeys[] = 'author_id';
 //        }
         $row->fillByAttr($dataKeys, $request->input());
+        if ($id <= 0 && empty($row->status)) {
+            $row->status = 'draft';
+        }
         if ($request->input('slug')) {
             $row->slug = $request->input('slug');
         }

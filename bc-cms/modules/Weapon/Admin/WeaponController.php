@@ -82,7 +82,7 @@ class WeaponController extends AdminController
         $this->checkPermission('weapon_create');
         $row = new $this->weaponType();
         $row->fill([
-            'status' => 'publish'
+            'status' => 'draft'
         ]);
         $data = [
             'row'          => $row,
@@ -124,7 +124,7 @@ class WeaponController extends AdminController
         } else {
             $this->checkPermission('weapon_create');
             $row = new $this->weaponType();
-            $row->status = "publish";
+            $row->status = "draft";
         }
         $dataKeys = [
             'title',
@@ -149,6 +149,9 @@ class WeaponController extends AdminController
             $dataKeys[] = 'author_id';
         }
         $row->fillByAttr($dataKeys, $request->input());
+        if ($id <= 0 && empty($row->status)) {
+            $row->status = 'draft';
+        }
         if ($request->input('slug')) {
             $row->slug = $request->input('slug');
         }
