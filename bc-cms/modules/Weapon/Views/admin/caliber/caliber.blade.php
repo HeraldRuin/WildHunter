@@ -64,7 +64,7 @@
                                 <th> {{ __('Name')}}</th>
                                 {{--                            <th width="200px"> {{ __('Location')}}</th>--}}
                                 {{--                            <th width="130px"> {{ __('Author')}}</th>--}}
-                                {{--                            <th width="100px"> {{ __('Status')}}</th>--}}
+                                <th width="100px"> {{ __('Status')}}</th>
                                 {{--                            <th width="100px"> {{ __('Reviews')}}</th>--}}
                                 <th width="100px"> {{ __('Date')}}</th>
                                 <th width="100px"></th>
@@ -91,7 +91,7 @@
                                         {{--                                            {{__("[Author Deleted]")}}--}}
                                         {{--                                        @endif--}}
                                         {{--                                    </td>--}}
-                                        {{--                                    <td><span class="badge badge-{{ $row->status }}">{{ $row->status }}</span></td>--}}
+                                        <td><span class="badge badge-{{ $row->status }}">{{ $row->status_text }}</span></td>
                                         {{--                                    <td>--}}
                                         {{--                                        <a target="_blank" href="{{ route('review.admin.index',['service_id'=>$row->id]) }}" class="review-count-approved">--}}
                                         {{--                                            {{ $row->getNumberReviewsInService() }}--}}

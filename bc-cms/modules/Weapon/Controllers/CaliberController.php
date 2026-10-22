@@ -183,9 +183,6 @@ class CaliberController extends AdminController
         $data = [
             'row'               => $row,
             'translation'       => $translation,
-//            "selected_terms"    => $row->terms->pluck('term_id'),
-//            'attributes'        => $this->attributes::where('service', 'weapon')->get(),
-            'weapon_location'      => $this->location::where('status', 'publish')->get()->toTree(),
             'enable_multi_lang' => true,
             'breadcrumbs'       => [
                 [
