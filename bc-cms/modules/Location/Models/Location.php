@@ -142,4 +142,16 @@
         {
             return $this->hasMany(Property::class, 'location_id');
         }
+
+        public function getStatusTextAttribute()
+        {
+            switch ($this->status) {
+                case "publish":
+                    return __("Published");
+                case "draft":
+                    return __("Draft");
+                default:
+                    return ucfirst($this->status ?? '');
+            }
+        }
     }

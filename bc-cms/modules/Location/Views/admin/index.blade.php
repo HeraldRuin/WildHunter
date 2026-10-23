@@ -94,7 +94,7 @@
                                             <a href="{{route('location.admin.edit',['id'=>$row->id])}}">{{$prefix.' '.$row->name}}</a>
                                         </td>
                                         <td>{{$row->slug}}</td>
-                                        <td><span class="badge badge-{{ $row->status }}">{{ $row->status }}</span></td>
+                                        <td><span class="badge badge-{{ $row->status }}">{{ $row->status_text }}</span></td>
                                         <td>{{display_date($row->updated_at)}}</td>
                                         <td>
                                             <a href="{{route('location.admin.edit',['id'=>$row->id])}}" class="btn btn-primary btn-sm"><i class="fa fa-edit"></i> {{__('Edit')}}
