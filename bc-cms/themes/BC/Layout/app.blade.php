@@ -2,6 +2,9 @@
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="{{ $html_class ?? '' }}">
 
 <head>
+    @if (in_array(request()->getHost(), ['new.wild-hunter.ru', 'www.new.wild-hunter.ru'], true))
+        <meta name="robots" content="noindex, nofollow">
+    @endif
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <!-- CSRF Token -->
