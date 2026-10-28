@@ -27,6 +27,7 @@ class AddetionalPrice extends Model
         'calculation_type',
         'count',
         'place',
+        'is_system',
     ];
 
     const INDIVIDUAL = 'individual';

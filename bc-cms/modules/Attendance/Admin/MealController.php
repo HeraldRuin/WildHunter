@@ -5,8 +5,10 @@ namespace Modules\Attendance\Admin;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
+use Illuminate\Database\Eloquent\Builder;
 use Modules\AdminController;
 use Modules\Attendance\Models\AddetionalPrice;
+use Modules\Hotel\Models\Hotel;
 use Modules\User\Models\Role;
 
 class MealController extends AdminController
@@ -30,9 +32,7 @@ class MealController extends AdminController
     {
         $this->authorizeService('additional_system_view');
 
-        $query = AddetionalPrice::query()
-            ->where('type', AddetionalPrice::FOOD)
-            ->orderBy('id');
+        $query = $this->foodQuery()->orderBy('id');
 
         if ($search = trim((string) $request->input('s'))) {
             $query->where('name', 'like', '%' . $search . '%');
@@ -124,6 +124,8 @@ class MealController extends AdminController
             $row = new AddetionalPrice();
             $row->user_id = Auth::id();
             $row->type = AddetionalPrice::FOOD;
+            $row->hotel_id = $this->hotelIdForCurrentUser();
+            $row->is_system = $row->hotel_id === null;
         }
 
         $request->merge([
@@ -157,8 +159,35 @@ class MealController extends AdminController
 
     private function findFood($id): ?AddetionalPrice
     {
-        return AddetionalPrice::query()
-            ->where('type', AddetionalPrice::FOOD)
-            ->find($id);
+        return $this->foodQuery()->find($id);
+    }
+
+    private function foodQuery(): Builder
+    {
+        $query = AddetionalPrice::query()->where('type', AddetionalPrice::FOOD);
+        $user = Auth::user();
+
+        if (!$user || $user->hasRole(Role::SUPERADMIN)) {
+            return $query->where('is_system', 1)->whereNull('hotel_id');
+        }
+
+        $hotelId = $this->hotelIdForCurrentUser();
+        if ($hotelId === null) {
+            return $query->whereRaw('0 = 1');
+        }
+
+        return $query->where('hotel_id', $hotelId);
+    }
+
+    private function hotelIdForCurrentUser(): ?int
+    {
+        $user = Auth::user();
+        if (!$user || $user->hasRole(Role::SUPERADMIN)) {
+            return null;
+        }
+
+        $hotelId = Hotel::query()->where('admin_base', $user->id)->value('id');
+
+        return $hotelId ? (int) $hotelId : null;
     }
 }
