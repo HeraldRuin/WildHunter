@@ -6,6 +6,9 @@ use Illuminate\Database\Eloquent\Model;
 
 class AddetionalPrice extends Model
 {
+    public const PLACE_BASE = 'base';
+
+    public const PLACE_HUNT = 'hunt';
     protected $table = 'bc_addetional_prices';
 
     protected $casts = [
@@ -23,6 +26,7 @@ class AddetionalPrice extends Model
         'is_visible',
         'calculation_type',
         'count',
+        'place',
     ];
 
     const INDIVIDUAL = 'individual';
@@ -39,6 +43,19 @@ class AddetionalPrice extends Model
     const PREPARATION = 'preparation';
     const PENALTY = 'penalty';
     const TROPHY = 'trophy';
+
+    public static function placeOptions(): array
+    {
+        return [
+            self::PLACE_BASE => __('At the base'),
+            self::PLACE_HUNT => __('On the hunt'),
+        ];
+    }
+
+    public function placeLabel(): string
+    {
+        return self::placeOptions()[$this->place] ?? '';
+    }
 
     public function scopeForUser($query, int $userId)
     {

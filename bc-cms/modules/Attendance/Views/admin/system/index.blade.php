@@ -40,6 +40,7 @@
                             <tr>
                                 <th width="60px"><input type="checkbox" class="check-all"></th>
                                 <th>{{ __('Service name') }}</th>
+                                <th width="160px">{{ __('Type') }}</th>
                                 <th width="160px">{{ __('Date') }}</th>
                                 <th width="280px"></th>
                             </tr>
@@ -52,6 +53,7 @@
                                         <td class="title">
                                             <a href="{{ route('additional_system.admin.edit', ['id' => $row->id]) }}">{{ $row->name }}</a>
                                         </td>
+                                        <td>{{ $row->typeLabel() }}</td>
                                         <td>{{ $row->updated_at ? display_date($row->updated_at) : '' }}</td>
                                         <td class="text-nowrap">
                                             <a href="{{ route('additional_system.admin.edit', ['id' => $row->id]) }}" class="btn btn-primary btn-sm">
@@ -70,7 +72,7 @@
                                 @endforeach
                             @else
                                 <tr>
-                                    <td colspan="4">{{ __('No system services found') }}</td>
+                                    <td colspan="5">{{ __('No system services found') }}</td>
                                 </tr>
                             @endif
                             </tbody>

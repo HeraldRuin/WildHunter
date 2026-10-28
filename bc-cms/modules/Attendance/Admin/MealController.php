@@ -4,6 +4,7 @@ namespace Modules\Attendance\Admin;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\Rule;
 use Modules\AdminController;
 use Modules\Attendance\Models\AddetionalPrice;
 use Modules\User\Models\Role;
@@ -135,12 +136,19 @@ class MealController extends AdminController
                 'string',
                 'max:191',
             ],
+            'place' => [
+                'required',
+                Rule::in(array_keys(AddetionalPrice::placeOptions())),
+            ],
         ], [
             'name.required' => __('Enter the meal name'),
+            'place.required' => __('Select the service type'),
+            'place.in' => __('Select the service type'),
         ]);
 
         $row->name = $request->input('name');
         $row->type = AddetionalPrice::FOOD;
+        $row->place = $request->input('place');
         $row->save();
 
         return redirect(route('meal.admin.edit', $row->id))

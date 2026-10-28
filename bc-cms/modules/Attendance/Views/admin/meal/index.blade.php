@@ -27,6 +27,7 @@
                             <thead>
                             <tr>
                                 <th>{{ __('Service name') }}</th>
+                                <th width="160px">{{ __('Type') }}</th>
                                 <th width="160px">{{ __('Date') }}</th>
                                 <th width="140px"></th>
                             </tr>
@@ -38,6 +39,7 @@
                                         <td class="title">
                                             <a href="{{ route('meal.admin.edit', ['id' => $row->id]) }}">{{ $row->name }}</a>
                                         </td>
+                                        <td>{{ $row->placeLabel() }}</td>
                                         <td>{{ $row->updated_at ? display_date($row->updated_at) : '' }}</td>
                                         <td>
                                             <a href="{{ route('meal.admin.edit', ['id' => $row->id]) }}" class="btn btn-primary btn-sm">
@@ -48,7 +50,7 @@
                                 @endforeach
                             @else
                                 <tr>
-                                    <td colspan="3">{{ __('Питание не найдено') }}</td>
+                                    <td colspan="4">{{ __('Питание не найдено') }}</td>
                                 </tr>
                             @endif
                             </tbody>

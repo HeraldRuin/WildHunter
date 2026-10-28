@@ -19,6 +19,19 @@
                             </div>
                         </div>
                     </div>
+                    <div class="panel">
+                        <div class="panel-title"><strong>{{ __('Type') }}</strong></div>
+                        <div class="panel-body">
+                            <div class="form-group mb-0">
+                                <label>{{ __('Type') }} <span class="text-danger">*</span></label>
+                                <select name="place" required class="form-control">
+                                    @foreach(\Modules\Attendance\Models\AddetionalPrice::placeOptions() as $value => $label)
+                                        <option value="{{ $value }}" @selected(old('place', $row->place ?: \Modules\Attendance\Models\AddetionalPrice::PLACE_BASE) === $value)>{{ $label }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        </div>
+                    </div>
                 </div>
                 <div class="col-md-3">
                     <div class="panel">

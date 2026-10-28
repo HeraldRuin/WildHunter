@@ -139,12 +139,19 @@ class AdditionalSystemController extends AdminController
                 'max:255',
                 $uniqueName,
             ],
+            'type' => [
+                'required',
+                Rule::in(array_keys(AdditionalSystem::typeOptions())),
+            ],
         ], [
             'name.required' => __('Enter the service name'),
             'name.unique' => __('This service already exists'),
+            'type.required' => __('Select the service type'),
+            'type.in' => __('Select the service type'),
         ]);
 
         $row->name = $request->input('name');
+        $row->type = $request->input('type');
         $row->save();
 
         if ($id > 0) {

@@ -19,6 +19,19 @@
                             </div>
                         </div>
                     </div>
+                    <div class="panel">
+                        <div class="panel-title"><strong>{{ __('Type') }}</strong></div>
+                        <div class="panel-body">
+                            <div class="form-group mb-0">
+                                <label>{{ __('Type') }} <span class="text-danger">*</span></label>
+                                <select name="type" required class="form-control">
+                                    @foreach(\Modules\Attendance\Models\AdditionalSystem::typeOptions() as $value => $label)
+                                        <option value="{{ $value }}" @selected(old('type', $row->type ?: \Modules\Attendance\Models\AdditionalSystem::TYPE_BASE) === $value)>{{ $label }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        </div>
+                    </div>
                 </div>
                 <div class="col-md-3">
                     <div class="panel">
