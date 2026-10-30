@@ -11,11 +11,14 @@ class AnimalPreparation extends Model
 {
     use HasHotelAnimalPrice;
 
+    public const PLACE_BASE = 'base';
+
     protected $table = 'bc_animal_preparations';
 
     protected $fillable = [
         'animal_id',
         'type',
+        'place',
         'price',
     ];
 

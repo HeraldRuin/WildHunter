@@ -459,6 +459,7 @@ class AnimalController extends AdminController
                         $newTrophy = AnimalPreparation::create([
                             'animal_id' => $row->id,
                             'type' => $type,
+                            'place' => AnimalPreparation::PLACE_BASE,
                             'price' => null,
                         ]);
                         $keepIds[] = $newTrophy->id;
