@@ -341,11 +341,11 @@ class BookingCalculator
     }
     public function calculateMyOrganisationHunting(Booking $booking, int $huntersCount): float
     {
-        if (!$booking->amount_hunting || $huntersCount <= 0) {
+        if (!$booking->total_hunting || $huntersCount <= 0) {
             return 0;
         }
 
-        return round($booking->amount_hunting / $huntersCount);
+        return round($booking->amount_hunting / $booking->total_hunting);
     }
 
     public function getOrganisationHunting(Booking $booking, int $huntersCount): array
