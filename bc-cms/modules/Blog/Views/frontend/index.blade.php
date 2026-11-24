@@ -63,7 +63,7 @@
             @foreach($rows as $row)
                 <div class="col-md-4 col-lg-3 mb-4">
                     <div class="blog-card panel h-100" data-blog-id="{{ $row->id }}">
-                        <div class="blog-card-cover blog-card-cover-pick" data-id="{{ $row->id }}" data-image-id="{{ $row->image_id }}">
+                        <div class="blog-card-cover" data-id="{{ $row->id }}" data-image-id="{{ $row->image_id }}">
                             @if($row->getCoverUrl())
                                 <img src="{{ $row->getCoverUrl() }}" alt="{{ $row->title }}">
                             @else
@@ -72,6 +72,7 @@
                                     <span>{{ __('Add cover') }}</span>
                                 </div>
                             @endif
+                            <span class="blog-card-cover-edit-hint">{{ __('Change cover') }}</span>
                             <span class="blog-card-date">{{ display_date($row->updated_at) }}</span>
                             <label class="blog-card-status-wrap" onclick="event.stopPropagation()">
                                 <input type="checkbox" name="ids[]" class="check-item" value="{{ $row->id }}" form="bulk-form">
@@ -83,13 +84,19 @@
                         <div class="blog-card-body panel-body">
                             <div
                                 class="blog-card-title-input"
-                                contenteditable="true"
+                                contenteditable="false"
                                 data-id="{{ $row->id }}"
                                 data-placeholder="{{ __('Blog name') }}"
                             >{{ $row->title }}</div>
                             <div class="blog-card-actions mt-auto">
-                                <a href="{{ route('blog.vendor.edit', ['id' => $row->id]) }}" class="btn btn-primary btn-sm btn-block">
-                                    <i class="fa fa-edit"></i> {{ __('Edit') }}
+                                <button type="button" class="btn btn-primary btn-sm btn-block blog-card-edit-btn">
+                                    <i class="fa fa-edit"></i> {{ __('Edit card') }}
+                                </button>
+                                <button type="button" class="btn btn-danger btn-sm btn-block blog-card-cancel-btn d-none mt-2">
+                                    {{ __('Cancel changes') }}
+                                </button>
+                                <a href="{{ route('blog.vendor.edit', ['id' => $row->id]) }}" class="btn btn-primary btn-sm btn-block mt-2 blog-card-article-btn">
+                                    <i class="fa fa-edit"></i> {{ __('Edit article') }}
                                 </a>
                             </div>
                         </div>
@@ -168,11 +175,32 @@
         .blog-card-title-input:focus {
             border-bottom: 1px solid #ced4da;
         }
+        .blog-card.is-editing {
+            box-shadow: 0 0 0 2px #1a2b48;
+        }
+        .blog-card-cover-edit-hint {
+            display: none;
+        }
+        .blog-card.is-editing .blog-card-cover-edit-hint {
+            display: flex;
+            position: absolute;
+            inset: 0;
+            z-index: 1;
+            align-items: center;
+            justify-content: center;
+            background: rgba(26, 43, 71, 0.45);
+            color: #fff;
+            font-size: 13px;
+            pointer-events: none;
+        }
+        .blog-card.is-editing .blog-card-cover:has(.blog-card-cover-placeholder) .blog-card-cover-edit-hint {
+            display: none;
+        }
         .blog-card-date {
             position: absolute;
             top: 8px;
             left: 8px;
-            z-index: 1;
+            z-index: 2;
             font-size: 12px;
             line-height: 1.2;
             color: #fff;
@@ -184,7 +212,7 @@
             position: absolute;
             top: 8px;
             right: 8px;
-            z-index: 1;
+            z-index: 2;
             display: flex;
             align-items: center;
             gap: 6px;
@@ -220,6 +248,8 @@
         (function ($) {
             var metaUrl = @json(route('blog.vendor.storeMeta', ['id' => 0]));
             var token = @json(csrf_token());
+            var editLabel = @json(__('Edit card'));
+            var saveLabel = @json(__('Save'));
 
             function saveMeta(id, payload, done) {
                 var url = metaUrl.replace(/\/0$/, '/' + (id || 0));
@@ -285,6 +315,7 @@
 
             $(document).on('blur', '.blog-card-title-input', function () {
                 var $input = $(this);
+                if ($input.closest('.blog-card').find('.blog-card-edit-btn').length) return;
                 var id = $input.data('id') || 0;
                 var title = titleValue($input);
                 if (!id && !title) return;
@@ -303,6 +334,103 @@
                 saveMeta(0, { title: title }, function () {
                     window.location.reload();
                 });
+            });
+
+            function setEditButton($btn, editing) {
+                if (editing) {
+                    $btn.text(saveLabel);
+                    return;
+                }
+                $btn.html('<i class="fa fa-edit"></i> ' + editLabel);
+            }
+
+            function coverSnapshot($card) {
+                var $cover = $card.find('.blog-card-cover');
+                var $media = $cover.children('img, .blog-card-cover-placeholder').first();
+                return {
+                    imageId: $cover.data('image-id') || '',
+                    mediaHtml: $media.length ? $media.prop('outerHTML') : ''
+                };
+            }
+
+            function restoreCover($card, done) {
+                var snap = $card.data('cover-snapshot');
+                var $cover = $card.find('.blog-card-cover');
+                if (!snap) {
+                    done();
+                    return;
+                }
+                var current = String($cover.data('image-id') || '');
+                var original = String(snap.imageId || '');
+                if (current === original) {
+                    done();
+                    return;
+                }
+                saveMeta($cover.data('id'), { image_id: original }, function () {
+                    $cover.data('image-id', original);
+                    $cover.children('img, .blog-card-cover-placeholder').remove();
+                    if (snap.mediaHtml) {
+                        $cover.prepend(snap.mediaHtml);
+                    }
+                    done();
+                });
+            }
+
+            function leaveCardEdit($card, persist) {
+                var $title = $card.find('.blog-card-title-input');
+                var finish = function () {
+                    $card.removeClass('is-editing');
+                    $card.find('.blog-card-cover').removeClass('blog-card-cover-pick');
+                    $title.attr('contenteditable', 'false');
+                    setEditButton($card.find('.blog-card-edit-btn'), false);
+                    $card.find('.blog-card-cancel-btn').addClass('d-none');
+                    $card.find('.blog-card-article-btn').removeClass('d-none');
+                };
+
+                if (!persist) {
+                    $title.text($title.data('saved') || '');
+                    restoreCover($card, finish);
+                    return;
+                }
+
+                var id = $title.data('id') || 0;
+                var title = titleValue($title);
+                if (!id || title === ($title.data('saved') || '')) {
+                    finish();
+                    return;
+                }
+
+                saveMeta(id, { title: title }, function () {
+                    $title.data('saved', title);
+                    finish();
+                });
+            }
+
+            function enterCardEdit($card) {
+                $('.blog-card.is-editing').not($card).each(function () {
+                    leaveCardEdit($(this), true);
+                });
+                $card.data('cover-snapshot', coverSnapshot($card));
+                $card.addClass('is-editing');
+                $card.find('.blog-card-cover').addClass('blog-card-cover-pick');
+                var $title = $card.find('.blog-card-title-input');
+                $title.attr('contenteditable', 'true').trigger('focus');
+                setEditButton($card.find('.blog-card-edit-btn'), true);
+                $card.find('.blog-card-cancel-btn').removeClass('d-none');
+                $card.find('.blog-card-article-btn').addClass('d-none');
+            }
+
+            $(document).on('click', '.blog-card-edit-btn', function () {
+                var $card = $(this).closest('.blog-card');
+                if ($card.hasClass('is-editing')) {
+                    leaveCardEdit($card, true);
+                    return;
+                }
+                enterCardEdit($card);
+            });
+
+            $(document).on('click', '.blog-card-cancel-btn', function () {
+                leaveCardEdit($(this).closest('.blog-card'), false);
             });
         })(jQuery);
     </script>
