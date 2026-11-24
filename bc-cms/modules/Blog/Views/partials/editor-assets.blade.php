@@ -1,27 +1,54 @@
 @include('Blog::partials.vendor-user-layout')
 
 @push('css')
-    <link rel="stylesheet" href="{{ asset('themes/admin/dist/css/blogEditor.css?_v='.config('app.asset_version')) }}">
+    <link rel="stylesheet" href="{{ asset('themes/admin/dist/css/blogEditor.css?_v='.filemtime(public_path('themes/admin/dist/css/blogEditor.css'))) }}">
+    <style>
+        .blog-editor-root .blog-left-zone .blog-fixed-sections {
+            flex: 0 0 auto;
+            border-bottom: 1px solid #e7e6e6;
+        }
+    </style>
     @if(!empty($user_editor))
         <style>
+            .user-page.blog-editor-page .bc_user_profile > .container-fluid > .row-eq-height > .col-md-9 {
+                display: flex;
+                flex-direction: column;
+                align-self: stretch;
+            }
+
             .user-page.blog-editor-page .user-form-settings {
                 padding: 0;
+                display: flex;
+                flex-direction: column;
+                flex: 1 1 auto;
+                min-height: 0;
             }
 
             .user-page.blog-editor-page .blog-editor-root.list-animal-width {
                 padding-left: 0;
                 padding-right: 0;
                 overflow-x: hidden;
+                display: flex;
+                flex-direction: column;
+                flex: 1 1 auto;
+                min-height: 0;
             }
 
             .user-page.blog-editor-page .blog-editor-root #blog-editor {
                 display: flex;
                 flex-direction: column;
-                height: calc(100vh - 60px);
-                min-height: 600px;
+                flex: 0 0 auto;
+                height: 100vh;
+                max-height: 100vh;
+                min-height: 0;
                 overflow: hidden;
                 width: 100%;
                 max-width: 100%;
+            }
+
+            .user-page.blog-editor-page .blog-editor-root .blog-editor-workspace {
+                flex: 1 1 auto;
+                min-height: 0;
             }
 
             .user-page.blog-editor-page .blog-editor-root .blog-left-zone {
@@ -39,6 +66,8 @@
             .user-page.blog-editor-page .blog-editor-root .blog-editor-main {
                 flex: 1 1 auto !important;
                 min-width: 0 !important;
+                min-height: 0 !important;
+                overflow: hidden;
             }
 
             .user-page.blog-editor-page .blog-editor-root .blog-content-zone {
@@ -51,6 +80,12 @@
 
             .user-page.blog-editor-page .blog-editor-root .blog-block-settings-zone {
                 max-height: min(38vh, 280px);
+            }
+
+            .user-page.blog-editor-page .blog-editor-root .blog-block-settings-zone.is-faq {
+                max-height: min(60vh, 560px);
+                margin-top: auto;
+                flex: 0 0 auto;
             }
 
             .user-page.blog-editor-page .blog-editor-root .blog-preview-container {
@@ -101,5 +136,5 @@
 
 @push('js')
     <script src="{{ asset('libs/tinymce/js/tinymce/tinymce.min.js') }}"></script>
-    <script type="module" src="{{ asset('themes/admin/dist/js/blogEditor.js?_v='.config('app.asset_version')) }}"></script>
+    <script type="module" src="{{ asset('themes/admin/dist/js/blogEditor.js?_v='.filemtime(public_path('themes/admin/dist/js/blogEditor.js'))) }}"></script>
 @endpush

@@ -25,6 +25,16 @@
             <div class="blog-zone-header">
                 <h5 class="mb-0">{{ __('Sections') }}</h5>
             </div>
+            <div class="blog-fixed-sections">
+                <div
+                    class="blog-block-item blog-block-item--fixed"
+                    :class="{ selected: selectedBlockId === faq.id }"
+                    @click="selectBlock(faq.id)"
+                >
+                    <span class="block-icon"><i class="fa fa-question-circle"></i></span>
+                    <span class="block-label">{{ __('FAQ') }}</span>
+                </div>
+            </div>
             <div class="blog-blocks-list overflow-auto">
                 <draggable v-model="blocks" item-key="id" handle=".drag-handler" @change="onSort">
                     <template #item="{ element, index }">
@@ -68,7 +78,7 @@
                 </draggable>
                 <div v-if="!blocks.length" class="text-muted text-center p-3">{{ __('No blocks yet') }}</div>
             </div>
-            <div class="blog-add-blocks p-2 border-top">
+            <div v-show="selectedBlockId !== faq.id" class="blog-add-blocks p-2 border-top">
                 <p class="small text-muted mb-2">{{ __('Add block') }}</p>
                 <button class="btn btn-sm btn-outline-secondary btn-block mb-1" @click="addBlock('text')">
                     <i class="fa fa-font"></i> {{ __('Text') }}
@@ -90,6 +100,7 @@
             <div class="blog-preview-container">
                 <div
                     v-for="(block, index) in blocks"
+                    v-show="selectedBlockId !== faq.id"
                     :key="block.id"
                     class="blog-preview-block"
                     :class="{ selected: selectedBlockId === block.id }"
@@ -208,14 +219,37 @@
                         </div>
                     </div>
                 </div>
-                <div v-if="!blocks.length" class="blog-preview-empty">
+                <div
+                    v-show="selectedBlockId === faq.id && faqPreviewItems.length"
+                    ref="faqPreview"
+                    class="blog-preview-block blog-preview-block--faq"
+                >
+                    <div class="blog-preview-faq">
+                        <div class="blog-preview-faq-list">
+                            <details
+                                v-for="(item, index) in faqPreviewItems"
+                                :key="item.index"
+                                class="blog-preview-faq-item"
+                                :class="{ 'is-editing': editingFaqIndex === item.index }"
+                            >
+                                <summary @click="onFaqRowClick(item.index, $event)">
+                                    <span class="blog-preview-faq-num">@{{ index + 1 }}</span>
+                                    <span class="blog-preview-faq-question">@{{ item.question }}</span>
+                                    <span class="blog-preview-faq-toggle" aria-hidden="true"></span>
+                                </summary>
+                                <div v-if="item.answer" class="blog-preview-faq-answer">@{{ item.answer }}</div>
+                            </details>
+                        </div>
+                    </div>
+                </div>
+                <div v-if="!blocks.length && selectedBlockId !== faq.id" class="blog-preview-empty">
                     <i class="fa fa-plus-circle fa-3x text-muted mb-3"></i>
                     <p class="text-muted">{{ __('Add blocks from the left panel') }}</p>
                 </div>
             </div>
         </div>
 
-        <div class="blog-block-settings-zone overflow-auto" v-if="selectedBlock">
+        <div class="blog-block-settings-zone overflow-auto" v-if="selectedBlock" :class="{ 'is-faq': selectedBlock.type === 'faq' }">
                 <div class="blog-settings-body">
                     <template v-if="selectedBlock.type === 'text'">
                         <div class="blog-form-field blog-text-editor-wrap">
@@ -283,6 +317,23 @@
                         <label class="form-check-label" :for="'header-' + selectedBlock.id">{{ __('First row is header') }}</label>
                     </div>
                 </template>
+                    <template v-if="selectedBlock.type === 'faq'">
+                        <div class="blog-faq-editor">
+                            <div class="blog-faq-editor-item">
+                                <div class="blog-form-field">
+                                    <div class="blog-faq-question-head">
+                                        <label>{{ __('Question') }}</label>
+                                        <button type="button" class="blog-faq-clear btn btn-sm btn-outline-secondary" @click="clearFaqForm">{{ __('Clear') }}</button>
+                                    </div>
+                                    <input type="text" class="form-control" v-model="faqForm.question">
+                                </div>
+                                <div class="blog-form-field">
+                                    <label>{{ __('Answer') }}</label>
+                                    <textarea class="form-control" rows="3" v-model="faqForm.answer"></textarea>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
                     <template v-if="selectedBlock.type === 'columns'">
                         <div class="blog-form-field">
                             <label>{{ __('Columns') }}</label>
@@ -331,6 +382,7 @@
         image: @json(__('Image')),
         table: @json(__('Table')),
         columns_layout: @json(__('Columns layout')),
+        faq: @json(__('FAQ')),
         untitled: @json(__('Untitled')),
         saved: @json(__('Saved')),
         error: @json(__('Error saving')),

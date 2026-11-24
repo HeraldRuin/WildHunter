@@ -42,6 +42,10 @@
     .blog-block-settings-zone {
         flex: 0 0 auto;
         max-height: min(42vh, 320px);
+
+        &.is-faq {
+            max-height: min(60vh, 560px);
+        }
         border-top: 1px solid rgb(232, 232, 233);
         background: white;
         overflow-x: hidden;
@@ -117,8 +121,15 @@
                 margin-bottom: 0;
             }
 
-            .blog-form-field.blog-text-editor-wrap {
+            .blog-form-field.blog-text-editor-wrap,
+            .blog-faq-editor {
                 flex: 1 1 100%;
+            }
+
+            .blog-faq-editor .blog-form-field {
+                flex: 1 1 100%;
+                max-width: 100%;
+                margin-bottom: 12px;
             }
 
             .form-check {
@@ -173,6 +184,12 @@
             min-height: 0;
             overflow-y: auto;
             overflow-x: hidden;
+        }
+
+        .blog-fixed-sections {
+            flex-shrink: 0;
+            border-bottom: 1px solid #e7e6e6;
+            background: #fff;
         }
 
         .blog-add-blocks {
@@ -318,6 +335,11 @@
             white-space: nowrap;
         }
 
+        &--fixed .block-label {
+            white-space: normal;
+            line-height: 1.3;
+        }
+
         .block-delete {
             padding: 0 4px;
             font-size: 12px;
@@ -460,6 +482,11 @@
             border-color: rgb(38, 128, 235);
         }
 
+        &--faq,
+        &--faq:hover {
+            border-color: transparent;
+        }
+
         .blog-preview-block-toolbar {
             display: none;
             position: absolute;
@@ -528,6 +555,133 @@
         table {
             margin-bottom: 0;
         }
+    }
+
+    .blog-preview-faq-title {
+        margin: 0 0 12px;
+        font-size: 28px;
+        line-height: 1.25;
+        color: #1a2b48;
+    }
+
+    .blog-preview-faq-lead {
+        margin: 0 0 16px;
+        color: #3d4d66;
+    }
+
+    .blog-preview-faq-list {
+        border-top: 1px solid rgba(28, 33, 28, 0.2);
+    }
+
+    .blog-preview-faq-item {
+        margin: 0;
+        border-bottom: 1px solid rgba(28, 33, 28, 0.2);
+
+        &.is-editing {
+            background: #f3f6f3;
+        }
+
+        summary {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 16px 0;
+            cursor: pointer;
+            list-style: none;
+
+            &::-webkit-details-marker {
+                display: none;
+            }
+
+            &::marker {
+                content: "";
+            }
+        }
+    }
+
+    .blog-preview-faq-num {
+        display: grid;
+        flex: 0 0 36px;
+        place-items: center;
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        background: #52714f;
+        color: #fff;
+        font-size: 16px;
+        font-weight: 500;
+    }
+
+    .blog-preview-faq-question {
+        flex: 1 1 auto;
+        min-width: 0;
+        font-weight: 600;
+        color: #1c211c;
+    }
+
+    .blog-preview-faq-toggle {
+        position: relative;
+        flex: 0 0 24px;
+        width: 24px;
+        height: 24px;
+
+        &::before,
+        &::after {
+            content: "";
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            background: #1c211c;
+            transform: translate(-50%, -50%);
+        }
+
+        &::before {
+            width: 16px;
+            height: 2px;
+        }
+
+        &::after {
+            width: 2px;
+            height: 16px;
+        }
+    }
+
+    .blog-preview-faq-item[open] .blog-preview-faq-toggle::after {
+        display: none;
+    }
+
+    .blog-preview-faq-answer {
+        margin: 0 40px 16px 52px;
+        color: #1c211c;
+        white-space: pre-wrap;
+    }
+
+    .blog-faq-editor-item {
+        width: 100%;
+        margin-bottom: 12px;
+        padding: 12px;
+        border: 1px solid #e7e6e6;
+        border-radius: 4px;
+        background: #fafafa;
+    }
+
+    .blog-faq-question-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 6px;
+
+        label {
+            margin-bottom: 0;
+            font-weight: 500;
+            font-size: 13px;
+            color: #333;
+        }
+    }
+
+    .blog-faq-clear {
+        flex: 0 0 auto;
     }
 
     .blog-preview-empty {

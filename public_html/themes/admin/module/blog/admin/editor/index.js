@@ -120,6 +120,28 @@ function normalizeBlock(block) {
   return block;
 }
 
+function emptyFaqItem() {
+  return { id: makeId(), question: "", answer: "" };
+}
+
+function normalizeFaq(block) {
+  const items = Array.isArray(block?.items)
+    ? block.items
+        .filter((item) => item && (item.question || item.answer))
+        .map((item) => ({
+          id: item.id || makeId(),
+          question: item.question || "",
+          answer: item.answer || "",
+        }))
+    : [];
+
+  return {
+    id: block?.id || makeId(),
+    type: "faq",
+    items: items.length ? items : [emptyFaqItem()],
+  };
+}
+
 function defaultBlock(type) {
   const id = makeId();
   switch (type) {
@@ -160,6 +182,16 @@ const app = createApp({
   components: { draggable, TextBlockEditor },
   data() {
     const contentJson = blogEditorData.content_json || { blocks: [] };
+    const rawBlocks = contentJson.blocks || [];
+    const rawFaq = rawBlocks.find((block) => block.type === "faq");
+    const faq = normalizeFaq(rawFaq);
+    const savedFaqItems = faq.items
+      .map((item) => ({
+        question: (item.question || "").trim(),
+        answer: (item.answer || "").trim(),
+      }))
+      .filter((item) => item.question || item.answer);
+    faq.items = [emptyFaqItem()];
     return {
       blogId: blogEditorData.id,
       title: blogEditorData.title || "",
@@ -168,7 +200,11 @@ const app = createApp({
       image_id: blogEditorData.image_id,
       coverUrl: blogEditorData.cover_url || null,
       excerpt: blogEditorData.excerpt || "",
-      blocks: (contentJson.blocks || []).map((b) => normalizeBlock(b)),
+      blocks: rawBlocks.filter((block) => block.type !== "faq").map((b) => normalizeBlock(b)),
+      faq,
+      savedFaqItems,
+      faqDraft: emptyFaqItem(),
+      editingFaqIndex: null,
       selectedBlockId: null,
       draggingColumnId: null,
       draggingParentId: null,
@@ -180,7 +216,42 @@ const app = createApp({
   },
   computed: {
     selectedBlock() {
+      if (this.faq && this.selectedBlockId === this.faq.id) return this.faq;
       return this.findBlockById(this.selectedBlockId);
+    },
+    faqForm() {
+      if (this.editingFaqIndex != null && this.savedFaqItems[this.editingFaqIndex]) {
+        return this.savedFaqItems[this.editingFaqIndex];
+      }
+      return this.faqDraft;
+    },
+    faqPreviewItems() {
+      const saved = this.savedFaqItems
+        .map((item, index) => ({
+          index,
+          question: item.question,
+          answer: item.answer,
+        }))
+        .filter(
+          (item) =>
+            item.index === this.editingFaqIndex ||
+            (item.question || "").trim() ||
+            (item.answer || "").trim()
+        );
+
+      if (this.editingFaqIndex != null) return saved;
+
+      const question = (this.faqDraft.question || "").trim();
+      const answer = (this.faqDraft.answer || "").trim();
+      if (!question && !answer) return saved;
+
+      return saved.concat([
+        {
+          index: this.savedFaqItems.length,
+          question,
+          answer,
+        },
+      ]);
     },
   },
   mounted() {
@@ -264,6 +335,48 @@ const app = createApp({
     },
     selectBlock(id) {
       this.selectedBlockId = id;
+      if (this.faq && id === this.faq.id) {
+        this.$nextTick(() => {
+          const el = this.$refs.faqPreview;
+          if (el && el.scrollIntoView) el.scrollIntoView({ block: "nearest" });
+        });
+      }
+    },
+    onFaqRowClick(index, event) {
+      if (event.target.closest(".blog-preview-faq-toggle")) return;
+      event.preventDefault();
+      this.editFaqItem(index);
+    },
+    clearFaqForm() {
+      this.editingFaqIndex = null;
+      this.faqDraft = emptyFaqItem();
+    },
+    editFaqItem(index) {
+      if (index == null || index < 0 || index >= this.savedFaqItems.length) return;
+      if (this.editingFaqIndex == null) {
+        const question = (this.faqDraft.question || "").trim();
+        const answer = (this.faqDraft.answer || "").trim();
+        if (question || answer) {
+          this.savedFaqItems.push({ question, answer });
+          this.faqDraft = emptyFaqItem();
+        }
+      }
+      this.editingFaqIndex = index;
+    },
+    collectFaqItems() {
+      const items = this.savedFaqItems
+        .map((item) => ({
+          question: (item.question || "").trim(),
+          answer: (item.answer || "").trim(),
+        }))
+        .filter((item) => item.question || item.answer);
+
+      if (this.editingFaqIndex != null) return items;
+
+      const question = (this.faqDraft.question || "").trim();
+      const answer = (this.faqDraft.answer || "").trim();
+      if (question || answer) items.push({ question, answer });
+      return items;
     },
     findColumnContext(blockId) {
       for (const block of this.blocks) {
@@ -510,9 +623,14 @@ const app = createApp({
         body.append("status", this.status);
         body.append("image_id", this.image_id || "");
         body.append("excerpt", this.excerpt);
+        const faqItems = this.collectFaqItems();
+        const faq = {
+          type: "faq",
+          items: faqItems,
+        };
         body.append(
           "content_json",
-          JSON.stringify({ blocks: this.blocks })
+          JSON.stringify({ blocks: [...this.blocks, faq] })
         );
 
         const res = await fetch(blogEditorData.save_url, {
@@ -523,6 +641,10 @@ const app = createApp({
 
         const data = await res.json();
         if (data.success) {
+          this.savedFaqItems = faqItems;
+          this.faq.items = [emptyFaqItem()];
+          this.faqDraft = emptyFaqItem();
+          this.editingFaqIndex = null;
           this.showMessage(data.message || blogEditorI18n.saved, true);
           this.lastSaved = new Date().toLocaleString();
           if (!this.blogId && data.id) {
